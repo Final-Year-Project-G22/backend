@@ -1,0 +1,12 @@
+version: v2
+plugins:
+  - plugin: buf.build/protocolbuffers/go:v1.34.0
+    out: ../core-backend/pb
+    opt: paths=source_relative
+  - plugin: buf.build/grpc/go:v2.0.0
+    out: ../core-backend/pb
+    opt: paths=source_relative
+  - plugin: buf.build/protocolbuffers/python:v28.1.0
+    out: ../ai-service/pb
+  - plugin: buf.build/grpc/python:v1.4.0
+    out: ../ai-service/pb
