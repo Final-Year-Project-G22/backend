@@ -1,0 +1,34 @@
+{
+  "errors.validationError": "ማረጋገጫ አልተሳካም",
+  "errors.notFound": "አልተገኘም",
+  "errors.unauthorized": "መድረስ አልተፈቀደም",
+  "errors.forbidden": "መድረስ ተከልክሏል",
+  "errors.conflict": "ሃብት ግጭት",
+  "errors.internalError": "ውስጥ የሰርቨር ስህተት",
+  "errors.badRequest": "ጥሩ ያልሆነ ጥያቄ",
+  "errors.alreadyExists": "ሃብቱ አስቀድሞ አለ",
+  "errors.invalidInput": "ዋጋ የማይሰራ",
+
+  "errors.userNotFound": "ተጠቃሚው አልተገኘም",
+  "errors.userAlreadyExists": "ተጠቃሚው አስቀድሞ አለ",
+  "errors.invalidCredentials": "የኢሜይል ወይም የይለፍ ቃል ትክክል አይደለም",
+  "errors.tokenExpired": "ቶኬን ጊዜው አልቋል",
+  "errors.tokenInvalid": "ቶኬን ዋጋ የሌለው",
+
+  "errors.roleNotFound": "ሚና አልተገኘም",
+  "errors.permissionDenied": "ፈቃድ ተከልክሏል",
+
+  "errors.resourceNotFound": "{{resource}} አልተገኘም",
+  "errors.resourceAlreadyExists": "{{resource}} አስቀድሞ አለ",
+
+  "errors.requiredField": "{{field}} ያስፈላጊ ነው",
+  "errors.invalidEmail": "የኢሜይል አድራሻ ዋጋ የሌለው",
+  "errors.invalidPassword": "የይለፍ ቃል ቢያንስ 8 ፊደላት መሆን አለ።",
+  "errors.passwordMismatch": "የይለፍ ቃላት አይዛመዱም",
+
+  "errors.databaseError": "የውሂብ ጎታ ስህተት",
+  "errors.cacheError": "ኬሽ ስህተት",
+  "errors.networkError": "የ�arm
+
+  "errors.unknownError": "ያልታወቀ ስህተት ተከስቷል"
+}
