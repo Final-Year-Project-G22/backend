@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"go.uber.org/zap"
 )
 
@@ -13,6 +14,7 @@ type Config struct {
 	Cache    CacheConfig    `mapstructure:"cache"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	Server   ServerConfig   `mapstructure:"server"`
+	Storage  storage.Config `mapstructure:"storage"`
 }
 
 type AppConfig struct {
