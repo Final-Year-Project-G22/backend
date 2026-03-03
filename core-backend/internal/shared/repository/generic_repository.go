@@ -22,6 +22,9 @@ type GenericRepository[T any] interface {
 	// Update updates an entity
 	Update(ctx context.Context, entity *T) error
 
+	// UpdateByID updates an entity by ID with partial updates
+	UpdateByID(ctx context.Context, id uuid.UUID, updates map[string]interface{}) error
+
 	// Delete soft deletes an entity
 	Delete(ctx context.Context, id uuid.UUID) error
 
@@ -33,6 +36,12 @@ type GenericRepository[T any] interface {
 
 	// FindAllArchived retrieves all archived (soft deleted) entities with pagination
 	FindAllArchived(ctx context.Context, opts query.QueryOptions) PaginatedResult[T]
+
+	// First retrieves the first matching record (no pagination)
+	First(ctx context.Context, opts query.QueryOptions) (*T, error)
+
+	// Find retrieves all matching records without pagination
+	Find(ctx context.Context, opts query.QueryOptions) ([]*T, error)
 
 	// FindByIDs retrieves multiple entities by IDs
 	FindByIDs(ctx context.Context, ids []uuid.UUID) ([]*T, error)
