@@ -110,11 +110,6 @@ func (db *Database) Close() error {
 	return sqlDB.Close()
 }
 
-// WithTenant returns a new DB instance scoped to a tenant
-func (db *Database) WithTenant(tenantID string) *gorm.DB {
-	return db.Where("tenant_id = ?", tenantID)
-}
-
 // Transaction executes a function within a database transaction
 func (db *Database) Transaction(ctx context.Context, fn func(*gorm.DB) error) error {
 	return db.DB.WithContext(ctx).Transaction(fn)
