@@ -18,7 +18,8 @@ type User struct {
 	AccountId uuid.UUID `gorm:"type:uuid;not null;uniqueIndex"`
 	Account   Account   `gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
-	FirstName string `gorm:"type:varchar(255);not null"`
-	LastName  string `gorm:"type:varchar(255);not null"`
-	Tier      Tier   `gorm:"type:varchar(255);not null;default:'free'"`
+	FirstName string  `gorm:"type:varchar(255);not null"`
+	LastName  string  `gorm:"type:varchar(255);not null"`
+	ImageUrl  *string `gorm:"type:varchar(255)"`
+	Tier      Tier    `gorm:"type:varchar(255);not null;default:'free'"`
 }
