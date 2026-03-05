@@ -1,0 +1,12 @@
+app:
+  environment: "local"
+  debug: true
+
+logger:
+  level: "debug"
+  encoding: "console"
+  output_paths: ["stdout"]
+  error_output_paths: ["stderr"]
+
+cache:
+  enabled: false

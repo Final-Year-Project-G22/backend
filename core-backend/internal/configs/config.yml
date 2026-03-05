@@ -1,0 +1,21 @@
+app:
+  name: "server"
+  environment: "local"
+  version: "0.1.0"
+  port: 4000
+  debug: true
+
+database:
+  type: "postgres"
+  host: "localhost"
+  port: 5432
+  sslmode: "disable"
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: 30m
+
+server:
+  read_timeout: 10s
+  write_timeout: 10s
+  idle_timeout: 60s
+  shutdown_timeout: 5s
