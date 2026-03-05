@@ -8,11 +8,13 @@ import (
 type UserOauthIdentity struct {
 	model.BaseModel `gorm:"embedded"`
 
-	AccountId      uuid.UUID `gorm:"type:uuid;not null;index"`
-	Provider       string    `gorm:"type:varchar(255);not null;uniqueIndex:idx_provider_provider_user_id"`
-	ProviderUserId string    `gorm:"type:varchar(255);not null;uniqueIndex:idx_provider_provider_user_id"`
-	AccessToken    string    `gorm:"type:varchar(255);not null"`
-	RefreshToken   *string   `gorm:"type:varchar(255)"`
+	AccountId uuid.UUID `gorm:"type:uuid;not null;uniqueIndex"`
+	Account   Account   `gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+
+	Provider       string  `gorm:"type:varchar(255);not null;uniqueIndex:idx_provider_provider_user_id"`
+	ProviderUserId string  `gorm:"type:varchar(255);not null;uniqueIndex:idx_provider_provider_user_id"`
+	AccessToken    string  `gorm:"type:varchar(255);not null"`
+	RefreshToken   *string `gorm:"type:varchar(255)"`
 }
 
 func (UserOauthIdentity) TableName() string {

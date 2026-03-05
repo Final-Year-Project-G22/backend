@@ -5,20 +5,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type Tier string
-
-const (
-	TierFree    Tier = "free"
-	TierPremium Tier = "premium"
-)
-
-type User struct {
+type AccountRole struct {
 	model.BaseModel `gorm:"embedded"`
 
 	AccountId uuid.UUID `gorm:"type:uuid;not null;uniqueIndex"`
 	Account   Account   `gorm:"foreignKey:AccountId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 
-	FirstName string `gorm:"type:varchar(255);not null"`
-	LastName  string `gorm:"type:varchar(255);not null"`
-	Tier      Tier   `gorm:"type:varchar(255);not null;default:'free'"`
+	RoleId    uuid.UUID `gorm:"type:uuid;not null;index"`
+	CreatedBy uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_created_by_account_role_id"`
+}
+
+func (AccountRole) TableName() string {
+	return "account_roles"
 }
