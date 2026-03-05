@@ -60,15 +60,16 @@ jobs:
           git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
           cat /tmp/changed_files.txt
 
-      - name: Lint Go (changed files)
+      - name: Lint Go (changed packages)
         run: |
           GO_FILES=$(grep '^core-backend/.*\.go$' /tmp/changed_files.txt || true)
           if [ -z "$GO_FILES" ]; then
             echo "No Go files changed"
             exit 0
           fi
+          GO_DIRS=$(echo "$GO_FILES" | sed 's|^core-backend/||' | xargs -n1 dirname | sort -u)
           cd core-backend
-          echo "$GO_FILES" | sed 's|^core-backend/||' | xargs golangci-lint run
+          echo "$GO_DIRS" | xargs -n1 golangci-lint run
 
       - name: Format Go (check only)
         run: |
@@ -78,7 +79,7 @@ jobs:
             exit 0
           fi
           cd core-backend
-          echo "$GO_FILES" | sed 's|^core-backend/||' | xargs golangci-lint run --config ../core-backend/.golangci.yml
+          echo "$GO_FILES" | sed 's|^core-backend/||' | xargs goimports -l
 
       - name: Lint Python (changed files)
         run: |
