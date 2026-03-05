@@ -1,0 +1,117 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  lint-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.3"
+          cache: true
+          cache-dependency-path: core-backend/go.sum
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('ai-service/uv.lock') }}
+
+      - name: Install tooling
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
+          go install golang.org/x/tools/cmd/goimports@latest
+          uv pip install --system pre-commit ruff
+
+      - name: Show golangci-lint version and config
+        run: |
+          golangci-lint --version
+          cat core-backend/.golangci.yml
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Lint Go (changed files)
+        run: |
+          GO_FILES=$(grep '^core-backend/.*\.go$' /tmp/changed_files.txt || true)
+          if [ -z "$GO_FILES" ]; then
+            echo "No Go files changed"
+            exit 0
+          fi
+          cd core-backend
+          echo "$GO_FILES" | sed 's|^core-backend/||' | xargs golangci-lint run
+
+      - name: Format Go (check only)
+        run: |
+          GO_FILES=$(grep '^core-backend/.*\.go$' /tmp/changed_files.txt || true)
+          if [ -z "$GO_FILES" ]; then
+            echo "No Go files changed"
+            exit 0
+          fi
+          cd core-backend
+          echo "$GO_FILES" | sed 's|^core-backend/||' | xargs golangci-lint run --config ../core-backend/.golangci.yml
+
+      - name: Lint Python (changed files)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          cd ai-service
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff check
+
+      - name: Format Python (check only)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          cd ai-service
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff format --check
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.3"
+          cache: true
+          cache-dependency-path: core-backend/go.sum
+
+      - name: Run Go tests
+        run: cd core-backend && go test ./...

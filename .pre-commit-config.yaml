@@ -1,0 +1,46 @@
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  # Go (core-backend)
+  - repo: local
+    hooks:
+      - id: go-lint
+        name: Go Linting
+        entry: bash -c 'cd core-backend && golangci-lint run'
+        language: system
+        types: [go]
+        pass_filenames: false
+
+      - id: go-fmt
+        name: Go Formatting (goimports)
+        entry: bash -c 'cd core-backend && goimports -l -w .'
+        language: system
+        types: [go]
+        pass_filenames: false
+
+  # Python (ai-service)
+  - repo: local
+    hooks:
+      - id: python-ruff
+        name: Python Linting (ruff)
+        entry: bash -c 'cd ai-service && uv run ruff check .'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: python-format
+        name: Python Formatting (ruff)
+        entry: bash -c 'cd ai-service && uv run ruff format .'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  # Commit Message
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: Commit Message Linting
+        entry: npx commitlint --edit
+        language: system
+        stages: [commit-msg]

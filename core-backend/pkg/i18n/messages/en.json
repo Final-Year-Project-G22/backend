@@ -1,0 +1,34 @@
+{
+  "errors.validationError": "Validation failed",
+  "errors.notFound": "Not found",
+  "errors.unauthorized": "Unauthorized access",
+  "errors.forbidden": "Access forbidden",
+  "errors.conflict": "Resource conflict",
+  "errors.internalError": "Internal server error",
+  "errors.badRequest": "Bad request",
+  "errors.alreadyExists": "Resource already exists",
+  "errors.invalidInput": "Invalid input",
+
+  "errors.userNotFound": "User not found",
+  "errors.userAlreadyExists": "User already exists",
+  "errors.invalidCredentials": "Invalid email or password",
+  "errors.tokenExpired": "Token has expired",
+  "errors.tokenInvalid": "Invalid token",
+
+  "errors.roleNotFound": "Role not found",
+  "errors.permissionDenied": "Permission denied",
+
+  "errors.resourceNotFound": "{{resource}} not found",
+  "errors.resourceAlreadyExists": "{{resource}} already exists",
+
+  "errors.requiredField": "{{field}} is required",
+  "errors.invalidEmail": "Invalid email address",
+  "errors.invalidPassword": "Password must be at least 8 characters",
+  "errors.passwordMismatch": "Passwords do not match",
+
+  "errors.databaseError": "Database operation failed",
+  "errors.cacheError": "Cache operation failed",
+  "errors.networkError": "Network error occurred",
+
+  "errors.unknownError": "An unknown error occurred"
+}

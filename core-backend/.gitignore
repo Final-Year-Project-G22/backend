@@ -1,0 +1,17 @@
+.env.*
+config.yaml
+config.*.yaml
+/bin
+.idea
+/tmp
+bin/
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+*.log
