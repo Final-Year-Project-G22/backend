@@ -31,7 +31,12 @@ func Init(messagesPath string) error {
 		messagesPath = "pkg/i18n/messages"
 	}
 
-	files, err := os.ReadDir(messagesPath)
+	absMessagesPath, err := filepath.Abs(messagesPath)
+	if err != nil {
+		return fmt.Errorf("failed to resolve messages path: %w", err)
+	}
+
+	files, err := os.ReadDir(absMessagesPath)
 	if err != nil {
 		return fmt.Errorf("failed to read messages directory: %w", err)
 	}
@@ -42,7 +47,8 @@ func Init(messagesPath string) error {
 		}
 
 		locale := strings.TrimSuffix(file.Name(), ".json")
-		data, err := os.ReadFile(filepath.Join(messagesPath, file.Name()))
+		// #nosec G304 -- file names come from a trusted directory listing.
+		data, err := os.ReadFile(filepath.Join(absMessagesPath, file.Name()))
 		if err != nil {
 			return fmt.Errorf("failed to read message file %s: %w", file.Name(), err)
 		}

@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"time"
 
@@ -128,9 +127,17 @@ func (m *MinIO) Download(ctx context.Context, key string) ([]byte, error) {
 		}
 		return nil, fmt.Errorf("failed to get object: %w", err)
 	}
-	defer obj.Close()
 
-	return io.ReadAll(obj)
+	data, err := io.ReadAll(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := obj.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close object: %w", err)
+	}
+
+	return data, nil
 }
 
 // Delete removes a file from MinIO.
@@ -251,23 +258,4 @@ func (m *MinIO) Exists(ctx context.Context, key string) (bool, error) {
 // GetBucket returns the bucket name.
 func (m *MinIO) GetBucket() string {
 	return m.bucket
-}
-
-// calculatePageOffset calculates the offset for pagination.
-func calculatePageOffset(page, pageSize int) int64 {
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 {
-		pageSize = 20
-	}
-	return int64((page - 1) * pageSize)
-}
-
-// calculateTotalPages calculates the total number of pages.
-func calculateTotalPages(total int64, pageSize int) int {
-	if pageSize < 1 {
-		pageSize = 20
-	}
-	return int(math.Ceil(float64(total) / float64(pageSize)))
 }

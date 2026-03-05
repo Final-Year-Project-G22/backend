@@ -22,6 +22,13 @@ lint:
 fmt:
 	go fmt ./...
 
+# Format with goimports
+fmt-imports:
+	goimports -l -w .
+
+# Format + Lint
+check: fmt-imports lint
+
 # Clean build artifacts
 clean:
 	rm -rf ./tmp
