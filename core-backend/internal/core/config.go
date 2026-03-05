@@ -47,7 +47,7 @@ func NewConfig() (*Config, error) {
 
 	// 4. Set defaults
 	v.SetDefault("app.environment", "development")
-	v.SetDefault("app.port", 8080)
+	v.SetDefault("app.port", 4000)
 	v.SetDefault("logger.level", "info")
 	v.SetDefault("database.sslmode", "disable")
 
