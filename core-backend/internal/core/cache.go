@@ -92,7 +92,7 @@ func NewCache(cfg *Config, log Logger) (Cache, error) {
 	defer cancel()
 
 	if err := client.Ping(ctx).Err(); err != nil {
-		log.Fatal("Failed to connect to Redis cache", Error(err))
+		log.Error("Failed to connect to Redis cache", Error(err))
 		return nil, fmt.Errorf("failed to connect to Redis cache: %w", err)
 	}
 

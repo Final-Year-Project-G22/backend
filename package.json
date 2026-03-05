@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky && pre-commit install && pre-commit install --hook-type commit-msg"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",
     "@commitlint/config-conventional": "^20.4.2",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "pre-commit": "^4.1.0"
   }
 }

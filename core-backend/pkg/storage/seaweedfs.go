@@ -89,12 +89,11 @@ func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, re
 		return nil, fmt.Errorf("failed to get assign URL: %w", err)
 	}
 
-	uploadURL := assignURL.URL
 	if assignURL.Fid == "" {
-		uploadURL = s.volumeURL + "/" + assignURL.Fid
-	} else {
-		uploadURL = s.volumeURL + "/" + assignURL.Fid
+		return nil, fmt.Errorf("missing file id from assign response")
 	}
+
+	uploadURL := s.volumeURL + "/" + assignURL.Fid
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadURL, reader)
 	if err != nil {
@@ -115,7 +114,7 @@ func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, re
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -151,7 +150,7 @@ func (s *SeaweedFS) Download(ctx context.Context, key string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to download file: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, os.ErrNotExist
@@ -177,7 +176,7 @@ func (s *SeaweedFS) Delete(ctx context.Context, key string) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete file: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("delete failed with status %d", resp.StatusCode)
@@ -199,7 +198,7 @@ func (s *SeaweedFS) GetInfo(ctx context.Context, key string) (*FileInfo, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file info: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, os.ErrNotExist
@@ -247,7 +246,7 @@ func (s *SeaweedFS) GetPresignedURL(ctx context.Context, key string, expiry time
 	if err != nil {
 		return "", fmt.Errorf("failed to get presigned URL: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("presign failed with status %d", resp.StatusCode)
@@ -289,7 +288,7 @@ func (s *SeaweedFS) List(ctx context.Context, opts ListOptions) ([]FileInfo, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to list files: %w", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("list failed with status %d", resp.StatusCode)
@@ -348,7 +347,7 @@ func (s *SeaweedFS) getAssignURL(ctx context.Context) (*SeaweedAssignResponse, e
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("assign failed with status %d", resp.StatusCode)
@@ -403,6 +402,15 @@ func formatExpiry(d time.Duration) string {
 		return "30m"
 	}
 	return fmt.Sprintf("%dh", hours)
+}
+
+func closeResponseBody(body io.ReadCloser) {
+	if body == nil {
+		return
+	}
+	if err := body.Close(); err != nil {
+		fmt.Printf("failed to close response body: %v\n", err)
+	}
 }
 
 // Response types for SeaweedFS API.

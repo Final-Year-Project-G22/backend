@@ -21,7 +21,7 @@ func (e *AppError) Error() string {
 	if e.Err != nil {
 		return fmt.Sprintf("%s: %v", e.Code, e.Err)
 	}
-	return fmt.Sprintf("%s", e.Code)
+	return string(e.Code)
 }
 
 // Unwrap returns the underlying error for error wrapping.
