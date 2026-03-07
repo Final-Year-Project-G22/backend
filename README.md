@@ -34,10 +34,28 @@ Install in order if not already installed:
    brew install uv
    ```
 
-4. **Docker & Docker Compose**
+4. **Node.js LTS**
+   - Download from: https://nodejs.org/
+   - Or on Linux/macOS via nvm:
+     ```bash
+     nvm install --lts
+     nvm use --lts
+     ```
+
+5. **pnpm (Node Package Manager)**
+   ```bash
+   # Option 1: Corepack (recommended)
+   corepack enable
+   corepack prepare pnpm@latest --activate
+
+   # Option 2: npm global install
+   npm install -g pnpm
+   ```
+
+6. **Docker & Docker Compose**
    - Download from: https://docs.docker.com/get-docker/
 
-5. **Atlas CLI** (for migrations)
+7. **Atlas CLI** (for migrations)
    ```bash
    curl -sSf https://atlasgo.sh | sh
    ```
@@ -51,11 +69,17 @@ make setup
 ```
 
 This will:
-- Check for Go, Python, uv installation
-- Install pre-commit
-- Install Go tools (air, goimports, golangci-lint)
-- Install Python tools (ruff)
+- Check for Go, Python, uv, and Node.js installation
+- Ensure pnpm is installed (auto-installs pnpm if missing)
+- Install pre-commit with `uv pip install --system pre-commit`
+- Install Node.js dependencies with `pnpm install`
+- Install Go tools (air, goimports, golangci-lint v1.64.2 via `go install`)
+- Install Python tools with `uv pip install --system ruff`
 - Install pre-commit hooks
+
+If your Python installation is not writable, run `make setup` with a user that can install system Python packages.
+
+Note: Git hooks are installed by `make setup` through the Python `pre-commit` CLI, not through an npm `prepare` script.
 
 ### 2. Start Infrastructure
 
@@ -131,7 +155,7 @@ make fmt-all
 
 | Service | Language | Port | Description |
 |---------|----------|------|-------------|
-| core-backend | Go | 8080 | Main API |
+| core-backend | Go | 4000 | Main API |
 | ai-service | Python | 3000 | AI processing |
 | PostgreSQL | - | 5432 | Database |
 | Redis | - | 6379 | Cache |

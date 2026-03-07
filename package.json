@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "prepare": "pre-commit install && pre-commit install --hook-type commit-msg"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Final-Year-Project-G22/backend.git"
@@ -20,7 +18,6 @@
   "homepage": "https://github.com/Final-Year-Project-G22/backend#readme",
   "devDependencies": {
     "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
-    "pre-commit": "^4.1.0"
+    "@commitlint/config-conventional": "^20.4.2"
   }
 }

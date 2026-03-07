@@ -23,20 +23,36 @@ install-uv:
 	curl -LsSf https://astral.sh/uv/install.sh | sh
 	@echo "uv installed. Restart shell or source profile."
 
+# Install pnpm (Node package manager)
+install-pnpm:
+	@echo "Installing pnpm..."
+	@if command -v corepack >/dev/null 2>&1; then \
+		corepack enable && corepack prepare pnpm@latest --activate; \
+	elif command -v npm >/dev/null 2>&1; then \
+		npm install -g pnpm; \
+	else \
+		echo "Node.js/npm not found. Install Node.js LTS first."; \
+		exit 1; \
+	fi
+	@echo "pnpm installed."
+
 # ==============================================================================
 # Setup (Install all dev tools)
 # ==============================================================================
 
 setup: check-prerequisites
 	@echo "Setting up development environment..."
-	@echo "Installing pre-commit..."
-	uv pip install pre-commit
+	@$(MAKE) ensure-pnpm
+	@echo "Installing pre-commit (system Python)..."
+	uv pip install --system pre-commit
+	@echo "Installing Node.js dependencies (pnpm)..."
+	pnpm install
 	@echo "Installing Go tools..."
-	cd core-backend && go install github.com/cosmtrek/air@latest
+	cd core-backend && go install github.com/air-verse/air@latest
 	cd core-backend && go install golang.org/x/tools/cmd/goimports@latest
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin
-	@echo "Installing Python tools..."
-	cd ai-service && uv pip install ruff
+	cd core-backend && go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
+	@echo "Installing Python tools (system Python)..."
+	uv pip install --system ruff
 	@echo "Installing pre-commit hooks..."
 	pre-commit install
 	pre-commit install --hook-type commit-msg
@@ -48,7 +64,12 @@ check-prerequisites:
 	@which go >/dev/null 2>&1 || (echo "Go not found. Run: make install-go" && exit 1)
 	@which python3 >/dev/null 2>&1 || (echo "Python not found. Run: make install-python" && exit 1)
 	@which uv >/dev/null 2>&1 || (echo "uv not found. Run: make install-uv" && exit 1)
+	@which node >/dev/null 2>&1 || (echo "Node.js not found. Install Node.js LTS first." && exit 1)
 	@echo "All prerequisites satisfied."
+
+# Ensure pnpm is installed before setup
+ensure-pnpm:
+	@which pnpm >/dev/null 2>&1 || $(MAKE) install-pnpm
 
 # ==============================================================================
 # Linting & Formatting
