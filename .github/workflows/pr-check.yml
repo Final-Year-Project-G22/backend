@@ -57,7 +57,7 @@ jobs:
         id: diff
         run: |
           git fetch origin ${{ github.base_ref }}
-          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
           cat /tmp/changed_files.txt
 
       - name: Lint Go (changed packages)
@@ -67,9 +67,12 @@ jobs:
             echo "No Go files changed"
             exit 0
           fi
-          GO_DIRS=$(echo "$GO_FILES" | sed 's|^core-backend/||' | xargs -n1 dirname | sort -u)
           cd core-backend
-          echo "$GO_DIRS" | xargs -n1 golangci-lint run
+          printf '%s\n' "$GO_FILES" | sed 's|^core-backend/||' | xargs -n1 dirname | sort -u | while read -r dir; do
+            if [ -d "$dir" ]; then
+              golangci-lint run "$dir"
+            fi
+          done
 
       - name: Format Go (check only)
         run: |
