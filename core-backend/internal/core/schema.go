@@ -121,7 +121,7 @@ func (sm *SchemaManager) LoadGORMSchema(writer io.Writer, cfg *Config, db *Datab
 		return fmt.Errorf("failed to convert schema to Atlas format: %w", err)
 	}
 
-	stmts = fmt.Sprintf("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";\n%s", stmts)
+	stmts = fmt.Sprintf("CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";\n%s", stmts)
 	_, err = writer.Write([]byte(stmts))
 	if err != nil {
 		return fmt.Errorf("failed to write schema to file: %w", err)

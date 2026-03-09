@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"os"
 
 	"go.uber.org/fx"
 )
@@ -36,6 +37,11 @@ func registerLifecycleHooks(
 			// Run Health checks
 			if err := db.Health(ctx); err != nil {
 				return err
+			}
+			if os.Getenv("SKIP_AUTO_MIGRATIONS") == "true" {
+				log.Info("Skipping automatic migrations")
+				log.Info("Core Module started successfully")
+				return nil
 			}
 			// Run Migrations
 			log.Info("Running migrations")
