@@ -1,0 +1,18 @@
+package repository
+
+import (
+	"context"
+
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	"github.com/google/uuid"
+)
+
+type AccountRepository interface {
+	sharedrepo.GenericRepository[entity.Account]
+
+	GetByEmailNormalized(ctx context.Context, email string) (*entity.Account, error)
+	ListByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error)
+	ExistsByEmailNormalized(ctx context.Context, email string) (bool, error)
+	UpdateStatus(ctx context.Context, id uuid.UUID, status entity.AccountStatus) error
+}
