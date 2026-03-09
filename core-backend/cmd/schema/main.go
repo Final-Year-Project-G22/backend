@@ -3,19 +3,27 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules"
+	appmodules "github.com/Final-Year-Project-G22/backend/core/internal/modules"
 	"go.uber.org/fx"
 )
 
 func main() {
+	action := flag.String("action", "", "Action: list, generate, apply, status")
+	name := flag.String("name", "", "Migration name (for generate)")
+	moduleFilter := flag.String("modules", "", "Comma-separated module names (empty = all)")
+	flag.Parse()
+
+	_ = os.Setenv("SKIP_AUTO_MIGRATIONS", "true")
+
 	var migrator *core.Migrator
 	var logger core.Logger
 
 	app := fx.New(
 		core.Module,
-		modules.Modules,
+		appmodules.Modules,
 		fx.Populate(&migrator, &logger),
 		fx.NopLogger,
 	)
@@ -30,11 +38,6 @@ func main() {
 		}
 	}()
 
-	action := flag.String("action", "", "Action: list, generate, apply, status")
-	name := flag.String("name", "", "Migration name (for generate)")
-	modules := flag.String("modules", "", "Comma-separated module names (empty = all)")
-	flag.Parse()
-
 	switch *action {
 	case "list":
 		migrator.ListModules()
@@ -42,7 +45,7 @@ func main() {
 		if *name == "" {
 			logger.Fatal("Migration name is required for generate action ")
 		}
-		err := migrator.GenerateMigration(*name, *modules)
+		err := migrator.GenerateMigration(*name, *moduleFilter)
 		if err != nil {
 			logger.Fatal(err.Error())
 			panic(err)
