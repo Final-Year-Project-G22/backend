@@ -1,0 +1,100 @@
+package repository
+
+import (
+	"context"
+	"strings"
+
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
+	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type accountRepository struct {
+	sharedrepo.GenericRepository[entity.Account]
+	db     *core.Database
+	logger core.Logger
+}
+
+// NewAccountRepository creates a new AccountRepository implementation.
+func NewAccountRepository(db *core.Database, logger core.Logger) repository.AccountRepository {
+	base := sharedrepo.NewBaseRepository[entity.Account](db, logger)
+	return &accountRepository{
+		GenericRepository: base,
+		db:                db,
+		logger:            logger,
+	}
+}
+
+func (r *accountRepository) GetByEmailNormalized(ctx context.Context, email string) (*entity.Account, error) {
+	var account entity.Account
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+
+	err := r.db.WithContext(ctx).
+		Where("email_normalized = ?", normalizedEmail).
+		First(&account).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, iamerror.ErrAccountNotFound
+		}
+		r.logger.Error("Failed to get account by email", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return &account, nil
+}
+
+func (r *accountRepository) ListByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error) {
+	var accounts []*entity.Account
+
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Find(&accounts).Error
+
+	if err != nil {
+		r.logger.Error("Failed to list accounts by user ID", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return accounts, nil
+}
+
+func (r *accountRepository) ExistsByEmailNormalized(ctx context.Context, email string) (bool, error) {
+	var count int64
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+
+	err := r.db.WithContext(ctx).
+		Model(&entity.Account{}).
+		Where("email_normalized = ?", normalizedEmail).
+		Count(&count).Error
+
+	if err != nil {
+		r.logger.Error("Failed to check account existence by email", core.Error(err))
+		return false, errors.InternalError("errors.databaseError", err)
+	}
+
+	return count > 0, nil
+}
+
+func (r *accountRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status entity.AccountStatus) error {
+	result := r.db.WithContext(ctx).
+		Model(&entity.Account{}).
+		Where("id = ?", id).
+		Update("status", status)
+
+	if result.Error != nil {
+		r.logger.Error("Failed to update account status", core.Error(result.Error))
+		return errors.InternalError("errors.databaseError", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return iamerror.ErrAccountNotFound
+	}
+
+	return nil
+}
