@@ -2,8 +2,10 @@ package core
 
 import (
 	"context"
+	"net/http"
 	"os"
 
+	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
 
@@ -15,8 +17,13 @@ var Module = fx.Module("core",
 		NewSchemaManager,
 		NewMigrator,
 		NewCache,
+		NewGinEngine,
+		NewHTTPServer,
+		NewHumaAPI,
 	),
 	fx.Invoke(registerLifecycleHooks),
+	// Ensure HTTP server and Huma API are instantiated by depending on them
+	fx.Invoke(func(*http.Server, huma.API) {}),
 )
 
 func registerLifecycleHooks(

@@ -15,6 +15,7 @@ type Config struct {
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	Server   ServerConfig   `mapstructure:"server"`
 	Storage  storage.Config `mapstructure:"storage"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 }
 
 type AppConfig struct {
@@ -59,6 +60,12 @@ type ServerConfig struct {
 	WriteTimeout    time.Duration `mapstructure:"write_timeout"    validate:"gt=0"`
 	IdleTimeout     time.Duration `mapstructure:"idle_timeout"     validate:"gt=0"`
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" validate:"gt=0"`
+}
+
+type JWTConfig struct {
+	Secret          string        `mapstructure:"secret"            validate:"required,min=32"`
+	AccessTokenTTL  time.Duration `mapstructure:"access_token_ttl"  validate:"required,gt=0"`
+	RefreshTokenTTL time.Duration `mapstructure:"refresh_token_ttl" validate:"required,gt=0"`
 }
 
 type Logger interface {
