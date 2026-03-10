@@ -1,0 +1,16 @@
+app:
+  environment: "development"
+  debug: true
+
+logger:
+  level: "debug"
+  encoding: "console"
+  output_paths: ["stdout"]
+  error_output_paths: ["stderr"]
+
+cache:
+  enabled: false
+
+jwt:
+  access_token_ttl: 30m
+  refresh_token_ttl: 336h

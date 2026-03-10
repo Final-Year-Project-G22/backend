@@ -45,6 +45,12 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("error binding env database.name %w", err)
 	}
 
+	// Bind JWT secret from environment variable
+	err = v.BindEnv("jwt.secret", "JWT_SECRET")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env jwt.secret: %w", err)
+	}
+
 	// 4. Set defaults
 	v.SetDefault("app.environment", "development")
 	v.SetDefault("app.port", 4000)
