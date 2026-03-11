@@ -30,10 +30,38 @@ func NewSessionRepository(db *core.Database, logger core.Logger) repository.Sess
 	}
 }
 
+// getDB returns the appropriate *gorm.DB for the context (tx-aware).
+func (r *sessionRepository) getDB(ctx context.Context) *gorm.DB {
+	if tx, ok := core.TxFromContext(ctx); ok {
+		return tx
+	}
+	return r.db.WithContext(ctx)
+}
+
+func (r *sessionRepository) GetActiveByID(ctx context.Context, id uuid.UUID) (*entity.Session, error) {
+	var session entity.Session
+
+	err := r.getDB(ctx).
+		Where("id = ?", id).
+		Where("revoked_at IS NULL").
+		Where("expires_at > ?", time.Now()).
+		First(&session).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, iamerror.ErrSessionNotFound
+		}
+		r.logger.Error("Failed to get active session by ID", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return &session, nil
+}
+
 func (r *sessionRepository) GetByRefreshTokenHash(ctx context.Context, hash string) (*entity.Session, error) {
 	var session entity.Session
 
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Where("refresh_token_hash = ?", hash).
 		Where("revoked_at IS NULL").
 		Where("expires_at > ?", time.Now()).
@@ -53,7 +81,7 @@ func (r *sessionRepository) GetByRefreshTokenHash(ctx context.Context, hash stri
 func (r *sessionRepository) ListActiveByAccountID(ctx context.Context, accountID uuid.UUID) ([]*entity.Session, error) {
 	var sessions []*entity.Session
 
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Where("account_id = ?", accountID).
 		Where("revoked_at IS NULL").
 		Where("expires_at > ?", time.Now()).
@@ -68,7 +96,7 @@ func (r *sessionRepository) ListActiveByAccountID(ctx context.Context, accountID
 }
 
 func (r *sessionRepository) RevokeByID(ctx context.Context, id uuid.UUID, revokedAt time.Time) error {
-	result := r.db.WithContext(ctx).
+	result := r.getDB(ctx).
 		Model(&entity.Session{}).
 		Where("id = ?", id).
 		Where("revoked_at IS NULL").
@@ -87,7 +115,7 @@ func (r *sessionRepository) RevokeByID(ctx context.Context, id uuid.UUID, revoke
 }
 
 func (r *sessionRepository) RevokeAllByAccountID(ctx context.Context, accountID uuid.UUID, revokedAt time.Time) error {
-	result := r.db.WithContext(ctx).
+	result := r.getDB(ctx).
 		Model(&entity.Session{}).
 		Where("account_id = ?", accountID).
 		Where("revoked_at IS NULL").
@@ -102,7 +130,7 @@ func (r *sessionRepository) RevokeAllByAccountID(ctx context.Context, accountID 
 }
 
 func (r *sessionRepository) DeleteExpired(ctx context.Context, now time.Time) error {
-	result := r.db.WithContext(ctx).
+	result := r.getDB(ctx).
 		Where("expires_at < ?", now).
 		Delete(&entity.Session{})
 

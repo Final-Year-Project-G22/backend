@@ -22,8 +22,8 @@ func NewGinEngine(cfg *Config, log Logger) *gin.Engine {
 	router := gin.New()
 
 	// Apply standard middleware stack
-	router.Use(middleware.Recovery())
-	router.Use(middleware.RequestLogger())
+	router.Use(middleware.Recovery(log))
+	router.Use(middleware.RequestLogger(log))
 	router.Use(middleware.CORSMiddleware("*"))
 	router.Use(middleware.ErrorHandler())
 
