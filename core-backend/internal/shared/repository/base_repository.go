@@ -35,8 +35,18 @@ func getEntityType(entity any) string {
 	return t.Name()
 }
 
+// getDB returns the appropriate *gorm.DB for the context.
+// If a transaction is active in the context, it returns that tx.
+// Otherwise, it returns the default DB with context applied.
+func (r *BaseRepository[T]) getDB(ctx context.Context) *gorm.DB {
+	if tx, ok := core.TxFromContext(ctx); ok {
+		return tx
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *BaseRepository[T]) Create(ctx context.Context, entity *T) error {
-	if err := r.db.WithContext(ctx).Create(entity).Error; err != nil {
+	if err := r.getDB(ctx).Create(entity).Error; err != nil {
 		r.logger.Error("Failed to create entity", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
@@ -47,7 +57,7 @@ func (r *BaseRepository[T]) BulkCreate(ctx context.Context, entities []*T) error
 	if len(entities) == 0 {
 		return nil
 	}
-	if err := r.db.WithContext(ctx).CreateInBatches(entities, 100).Error; err != nil {
+	if err := r.getDB(ctx).CreateInBatches(entities, 100).Error; err != nil {
 		r.logger.Error("Failed to bulk create entities", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
@@ -56,7 +66,7 @@ func (r *BaseRepository[T]) BulkCreate(ctx context.Context, entities []*T) error
 
 func (r *BaseRepository[T]) GetByID(ctx context.Context, id uuid.UUID) (*T, error) {
 	var entity T
-	if err := r.db.WithContext(ctx).First(&entity, "id = ?", id).Error; err != nil {
+	if err := r.getDB(ctx).First(&entity, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.NotFoundError(r.entityType, id)
 		}
@@ -67,7 +77,7 @@ func (r *BaseRepository[T]) GetByID(ctx context.Context, id uuid.UUID) (*T, erro
 }
 
 func (r *BaseRepository[T]) Update(ctx context.Context, entity *T) error {
-	if err := r.db.WithContext(ctx).Save(entity).Error; err != nil {
+	if err := r.getDB(ctx).Save(entity).Error; err != nil {
 		r.logger.Error("Failed to update entity", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
@@ -78,7 +88,7 @@ func (r *BaseRepository[T]) UpdateByID(ctx context.Context, id uuid.UUID, update
 	if len(updates) == 0 {
 		return nil
 	}
-	if err := r.db.WithContext(ctx).Model(new(T)).Where("id = ?", id).Updates(updates).Error; err != nil {
+	if err := r.getDB(ctx).Model(new(T)).Where("id = ?", id).Updates(updates).Error; err != nil {
 		r.logger.Error("Failed to update entity by ID", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
@@ -86,7 +96,7 @@ func (r *BaseRepository[T]) UpdateByID(ctx context.Context, id uuid.UUID, update
 }
 
 func (r *BaseRepository[T]) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := r.db.WithContext(ctx).Delete(new(T), "id = ?", id).Error; err != nil {
+	if err := r.getDB(ctx).Delete(new(T), "id = ?", id).Error; err != nil {
 		r.logger.Error("Failed to delete entity", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
@@ -94,7 +104,7 @@ func (r *BaseRepository[T]) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r *BaseRepository[T]) HardDelete(ctx context.Context, id uuid.UUID) error {
-	if err := r.db.WithContext(ctx).Unscoped().Delete(new(T), "id = ?", id).Error; err != nil {
+	if err := r.getDB(ctx).Unscoped().Delete(new(T), "id = ?", id).Error; err != nil {
 		r.logger.Error("Failed to hard delete entity", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
@@ -112,7 +122,7 @@ func (r *BaseRepository[T]) FindAllArchived(ctx context.Context, opts query.Quer
 func (r *BaseRepository[T]) First(ctx context.Context, opts query.QueryOptions) (*T, error) {
 	builder := query.NewQueryBuilder(r.entityType)
 
-	db := builder.Build(r.db.WithContext(ctx), opts)
+	db := builder.Build(r.getDB(ctx), opts)
 
 	var entity T
 	if err := db.First(&entity).Error; err != nil {
@@ -128,7 +138,7 @@ func (r *BaseRepository[T]) First(ctx context.Context, opts query.QueryOptions) 
 func (r *BaseRepository[T]) Find(ctx context.Context, opts query.QueryOptions) ([]*T, error) {
 	builder := query.NewQueryBuilder(r.entityType)
 
-	db := builder.Build(r.db.WithContext(ctx), opts)
+	db := builder.Build(r.getDB(ctx), opts)
 
 	var entities []*T
 	if err := db.Find(&entities).Error; err != nil {
@@ -142,6 +152,7 @@ func (r *BaseRepository[T]) findAll(ctx context.Context, opts query.QueryOptions
 	var entities []*T
 
 	builder := query.NewQueryBuilder(r.entityType)
+	db := r.getDB(ctx)
 
 	// Apply pagination defaults
 	if opts.Page < 1 {
@@ -155,17 +166,17 @@ func (r *BaseRepository[T]) findAll(ctx context.Context, opts query.QueryOptions
 	}
 
 	// Count total records
-	total := builder.Count(r.db.WithContext(ctx).Session(&gorm.Session{}), opts, archived)
+	total := builder.Count(db.Session(&gorm.Session{}), opts, archived)
 
 	// Build and execute query
-	var db *gorm.DB
+	var queryDB *gorm.DB
 	if archived {
-		db = builder.BuildArchived(r.db.WithContext(ctx), opts)
+		queryDB = builder.BuildArchived(db, opts)
 	} else {
-		db = builder.Build(r.db.WithContext(ctx), opts)
+		queryDB = builder.Build(db, opts)
 	}
 
-	if err := db.Find(&entities).Error; err != nil {
+	if err := queryDB.Find(&entities).Error; err != nil {
 		r.logger.Error("Failed to find entities", core.Error(err))
 		return PaginatedResult[T]{
 			Data:       nil,
@@ -196,7 +207,7 @@ func (r *BaseRepository[T]) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]*
 		return []*T{}, nil
 	}
 	var entities []*T
-	if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&entities).Error; err != nil {
+	if err := r.getDB(ctx).Where("id IN ?", ids).Find(&entities).Error; err != nil {
 		r.logger.Error("Failed to find entities by IDs", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
@@ -205,7 +216,7 @@ func (r *BaseRepository[T]) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]*
 
 func (r *BaseRepository[T]) Count(ctx context.Context) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(new(T)).Count(&count).Error; err != nil {
+	if err := r.getDB(ctx).Model(new(T)).Count(&count).Error; err != nil {
 		r.logger.Error("Failed to count entities", core.Error(err))
 		return 0, errors.InternalError("errors.databaseError", err)
 	}
@@ -214,7 +225,7 @@ func (r *BaseRepository[T]) Count(ctx context.Context) (int64, error) {
 
 func (r *BaseRepository[T]) Exists(ctx context.Context, id uuid.UUID) (bool, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(new(T)).Where("id = ?", id).Count(&count).Error; err != nil {
+	if err := r.getDB(ctx).Model(new(T)).Where("id = ?", id).Count(&count).Error; err != nil {
 		r.logger.Error("Failed to check entity existence", core.Error(err))
 		return false, errors.InternalError("errors.databaseError", err)
 	}

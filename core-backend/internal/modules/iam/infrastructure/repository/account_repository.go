@@ -30,11 +30,19 @@ func NewAccountRepository(db *core.Database, logger core.Logger) repository.Acco
 	}
 }
 
+// getDB returns the appropriate *gorm.DB for the context (tx-aware).
+func (r *accountRepository) getDB(ctx context.Context) *gorm.DB {
+	if tx, ok := core.TxFromContext(ctx); ok {
+		return tx
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *accountRepository) GetByEmailNormalized(ctx context.Context, email string) (*entity.Account, error) {
 	var account entity.Account
 	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
 
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Where("email_normalized = ?", normalizedEmail).
 		First(&account).Error
 
@@ -52,7 +60,7 @@ func (r *accountRepository) GetByEmailNormalized(ctx context.Context, email stri
 func (r *accountRepository) ListByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error) {
 	var accounts []*entity.Account
 
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Where("user_id = ?", userID).
 		Find(&accounts).Error
 
@@ -68,7 +76,7 @@ func (r *accountRepository) ExistsByEmailNormalized(ctx context.Context, email s
 	var count int64
 	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
 
-	err := r.db.WithContext(ctx).
+	err := r.getDB(ctx).
 		Model(&entity.Account{}).
 		Where("email_normalized = ?", normalizedEmail).
 		Count(&count).Error
@@ -82,7 +90,7 @@ func (r *accountRepository) ExistsByEmailNormalized(ctx context.Context, email s
 }
 
 func (r *accountRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status entity.AccountStatus) error {
-	result := r.db.WithContext(ctx).
+	result := r.getDB(ctx).
 		Model(&entity.Account{}).
 		Where("id = ?", id).
 		Update("status", status)
