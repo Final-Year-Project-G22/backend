@@ -148,7 +148,6 @@ func (m *Migrator) CheckStatus() {
 func (m *Migrator) ApplyMigrations() error {
 	m.log.Info("Starting migration process...")
 	m.log.Info("Migration directory: file://migrations")
-	m.log.Debug("Target database", String("url", m.config.GetDatabaseUrl()))
 
 	// nolint:gosec // G204: Arguments are derived from validated application configuration, not untrusted user input.
 	cmd := exec.Command("atlas", "migrate", "apply",

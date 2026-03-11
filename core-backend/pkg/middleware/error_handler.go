@@ -4,15 +4,25 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"runtime/debug"
+	"time"
 
 	appErrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/response"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
+
+// Logger is a minimal interface for structured logging.
+// This avoids importing internal/core which would create an import cycle.
+// core.Logger satisfies this interface via structural typing.
+type Logger interface {
+	Info(msg string, fields ...zap.Field)
+	Warn(msg string, fields ...zap.Field)
+	Error(msg string, fields ...zap.Field)
+}
 
 const (
 	// PanicRecoveryKey is the context key for panic information.
@@ -45,13 +55,19 @@ func ErrorHandler() gin.HandlerFunc {
 }
 
 // Recovery returns a Gin middleware that recovers from panics.
-// This is a enhanced version of gin.Recovery() with i18n support.
-func Recovery() gin.HandlerFunc {
+// This is an enhanced version of gin.Recovery() with i18n support and structured logging.
+func Recovery(logger Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				stack := string(debug.Stack())
-				log.Printf("[PANIC] %v\n%s", err, stack)
+				logger.Error("panic recovered",
+					zap.Any("error", err),
+					zap.String("method", c.Request.Method),
+					zap.String("path", c.Request.URL.Path),
+					zap.String("ip", c.ClientIP()),
+					zap.String("stack", stack),
+				)
 
 				c.Set(PanicRecoveryKey, err)
 				c.Abort()
@@ -118,16 +134,36 @@ func getLocale(c *gin.Context) string {
 	return locale
 }
 
-// RequestLogger returns a middleware that logs HTTP requests.
-// Enhanced version with i18n-aware error logging.
-func RequestLogger() gin.HandlerFunc {
+// RequestLogger returns a middleware that logs every HTTP request with structured logging.
+func RequestLogger(logger Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		start := time.Now()
+
+		// Process request
 		c.Next()
 
-		// Log errors
+		// Calculate latency
+		latency := time.Since(start)
+
+		// Log every request
+		logger.Info("request",
+			zap.String("method", c.Request.Method),
+			zap.String("path", c.Request.URL.Path),
+			zap.Int("status", c.Writer.Status()),
+			zap.Duration("latency", latency),
+			zap.String("ip", c.ClientIP()),
+			zap.String("user_agent", c.Request.UserAgent()),
+		)
+
+		// Additionally log errors at warn level
 		if len(c.Errors) > 0 {
-			err := c.Errors.Last()
-			log.Printf("[ERROR] %s - %s - %v", c.Request.Method, c.Request.URL.Path, err.Err)
+			for _, e := range c.Errors {
+				logger.Warn("request error",
+					zap.String("method", c.Request.Method),
+					zap.String("path", c.Request.URL.Path),
+					zap.Error(e.Err),
+				)
+			}
 		}
 	}
 }

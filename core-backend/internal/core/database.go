@@ -45,6 +45,7 @@ func NewDatabase(cfg *Config, log Logger) (*Database, error) {
 			LogLevel:                  getGormLogLevel(cfg.Logger.Level),
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  cfg.IsDevelopment(),
+			ParameterizedQueries:      true,
 		},
 	)
 
@@ -110,9 +111,32 @@ func (db *Database) Close() error {
 	return sqlDB.Close()
 }
 
-// Transaction executes a function within a database transaction
+// Transaction executes a function within a database transaction (internal use).
 func (db *Database) Transaction(ctx context.Context, fn func(*gorm.DB) error) error {
 	return db.DB.WithContext(ctx).Transaction(fn)
+}
+
+// WithinTransaction implements repository.Transactor for cross-entity atomic operations.
+// The transaction is passed via context - repositories automatically detect and use it.
+func (db *Database) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
+	return db.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txCtx := contextWithTx(ctx, tx)
+		return fn(txCtx)
+	})
+}
+
+// txKey is the context key for carrying a database transaction.
+type txKey struct{}
+
+// contextWithTx returns a new context with the transaction attached.
+func contextWithTx(ctx context.Context, tx *gorm.DB) context.Context {
+	return context.WithValue(ctx, txKey{}, tx)
+}
+
+// TxFromContext extracts the transaction from context if present.
+func TxFromContext(ctx context.Context) (*gorm.DB, bool) {
+	tx, ok := ctx.Value(txKey{}).(*gorm.DB)
+	return tx, ok
 }
 
 type gormLoggerAdapter struct {

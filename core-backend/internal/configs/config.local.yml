@@ -10,3 +10,7 @@ logger:
 
 cache:
   enabled: false
+
+jwt:
+  access_token_ttl: 1h
+  refresh_token_ttl: 720h

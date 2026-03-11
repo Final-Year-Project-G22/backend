@@ -1,0 +1,408 @@
+package service
+
+import (
+	"context"
+	"strings"
+	"time"
+
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
+	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type AuthService interface {
+	Register(ctx context.Context, input RegisterInput) (*AuthResult, error)
+	Login(ctx context.Context, input LoginInput) (*AuthResult, error)
+	Refresh(ctx context.Context, refreshToken string) (*AuthResult, error)
+	ValidateAccessSession(ctx context.Context, sessionID uuid.UUID) (ValidatedAccessSessionOutput, error)
+	Logout(ctx context.Context, sessionID uuid.UUID) error
+	LogoutAll(ctx context.Context, accountID uuid.UUID) error
+	GetAccountIDBySessionID(ctx context.Context, sessionID uuid.UUID) (uuid.UUID, error)
+}
+
+type RegisterInput struct {
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
+	UserAgent *string
+	IPAddress *string
+}
+
+type LoginInput struct {
+	Email     string
+	Password  string
+	UserAgent *string
+	IPAddress *string
+}
+
+type AuthResult struct {
+	AccessToken  string
+	RefreshToken string
+	ExpiresAt    time.Time
+	User         *entity.User
+	Account      *entity.Account
+}
+
+type ValidatedAccessSessionOutput struct {
+	Email     string
+	AccountID uuid.UUID
+	UserID    uuid.UUID
+}
+
+type authService struct {
+	transactor     sharedrepo.Transactor
+	userUsecase    usecase.UserUsecase
+	accountUsecase usecase.AccountUsecase
+	sessionUsecase usecase.SessionUsecase
+	sessionRepo    repository.SessionRepository
+	tokenService   token.TokenService
+	logger         core.Logger
+}
+
+func NewAuthService(
+	transactor sharedrepo.Transactor,
+	userUsecase usecase.UserUsecase,
+	accountUsecase usecase.AccountUsecase,
+	sessionUsecase usecase.SessionUsecase,
+	sessionRepo repository.SessionRepository,
+	tokenService token.TokenService,
+	logger core.Logger,
+) AuthService {
+	return &authService{
+		transactor:     transactor,
+		userUsecase:    userUsecase,
+		accountUsecase: accountUsecase,
+		sessionUsecase: sessionUsecase,
+		sessionRepo:    sessionRepo,
+		tokenService:   tokenService,
+		logger:         logger,
+	}
+}
+
+// Register creates a new user, account, and session atomically.
+// Returns tokens immediately (user is logged in after registration).
+func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthResult, error) {
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+
+	// Check if account already exists
+	existingAccount, err := s.accountUsecase.GetAccountByEmail(ctx, email)
+	if err == nil && existingAccount != nil {
+		return nil, errors.ConflictError("iam.errors.emailAlreadyExists")
+	}
+	if err != nil && err != iamerror.ErrAccountNotFound {
+		return nil, err
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Error("Failed to hash password", core.Error(err))
+		return nil, errors.InternalError("iam.errors.passwordHashFailed", err)
+	}
+
+	// Generate refresh token
+	rawRefreshToken, refreshTokenHash, err := s.tokenService.GenerateRefreshToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var user *entity.User
+	var account *entity.Account
+	var session *entity.Session
+
+	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		var txErr error
+
+		// Create user
+		user, txErr = s.userUsecase.CreateUser(txCtx, usecase.CreateUserInput{
+			FirstName: input.FirstName,
+			LastName:  input.LastName,
+		})
+		if txErr != nil {
+			return txErr
+		}
+
+		// Create account
+		account, txErr = s.accountUsecase.CreateAccount(txCtx, usecase.CreateAccountInput{
+			UserID:       user.ID,
+			Email:        email,
+			PasswordHash: string(passwordHash),
+		})
+		if txErr != nil {
+			return txErr
+		}
+
+		// Create session
+		session, txErr = s.sessionUsecase.CreateSession(txCtx, account.ID, usecase.CreateSessionInput{
+			RefreshTokenHash: refreshTokenHash,
+			UserAgent:        input.UserAgent,
+			IPAddress:        input.IPAddress,
+			ExpiresAt:        time.Now().Add(s.tokenService.GetRefreshTokenTTL()),
+		})
+		if txErr != nil {
+			return txErr
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate access token (outside transaction - read-only operation)
+	accessToken, err := s.tokenService.GenerateAccessToken(ctx, token.AccessTokenClaims{
+		SessionID: session.ID,
+		Email:     account.Email,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Info("User registered successfully",
+		core.String("userID", user.ID.String()),
+		core.String("accountID", account.ID.String()),
+	)
+
+	return &AuthResult{
+		AccessToken:  accessToken,
+		RefreshToken: rawRefreshToken,
+		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
+		User:         user,
+		Account:      account,
+	}, nil
+}
+
+// Login authenticates a user and creates a new session.
+func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult, error) {
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+
+	// Get account by email
+	account, err := s.accountUsecase.GetAccountByEmail(ctx, email)
+	if err != nil {
+		if err == iamerror.ErrAccountNotFound {
+			return nil, errors.UnauthorizedError("iam.errors.invalidCredentials")
+		}
+		return nil, err
+	}
+
+	// Verify password
+	if err := bcrypt.CompareHashAndPassword([]byte(account.PasswordHash), []byte(input.Password)); err != nil {
+		return nil, errors.UnauthorizedError("iam.errors.invalidCredentials")
+	}
+
+	// Check account status
+	if err := s.ensureAccountCanAuthenticate(account); err != nil {
+		return nil, err
+	}
+
+	// Get user
+	user, err := s.userUsecase.GetUser(ctx, account.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate refresh token
+	rawRefreshToken, refreshTokenHash, err := s.tokenService.GenerateRefreshToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create session
+	session, err := s.sessionUsecase.CreateSession(ctx, account.ID, usecase.CreateSessionInput{
+		RefreshTokenHash: refreshTokenHash,
+		UserAgent:        input.UserAgent,
+		IPAddress:        input.IPAddress,
+		ExpiresAt:        time.Now().Add(s.tokenService.GetRefreshTokenTTL()),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate access token
+	accessToken, err := s.tokenService.GenerateAccessToken(ctx, token.AccessTokenClaims{
+		SessionID: session.ID,
+		Email:     account.Email,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Info("User logged in successfully",
+		core.String("accountID", account.ID.String()),
+	)
+
+	return &AuthResult{
+		AccessToken:  accessToken,
+		RefreshToken: rawRefreshToken,
+		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
+		User:         user,
+		Account:      account,
+	}, nil
+}
+
+// Refresh rotates the refresh token and issues new tokens.
+// Old session is revoked, new session is created.
+func (s *authService) Refresh(ctx context.Context, refreshToken string) (*AuthResult, error) {
+	// Hash the provided refresh token to look up the session
+	tokenHash := s.tokenService.HashRefreshToken(refreshToken)
+
+	// Get session by refresh token hash
+	session, err := s.sessionUsecase.GetSessionByRefreshTokenHash(ctx, tokenHash)
+	if err != nil {
+		if err == iamerror.ErrSessionNotFound {
+			return nil, errors.UnauthorizedError("iam.errors.invalidRefreshToken")
+		}
+		return nil, err
+	}
+
+	// Get account
+	account, err := s.accountUsecase.GetAccount(ctx, session.AccountID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check account status
+	if err := s.ensureAccountCanAuthenticate(account); err != nil {
+		return nil, err
+	}
+
+	// Get user
+	user, err := s.userUsecase.GetUser(ctx, account.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate new refresh token
+	rawRefreshToken, refreshTokenHash, err := s.tokenService.GenerateRefreshToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var newSession *entity.Session
+
+	// Rotate: revoke old session and create new one atomically
+	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		// Revoke old session
+		if txErr := s.sessionUsecase.RevokeSession(txCtx, session.ID); txErr != nil {
+			return txErr
+		}
+
+		// Create new session
+		var txErr error
+		newSession, txErr = s.sessionUsecase.CreateSession(txCtx, account.ID, usecase.CreateSessionInput{
+			RefreshTokenHash: refreshTokenHash,
+			UserAgent:        session.UserAgent,
+			IPAddress:        session.IPAddress,
+			ExpiresAt:        time.Now().Add(s.tokenService.GetRefreshTokenTTL()),
+		})
+		return txErr
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate access token
+	accessToken, err := s.tokenService.GenerateAccessToken(ctx, token.AccessTokenClaims{
+		SessionID: newSession.ID,
+		Email:     account.Email,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Info("Session refreshed successfully",
+		core.String("oldSessionID", session.ID.String()),
+		core.String("newSessionID", newSession.ID.String()),
+		core.String("accountID", account.ID.String()),
+	)
+
+	return &AuthResult{
+		AccessToken:  accessToken,
+		RefreshToken: rawRefreshToken,
+		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
+		User:         user,
+		Account:      account,
+	}, nil
+}
+
+func (s *authService) ValidateAccessSession(ctx context.Context, sessionID uuid.UUID) (ValidatedAccessSessionOutput, error) {
+	session, err := s.sessionRepo.GetActiveByID(ctx, sessionID)
+	if err != nil {
+		if err == iamerror.ErrSessionNotFound {
+			return ValidatedAccessSessionOutput{}, errors.UnauthorizedError("iam.errors.sessionNotFound")
+		}
+		return ValidatedAccessSessionOutput{}, err
+	}
+
+	account, err := s.accountUsecase.GetAccount(ctx, session.AccountID)
+	if err != nil {
+		return ValidatedAccessSessionOutput{}, err
+	}
+
+	if err := s.ensureAccountCanAuthenticate(account); err != nil {
+		return ValidatedAccessSessionOutput{}, err
+	}
+
+	return ValidatedAccessSessionOutput{
+		Email:     account.Email,
+		AccountID: account.ID,
+		UserID:    account.UserID,
+	}, nil
+}
+
+func (s *authService) ensureAccountCanAuthenticate(account *entity.Account) error {
+	switch account.Status {
+	case entity.AccountStatusActive:
+		return nil
+	case entity.AccountStatusPendingVerification:
+		return errors.ForbiddenError("errors.forbidden")
+	case entity.AccountStatusLocked:
+		return errors.ForbiddenError("errors.forbidden")
+	case entity.AccountStatusSuspended:
+		return errors.ForbiddenError("errors.forbidden")
+	case entity.AccountStatusDisabled:
+		return errors.ForbiddenError("errors.forbidden")
+	default:
+		return errors.ForbiddenError("errors.forbidden")
+	}
+}
+
+// Logout revokes a specific session.
+func (s *authService) Logout(ctx context.Context, sessionID uuid.UUID) error {
+	if err := s.sessionUsecase.RevokeSession(ctx, sessionID); err != nil {
+		return err
+	}
+
+	s.logger.Info("Session logged out", core.String("sessionID", sessionID.String()))
+	return nil
+}
+
+// LogoutAll revokes all sessions for an account.
+func (s *authService) LogoutAll(ctx context.Context, accountID uuid.UUID) error {
+	if err := s.sessionUsecase.RevokeAllSessions(ctx, accountID); err != nil {
+		return err
+	}
+
+	s.logger.Info("All sessions logged out", core.String("accountID", accountID.String()))
+	return nil
+}
+
+func (s *authService) GetAccountIDBySessionID(ctx context.Context, sessionID uuid.UUID) (uuid.UUID, error) {
+	session, err := s.sessionRepo.GetByID(ctx, sessionID)
+	if err != nil {
+		if err == iamerror.ErrSessionNotFound {
+			return uuid.Nil, errors.UnauthorizedError("iam.errors.sessionNotFound")
+		}
+		return uuid.Nil, err
+	}
+	return session.AccountID, nil
+}

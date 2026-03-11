@@ -12,6 +12,7 @@ import (
 type SessionRepository interface {
 	sharedrepo.GenericRepository[entity.Session]
 
+	GetActiveByID(ctx context.Context, id uuid.UUID) (*entity.Session, error)
 	GetByRefreshTokenHash(ctx context.Context, hash string) (*entity.Session, error)
 	ListActiveByAccountID(ctx context.Context, accountID uuid.UUID) ([]*entity.Session, error)
 	RevokeByID(ctx context.Context, id uuid.UUID, revokedAt time.Time) error

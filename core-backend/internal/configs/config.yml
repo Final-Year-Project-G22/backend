@@ -19,3 +19,19 @@ server:
   write_timeout: 10s
   idle_timeout: 60s
   shutdown_timeout: 5s
+
+logger:
+  level: "info"
+  encoding: "json"
+  output_paths: ["stdout"]
+  error_output_paths: ["stderr"]
+
+cache:
+  enabled: false
+
+# JWT configuration - secret MUST be overridden via JWT_SECRET env var
+# The placeholder below will fail validation (min 32 chars) unless overridden
+jwt:
+  secret: "change-me-via-JWT_SECRET-env-var"
+  access_token_ttl: 15m
+  refresh_token_ttl: 168h
