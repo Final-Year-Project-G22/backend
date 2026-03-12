@@ -1,0 +1,22 @@
+app:
+  environment: "production"
+  debug: false
+
+logger:
+  level: "warn"
+  encoding: "json"
+  output_paths: ["stdout"]
+  error_output_paths: ["stderr"]
+
+database:
+  sslmode: "require"
+  max_open_conns: 25
+  max_idle_conns: 10
+  conn_max_lifetime: 5m
+
+cache:
+  enabled: false
+
+jwt:
+  access_token_ttl: 15m
+  refresh_token_ttl: 168h
