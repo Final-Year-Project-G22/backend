@@ -5,6 +5,8 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/handler"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/routes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
@@ -102,7 +104,11 @@ var Module = fx.Module("iam",
 
 	// Register auth routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, tokenService token.TokenService, authService service.AuthService) {
-		RegisterAuthRoutes(api, authHandler, tokenService, authService)
+		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
+		routes.RegisterRoutes(api, routes.RouteDependencies{
+			AuthHandler:    authHandler,
+			AuthMiddleware: authMiddleware,
+		})
 	}),
 )
 

@@ -164,6 +164,9 @@ func (h *AuthHandler) createClearRefreshTokenCookie() http.Cookie {
 }
 
 func (h *AuthHandler) isSecureCookie() bool {
+	if h.cfg == nil {
+		return false
+	}
 	return h.cfg.IsProduction()
 }
 
