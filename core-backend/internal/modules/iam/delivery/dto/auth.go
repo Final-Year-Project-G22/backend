@@ -24,6 +24,26 @@ type AccountDTO struct {
 	Status string    `json:"status" doc:"Account status (pending_verification, active, locked, suspended, disabled)"`
 }
 
+type UpdateUserProfileRequest struct {
+	FirstName string  `json:"firstName" doc:"First name" minLength:"1" maxLength:"100"`
+	LastName  string  `json:"lastName" doc:"Last name" minLength:"1" maxLength:"100"`
+	Bio       *string `json:"bio,omitempty" doc:"Bio"`
+}
+
+type UpdateUserProfileInput struct {
+	Body UpdateUserProfileRequest
+}
+
+type UpdateUserProfileResponseBody struct {
+	FirstName string `json:"firstName" doc:"First name"`
+	LastName  string `json:"lastName" doc:"Last name"`
+	Bio       string `json:"bio" doc:"Bio"`
+}
+
+type UpdateUserProfileOutput struct {
+	Body UpdateUserProfileResponseBody
+}
+
 // RegisterRequest is the input for user registration.
 type RegisterRequest struct {
 	Email     string `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
