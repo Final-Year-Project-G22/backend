@@ -15,5 +15,5 @@ func LocaleFromContext(ctx context.Context) string {
 		return locale
 	}
 
-	return "en"
+	return GetDefaultLocale()
 }

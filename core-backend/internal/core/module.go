@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -53,6 +54,11 @@ func registerLifecycleHooks(
 			// Run Migrations
 			log.Info("Running migrations")
 			if err := m.ApplyMigrations(); err != nil {
+				return err
+			}
+
+			log.Info("Initialize Internationalization")
+			if err := i18n.Init(""); err != nil {
 				return err
 			}
 
