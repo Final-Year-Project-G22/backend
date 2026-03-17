@@ -47,26 +47,63 @@ func Init(messagesPath string) error {
 		}
 
 		locale := strings.TrimSuffix(file.Name(), ".json")
-		// #nosec G304 -- file names come from a trusted directory listing.
-		data, err := os.ReadFile(filepath.Join(absMessagesPath, file.Name()))
+
+		if strings.Contains(file.Name(), "..") || filepath.IsAbs(file.Name()) {
+			continue
+		}
+
+		fullPath := filepath.Join(absMessagesPath, file.Name())
+		absFullPath, err := filepath.Abs(fullPath)
+		if err != nil {
+			continue
+		}
+		absMessagesPathAbs, err := filepath.Abs(absMessagesPath)
+		if err != nil {
+			continue
+		}
+		if !strings.HasPrefix(absFullPath, absMessagesPathAbs+string(filepath.Separator)) {
+			continue
+		}
+
+		data, err := os.ReadFile(fullPath) // nolint:gosec
 		if err != nil {
 			return fmt.Errorf("failed to read message file %s: %w", file.Name(), err)
 		}
 
-		var msgs map[string]string
-		if err := json.Unmarshal(data, &msgs); err != nil {
+		var raw map[string]any
+		if err := json.Unmarshal(data, &raw); err != nil {
 			return fmt.Errorf("failed to parse message file %s: %w", file.Name(), err)
 		}
 
-		messages[locale] = msgs
-		loaded = true
+		flattened := make(map[string]string)
+		flattenMessages("", raw, flattened)
+
+		messages[locale] = flattened
 	}
+
+	loaded = true
 
 	if _, ok := messages[defaultLocale]; !ok {
 		return fmt.Errorf("default locale %s not found", defaultLocale)
 	}
 
 	return nil
+}
+
+func flattenMessages(prefix string, input map[string]any, out map[string]string) {
+	for key, value := range input {
+		fullKey := key
+		if prefix != "" {
+			fullKey = prefix + "." + key
+		}
+
+		switch v := value.(type) {
+		case string:
+			out[fullKey] = v
+		case map[string]any:
+			flattenMessages(fullKey, v, out)
+		}
+	}
 }
 
 // Resolve returns the message for the given key and locale.
