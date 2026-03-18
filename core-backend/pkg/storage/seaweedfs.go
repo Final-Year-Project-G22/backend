@@ -20,6 +20,7 @@ import (
 type SeaweedFS struct {
 	filerURL    string
 	volumeURL   string
+	masterURL   string
 	replication string
 	collection  string
 	httpClient  *http.Client
@@ -51,6 +52,7 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 	s := &SeaweedFS{
 		filerURL:    config.FilerURL,
 		volumeURL:   config.VolumeURL,
+		masterURL:   config.MasterURL,
 		replication: config.Replication,
 		collection:  config.Collection,
 		httpClient: &http.Client{
@@ -64,6 +66,10 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 
 	if s.volumeURL == "" {
 		s.volumeURL = "http://" + strings.ReplaceAll(s.filerURL, "8888", "8080")
+	}
+
+	if s.masterURL == "" {
+		s.masterURL = strings.ReplaceAll(s.filerURL, "8888", "9333")
 	}
 
 	return s, nil
@@ -116,7 +122,7 @@ func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, re
 	}
 	defer closeResponseBody(resp.Body)
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("upload failed with status %d: %s", resp.StatusCode, string(body))
 	}
@@ -325,9 +331,9 @@ func (s *SeaweedFS) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
-// getAssignURL requests a file ID and upload URL from the filer.
+// getAssignURL requests a file ID and upload URL from the master.
 func (s *SeaweedFS) getAssignURL(ctx context.Context) (*SeaweedAssignResponse, error) {
-	assignURL := s.filerURL + "/dir/assign"
+	assignURL := "http://" + s.masterURL + "/dir/assign"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, assignURL, nil)
 	if err != nil {

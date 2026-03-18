@@ -52,7 +52,7 @@ func (s *AvatarService) UploadAvatar(ctx context.Context, input UploadAvatarInpu
 
 	oldImageURL, err := s.userRepo.GetImageURL(input.UserID.String())
 	if err != nil {
-		return nil, err
+		return nil, apperrors.InternalError("iam.errors.updateFailed", fmt.Errorf("get existing avatar url: %w", err))
 	}
 
 	validated, err := s.avatarValidator.Validate(input.FileBytes)
@@ -68,7 +68,7 @@ func (s *AvatarService) UploadAvatar(ctx context.Context, input UploadAvatarInpu
 		ContentType: validated.ContentType,
 	})
 	if err != nil {
-		return nil, apperrors.InternalError("iam.errors.uploadFailed", err)
+		return nil, apperrors.InternalError("iam.errors.uploadFailed", fmt.Errorf("storage upload key=%s contentType=%s size=%d: %w", key, validated.ContentType, len(validated.Content), err))
 	}
 
 	imageURL := uploaded.URL

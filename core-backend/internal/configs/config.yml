@@ -29,14 +29,14 @@ logger:
 cache:
   enabled: false
 
-# JWT configuration - secret MUST be overridden via JWT_SECRET env var
 jwt:
-  secret: ${JWT_SECRET:?JWT secret is required}
+  secret: ${JWT_SECRET}
   access_token_ttl: 15m
   refresh_token_ttl: 168h
 
 storage:
-  provider: ${STORAGE_PROVIDER:-seaweedfs}
+  provider: seaweedfs
   seaweedfs:
-    filer_url: ${SEAWEED_FILER_URL:-localhost:8888}
-    volume_url: ${SEAWEED_VOLUME_URL:-http://localhost:8080}
+    master_url: ${SEAWEED_MASTER_URL}
+    filer_url: ${SEAWEED_FILER_URL}
+    volume_url: ${SEAWEED_VOLUME_URL}
