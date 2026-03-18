@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -20,6 +22,10 @@ var Module = fx.Module("core",
 		NewGinEngine,
 		NewHTTPServer,
 		NewHumaAPI,
+		func(cfg *Config) storage.Config {
+			return cfg.Storage
+		},
+		storage.NewStorage,
 	),
 	fx.Invoke(registerLifecycleHooks),
 	// Ensure HTTP server and Huma API are instantiated by depending on them
@@ -53,6 +59,11 @@ func registerLifecycleHooks(
 			// Run Migrations
 			log.Info("Running migrations")
 			if err := m.ApplyMigrations(); err != nil {
+				return err
+			}
+
+			log.Info("Initialize Internationalization")
+			if err := i18n.Init(""); err != nil {
 				return err
 			}
 

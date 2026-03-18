@@ -5,6 +5,8 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/handler"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/routes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
@@ -88,8 +90,13 @@ var Module = fx.Module("iam",
 		),
 	),
 
+	// Application Layer - Avatar Service
+	fx.Provide(service.NewAvatarValidator),
+	fx.Provide(service.NewAvatarService),
+
 	// Delivery Layer - Handler
 	fx.Provide(handler.NewAuthHandler),
+	fx.Provide(handler.NewImageHandler),
 
 	// Invocations
 
@@ -100,9 +107,14 @@ var Module = fx.Module("iam",
 		}
 	}),
 
-	// Register auth routes
-	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, tokenService token.TokenService, authService service.AuthService) {
-		RegisterAuthRoutes(api, authHandler, tokenService, authService)
+	// Register routes
+	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, imageHandler *handler.ImageHandler, tokenService token.TokenService, authService service.AuthService) {
+		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
+		routes.RegisterRoutes(api, routes.RouteDependencies{
+			AuthHandler:    authHandler,
+			ImageHandler:   imageHandler,
+			AuthMiddleware: authMiddleware,
+		})
 	}),
 )
 

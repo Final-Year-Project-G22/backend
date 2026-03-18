@@ -25,6 +25,7 @@ type AuthService interface {
 	Logout(ctx context.Context, sessionID uuid.UUID) error
 	LogoutAll(ctx context.Context, accountID uuid.UUID) error
 	GetAccountIDBySessionID(ctx context.Context, sessionID uuid.UUID) (uuid.UUID, error)
+	UpdateUserProfile(ctx context.Context, useId uuid.UUID, input UpdateUserProfileInput) (*UpdateUserProfileOutput, error)
 }
 
 type RegisterInput struct {
@@ -41,6 +42,16 @@ type LoginInput struct {
 	Password  string
 	UserAgent *string
 	IPAddress *string
+}
+type UpdateUserProfileInput struct {
+	FirstName string
+	LastName  string
+	Bio       *string
+}
+type UpdateUserProfileOutput struct {
+	FirstName string
+	LastName  string
+	Bio       string
 }
 
 type AuthResult struct {
@@ -245,6 +256,29 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
 		User:         user,
 		Account:      account,
+	}, nil
+}
+func (s *authService) UpdateUserProfile(ctx context.Context, userId uuid.UUID, input UpdateUserProfileInput) (*UpdateUserProfileOutput, error) {
+	user, err := s.userUsecase.UpdateUser(ctx, userId, usecase.UpdateUserInput{
+		FirstName: &input.FirstName,
+		LastName:  &input.LastName,
+		Bio:       input.Bio,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Info("User Profile updated Successfully",
+		core.String("userID", user.ID.String()),
+	)
+	bio := ""
+	if user.Bio != nil {
+		bio = *user.Bio
+	}
+	return &UpdateUserProfileOutput{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Bio:       bio,
 	}, nil
 }
 

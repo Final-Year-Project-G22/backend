@@ -7,4 +7,7 @@ import (
 
 type UserRepository interface {
 	sharedrepo.GenericRepository[entity.User]
+
+	UpdateAvatar(userID string, imageURL string) error
+	GetImageURL(userID string) (string, error)
 }
