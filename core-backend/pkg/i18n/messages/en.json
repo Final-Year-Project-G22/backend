@@ -26,7 +26,14 @@
       "requiredField": "{{field}} is required",
       "invalidEmail": "Invalid email address",
       "invalidPassword": "Password must be at least 8 characters",
-      "passwordMismatch": "Passwords do not match"
+      "passwordMismatch": "Passwords do not match",
+
+      "invalidFile": "Invalid file provided",
+      "invalidFileType": "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
+      "fileTooLarge": "File size exceeds maximum allowed (5MB)",
+      "readFileFailed": "Failed to read file",
+      "uploadFailed": "Failed to upload file",
+      "updateFailed": "Failed to update user profile"
     }
   },
   "errors": {

@@ -7,9 +7,14 @@ import (
 
 type RouteDependencies struct {
 	AuthHandler    *handler.AuthHandler
+	ImageHandler   *handler.ImageHandler
 	AuthMiddleware func(huma.Context, func(huma.Context))
 }
 
 func RegisterRoutes(api huma.API, deps RouteDependencies) {
-	registerAuthRoutes(api, deps)
+	RegisterAuthRoutes(api, deps)
+	RegisterUserRoutes(api, UserRouteDependencies{
+		ImageHandler:   deps.ImageHandler,
+		AuthMiddleware: deps.AuthMiddleware,
+	})
 }

@@ -8,28 +8,30 @@ type ErrorCode string
 
 // Common error codes used throughout the application.
 const (
-	ErrCodeValidation    ErrorCode = "validationError"
-	ErrCodeNotFound      ErrorCode = "notFound"
-	ErrCodeUnauthorized  ErrorCode = "unauthorized"
-	ErrCodeForbidden     ErrorCode = "forbidden"
-	ErrCodeConflict      ErrorCode = "conflict"
-	ErrCodeInternal      ErrorCode = "internalError"
-	ErrCodeBadRequest    ErrorCode = "badRequest"
-	ErrCodeAlreadyExists ErrorCode = "alreadyExists"
-	ErrCodeInvalidInput  ErrorCode = "invalidInput"
+	ErrCodeValidation      ErrorCode = "validationError"
+	ErrCodeNotFound        ErrorCode = "notFound"
+	ErrCodeUnauthorized    ErrorCode = "unauthorized"
+	ErrCodeForbidden       ErrorCode = "forbidden"
+	ErrCodeConflict        ErrorCode = "conflict"
+	ErrCodeInternal        ErrorCode = "internalError"
+	ErrCodeBadRequest      ErrorCode = "badRequest"
+	ErrCodeAlreadyExists   ErrorCode = "alreadyExists"
+	ErrCodeInvalidInput    ErrorCode = "invalidInput"
+	ErrCodePayloadTooLarge ErrorCode = "payloadTooLarge"
 )
 
 // HTTP status mapping for error codes.
 var codeToStatus = map[ErrorCode]int{
-	ErrCodeValidation:    400,
-	ErrCodeNotFound:      404,
-	ErrCodeUnauthorized:  401,
-	ErrCodeForbidden:     403,
-	ErrCodeConflict:      409,
-	ErrCodeInternal:      500,
-	ErrCodeBadRequest:    400,
-	ErrCodeAlreadyExists: 409,
-	ErrCodeInvalidInput:  400,
+	ErrCodeValidation:      400,
+	ErrCodeNotFound:        404,
+	ErrCodeUnauthorized:    401,
+	ErrCodeForbidden:       403,
+	ErrCodeConflict:        409,
+	ErrCodeInternal:        500,
+	ErrCodeBadRequest:      400,
+	ErrCodeAlreadyExists:   409,
+	ErrCodeInvalidInput:    400,
+	ErrCodePayloadTooLarge: 413,
 }
 
 // GetStatus returns the HTTP status code for an error code.
