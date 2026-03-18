@@ -26,7 +26,14 @@
       "requiredField": "{{field}} ያስፈላጊ ነው",
       "invalidEmail": "የኢሜይል አድራሻ ዋጋ የሌለው",
       "invalidPassword": "የይለፍ ቃል ቢያንስ 8 ፊደላት መሆን አለ።",
-      "passwordMismatch": "የይለፍ ቃላት አይዛመዱም"
+      "passwordMismatch": "የይለፍ ቃላት አይዛመዱም",
+
+      "invalidFile": "ዋጋ የማይሰራ ፋይል ተላልፏል",
+      "invalidFileType": "ዋጋ የማይሰራ የፋይል አይነት። የተፈቀዱት: JPEG, PNG, GIF, WebP",
+      "fileTooLarge": "የፋይል ልክ ከፍተኛ ነው (ከ5MB)",
+      "readFileFailed": "ፋይል ለማንበብ ተሳካምንያለም",
+      "uploadFileFailed": "ፋይል ለማስተላለፍ ተሳካምንያለም",
+      "updateFailed": "የተጠቃሚ ገጽ ለማዘመር ተሳካምንያለም"
     }
   },
   "errors": {

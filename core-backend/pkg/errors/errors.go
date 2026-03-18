@@ -172,6 +172,15 @@ func BadRequestError(message string) *AppError {
 	}
 }
 
+// PayloadTooLargeError creates a payload too large error (413).
+func PayloadTooLargeError(message string) *AppError {
+	return &AppError{
+		Code:    ErrCodePayloadTooLarge,
+		Message: message,
+		Status:  GetStatus(ErrCodePayloadTooLarge),
+	}
+}
+
 // InvalidInputError creates an invalid input error.
 func InvalidInputError(field string, message string) *AppError {
 	key := "errors.invalidInput"
