@@ -31,6 +31,11 @@ type SeaweedConfig struct {
 	// Optional. If empty, derived from FilerURL.
 	VolumeURL string `mapstructure:"volume_url"`
 
+	// MasterURL is the address of the SeaweedFS master service.
+	// Format: "host:port" (e.g., "localhost:9333")
+	// Optional. If empty, derived from FilerURL.
+	MasterURL string `mapstructure:"master_url"`
+
 	// Replication specifies the replication strategy.
 	// Format: "<dc><rack><data_center>" (e.g., "000" for no replication)
 	// Common values:

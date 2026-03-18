@@ -2,14 +2,12 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"mime/multipart"
+	"io"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
-	"github.com/danielgtaylor/huma/v2"
 )
 
 type ImageHandler struct {
@@ -28,21 +26,31 @@ func (h *ImageHandler) HandleUploadAvatar(ctx context.Context, input *dto.Upload
 		return nil, apperrors.ToHumaError(ctx, apperrors.UnauthorizedError("iam.errors.unauthorized"))
 	}
 
-	file, filename, err := h.extractFileFromContext(ctx)
-	if err != nil {
+	formData := input.RawBody.Data()
+	if formData == nil || !formData.File.IsSet {
+		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("iam.errors.invalidFile"))
+	}
+
+	file := formData.File.File
+	if file == nil {
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("iam.errors.invalidFile"))
 	}
 	defer func() { _ = file.Close() }()
 
-	fileBytes, err := h.readBoundedFile(file)
+	limitedReader := io.LimitReader(file, int64(service.MaxAvatarSize)+1)
+	fileBytes, err := io.ReadAll(limitedReader)
 	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
+		return nil, apperrors.ToHumaError(ctx, apperrors.InternalError("iam.errors.readFileFailed", err))
+	}
+
+	if len(fileBytes) > service.MaxAvatarSize {
+		return nil, apperrors.ToHumaError(ctx, apperrors.PayloadTooLargeError("iam.errors.fileTooLarge"))
 	}
 
 	result, err := h.avatarService.UploadAvatar(ctx, service.UploadAvatarInput{
 		UserID:    userID,
 		FileBytes: fileBytes,
-		Filename:  filename,
+		Filename:  formData.File.Filename,
 	})
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -53,48 +61,4 @@ func (h *ImageHandler) HandleUploadAvatar(ctx context.Context, input *dto.Upload
 			ImageURL: result.ImageURL,
 		},
 	}, nil
-}
-
-func (h *ImageHandler) extractFileFromContext(ctx context.Context) (multipart.File, string, error) {
-	hc, ok := ctx.Value("huma-context").(huma.Context)
-	if !ok {
-		if hc, ok = ctx.(huma.Context); !ok {
-			return nil, "", fmt.Errorf("invalid context type")
-		}
-	}
-
-	form, err := hc.GetMultipartForm()
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to get multipart form: %w", err)
-	}
-
-	if form.File == nil {
-		return nil, "", fmt.Errorf("no file provided")
-	}
-
-	fileHeader, exists := form.File["file"]
-	if !exists || len(fileHeader) == 0 {
-		return nil, "", fmt.Errorf("no file provided")
-	}
-
-	file, err := fileHeader[0].Open()
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to open file: %w", err)
-	}
-
-	return file, fileHeader[0].Filename, nil
-}
-
-func (h *ImageHandler) readBoundedFile(file multipart.File) ([]byte, error) {
-	buffer := make([]byte, service.MaxAvatarSize+1)
-	n, err := file.Read(buffer)
-	if err != nil && err.Error() != "EOF" {
-		return nil, apperrors.InternalError("iam.errors.readFileFailed", err)
-	}
-
-	if n > service.MaxAvatarSize {
-		return nil, apperrors.PayloadTooLargeError("iam.errors.fileTooLarge")
-	}
-
-	return buffer[:n], nil
 }
