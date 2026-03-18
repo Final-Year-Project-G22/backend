@@ -35,3 +35,9 @@ jwt:
   secret: "change-me-via-JWT_SECRET-env-var"
   access_token_ttl: 15m
   refresh_token_ttl: 168h
+
+storage:
+  provider: seaweedfs
+  seaweedfs:
+    filer_url: ${SEAWEED_FILTER_URL}
+    volume_url: ${SEAWEED_VOLUME_URL}

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -21,6 +22,10 @@ var Module = fx.Module("core",
 		NewGinEngine,
 		NewHTTPServer,
 		NewHumaAPI,
+		func(cfg *Config) storage.Config {
+			return cfg.Storage
+		},
+		storage.NewStorage,
 	),
 	fx.Invoke(registerLifecycleHooks),
 	// Ensure HTTP server and Huma API are instantiated by depending on them
