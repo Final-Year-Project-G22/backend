@@ -1,11 +1,6 @@
-package iam
+package routes
 
 import (
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/handler"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -14,13 +9,7 @@ const (
 	authBase  = apiV1Base + "/auth"
 )
 
-// RegisterAuthRoutes registers all IAM authentication routes with the Huma API.
-// Protected routes have AuthMiddleware applied via the Middlewares field.
-func RegisterAuthRoutes(api huma.API, authHandler *handler.AuthHandler, tokenService token.TokenService, authService service.AuthService) {
-	// Create the auth middleware for protected routes
-	authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
-
-	// POST /api/v1/auth/register - Public
+func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "register",
 		Method:      "POST",
@@ -28,9 +17,8 @@ func RegisterAuthRoutes(api huma.API, authHandler *handler.AuthHandler, tokenSer
 		Summary:     "Register a new user",
 		Description: "Creates a new user account and returns authentication tokens. The user is automatically logged in after registration.",
 		Tags:        []string{"Authentication"},
-	}, authHandler.HandleRegister)
+	}, deps.AuthHandler.HandleRegister)
 
-	// POST /api/v1/auth/login - Public
 	huma.Register(api, huma.Operation{
 		OperationID: "login",
 		Method:      "POST",
@@ -38,9 +26,8 @@ func RegisterAuthRoutes(api huma.API, authHandler *handler.AuthHandler, tokenSer
 		Summary:     "Log in a user",
 		Description: "Authenticates a user with email and password, returns authentication tokens.",
 		Tags:        []string{"Authentication"},
-	}, authHandler.HandleLogin)
+	}, deps.AuthHandler.HandleLogin)
 
-	// POST /api/v1/auth/refresh - Public (uses cookie)
 	huma.Register(api, huma.Operation{
 		OperationID: "refresh",
 		Method:      "POST",
@@ -48,9 +35,8 @@ func RegisterAuthRoutes(api huma.API, authHandler *handler.AuthHandler, tokenSer
 		Summary:     "Refresh access token",
 		Description: "Uses the refresh token cookie to issue new access and refresh tokens. Implements token rotation for security.",
 		Tags:        []string{"Authentication"},
-	}, authHandler.HandleRefresh)
+	}, deps.AuthHandler.HandleRefresh)
 
-	// POST /api/v1/auth/logout - Protected
 	huma.Register(api, huma.Operation{
 		OperationID:   "logout",
 		Method:        "POST",
@@ -58,12 +44,11 @@ func RegisterAuthRoutes(api huma.API, authHandler *handler.AuthHandler, tokenSer
 		Summary:       "Log out current session",
 		Description:   "Revokes the current session and clears the refresh token cookie.",
 		Tags:          []string{"Authentication"},
-		Middlewares:   huma.Middlewares{authMiddleware},
+		Middlewares:   huma.Middlewares{deps.AuthMiddleware},
 		Security:      []map[string][]string{{"bearerAuth": {}}},
 		DefaultStatus: 200,
-	}, authHandler.HandleLogout)
+	}, deps.AuthHandler.HandleLogout)
 
-	// POST /api/v1/auth/logout/all - Protected
 	huma.Register(api, huma.Operation{
 		OperationID:   "logoutAll",
 		Method:        "POST",
@@ -71,18 +56,26 @@ func RegisterAuthRoutes(api huma.API, authHandler *handler.AuthHandler, tokenSer
 		Summary:       "Log out all sessions",
 		Description:   "Revokes all sessions for the current user's account and clears the refresh token cookie.",
 		Tags:          []string{"Authentication"},
-		Middlewares:   huma.Middlewares{authMiddleware},
+		Middlewares:   huma.Middlewares{deps.AuthMiddleware},
 		Security:      []map[string][]string{{"bearerAuth": {}}},
 		DefaultStatus: 200,
-	}, authHandler.HandleLogoutAll)
+	}, deps.AuthHandler.HandleLogoutAll)
 
-	// Register security scheme for OpenAPI spec
+	huma.Register(api, huma.Operation{
+		OperationID: "userUpdate",
+		Method:      "PUT",
+		Path:        authBase + "/user/update",
+		Summary:     "Update user profile",
+		Description: "Updates the authenticated user's profile information such as name, bio, or other editable account fields.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AuthHandler.HandleUserUpdate)
+
 	registerSecurityScheme(api)
 }
 
-// registerSecurityScheme adds the Bearer token security scheme to the OpenAPI spec.
 func registerSecurityScheme(api huma.API) {
-	// Get the OpenAPI spec and add the security scheme
 	spec := api.OpenAPI()
 	if spec.Components == nil {
 		spec.Components = &huma.Components{}
@@ -98,13 +91,3 @@ func registerSecurityScheme(api huma.API) {
 		Description:  "JWT access token obtained from login or register endpoints",
 	}
 }
-
-// Ensure DTOs are properly typed for Huma registration.
-// These type assertions help catch type mismatches at compile time.
-var (
-	_ func(ctx interface{}, input *dto.RegisterInput) (*dto.RegisterOutput, error)   = nil
-	_ func(ctx interface{}, input *dto.LoginInput) (*dto.LoginOutput, error)         = nil
-	_ func(ctx interface{}, input *dto.RefreshInput) (*dto.RefreshOutput, error)     = nil
-	_ func(ctx interface{}, input *dto.LogoutInput) (*dto.LogoutOutput, error)       = nil
-	_ func(ctx interface{}, input *dto.LogoutAllInput) (*dto.LogoutAllOutput, error) = nil
-)

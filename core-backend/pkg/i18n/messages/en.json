@@ -1,34 +1,45 @@
 {
-  "errors.validationError": "Validation failed",
-  "errors.notFound": "Not found",
-  "errors.unauthorized": "Unauthorized access",
-  "errors.forbidden": "Access forbidden",
-  "errors.conflict": "Resource conflict",
-  "errors.internalError": "Internal server error",
-  "errors.badRequest": "Bad request",
-  "errors.alreadyExists": "Resource already exists",
-  "errors.invalidInput": "Invalid input",
+  "iam": {
+    "errors": {
+      "validationError": "Validation failed",
+      "notFound": "Not found",
+      "unauthorized": "Unauthorized access",
+      "forbidden": "Access forbidden",
+      "conflict": "Resource conflict",
+      "internalError": "Internal server error",
+      "badRequest": "Bad request",
+      "alreadyExists": "Resource already exists",
+      "invalidInput": "Invalid input",
 
-  "errors.userNotFound": "User not found",
-  "errors.userAlreadyExists": "User already exists",
-  "errors.invalidCredentials": "Invalid email or password",
-  "errors.tokenExpired": "Token has expired",
-  "errors.tokenInvalid": "Invalid token",
+      "userNotFound": "User not found",
+      "userAlreadyExists": "User already exists",
+      "invalidCredentials": "Invalid email or password",
+      "tokenExpired": "Token has expired",
+      "tokenInvalid": "Invalid token",
 
-  "errors.roleNotFound": "Role not found",
-  "errors.permissionDenied": "Permission denied",
+      "roleNotFound": "Role not found",
+      "permissionDenied": "Permission denied",
 
-  "errors.resourceNotFound": "{{resource}} not found",
-  "errors.resourceAlreadyExists": "{{resource}} already exists",
+      "resourceNotFound": "{{resource}} not found",
+      "resourceAlreadyExists": "{{resource}} already exists",
 
-  "errors.requiredField": "{{field}} is required",
-  "errors.invalidEmail": "Invalid email address",
-  "errors.invalidPassword": "Password must be at least 8 characters",
-  "errors.passwordMismatch": "Passwords do not match",
+      "requiredField": "{{field}} is required",
+      "invalidEmail": "Invalid email address",
+      "invalidPassword": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
 
-  "errors.databaseError": "Database operation failed",
-  "errors.cacheError": "Cache operation failed",
-  "errors.networkError": "Network error occurred",
-
-  "errors.unknownError": "An unknown error occurred"
+      "invalidFile": "Invalid file provided",
+      "invalidFileType": "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
+      "fileTooLarge": "File size exceeds maximum allowed (5MB)",
+      "readFileFailed": "Failed to read file",
+      "uploadFailed": "Failed to upload file",
+      "updateFailed": "Failed to update user profile"
+    }
+  },
+  "errors": {
+    "databaseError": "Database operation failed",
+    "cacheError": "Cache operation failed",
+    "networkError": "Network error occurred",
+    "unknownError": "An unknown error occurred"
+  }
 }

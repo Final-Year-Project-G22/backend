@@ -88,6 +88,11 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("error unmarshaling config: %w", err)
 	}
 
+	// 8. Resolve ${VAR} / ${VAR:-default} placeholders from environment
+	if err := resolveConfigPlaceholders(&cfg, false); err != nil {
+		return nil, fmt.Errorf("error resolving config placeholders: %w", err)
+	}
+
 	// Validate config
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
