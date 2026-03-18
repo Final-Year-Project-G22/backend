@@ -30,14 +30,13 @@ cache:
   enabled: false
 
 # JWT configuration - secret MUST be overridden via JWT_SECRET env var
-# The placeholder below will fail validation (min 32 chars) unless overridden
 jwt:
-  secret: "change-me-via-JWT_SECRET-env-var"
+  secret: ${JWT_SECRET:?JWT secret is required}
   access_token_ttl: 15m
   refresh_token_ttl: 168h
 
 storage:
-  provider: seaweedfs
+  provider: ${STORAGE_PROVIDER:-seaweedfs}
   seaweedfs:
-    filer_url: ${SEAWEED_FILTER_URL}
-    volume_url: ${SEAWEED_VOLUME_URL}
+    filer_url: ${SEAWEED_FILER_URL:-localhost:8888}
+    volume_url: ${SEAWEED_VOLUME_URL:-http://localhost:8080}
