@@ -35,9 +35,9 @@ func New(config Config) (Storage, error) {
 	}
 }
 
-// MustNew creates a Storage instance and panics on error.
+// NewStorage creates a Storage instance and panics on error.
 // Use this for application initialization where failure is fatal.
-func MustNew(config Config) Storage {
+func NewStorage(config Config) Storage {
 	s, err := New(config)
 	if err != nil {
 		panic(fmt.Errorf("failed to create storage: %w", err))

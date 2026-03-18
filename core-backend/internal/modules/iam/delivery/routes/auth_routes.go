@@ -9,7 +9,7 @@ const (
 	authBase  = apiV1Base + "/auth"
 )
 
-func registerAuthRoutes(api huma.API, deps RouteDependencies) {
+func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "register",
 		Method:      "POST",

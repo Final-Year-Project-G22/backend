@@ -33,18 +33,57 @@ services:
       timeout: 5s
       retries: 5
 
-  # File Storage (SeaweedFS)
-  seaweedfs:
+  # SeaweedFS Master
+  seaweed-master:
     image: chrislusf/seaweedfs:latest
-    container_name: adisu_filestorage
+    container_name: adisu_seaweed_master
+    command: "master -ip=seaweed-master -mdir=/data/master -defaultReplication=000 -volumeSizeLimitMB=1024"
     ports:
-      - "9333:9333" # Master server
-      - "8080:8080" # Volume server
-    command: "master -mdir=/data/master -defaultReplication=001 -volumeSizeLimitMB=1024 && volume -dir=/data/volume -max=5 -mserver=localhost:9333"
+      - "9333:9333"
     volumes:
-      - seaweedfs_data:/data
+      - seaweed_master_data:/data/master
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9333/cluster/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # SeaweedFS Volume
+  seaweed-volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: adisu_seaweed_volume
+    command: "volume -ip=seaweed-volume -dir=/data/volume -max=5 -mserver=seaweed-master:9333 -port=8080"
+    depends_on:
+      seaweed-master:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    volumes:
+      - seaweed_volume_data:/data/volume
+
+  # SeaweedFS Filer (required for /dir/assign used by app upload flow)
+  seaweed-filer:
+    image: chrislusf/seaweedfs:latest
+    container_name: adisu_seaweed_filer
+    command: "filer -ip=seaweed-filer -master=seaweed-master:9333"
+    depends_on:
+      seaweed-master:
+        condition: service_started
+      seaweed-volume:
+        condition: service_started
+    ports:
+      - "8888:8888"
+    volumes:
+      - seaweed_filer_data:/data/filer
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8888/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
   redis_data:
-  seaweedfs_data:
+  seaweed_master_data:
+  seaweed_volume_data:
+  seaweed_filer_data:
