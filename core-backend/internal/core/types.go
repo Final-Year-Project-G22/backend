@@ -16,6 +16,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Storage  storage.Config `mapstructure:"storage"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
+	OAuth    OAuthConfig    `mapstructure:"oauth"`
 }
 
 type AppConfig struct {
@@ -87,4 +88,18 @@ type Cache interface {
 	Expire(ctx context.Context, key string, expiration time.Duration) error
 	Health(ctx context.Context) error
 	Close() error
+}
+
+type OAuthConfig struct {
+	EncryptionKey string `mapstructure:"encryption_key" validate:"required,min=32"`
+	CookieDomain  string `mapstructure:"cookie_domain"  validate:"required"`
+	Providers     []OAuthProviderConfig
+}
+
+type OAuthProviderConfig struct {
+	Name         string   `mapstructure:"name"         validate:"required"`
+	ClientID     string   `mapstructure:"client_id"     validate:"required"`
+	ClientSecret string   `mapstructure:"client_secret" validate:"required"`
+	RedirectURI  string   `mapstructure:"redirect_uri"  validate:"required"`
+	Scopes       []string `mapstructure:"scopes"        validate:"required"`
 }

@@ -30,13 +30,19 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, input usecase.Create
 	email := strings.TrimSpace(input.Email)
 	normalizedEmail := strings.ToLower(email)
 
+	status := input.Status
+	if status == "" {
+		status = entity.AccountStatusPendingVerification
+	}
+
 	account := &entity.Account{
 		UserID:          input.UserID,
 		Email:           email,
 		EmailNormalized: normalizedEmail,
 		PasswordHash:    input.PasswordHash,
 		PhoneNumber:     input.PhoneNumber,
-		Status:          entity.AccountStatusPendingVerification,
+		EmailVerified:   input.EmailVerified,
+		Status:          status,
 	}
 
 	if err := u.accountRepo.Create(ctx, account); err != nil {
