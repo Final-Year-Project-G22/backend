@@ -1,6 +1,8 @@
 package core
 
 import (
+	"time"
+
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
@@ -8,6 +10,22 @@ import (
 )
 
 func NewHumaAPI(engine *gin.Engine, cfg *Config, log Logger) huma.API {
+	engine.Use(func(ctx *gin.Context) {
+		start := time.Now()
+		path := ctx.Request.URL.Path
+
+		ctx.Next()
+
+		// Log after request completes
+		log.Info("http request",
+			Int("status", ctx.Writer.Status()),
+			String("method", ctx.Request.Method),
+			String("path", path),
+			String("latency", time.Since(start).String()),
+			String("ip", ctx.ClientIP()),
+		)
+	})
+
 	// Initialize custom error handler before creating API
 	errors.InitHumaErrorHandler()
 

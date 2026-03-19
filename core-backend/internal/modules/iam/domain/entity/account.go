@@ -24,7 +24,7 @@ type Account struct {
 	User                User          `gorm:"foreignKey:UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Email               string        `gorm:"type:varchar(255);not null"`
 	EmailNormalized     string        `gorm:"type:varchar(255);not null;uniqueIndex:idx_accounts_email_normalized"`
-	PasswordHash        string        `gorm:"type:varchar(255);not null"`
+	PasswordHash        *string       `gorm:"type:varchar(255)"`
 	PhoneNumber         *string       `gorm:"type:varchar(50)"`
 	EmailVerified       bool          `gorm:"not null;default:false"`
 	PhoneVerified       bool          `gorm:"not null;default:false"`

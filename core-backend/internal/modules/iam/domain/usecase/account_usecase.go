@@ -17,10 +17,12 @@ type AccountUsecase interface {
 }
 
 type CreateAccountInput struct {
-	UserID       uuid.UUID
-	Email        string
-	PasswordHash string
-	PhoneNumber  *string
+	UserID        uuid.UUID
+	Email         string
+	PasswordHash  *string
+	PhoneNumber   *string
+	EmailVerified bool
+	Status        entity.AccountStatus
 }
 
 type UpdateAccountInput struct {

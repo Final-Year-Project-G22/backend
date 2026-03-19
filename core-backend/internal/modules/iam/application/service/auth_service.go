@@ -141,10 +141,13 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		}
 
 		// Create account
+		passwordHashStr := string(passwordHash)
 		account, txErr = s.accountUsecase.CreateAccount(txCtx, usecase.CreateAccountInput{
-			UserID:       user.ID,
-			Email:        email,
-			PasswordHash: string(passwordHash),
+			UserID:        user.ID,
+			Email:         email,
+			PasswordHash:  &passwordHashStr,
+			EmailVerified: false,
+			Status:        entity.AccountStatusPendingVerification,
 		})
 		if txErr != nil {
 			return txErr
@@ -205,7 +208,10 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 	}
 
 	// Verify password
-	if err := bcrypt.CompareHashAndPassword([]byte(account.PasswordHash), []byte(input.Password)); err != nil {
+	if account.PasswordHash == nil {
+		return nil, errors.UnauthorizedError("iam.errors.invalidCredentials")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(*account.PasswordHash), []byte(input.Password)); err != nil {
 		return nil, errors.UnauthorizedError("iam.errors.invalidCredentials")
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	iamoauth "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/oauth"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/repository"
 	infratoken "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/token"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
@@ -53,6 +54,65 @@ var Module = fx.Module("iam",
 			fx.As(new(repository.SessionRepository)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewOAuthIdentityRepository,
+			fx.As(new(repository.OAuthIdentityRepository)),
+		),
+	),
+
+	// OAuth Infrastructure
+	fx.Provide(fx.Annotate(
+		func(cfg *core.Config) (string, error) {
+			return cfg.OAuth.EncryptionKey, nil
+		},
+		fx.ResultTags(`name:"oauthEncryptionKey"`),
+	)),
+	fx.Provide(fx.Annotate(
+		iamoauth.NewTokenEncryptor,
+		fx.ParamTags(`name:"oauthEncryptionKey"`),
+	)),
+	fx.Provide(fx.Annotate(
+		func(cfg *core.Config) (string, bool) {
+			return cfg.OAuth.CookieDomain, cfg.IsProduction()
+		},
+		fx.ResultTags(`name:"oauthCookieDomain"`, `name:"isProduction"`),
+	)),
+	fx.Provide(fx.Annotate(
+		iamoauth.NewStateManager,
+		fx.ParamTags(`name:"oauthCookieDomain"`, `name:"isProduction"`),
+	)),
+	fx.Provide(iamoauth.NewProviderRegistry),
+	fx.Provide(fx.Annotate(
+		func(cfg *core.Config) *core.OAuthProviderConfig {
+			for i := range cfg.OAuth.Providers {
+				if cfg.OAuth.Providers[i].Name == "google" {
+					return &cfg.OAuth.Providers[i]
+				}
+			}
+			return nil
+		},
+		fx.ResultTags(`name:"googleOAuthConfig"`),
+	)),
+	fx.Provide(fx.Annotate(
+		iamoauth.NewGoogleProvider,
+		fx.ParamTags(`name:"googleOAuthConfig"`),
+	)),
+	fx.Provide(fx.Annotate(
+		func(cfg *core.Config) *core.OAuthProviderConfig {
+			for i := range cfg.OAuth.Providers {
+				if cfg.OAuth.Providers[i].Name == "facebook" {
+					return &cfg.OAuth.Providers[i]
+				}
+			}
+			return nil
+		},
+		fx.ResultTags(`name:"facebookOAuthConfig"`),
+	)),
+	fx.Provide(fx.Annotate(
+		iamoauth.NewFacebookProvider,
+		fx.ParamTags(`name:"facebookOAuthConfig"`),
+	)),
 
 	// Infrastructure Layer - Token Service
 	fx.Provide(
@@ -94,9 +154,22 @@ var Module = fx.Module("iam",
 	fx.Provide(service.NewAvatarValidator),
 	fx.Provide(service.NewAvatarService),
 
+	// Application Layer - OAuth Usecase
+	fx.Provide(
+		fx.Annotate(
+			appusecase.NewOAuthIdentityUsecase,
+			fx.As(new(usecase.OAuthIdentityUsecase)),
+		),
+	),
+
+	// OAuth Service
+	fx.Provide(iamoauth.NewOAuthService),
+
 	// Delivery Layer - Handler
 	fx.Provide(handler.NewAuthHandler),
+	fx.Provide(handler.NewUserHandler),
 	fx.Provide(handler.NewImageHandler),
+	fx.Provide(handler.NewOAuthHandler),
 
 	// Invocations
 
@@ -108,13 +181,22 @@ var Module = fx.Module("iam",
 	}),
 
 	// Register routes
-	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, imageHandler *handler.ImageHandler, tokenService token.TokenService, authService service.AuthService) {
+	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, imageHandler *handler.ImageHandler, oauthHandler *handler.OAuthHandler, tokenService token.TokenService, authService service.AuthService) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			AuthHandler:    authHandler,
+			UserHandler:    userHandler,
 			ImageHandler:   imageHandler,
+			OAuthHandler:   oauthHandler,
 			AuthMiddleware: authMiddleware,
 		})
+	}),
+
+	// Register Google OAuth provider in registry
+	fx.Invoke(func(registry *iamoauth.ProviderRegistry, googleProvider *iamoauth.GoogleProvider) {
+		if googleProvider != nil {
+			registry.Register(googleProvider)
+		}
 	}),
 )
 
