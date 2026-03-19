@@ -61,17 +61,6 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		DefaultStatus: 200,
 	}, deps.AuthHandler.HandleLogoutAll)
 
-	huma.Register(api, huma.Operation{
-		OperationID: "userUpdate",
-		Method:      "PUT",
-		Path:        authBase + "/user/update",
-		Summary:     "Update user profile",
-		Description: "Updates the authenticated user's profile information such as name, bio, or other editable account fields.",
-		Tags:        []string{"Authentication"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.AuthHandler.HandleUserUpdate)
-
 	registerSecurityScheme(api)
 }
 

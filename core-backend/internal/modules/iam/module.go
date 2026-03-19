@@ -96,6 +96,7 @@ var Module = fx.Module("iam",
 
 	// Delivery Layer - Handler
 	fx.Provide(handler.NewAuthHandler),
+	fx.Provide(handler.NewUserHandler),
 	fx.Provide(handler.NewImageHandler),
 
 	// Invocations
@@ -108,10 +109,11 @@ var Module = fx.Module("iam",
 	}),
 
 	// Register routes
-	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, imageHandler *handler.ImageHandler, tokenService token.TokenService, authService service.AuthService) {
+	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, imageHandler *handler.ImageHandler, tokenService token.TokenService, authService service.AuthService) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			AuthHandler:    authHandler,
+			UserHandler:    userHandler,
 			ImageHandler:   imageHandler,
 			AuthMiddleware: authMiddleware,
 		})

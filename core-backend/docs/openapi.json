@@ -105,6 +105,31 @@
         },
         "type": "object"
       },
+      "FormFile": {
+        "additionalProperties": false,
+        "properties": {
+          "ContentType": {
+            "type": "string"
+          },
+          "Filename": {
+            "type": "string"
+          },
+          "IsSet": {
+            "type": "boolean"
+          },
+          "Size": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ContentType",
+          "IsSet",
+          "Size",
+          "Filename"
+        ],
+        "type": "object"
+      },
       "LoginRequest": {
         "additionalProperties": false,
         "properties": {
@@ -284,6 +309,94 @@
           "expiresAt",
           "user",
           "account"
+        ],
+        "type": "object"
+      },
+      "UpdateUserProfileRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateUserProfileRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "bio": {
+            "description": "Bio",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName"
+        ],
+        "type": "object"
+      },
+      "UpdateUserProfileResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateUserProfileResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "bio": {
+            "description": "Bio",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "bio"
+        ],
+        "type": "object"
+      },
+      "UploadAvatarResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UploadAvatarResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "imageUrl"
         ],
         "type": "object"
       },
@@ -552,6 +665,115 @@
         "summary": "Register a new user",
         "tags": [
           "Authentication"
+        ]
+      }
+    },
+    "/api/v1/users/avatar": {
+      "post": {
+        "description": "Uploads and sets the authenticated user's avatar image",
+        "operationId": "uploadAvatar",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadAvatarResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Upload user avatar",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/profile": {
+      "put": {
+        "description": "Updates the authenticated user's profile information such as name, bio, or other editable account fields.",
+        "operationId": "updateUserProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserProfileResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update user profile",
+        "tags": [
+          "Users"
         ]
       }
     }
