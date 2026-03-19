@@ -23,10 +23,11 @@ var (
 )
 
 type StateData struct {
-	Provider  string    `json:"p"`
-	IsLinking bool      `json:"l"`
-	AccountID string    `json:"a,omitempty"`
-	CreatedAt time.Time `json:"c"`
+	Provider    string    `json:"p"`
+	IsLinking   bool      `json:"l"`
+	AccountID   string    `json:"a,omitempty"`
+	SessionData string    `json:"s,omitempty"`
+	CreatedAt   time.Time `json:"c"`
 }
 
 type CookieConfig struct {
@@ -113,6 +114,25 @@ func (sm *StateManager) ValidateState(ctx context.Context, state string) (*State
 	}
 
 	return data, nil
+}
+
+func (sm *StateManager) StoreSessionData(state string, sessionData string) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	if data, exists := sm.states[state]; exists {
+		data.SessionData = sessionData
+	}
+}
+
+func (sm *StateManager) GetSessionData(state string) string {
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+
+	if data, exists := sm.states[state]; exists {
+		return data.SessionData
+	}
+	return ""
 }
 
 func (sm *StateManager) DeleteState(state string) {

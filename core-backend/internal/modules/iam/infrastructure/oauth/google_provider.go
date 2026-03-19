@@ -2,12 +2,11 @@ package oauth
 
 import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
-	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/google"
 )
 
 type GoogleProvider struct {
-	provider  *google.Provider
+	*google.Provider
 	encryptor *TokenEncryptor
 	logger    core.Logger
 }
@@ -16,7 +15,7 @@ func NewGoogleProvider(cfg *core.OAuthProviderConfig, encryptor *TokenEncryptor,
 	provider := google.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.Scopes...)
 
 	return &GoogleProvider{
-		provider:  provider,
+		Provider:  provider,
 		encryptor: encryptor,
 		logger:    logger,
 	}, nil
@@ -27,7 +26,7 @@ func (p *GoogleProvider) Name() string {
 }
 
 func (p *GoogleProvider) GetAuthURL(state string) string {
-	session, _ := p.provider.BeginAuth(state)
+	session, _ := p.BeginAuth(state)
 	if session == nil {
 		return ""
 	}
@@ -35,10 +34,4 @@ func (p *GoogleProvider) GetAuthURL(state string) string {
 	return authURL
 }
 
-func (p *GoogleProvider) BeginAuth(state string) (goth.Session, error) {
-	return p.provider.BeginAuth(state)
-}
-
-func (p *GoogleProvider) UnmarshalSession(data string) (goth.Session, error) {
-	return p.provider.UnmarshalSession(data)
-}
+var _ OAuthProvider = (*GoogleProvider)(nil)

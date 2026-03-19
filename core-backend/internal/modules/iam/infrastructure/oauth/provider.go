@@ -5,10 +5,8 @@ import (
 )
 
 type OAuthProvider interface {
-	Name() string
+	goth.Provider
 	GetAuthURL(state string) string
-	BeginAuth(state string) (goth.Session, error)
-	UnmarshalSession(data string) (goth.Session, error)
 }
 
 type ProviderRegistry struct {
