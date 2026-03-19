@@ -16,6 +16,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Storage  storage.Config `mapstructure:"storage"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
+	OAuth    OAuthConfig    `mapstructure:"oauth"`
 }
 
 type AppConfig struct {

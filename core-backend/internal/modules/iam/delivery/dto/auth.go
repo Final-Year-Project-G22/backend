@@ -128,3 +128,108 @@ type LogoutAllInput struct{}
 type LogoutAllOutput struct {
 	SetCookie http.Cookie `header:"Set-Cookie"`
 }
+
+// OAuthProviderDTO represents an OAuth provider.
+type OAuthProviderDTO struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Icon        string `json:"icon"`
+}
+
+// OAuthProvidersResponse is the response for listing OAuth providers.
+type OAuthProvidersResponse struct {
+	Providers []OAuthProviderDTO `json:"providers"`
+}
+
+// OAuthCallbackResponse is the response body for successful OAuth callback.
+type OAuthCallbackResponse struct {
+	AccessToken   string                      `json:"accessToken,omitempty"`
+	RefreshToken  string                      `json:"refreshToken,omitempty"`
+	ExpiresAt     time.Time                   `json:"expiresAt,omitempty"`
+	User          *UserDTO                    `json:"user,omitempty"`
+	Account       *AccountDTO                 `json:"account,omitempty"`
+	IsNewUser     bool                        `json:"isNewUser,omitempty"`
+	EmailRequired *OAuthEmailRequiredResponse `json:"emailRequired,omitempty"`
+}
+
+// OAuthCallbackOutput is the full response for OAuth callback.
+type OAuthCallbackOutput struct {
+	SetCookie http.Cookie `header:"Set-Cookie"`
+	Body      OAuthCallbackResponse
+}
+
+// OAuthEmailRequiredResponse indicates email is required to complete OAuth.
+type OAuthEmailRequiredResponse struct {
+	Provider   string `json:"provider"`
+	Subject    string `json:"subject"`
+	Name       string `json:"name"`
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	PictureURL string `json:"pictureUrl,omitempty"`
+	State      string `json:"state"`
+}
+
+// OAuthEmailRequiredOutput is the response when email is required.
+type OAuthEmailRequiredOutput struct {
+	Body OAuthEmailRequiredResponse
+}
+
+// OAuthLinkCallbackOutput is the response for OAuth link callback.
+type OAuthLinkCallbackOutput struct {
+	Body struct {
+		Provider string `json:"provider"`
+	} `json:"body"`
+	EmailRequired *OAuthEmailRequiredResponse `json:"emailRequired,omitempty"`
+}
+
+// OAuthLinkEmailRequiredOutput is the response when email is required for linking.
+type OAuthLinkEmailRequiredOutput struct {
+	Body OAuthEmailRequiredResponse
+}
+
+// OAuthCompleteEmailRequest is the input for completing OAuth with email.
+type OAuthCompleteEmailRequest struct {
+	Email string `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
+	State string `json:"state" doc:"State token" minLength:"1"`
+}
+
+// OAuthCompleteEmailInput wraps the request body.
+type OAuthCompleteEmailInput struct {
+	Body OAuthCompleteEmailRequest
+}
+
+// OAuthLinkResponse is the response body for linking OAuth provider.
+type OAuthLinkResponse struct {
+	Provider string    `json:"provider"`
+	LinkedAt time.Time `json:"linkedAt"`
+}
+
+// OAuthLinkOutput is the response for linking OAuth provider.
+type OAuthLinkOutput struct {
+	Body OAuthLinkResponse
+}
+
+// OAuthIdentityDTO represents a linked OAuth identity.
+type OAuthIdentityDTO struct {
+	Provider      string     `json:"provider"`
+	ProviderEmail string     `json:"providerEmail,omitempty"`
+	LinkedAt      *time.Time `json:"linkedAt,omitempty"`
+	LastUsedAt    *time.Time `json:"lastUsedAt,omitempty"`
+}
+
+// OAuthIdentitiesResponse is the response for listing OAuth identities.
+type OAuthIdentitiesResponse struct {
+	Identities []OAuthIdentityDTO `json:"identities"`
+}
+
+// OAuthIdentitiesOutput is the response for listing OAuth identities.
+type OAuthIdentitiesOutput struct {
+	Body OAuthIdentitiesResponse
+}
+
+// OAuthUnlinkOutput is the response for unlinking OAuth provider.
+type OAuthUnlinkOutput struct {
+	Body struct {
+		Unlinked string `json:"unlinked"`
+	}
+}

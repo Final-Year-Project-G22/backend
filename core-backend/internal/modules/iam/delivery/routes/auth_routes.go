@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -61,7 +63,92 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		DefaultStatus: 200,
 	}, deps.AuthHandler.HandleLogoutAll)
 
+	registerOAuthRoutes(api, deps)
+
 	registerSecurityScheme(api)
+}
+
+func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
+	huma.Register(api, huma.Operation{
+		OperationID: "getOAuthProviders",
+		Method:      "GET",
+		Path:        authBase + "/oauth/providers",
+		Summary:     "List OAuth providers",
+		Description: "Returns a list of available OAuth providers for authentication.",
+		Tags:        []string{"OAuth"},
+	}, deps.OAuthHandler.HandleGetProviders)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "initiateOAuthLogin",
+		Method:        "GET",
+		Path:          authBase + "/oauth/login/{provider}",
+		Summary:       "Initiate OAuth login",
+		Description:   "Redirects to the OAuth provider for authentication.",
+		Tags:          []string{"OAuth"},
+		DefaultStatus: http.StatusFound,
+	}, deps.OAuthHandler.HandleInitiateLogin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "oauthCallback",
+		Method:      "GET",
+		Path:        authBase + "/oauth/callback/{provider}",
+		Summary:     "OAuth callback",
+		Description: "Handles the OAuth callback from the provider.",
+		Tags:        []string{"OAuth"},
+	}, deps.OAuthHandler.HandleCallback)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "oauthCompleteWithEmail",
+		Method:      "POST",
+		Path:        authBase + "/oauth/complete",
+		Summary:     "Complete OAuth with email",
+		Description: "Completes OAuth flow when email is required.",
+		Tags:        []string{"OAuth"},
+	}, deps.OAuthHandler.HandleCompleteWithEmail)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "initiateOAuthLink",
+		Method:      "GET",
+		Path:        authBase + "/oauth/link/{provider}",
+		Summary:     "Initiate OAuth link",
+		Description: "Initiates linking an OAuth provider to the authenticated account.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleInitiateLink)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "oauthLinkCallback",
+		Method:      "GET",
+		Path:        authBase + "/oauth/link/callback/{provider}",
+		Summary:     "OAuth link callback",
+		Description: "Handles the OAuth callback when linking a provider.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleLinkCallback)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "getOAuthIdentities",
+		Method:      "GET",
+		Path:        authBase + "/oauth/identities",
+		Summary:     "List linked OAuth identities",
+		Description: "Returns all OAuth providers linked to the authenticated account.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleGetIdentities)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "unlinkOAuthProvider",
+		Method:      "DELETE",
+		Path:        authBase + "/oauth/identities/{provider}",
+		Summary:     "Unlink OAuth provider",
+		Description: "Unlinks an OAuth provider from the authenticated account.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleUnlink)
 }
 
 func registerSecurityScheme(api huma.API) {

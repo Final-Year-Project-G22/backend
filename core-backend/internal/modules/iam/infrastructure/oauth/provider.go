@@ -7,6 +7,7 @@ import (
 type OAuthProvider interface {
 	goth.Provider
 	GetAuthURL(state string) string
+	GetGothProvider() goth.Provider
 }
 
 type ProviderRegistry struct {

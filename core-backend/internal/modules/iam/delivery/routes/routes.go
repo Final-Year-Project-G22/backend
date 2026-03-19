@@ -9,6 +9,7 @@ type RouteDependencies struct {
 	AuthHandler    *handler.AuthHandler
 	UserHandler    *handler.UserHandler
 	ImageHandler   *handler.ImageHandler
+	OAuthHandler   *handler.OAuthHandler
 	AuthMiddleware func(huma.Context, func(huma.Context))
 }
 

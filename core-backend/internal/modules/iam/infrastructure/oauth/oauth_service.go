@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/google"
+	"go.uber.org/zap"
 )
 
 type oauthService struct {
@@ -71,19 +73,23 @@ func (s *oauthService) InitiateLogin(ctx context.Context, provider iamdomain.Pro
 		return "", nil, errors.BadRequestError("oauth.errors.unsupportedProvider")
 	}
 
-	session, err := p.BeginAuth("")
-	if err != nil {
-		return "", nil, errors.InternalError("oauth.errors.authInitFailed", err)
-	}
-
 	state, cookie, err := s.stateManager.GenerateState(ctx, string(provider), false, "")
 	if err != nil {
 		return "", nil, errors.InternalError("oauth.errors.stateGenerationFailed", err)
 	}
 
+	session, err := p.BeginAuth(state)
+	if err != nil {
+		return "", nil, errors.InternalError("oauth.errors.authInitFailed", err)
+	}
+
 	s.stateManager.StoreSessionData(state, session.Marshal())
 
-	authURL, _ := session.GetAuthURL()
+	authURL, err := session.GetAuthURL()
+	if err != nil || authURL == "" {
+		return "", nil, errors.InternalError("oauth.errors.authInitFailed", err)
+	}
+
 	return authURL, cookie, nil
 }
 
@@ -134,7 +140,13 @@ func (s *oauthService) HandleCallback(ctx context.Context, provider iamdomain.Pr
 		return nil, nil, errors.InternalError("oauth.errors.sessionUnmarshalFailed", err)
 	}
 
-	_, err = session.Authorize(p, url.Values{"code": []string{code}})
+	s.logger.Debug("session data retrieved", zap.String("sessionType", fmt.Sprintf("%T", session)))
+	s.logger.Debug("session data", zap.String("data", sessionData))
+
+	gothProvider := p.GetGothProvider()
+	s.logger.Debug("goth provider type", zap.String("type", fmt.Sprintf("%T", gothProvider)))
+
+	_, err = session.Authorize(gothProvider, url.Values{"code": []string{code}})
 	if err != nil {
 		return nil, nil, errors.InternalError("oauth.errors.tokenExchangeFailed", err)
 	}
@@ -188,7 +200,8 @@ func (s *oauthService) HandleLinkCallback(ctx context.Context, provider iamdomai
 		return nil, nil, errors.InternalError("oauth.errors.sessionUnmarshalFailed", err)
 	}
 
-	_, err = session.Authorize(p, url.Values{"code": []string{code}})
+	gothProvider := p.GetGothProvider()
+	_, err = session.Authorize(gothProvider, url.Values{"code": []string{code}})
 	if err != nil {
 		return nil, nil, errors.InternalError("oauth.errors.tokenExchangeFailed", err)
 	}
