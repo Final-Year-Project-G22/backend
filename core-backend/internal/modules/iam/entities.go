@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 )
 
@@ -9,7 +8,7 @@ import (
 type EntityProvider struct{}
 
 // NewEntityProvider creates the entity provider
-func NewEntityProvider() core.EntityProvider {
+func NewEntityProvider() *EntityProvider {
 	return &EntityProvider{}
 }
 
