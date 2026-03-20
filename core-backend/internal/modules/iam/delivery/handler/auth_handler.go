@@ -12,6 +12,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 const refreshCookiePath = "/api/v1/auth/refresh"
@@ -74,6 +75,30 @@ func (h *AuthHandler) HandleLogin(ctx context.Context, input *dto.LoginInput) (*
 			Account:     toAccountDTO(result.Account),
 		},
 	}, nil
+}
+
+func (h *AuthHandler) HandleAccountPasswordUpdate(ctx context.Context, input *dto.UpdateAccountPasswordInput) (*dto.UpdateAccountPasswordOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	err := h.authService.UpdateAccountPassword(ctx, accountID, service.UpdateAccountPasswordInput{
+		ExistingPassword: input.Body.ExistingPassword,
+		NewPassword:      input.Body.NewPassword,
+		ConfirmPassword:  input.Body.ConfirmPassword,
+	})
+
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.UpdateAccountPasswordOutput{
+		Body: dto.UpdateAccountPasswordResponseBody{
+			Message: i18n.Resolve("iam.successes.passwordUpdated", i18n.LocaleFromContext(ctx)),
+		},
+	}, nil
+
 }
 
 // HandleRefresh handles POST /api/v1/auth/refresh

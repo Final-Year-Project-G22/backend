@@ -34,6 +34,9 @@
       "readFileFailed": "ፋይል ለማንበብ ተሳካምንያለም",
       "uploadFileFailed": "ፋይል ለማስተላለፍ ተሳካምንያለም",
       "updateFailed": "የተጠቃሚ ገጽ ለማዘመር ተሳካምንያለም"
+    },
+    "successes":{
+      "passwordUpdated":"የይለፍ ቃል ተዘምኗል"
     }
   },
   "errors": {

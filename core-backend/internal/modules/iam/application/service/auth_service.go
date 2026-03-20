@@ -26,6 +26,7 @@ type AuthService interface {
 	LogoutAll(ctx context.Context, accountID uuid.UUID) error
 	GetAccountIDBySessionID(ctx context.Context, sessionID uuid.UUID) (uuid.UUID, error)
 	UpdateUserProfile(ctx context.Context, useId uuid.UUID, input UpdateUserProfileInput) (*UpdateUserProfileOutput, error)
+	UpdateAccountPassword(ctx context.Context, userId uuid.UUID, input UpdateAccountPasswordInput) error
 }
 
 type RegisterInput struct {
@@ -52,6 +53,11 @@ type UpdateUserProfileOutput struct {
 	FirstName string
 	LastName  string
 	Bio       string
+}
+type UpdateAccountPasswordInput struct {
+	ExistingPassword string
+	NewPassword      string
+	ConfirmPassword  string
 }
 
 type AuthResult struct {
@@ -286,6 +292,43 @@ func (s *authService) UpdateUserProfile(ctx context.Context, userId uuid.UUID, i
 		LastName:  user.LastName,
 		Bio:       bio,
 	}, nil
+}
+
+func (s *authService) UpdateAccountPassword(ctx context.Context, accountID uuid.UUID, input UpdateAccountPasswordInput) error {
+
+	account, err := s.accountUsecase.GetAccount(ctx, accountID)
+
+	if err != nil {
+		return err
+	}
+
+	if account.PasswordHash == nil {
+		return errors.UnauthorizedError("iam.errors.invalidPassword")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(*account.PasswordHash), []byte(input.ExistingPassword)); err != nil {
+		return errors.UnauthorizedError("iam.errors.invalidPassword")
+	}
+
+	if input.NewPassword != input.ConfirmPassword {
+		return errors.BadRequestError("iam.errors.passwordMismatch")
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Error("Failed to hash new password", core.Error(err))
+		return errors.InternalError("iam.errors.passwordHashFailed", err)
+	}
+
+	err = s.accountUsecase.UpdateAccountPassword(ctx, account.ID, usecase.UpdateAccountPasswordInput{
+		NewHashedPassword: string(hashedPassword),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info("Account password updated successfully", core.String("userID", account.ID.String()))
+	return nil
+
 }
 
 // Refresh rotates the refresh token and issues new tokens.
