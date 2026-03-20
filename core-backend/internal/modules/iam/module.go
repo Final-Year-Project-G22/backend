@@ -20,12 +20,14 @@ import (
 
 var Module = fx.Module("iam",
 	// Entity Provider (for schema manager / migrations)
-	fx.Provide(
-		fx.Annotate(
-			NewEntityProvider,
-			fx.As(new(core.EntityProvider)),
-		),
-	),
+	fx.Provide(NewEntityProvider),
+
+	// Register schema provider
+	fx.Invoke(func(sm *core.SchemaManager, provider *EntityProvider) {
+		if err := sm.RegisterProvider(provider); err != nil {
+			panic(err)
+		}
+	}),
 
 	// Transactor (core.Database implements sharedrepo.Transactor)
 	fx.Provide(
@@ -172,13 +174,6 @@ var Module = fx.Module("iam",
 	fx.Provide(handler.NewOAuthHandler),
 
 	// Invocations
-
-	// Register schema provider
-	fx.Invoke(func(sm *core.SchemaManager, provider core.EntityProvider) {
-		if err := sm.RegisterProvider(provider); err != nil {
-			panic(err)
-		}
-	}),
 
 	// Register routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, imageHandler *handler.ImageHandler, oauthHandler *handler.OAuthHandler, tokenService token.TokenService, authService service.AuthService) {
