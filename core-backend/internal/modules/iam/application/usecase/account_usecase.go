@@ -89,6 +89,25 @@ func (u *accountUsecase) UpdateAccount(ctx context.Context, accountID uuid.UUID,
 	u.logger.Info("Account updated", core.String("accountID", account.ID.String()))
 	return account, nil
 }
+func (u *accountUsecase) UpdateAccountPassword(ctx context.Context, accountId uuid.UUID, input usecase.UpdateAccountPasswordInput) error {
+	account, err := u.accountRepo.GetByID(ctx, accountId)
+	if err != nil {
+		return err
+	}
+
+	hashedPassword := strings.TrimSpace(input.NewHashedPassword)
+	if hashedPassword != "" {
+		account.PasswordHash = &hashedPassword
+	}
+
+	err = u.accountRepo.Update(ctx, account)
+	if err != nil {
+		return err
+	}
+	u.logger.Info("Account password updated", core.String("accountId", account.ID.String()))
+	return nil
+
+}
 
 func (u *accountUsecase) ChangeAccountStatus(ctx context.Context, accountID uuid.UUID, status entity.AccountStatus) error {
 	if err := u.accountRepo.UpdateStatus(ctx, accountID, status); err != nil {

@@ -43,6 +43,21 @@ type UpdateUserProfileResponseBody struct {
 type UpdateUserProfileOutput struct {
 	Body UpdateUserProfileResponseBody
 }
+type UpdateAccountPasswordRequest struct {
+	ExistingPassword string `json:"existingPassword" doc:"Password" minLength:"1" maxLength:"128"`
+	NewPassword      string `json:"newPassword" doc:"Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
+	ConfirmPassword  string `json:"confirmPassword" doc:"Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
+}
+
+type UpdateAccountPasswordInput struct {
+	Body UpdateAccountPasswordRequest
+}
+type UpdateAccountPasswordResponseBody struct {
+	Message string `json:"message" doc:"Message"`
+}
+type UpdateAccountPasswordOutput struct {
+	Body UpdateAccountPasswordResponseBody
+}
 
 // RegisterRequest is the input for user registration.
 type RegisterRequest struct {

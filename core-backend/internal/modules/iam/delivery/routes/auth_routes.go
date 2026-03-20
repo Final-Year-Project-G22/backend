@@ -65,6 +65,17 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 
 	registerOAuthRoutes(api, deps)
 
+	huma.Register(api, huma.Operation{
+		OperationID: "AccountPassword",
+		Method:      "PUT",
+		Path:        authBase + "/user/updatePassword",
+		Summary:     "Update account password",
+		Description: "Updates account password",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AuthHandler.HandleAccountPasswordUpdate)
+
 	registerSecurityScheme(api)
 }
 

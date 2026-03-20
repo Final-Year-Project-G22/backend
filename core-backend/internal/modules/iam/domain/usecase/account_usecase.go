@@ -14,6 +14,7 @@ type AccountUsecase interface {
 	ListUserAccounts(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error)
 	UpdateAccount(ctx context.Context, accountID uuid.UUID, input UpdateAccountInput) (*entity.Account, error)
 	ChangeAccountStatus(ctx context.Context, accountID uuid.UUID, status entity.AccountStatus) error
+	UpdateAccountPassword(ctx context.Context, accountID uuid.UUID, input UpdateAccountPasswordInput) error
 }
 
 type CreateAccountInput struct {
@@ -28,4 +29,8 @@ type CreateAccountInput struct {
 type UpdateAccountInput struct {
 	Email       *string
 	PhoneNumber *string
+}
+
+type UpdateAccountPasswordInput struct {
+	NewHashedPassword string
 }
