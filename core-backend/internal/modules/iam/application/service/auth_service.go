@@ -27,6 +27,7 @@ type AuthService interface {
 	GetAccountIDBySessionID(ctx context.Context, sessionID uuid.UUID) (uuid.UUID, error)
 	UpdateUserProfile(ctx context.Context, useId uuid.UUID, input UpdateUserProfileInput) (*UpdateUserProfileOutput, error)
 	UpdateAccountPassword(ctx context.Context, userId uuid.UUID, input UpdateAccountPasswordInput) error
+	GetCurrentUser(ctx context.Context, userID uuid.UUID, accountID uuid.UUID) (*GetCurrentUserOutput, error)
 }
 
 type RegisterInput struct {
@@ -72,6 +73,10 @@ type ValidatedAccessSessionOutput struct {
 	Email     string
 	AccountID uuid.UUID
 	UserID    uuid.UUID
+}
+type GetCurrentUserOutput struct {
+	User    *entity.User
+	Account *entity.Account
 }
 
 type authService struct {
@@ -488,4 +493,21 @@ func (s *authService) GetAccountIDBySessionID(ctx context.Context, sessionID uui
 		return uuid.Nil, err
 	}
 	return session.AccountID, nil
+}
+
+func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID, accountID uuid.UUID) (*GetCurrentUserOutput, error) {
+	user, err := s.userUsecase.GetUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := s.accountUsecase.GetAccount(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetCurrentUserOutput{
+		User:    user,
+		Account: account,
+	}, nil
 }

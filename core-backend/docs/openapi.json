@@ -203,6 +203,33 @@
         ],
         "type": "object"
       },
+      "GetCurrentUserResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetCurrentUserResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "account": {
+            "$ref": "#/components/schemas/AccountDTO",
+            "description": "Current user account"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDTO",
+            "description": "Current user"
+          }
+        },
+        "required": [
+          "user",
+          "account"
+        ],
+        "type": "object"
+      },
       "GetOAuthProvidersResponse": {
         "additionalProperties": false,
         "properties": {
@@ -627,6 +654,66 @@
         ],
         "type": "object"
       },
+      "UpdateAccountPasswordRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateAccountPasswordRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "confirmPassword": {
+            "description": "Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)",
+            "maxLength": 128,
+            "minLength": 8,
+            "type": "string"
+          },
+          "existingPassword": {
+            "description": "Password",
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "newPassword": {
+            "description": "Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)",
+            "maxLength": 128,
+            "minLength": 8,
+            "type": "string"
+          }
+        },
+        "required": [
+          "existingPassword",
+          "newPassword",
+          "confirmPassword"
+        ],
+        "type": "object"
+      },
+      "UpdateAccountPasswordResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateAccountPasswordResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "UpdateUserProfileRequest": {
         "additionalProperties": false,
         "properties": {
@@ -881,6 +968,43 @@
           }
         ],
         "summary": "Log out all sessions",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "Returns the current authenticated user's profile and account information.",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCurrentUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get current user",
         "tags": [
           "Authentication"
         ]
@@ -1372,6 +1496,53 @@
           }
         },
         "summary": "Register a new user",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/user/updatePassword": {
+      "put": {
+        "description": "Updates account password",
+        "operationId": "AccountPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateAccountPasswordResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update account password",
         "tags": [
           "Authentication"
         ]
