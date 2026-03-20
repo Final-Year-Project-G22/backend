@@ -101,6 +101,28 @@ func (h *AuthHandler) HandleAccountPasswordUpdate(ctx context.Context, input *dt
 
 }
 
+func (h *AuthHandler) HandleGetCurrentUser(ctx context.Context, input *dto.GetCurrentUserInput) (*dto.GetCurrentUserOutput, error) {
+
+	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if userID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	result, err := h.authService.GetCurrentUser(ctx, userID, accountID)
+
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.GetCurrentUserOutput{
+		Body: dto.GetCurrentUserResponseBody{
+			User:    toUserDTO(result.User),
+			Account: toAccountDTO(result.Account),
+		},
+	}, nil
+}
+
 // HandleRefresh handles POST /api/v1/auth/refresh
 func (h *AuthHandler) HandleRefresh(ctx context.Context, input *dto.RefreshInput) (*dto.RefreshOutput, error) {
 	if input.RefreshToken == "" {

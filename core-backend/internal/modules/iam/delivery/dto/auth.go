@@ -58,6 +58,16 @@ type UpdateAccountPasswordResponseBody struct {
 type UpdateAccountPasswordOutput struct {
 	Body UpdateAccountPasswordResponseBody
 }
+type GetCurrentUserResponseBody struct {
+	User    UserDTO    `json:"user" doc:"Current user"`
+	Account AccountDTO `json:"account" doc:"Current user account"`
+}
+
+type GetCurrentUserInput struct{}
+
+type GetCurrentUserOutput struct {
+	Body GetCurrentUserResponseBody
+}
 
 // RegisterRequest is the input for user registration.
 type RegisterRequest struct {
