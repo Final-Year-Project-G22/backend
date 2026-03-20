@@ -76,6 +76,17 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AuthHandler.HandleAccountPasswordUpdate)
 
+	huma.Register(api, huma.Operation{
+		OperationID: "getCurrentUser",
+		Method:      "GET",
+		Path:        authBase + "/me",
+		Summary:     "Get current user",
+		Description: "Returns the current authenticated user's profile and account information.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AuthHandler.HandleGetCurrentUser)
+
 	registerSecurityScheme(api)
 }
 
