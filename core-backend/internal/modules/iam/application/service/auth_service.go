@@ -326,7 +326,7 @@ func (s *authService) UpdateAccountPassword(ctx context.Context, accountID uuid.
 		return err
 	}
 
-	s.logger.Info("Account password updated successfully", core.String("userID", account.ID.String()))
+	s.logger.Info("Account password updated successfully", core.String("accountID", account.ID.String()))
 	return nil
 
 }
