@@ -5,11 +5,40 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/handlers"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/email"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"github.com/danielgtaylor/huma/v2"
+
 	"go.uber.org/fx"
 )
+
+func provideMessageBus(cfg *Config) (rabbitmq.Bus, error) {
+	if !cfg.RabbitMQ.Enabled {
+		return rabbitmq.NoOp(), nil
+	}
+	return rabbitmq.New(cfg.RabbitMQ)
+}
+
+func provideEmailer(cfg *Config) (email.Emailer, error) {
+	if !cfg.Email.Enabled {
+		return nil, nil
+	}
+	return email.NewEmailer(cfg.Email)
+}
+
+func registerEventHandlers(lc fx.Lifecycle, bus rabbitmq.Bus, emailer email.Emailer, logger Logger) {
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			return handlers.RegisterEventHandlers(bus, emailer, logger)
+		},
+		OnStop: func(ctx context.Context) error {
+			return nil
+		},
+	})
+}
 
 var Module = fx.Module("core",
 	fx.Provide(
@@ -19,6 +48,8 @@ var Module = fx.Module("core",
 		NewSchemaManager,
 		NewMigrator,
 		NewCache,
+		provideMessageBus,
+		provideEmailer,
 		NewGinEngine,
 		NewHTTPServer,
 		NewHumaAPI,
@@ -28,7 +59,7 @@ var Module = fx.Module("core",
 		storage.NewStorage,
 	),
 	fx.Invoke(registerLifecycleHooks),
-	// Ensure HTTP server and Huma API are instantiated by depending on them
+	fx.Invoke(registerEventHandlers),
 	fx.Invoke(func(*http.Server, huma.API) {}),
 )
 
@@ -40,6 +71,7 @@ func registerLifecycleHooks(
 	sm *SchemaManager,
 	m *Migrator,
 	cache Cache,
+	bus rabbitmq.Bus,
 ) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -47,23 +79,32 @@ func registerLifecycleHooks(
 				String("cfg", cfg.App.Name),
 				String("env", cfg.App.Environment),
 			)
-			// Run Health checks
+			log.Info("Initialize Internationalization")
+			if err := i18n.Init(""); err != nil {
+				return err
+			}
 			if err := db.Health(ctx); err != nil {
 				return err
+			}
+			if cfg.RabbitMQ.Enabled {
+				log.Info("Connecting to RabbitMQ",
+					String("host", cfg.RabbitMQ.Host),
+					Int("port", cfg.RabbitMQ.Port),
+				)
+			}
+			if cfg.Email.Enabled {
+				log.Info("Email service configured",
+					String("host", cfg.Email.Host),
+					Int("port", cfg.Email.Port),
+				)
 			}
 			if os.Getenv("SKIP_AUTO_MIGRATIONS") == "true" {
 				log.Info("Skipping automatic migrations")
 				log.Info("Core Module started successfully")
 				return nil
 			}
-			// Run Migrations
 			log.Info("Running migrations")
 			if err := m.ApplyMigrations(); err != nil {
-				return err
-			}
-
-			log.Info("Initialize Internationalization")
-			if err := i18n.Init(""); err != nil {
 				return err
 			}
 
@@ -74,7 +115,6 @@ func registerLifecycleHooks(
 			log.Info("Shutting down core module")
 			var shutdownErr error
 
-			// Close Connections
 			if err := db.Close(); err != nil {
 				log.Error("Failed to close database", Error(err))
 				shutdownErr = err
@@ -85,7 +125,13 @@ func registerLifecycleHooks(
 				shutdownErr = err
 			}
 
-			// Sync logger last
+			if cfg.RabbitMQ.Enabled && bus != nil {
+				if err := bus.Close(); err != nil {
+					log.Error("Failed to close RabbitMQ", Error(err))
+					shutdownErr = err
+				}
+			}
+
 			_ = log.Sync()
 
 			return shutdownErr

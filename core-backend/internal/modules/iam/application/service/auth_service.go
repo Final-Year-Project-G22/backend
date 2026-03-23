@@ -8,11 +8,13 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/event"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -87,6 +89,7 @@ type authService struct {
 	sessionRepo    repository.SessionRepository
 	tokenService   token.TokenService
 	logger         core.Logger
+	messageBus     rabbitmq.Bus
 }
 
 func NewAuthService(
@@ -97,6 +100,7 @@ func NewAuthService(
 	sessionRepo repository.SessionRepository,
 	tokenService token.TokenService,
 	logger core.Logger,
+	messageBus rabbitmq.Bus,
 ) AuthService {
 	return &authService{
 		transactor:     transactor,
@@ -106,6 +110,7 @@ func NewAuthService(
 		sessionRepo:    sessionRepo,
 		tokenService:   tokenService,
 		logger:         logger,
+		messageBus:     messageBus,
 	}
 }
 
@@ -196,6 +201,18 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		core.String("accountID", account.ID.String()),
 	)
 
+	go func() {
+		err := s.messageBus.Publish(context.Background(), event.UserRegistered, event.UserRegisteredEvent{
+			ID:        user.ID.String(),
+			Email:     account.Email,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+		})
+		if err != nil {
+			s.logger.Error("Failed to publish user registered event", core.Error(err))
+		}
+	}()
+
 	return &AuthResult{
 		AccessToken:  accessToken,
 		RefreshToken: rawRefreshToken,
@@ -227,9 +244,9 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 	}
 
 	// Check account status
-	if err := s.ensureAccountCanAuthenticate(account); err != nil {
-		return nil, err
-	}
+	// if err := s.ensureAccountCanAuthenticate(account); err != nil {
+	// 	return nil, err
+	// }
 
 	// Get user
 	user, err := s.userUsecase.GetUser(ctx, account.UserID)

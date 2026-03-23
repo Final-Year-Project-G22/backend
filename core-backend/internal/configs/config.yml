@@ -59,3 +59,22 @@ oauth:
       scopes:
         - email
         - public_profile
+rabbitmq:
+  enabled: ${RABBITMQ_ENABLED}
+  host: ${RABBITMQ_HOST}
+  port: ${RABBITMQ_PORT}
+  username: ${RABBITMQ_USERNAME}
+  password: ${RABBITMQ_PASSWORD}
+  vhost: ${RABBITMQ_VHOST}
+  exchange: ${RABBITMQ_EXCHANGE}
+  service_name: ${RABBITMQ_SERVICE_NAME}
+
+email:
+  enabled: ${SMTP_ENABLED}
+  host: ${SMTP_HOST}
+  port: ${SMTP_PORT}
+  username: ${SMTP_USERNAME}
+  password: ${SMTP_PASSWORD}
+  from: ${SMTP_FROM}
+  from_name: ${SMTP_FROM_NAME}
+  enable_tls: ${SMTP_ENABLE_TLS}
