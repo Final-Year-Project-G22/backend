@@ -469,15 +469,15 @@ func (s *authService) ensureAccountCanAuthenticate(account *entity.Account) erro
 	case entity.AccountStatusActive:
 		return nil
 	case entity.AccountStatusPendingVerification:
-		return errors.ForbiddenError("errors.forbidden")
+		return errors.ForbiddenError("iam.errors.accountStatusPendingVerification")
 	case entity.AccountStatusLocked:
-		return errors.ForbiddenError("errors.forbidden")
+		return errors.ForbiddenError("iam.errors.accountStatusLocked")
 	case entity.AccountStatusSuspended:
-		return errors.ForbiddenError("errors.forbidden")
+		return errors.ForbiddenError("iam.errors.accountStatusSuspended")
 	case entity.AccountStatusDisabled:
-		return errors.ForbiddenError("errors.forbidden")
+		return errors.ForbiddenError("iam.errors.accountStatusDisabled")
 	default:
-		return errors.ForbiddenError("errors.forbidden")
+		return errors.ForbiddenError("iam.errors.forbidden")
 	}
 }
 
