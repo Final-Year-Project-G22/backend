@@ -39,6 +39,12 @@
       "passwordUpdated":"የይለፍ ቃል ተዘምኗል"
     }
   },
+  "email": {
+    "welcome": {
+      "subject": "ወደ አዲሱ ሰራተኛ እንኳን በደህና መጡ",
+      "template": "<div style='font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;padding:24px'><div style='max-width:620px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb'><div style='background:#0f4c81;color:#ffffff;padding:18px 24px;font-size:20px;font-weight:700'>Adisu Serategna</div><div style='padding:24px;color:#111827;line-height:1.6'><p style='margin:0 0 12px'>ሰላም {{.firstName}},</p><p style='margin:0 0 12px'>ወደ አዲሱ ሰራተኛ እንኳን በደህና መጡ። ከእኛ ጋር በመሆንዎ ደስ ብሎናል።</p><p style='margin:0'>ከሰላምታ ጋር,<br/>የአዲሱ ሰራተኛ ቡድን</p></div></div></div>"
+    }
+  },
   "errors": {
     "databaseError": "የውሂብ ጎታ ስህተት",
     "cacheError": "ኬሽ ስህተት",

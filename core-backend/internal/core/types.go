@@ -4,19 +4,23 @@ import (
 	"context"
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/pkg/email"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"go.uber.org/zap"
 )
 
 type Config struct {
-	App      AppConfig      `mapstructure:"app"`
-	Database DatabaseConfig `mapstructure:"database"`
-	Cache    CacheConfig    `mapstructure:"cache"`
-	Logger   LoggerConfig   `mapstructure:"logger"`
-	Server   ServerConfig   `mapstructure:"server"`
-	Storage  storage.Config `mapstructure:"storage"`
-	JWT      JWTConfig      `mapstructure:"jwt"`
-	OAuth    OAuthConfig    `mapstructure:"oauth"`
+	App      AppConfig       `mapstructure:"app"`
+	Database DatabaseConfig  `mapstructure:"database"`
+	Cache    CacheConfig     `mapstructure:"cache"`
+	Logger   LoggerConfig    `mapstructure:"logger"`
+	Server   ServerConfig    `mapstructure:"server"`
+	Storage  storage.Config  `mapstructure:"storage"`
+	JWT      JWTConfig       `mapstructure:"jwt"`
+	OAuth    OAuthConfig     `mapstructure:"oauth"`
+	RabbitMQ rabbitmq.Config `mapstructure:"rabbitmq"`
+	Email    email.Config    `mapstructure:"email"`
 }
 
 type AppConfig struct {
