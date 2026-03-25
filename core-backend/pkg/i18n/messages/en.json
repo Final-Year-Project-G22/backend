@@ -16,6 +16,10 @@
       "invalidCredentials": "Invalid email or password",
       "tokenExpired": "Token has expired",
       "tokenInvalid": "Invalid token",
+      "accountStatusPendingVerification": "Account is pending verification",
+      "accountStatusLocked": "Account is locked",
+      "accountStatusSuspended": "Account is suspended",
+      "accountStatusDisabled": "Account is disabled",
 
       "roleNotFound": "Role not found",
       "permissionDenied": "Permission denied",

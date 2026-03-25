@@ -35,8 +35,8 @@
       "uploadFileFailed": "ፋይል ለማስተላለፍ ተሳካምንያለም",
       "updateFailed": "የተጠቃሚ ገጽ ለማዘመር ተሳካምንያለም"
     },
-    "successes":{
-      "passwordUpdated":"የይለፍ ቃል ተዘምኗል"
+    "successes": {
+      "passwordUpdated": "የይለፍ ቃል ተዘምኗል"
     }
   },
   "email": {
