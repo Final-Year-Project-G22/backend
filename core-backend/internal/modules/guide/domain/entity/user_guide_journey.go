@@ -10,8 +10,9 @@ import (
 
 type UserGuideJourney struct {
 	model.BaseModel    `gorm:"embedded"`
-	UserID             uuid.UUID         `gorm:"type:uuid;not null;uniqueIndex:idx_journey_user_guide,priority:1;index:idx_journey_user"`
-	GuideID            uuid.UUID         `gorm:"type:uuid;not null;uniqueIndex:idx_journey_user_guide,priority:2;index:idx_journey_guide"`
+	AccountID          uuid.UUID         `gorm:"type:uuid;not null;index:idx_journey_account;uniqueIndex:idx_journey_account_user_guide,priority:1"`
+	UserID             uuid.UUID         `gorm:"type:uuid;not null;index:idx_journey_user;uniqueIndex:idx_journey_account_user_guide,priority:2"`
+	GuideID            uuid.UUID         `gorm:"type:uuid;not null;index:idx_journey_guide;uniqueIndex:idx_journey_account_user_guide,priority:3"`
 	Guide              Guide             `gorm:"foreignKey:GuideID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	JourneyHash        *string           `gorm:"type:text"`
 	StepSequence       datatypes.JSONMap `gorm:"type:jsonb;not null"`

@@ -12,8 +12,11 @@ type AccountRepository interface {
 	sharedrepo.GenericRepository[entity.Account]
 
 	GetByEmailNormalized(ctx context.Context, email string) (*entity.Account, error)
+	GetByUsernameNormalized(ctx context.Context, username string) (*entity.Account, error)
+	GetByEmailOrUsername(ctx context.Context, identifier string) (*entity.Account, error)
 	ListByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error)
 	ExistsByEmailNormalized(ctx context.Context, email string) (bool, error)
+	ExistsByUsernameNormalized(ctx context.Context, username string) (bool, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status entity.AccountStatus) error
 	MarkEmailVerifiedAndActivate(ctx context.Context, id uuid.UUID) error
 }
