@@ -27,8 +27,11 @@ func RegisterEventHandlers(bus interface {
 	}
 
 	handlers := map[string]EventHandler{
-		event.UserRegistered: func(ctx context.Context, data []byte) error {
+		event.AccountRegistered: func(ctx context.Context, data []byte) error {
 			return handleUserRegistered(ctx, data, emailer)
+		},
+		event.UserEmailOTPRequested: func(ctx context.Context, data []byte) error {
+			return handleUserEmailOTPRequested(ctx, data, emailer)
 		},
 	}
 
@@ -44,7 +47,7 @@ func RegisterEventHandlers(bus interface {
 }
 
 func handleUserRegistered(ctx context.Context, data []byte, emailer email.Emailer) error {
-	var evt event.UserRegisteredEvent
+	var evt event.AccountRegisteredEvent
 
 	if err := json.Unmarshal(data, &evt); err != nil {
 		return fmt.Errorf("failed to unmarshal user registered event: %w", err)
@@ -75,6 +78,38 @@ func handleUserRegistered(ctx context.Context, data []byte, emailer email.Emaile
 	}
 
 	fmt.Println("EMAIL SENT to", evt.Email)
+
+	return nil
+}
+
+func handleUserEmailOTPRequested(ctx context.Context, data []byte, emailer email.Emailer) error {
+	var evt event.UserEmailOTPRequestedEvent
+
+	if err := json.Unmarshal(data, &evt); err != nil {
+		return fmt.Errorf("failed to unmarshal user email otp requested event: %w", err)
+	}
+
+	locale := evt.Locale
+	if locale == "" || !i18n.HasLocale(locale) {
+		locale = "en"
+	}
+
+	subject := i18n.Resolve("email.verification.subject", locale)
+	templateBody := i18n.Resolve("email.verification.template", locale)
+
+	err := emailer.SendTemplate(ctx, email.SendTemplateInput{
+		To:       []string{evt.Email},
+		Subject:  subject,
+		Template: templateBody,
+		Data: map[string]string{
+			"firstName":      evt.FirstName,
+			"otpCode":        evt.OTPCode,
+			"expiresMinutes": fmt.Sprintf("%d", evt.ExpiresMinutes),
+		},
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

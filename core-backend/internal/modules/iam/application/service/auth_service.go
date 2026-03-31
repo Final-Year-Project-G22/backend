@@ -2,6 +2,12 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
+	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -23,7 +29,9 @@ type AuthService interface {
 	Register(ctx context.Context, input RegisterInput) (*AuthResult, error)
 	Login(ctx context.Context, input LoginInput) (*AuthResult, error)
 	Refresh(ctx context.Context, refreshToken string) (*AuthResult, error)
-	ValidateAccessSession(ctx context.Context, sessionID uuid.UUID) (ValidatedAccessSessionOutput, error)
+	ValidateAccessSession(ctx context.Context, sessionID uuid.UUID, checkStatus bool) (ValidatedAccessSessionOutput, error)
+	VerifyEmailOTP(ctx context.Context, accountID uuid.UUID, userID uuid.UUID, otp string) error
+	ResendEmailOTP(ctx context.Context, accountID uuid.UUID) error
 	Logout(ctx context.Context, sessionID uuid.UUID) error
 	LogoutAll(ctx context.Context, accountID uuid.UUID) error
 	GetAccountIDBySessionID(ctx context.Context, sessionID uuid.UUID) (uuid.UUID, error)
@@ -85,6 +93,7 @@ type authService struct {
 	transactor     sharedrepo.Transactor
 	userUsecase    usecase.UserUsecase
 	accountUsecase usecase.AccountUsecase
+	otpUsecase     usecase.AccountEmailOTPUsecase
 	sessionUsecase usecase.SessionUsecase
 	sessionRepo    repository.SessionRepository
 	tokenService   token.TokenService
@@ -92,10 +101,18 @@ type authService struct {
 	messageBus     rabbitmq.Bus
 }
 
+const (
+	otpTTL           = 3 * time.Minute
+	otpResendCoolOff = 60 * time.Second
+	otpMaxAttempts   = 5
+	otpMaxResends    = 5
+)
+
 func NewAuthService(
 	transactor sharedrepo.Transactor,
 	userUsecase usecase.UserUsecase,
 	accountUsecase usecase.AccountUsecase,
+	otpUsecase usecase.AccountEmailOTPUsecase,
 	sessionUsecase usecase.SessionUsecase,
 	sessionRepo repository.SessionRepository,
 	tokenService token.TokenService,
@@ -106,6 +123,7 @@ func NewAuthService(
 		transactor:     transactor,
 		userUsecase:    userUsecase,
 		accountUsecase: accountUsecase,
+		otpUsecase:     otpUsecase,
 		sessionUsecase: sessionUsecase,
 		sessionRepo:    sessionRepo,
 		tokenService:   tokenService,
@@ -143,9 +161,15 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 	var user *entity.User
 	var account *entity.Account
 	var session *entity.Session
+	var otpCode string
 
 	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		var txErr error
+
+		otpCode, txErr = generateOTPCode()
+		if txErr != nil {
+			return errors.InternalError("iam.errors.failedToGenerateOtp", txErr)
+		}
 
 		// Create user
 		user, txErr = s.userUsecase.CreateUser(txCtx, usecase.CreateUserInput{
@@ -180,6 +204,12 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 			return txErr
 		}
 
+		now := time.Now()
+		_, txErr = s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now)
+		if txErr != nil {
+			return txErr
+		}
+
 		return nil
 	})
 
@@ -201,17 +231,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		core.String("accountID", account.ID.String()),
 	)
 
-	go func() {
-		err := s.messageBus.Publish(context.Background(), event.UserRegistered, event.UserRegisteredEvent{
-			ID:        user.ID.String(),
-			Email:     account.Email,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-		})
-		if err != nil {
-			s.logger.Error("Failed to publish user registered event", core.Error(err))
-		}
-	}()
+	go s.publishEmailOTPRequestedEvent(context.Background(), account, user, otpCode)
 
 	return &AuthResult{
 		AccessToken:  accessToken,
@@ -244,9 +264,9 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 	}
 
 	// Check account status
-	// if err := s.ensureAccountCanAuthenticate(account); err != nil {
-	// 	return nil, err
-	// }
+	if err := s.ensureAccountCanAuthenticate(account); err != nil {
+		return nil, err
+	}
 
 	// Get user
 	user, err := s.userUsecase.GetUser(ctx, account.UserID)
@@ -439,7 +459,7 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 	}, nil
 }
 
-func (s *authService) ValidateAccessSession(ctx context.Context, sessionID uuid.UUID) (ValidatedAccessSessionOutput, error) {
+func (s *authService) ValidateAccessSession(ctx context.Context, sessionID uuid.UUID, checkStatus bool) (ValidatedAccessSessionOutput, error) {
 	session, err := s.sessionRepo.GetActiveByID(ctx, sessionID)
 	if err != nil {
 		if err == iamerror.ErrSessionNotFound {
@@ -453,8 +473,10 @@ func (s *authService) ValidateAccessSession(ctx context.Context, sessionID uuid.
 		return ValidatedAccessSessionOutput{}, err
 	}
 
-	if err := s.ensureAccountCanAuthenticate(account); err != nil {
-		return ValidatedAccessSessionOutput{}, err
+	if checkStatus {
+		if err := s.ensureAccountCanAuthenticate(account); err != nil {
+			return ValidatedAccessSessionOutput{}, err
+		}
 	}
 
 	return ValidatedAccessSessionOutput{
@@ -462,6 +484,117 @@ func (s *authService) ValidateAccessSession(ctx context.Context, sessionID uuid.
 		AccountID: account.ID,
 		UserID:    account.UserID,
 	}, nil
+}
+
+func (s *authService) VerifyEmailOTP(ctx context.Context, accountID uuid.UUID, userID uuid.UUID, otp string) error {
+	account, err := s.accountUsecase.GetAccount(ctx, accountID)
+	if err != nil {
+		return err
+	}
+	user, err := s.userUsecase.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if account.EmailVerified {
+		return nil
+	}
+
+	now := time.Now()
+	activeOTP, err := s.otpUsecase.GetActiveOTP(ctx, accountID, now)
+	if err != nil {
+		if err == iamerror.ErrEmailOTPNotFound {
+			return errors.BadRequestError("iam.errors.invalidOtp")
+		}
+		return err
+	}
+
+	if activeOTP.AttemptCount >= otpMaxAttempts {
+		return errors.BadRequestError("iam.errors.otpAttemptsExceeded")
+	}
+
+	inputHash := hashOTPCode(otp)
+	if subtle.ConstantTimeCompare([]byte(inputHash), []byte(activeOTP.CodeHash)) != 1 {
+		if err := s.otpUsecase.IncrementAttemptCount(ctx, activeOTP.ID); err != nil {
+			return err
+		}
+		return errors.BadRequestError("iam.errors.invalidOtp")
+	}
+
+	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if txErr := s.otpUsecase.ConsumeOTP(txCtx, activeOTP.ID, now); txErr != nil {
+			return txErr
+		}
+
+		return s.accountUsecase.MarkEmailVerifiedAndActivate(txCtx, accountID)
+	})
+	if err != nil {
+		return err
+	}
+
+	go s.publishAccountRegisteredEvent(context.Background(), account, user)
+
+	return nil
+}
+
+func (s *authService) ResendEmailOTP(ctx context.Context, accountID uuid.UUID) error {
+	account, err := s.accountUsecase.GetAccount(ctx, accountID)
+	if err != nil {
+		return err
+	}
+
+	if account.EmailVerified {
+		return errors.BadRequestError("iam.errors.emailAlreadyVerified")
+	}
+
+	user, err := s.userUsecase.GetUser(ctx, account.UserID)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	latestOTP, err := s.otpUsecase.GetLatestOTP(ctx, accountID)
+	if err != nil && err != iamerror.ErrEmailOTPNotFound {
+		return err
+	}
+
+	if err == nil {
+		if now.Sub(latestOTP.LastSentAt) < otpResendCoolOff {
+			return errors.BadRequestError("iam.errors.otpResendTooSoon")
+		}
+		if latestOTP.ResendCount >= otpMaxResends {
+			return errors.BadRequestError("iam.errors.otpResendLimitExceeded")
+		}
+	}
+
+	otpCode, err := generateOTPCode()
+	if err != nil {
+		return errors.InternalError("iam.errors.failedToGenerateOtp", err)
+	}
+
+	resendCount := 1
+	if latestOTP != nil {
+		resendCount = latestOTP.ResendCount + 1
+	}
+
+	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if txErr := s.otpUsecase.InvalidateActiveOTP(txCtx, accountID, now); txErr != nil {
+			return txErr
+		}
+
+		_, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now)
+		if txErr != nil {
+			return txErr
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	go s.publishEmailOTPRequestedEvent(context.Background(), account, user, otpCode)
+
+	return nil
 }
 
 func (s *authService) ensureAccountCanAuthenticate(account *entity.Account) error {
@@ -527,4 +660,43 @@ func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID, acco
 		User:    user,
 		Account: account,
 	}, nil
+}
+
+func (s *authService) publishAccountRegisteredEvent(ctx context.Context, account *entity.Account, user *entity.User) {
+	err := s.messageBus.Publish(ctx, event.AccountRegistered, event.AccountRegisteredEvent{
+		ID:        user.ID.String(),
+		Email:     account.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	})
+	if err != nil {
+		s.logger.Error("Failed to publish user registered event", core.Error(err))
+	}
+}
+
+func (s *authService) publishEmailOTPRequestedEvent(ctx context.Context, account *entity.Account, user *entity.User, otpCode string) {
+	err := s.messageBus.Publish(ctx, event.UserEmailOTPRequested, event.UserEmailOTPRequestedEvent{
+		AccountID:      account.ID.String(),
+		Email:          account.Email,
+		FirstName:      user.FirstName,
+		OTPCode:        otpCode,
+		ExpiresMinutes: int(otpTTL / time.Minute),
+	})
+	if err != nil {
+		s.logger.Error("Failed to publish user email otp requested event", core.Error(err))
+	}
+}
+
+func generateOTPCode() (string, error) {
+	randomInt, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%06d", randomInt.Int64()), nil
+}
+
+func hashOTPCode(otpCode string) string {
+	hash := sha256.Sum256([]byte(strings.TrimSpace(otpCode)))
+	return hex.EncodeToString(hash[:])
 }

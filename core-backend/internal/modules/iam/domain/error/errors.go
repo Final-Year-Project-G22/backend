@@ -16,4 +16,7 @@ var (
 	ErrPermissionNotFound           = errors.New("iam: permission not found")
 	ErrSessionNotFound              = errors.New("iam: session not found")
 	ErrSessionRevoked               = errors.New("iam: session revoked")
+	ErrEmailOTPNotFound             = errors.New("iam: email otp not found")
+	ErrEmailOTPExpired              = errors.New("iam: email otp expired")
+	ErrEmailOTPAlreadyConsumed      = errors.New("iam: email otp already consumed")
 )

@@ -106,3 +106,24 @@ func (r *accountRepository) UpdateStatus(ctx context.Context, id uuid.UUID, stat
 
 	return nil
 }
+
+func (r *accountRepository) MarkEmailVerifiedAndActivate(ctx context.Context, id uuid.UUID) error {
+	result := r.getDB(ctx).
+		Model(&entity.Account{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"email_verified": true,
+			"status":         entity.AccountStatusActive,
+		})
+
+	if result.Error != nil {
+		r.logger.Error("Failed to mark account email verified and active", core.Error(result.Error))
+		return errors.InternalError("errors.databaseError", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return iamerror.ErrAccountNotFound
+	}
+
+	return nil
+}

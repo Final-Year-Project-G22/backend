@@ -1,5 +1,6 @@
 package event
 
 const (
-	UserRegistered = "user.registered"
+	AccountRegistered     = "account.registered"
+	UserEmailOTPRequested = "user.email_otp_requested"
 )

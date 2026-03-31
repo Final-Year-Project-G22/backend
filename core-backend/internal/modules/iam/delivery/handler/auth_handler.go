@@ -77,6 +77,46 @@ func (h *AuthHandler) HandleLogin(ctx context.Context, input *dto.LoginInput) (*
 	}, nil
 }
 
+func (h *AuthHandler) HandleVerifyEmailOTP(ctx context.Context, input *dto.VerifyEmailOTPInput) (*dto.VerifyEmailOTPOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
+	if userID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	err := h.authService.VerifyEmailOTP(ctx, accountID, userID, input.Body.OTP)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.VerifyEmailOTPOutput{
+		Body: dto.VerifyEmailOTPResponseBody{
+			Message: i18n.Resolve("iam.successes.emailVerified", i18n.LocaleFromContext(ctx)),
+		},
+	}, nil
+}
+
+func (h *AuthHandler) HandleResendEmailOTP(ctx context.Context, _ *dto.ResendEmailOTPInput) (*dto.ResendEmailOTPOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	err := h.authService.ResendEmailOTP(ctx, accountID)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.ResendEmailOTPOutput{
+		Body: dto.ResendEmailOTPResponseBody{
+			Message: i18n.Resolve("iam.successes.otpResent", i18n.LocaleFromContext(ctx)),
+		},
+	}, nil
+}
+
 func (h *AuthHandler) HandleAccountPasswordUpdate(ctx context.Context, input *dto.UpdateAccountPasswordInput) (*dto.UpdateAccountPasswordOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	if accountID == contextkeys.NilUUID {

@@ -14,6 +14,7 @@ type AccountUsecase interface {
 	ListUserAccounts(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error)
 	UpdateAccount(ctx context.Context, accountID uuid.UUID, input UpdateAccountInput) (*entity.Account, error)
 	ChangeAccountStatus(ctx context.Context, accountID uuid.UUID, status entity.AccountStatus) error
+	MarkEmailVerifiedAndActivate(ctx context.Context, accountID uuid.UUID) error
 	UpdateAccountPassword(ctx context.Context, accountID uuid.UUID, input UpdateAccountPasswordInput) error
 }
 

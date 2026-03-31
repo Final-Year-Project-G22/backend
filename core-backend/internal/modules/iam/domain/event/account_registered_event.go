@@ -1,6 +1,6 @@
 package event
 
-type UserRegisteredEvent struct {
+type AccountRegisteredEvent struct {
 	ID        string `json:"id"`
 	Email     string `json:"email"`
 	FirstName string `json:"first_name"`

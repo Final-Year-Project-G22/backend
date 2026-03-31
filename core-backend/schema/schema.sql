@@ -5,6 +5,10 @@ CREATE TABLE "accounts" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timest
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_accounts_email_normalized" ON "accounts" ("email_normalized");
 CREATE INDEX IF NOT EXISTS "idx_accounts_user_id" ON "accounts" ("user_id");
 CREATE INDEX IF NOT EXISTS "idx_accounts_deleted_at" ON "accounts" ("deleted_at");
+CREATE TABLE "account_email_otps" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"account_id" uuid NOT NULL,"code_hash" varchar(255) NOT NULL,"expires_at" timestamptz NOT NULL,"consumed_at" timestamptz,"attempt_count" bigint NOT NULL DEFAULT 0,"resend_count" bigint NOT NULL DEFAULT 0,"last_sent_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_account_email_otps_expires_at" ON "account_email_otps" ("expires_at");
+CREATE INDEX IF NOT EXISTS "idx_account_email_otps_account_id" ON "account_email_otps" ("account_id");
+CREATE INDEX IF NOT EXISTS "idx_account_email_otps_deleted_at" ON "account_email_otps" ("deleted_at");
 CREATE TABLE "roles" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"code" varchar(100) NOT NULL,"name" varchar(100) NOT NULL,"description" text,"type" varchar(32) NOT NULL DEFAULT 'system',"is_system" boolean NOT NULL DEFAULT true,"is_mutable" boolean NOT NULL DEFAULT false,PRIMARY KEY ("id"));
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_roles_code" ON "roles" ("code");
 CREATE INDEX IF NOT EXISTS "idx_roles_deleted_at" ON "roles" ("deleted_at");
@@ -100,6 +104,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "idx_guide_trans" ON "guide_translations" ("gu
 CREATE TABLE "guide_step_translations" ("id" uuid DEFAULT gen_random_uuid(),"guide_step_id" uuid NOT NULL,"language" varchar(10) NOT NULL,"title" varchar(200) NOT NULL,"description" text,"detailed_content" JSONB NOT NULL DEFAULT '{}',"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY ("id"));
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_step_trans" ON "guide_step_translations" ("guide_step_id","language");
 ALTER TABLE "accounts" ADD CONSTRAINT "fk_users_accounts" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "account_email_otps" ADD CONSTRAINT "fk_account_email_otps_account" FOREIGN KEY ("account_id") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "role_permissions" ADD CONSTRAINT "fk_permissions_role_permissions" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "role_permissions" ADD CONSTRAINT "fk_roles_role_permissions" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "role_assignments" ADD CONSTRAINT "fk_role_assignments_assigned_by_account" FOREIGN KEY ("assigned_by") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

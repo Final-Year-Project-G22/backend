@@ -70,11 +70,11 @@ rabbitmq:
   service_name: ${RABBITMQ_SERVICE_NAME}
 
 email:
-  enabled: ${SMTP_ENABLED}
-  host: ${SMTP_HOST}
-  port: ${SMTP_PORT}
-  username: ${SMTP_USERNAME}
-  password: ${SMTP_PASSWORD}
-  from: ${SMTP_FROM}
-  from_name: ${SMTP_FROM_NAME}
-  enable_tls: ${SMTP_ENABLE_TLS}
+  enabled: ${EMAIL_ENABLED}
+  host: ${EMAIL_HOST}
+  port: ${EMAIL_PORT}
+  username: ${EMAIL_USERNAME}
+  password: ${EMAIL_PASSWORD}
+  from: ${EMAIL_FROM}
+  from_name: ${EMAIL_FROM_NAME}
+  enable_tls: ${EMAIL_ENABLE_TLS}
