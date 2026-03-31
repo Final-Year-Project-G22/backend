@@ -26,7 +26,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Method:      "POST",
 		Path:        authBase + "/login",
 		Summary:     "Log in a user",
-		Description: "Authenticates a user with email and password, returns authentication tokens.",
+		Description: "Authenticates a user with email or username and password, returns authentication tokens.",
 		Tags:        []string{"Authentication"},
 	}, deps.AuthHandler.HandleLogin)
 

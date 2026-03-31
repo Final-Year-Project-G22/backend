@@ -5,9 +5,11 @@ import (
 	"strings"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/validation"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
 )
 
@@ -27,8 +29,31 @@ func NewAccountUsecase(
 }
 
 func (u *accountUsecase) CreateAccount(ctx context.Context, input usecase.CreateAccountInput) (*entity.Account, error) {
-	email := strings.TrimSpace(input.Email)
-	normalizedEmail := strings.ToLower(email)
+	normalizedEmail, ok := validation.NormalizeEmail(input.Email)
+	if !ok {
+		return nil, errors.BadRequestError("iam.errors.invalidEmailFormat")
+	}
+
+	var username *string
+	var usernameNormalized *string
+	if input.Username != nil {
+		if strings.TrimSpace(*input.Username) != "" {
+			normalized, valid := validation.NormalizeUsername(*input.Username)
+			if !valid {
+				return nil, errors.BadRequestError("iam.errors.invalidUsernameFormat")
+			}
+			exists, err := u.accountRepo.ExistsByUsernameNormalized(ctx, normalized)
+			if err != nil {
+				return nil, err
+			}
+			if exists {
+				return nil, errors.ConflictError("iam.errors.usernameAlreadyExists")
+			}
+
+			username = &normalized
+			usernameNormalized = &normalized
+		}
+	}
 
 	status := input.Status
 	if status == "" {
@@ -36,13 +61,15 @@ func (u *accountUsecase) CreateAccount(ctx context.Context, input usecase.Create
 	}
 
 	account := &entity.Account{
-		UserID:          input.UserID,
-		Email:           email,
-		EmailNormalized: normalizedEmail,
-		PasswordHash:    input.PasswordHash,
-		PhoneNumber:     input.PhoneNumber,
-		EmailVerified:   input.EmailVerified,
-		Status:          status,
+		UserID:             input.UserID,
+		Email:              normalizedEmail,
+		EmailNormalized:    normalizedEmail,
+		Username:           username,
+		UsernameNormalized: usernameNormalized,
+		PasswordHash:       input.PasswordHash,
+		PhoneNumber:        input.PhoneNumber,
+		EmailVerified:      input.EmailVerified,
+		Status:             status,
 	}
 
 	if err := u.accountRepo.Create(ctx, account); err != nil {
@@ -63,6 +90,10 @@ func (u *accountUsecase) GetAccountByEmail(ctx context.Context, email string) (*
 	return u.accountRepo.GetByEmailNormalized(ctx, email)
 }
 
+func (u *accountUsecase) GetAccountByIdentifier(ctx context.Context, identifier string) (*entity.Account, error) {
+	return u.accountRepo.GetByEmailOrUsername(ctx, identifier)
+}
+
 func (u *accountUsecase) ListUserAccounts(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error) {
 	return u.accountRepo.ListByUserID(ctx, userID)
 }
@@ -74,9 +105,12 @@ func (u *accountUsecase) UpdateAccount(ctx context.Context, accountID uuid.UUID,
 	}
 
 	if input.Email != nil {
-		email := strings.TrimSpace(*input.Email)
-		account.Email = email
-		account.EmailNormalized = strings.ToLower(email)
+		normalizedEmail, ok := validation.NormalizeEmail(*input.Email)
+		if !ok {
+			return nil, errors.BadRequestError("iam.errors.invalidEmailFormat")
+		}
+		account.Email = normalizedEmail
+		account.EmailNormalized = normalizedEmail
 	}
 	if input.PhoneNumber != nil {
 		account.PhoneNumber = input.PhoneNumber

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/validation"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/event"
@@ -42,6 +43,7 @@ type AuthService interface {
 
 type RegisterInput struct {
 	Email     string
+	Username  *string
 	Password  string
 	FirstName string
 	LastName  string
@@ -50,10 +52,10 @@ type RegisterInput struct {
 }
 
 type LoginInput struct {
-	Email     string
-	Password  string
-	UserAgent *string
-	IPAddress *string
+	Identifier string
+	Password   string
+	UserAgent  *string
+	IPAddress  *string
 }
 type UpdateUserProfileInput struct {
 	FirstName string
@@ -135,7 +137,16 @@ func NewAuthService(
 // Register creates a new user, account, and session atomically.
 // Returns tokens immediately (user is logged in after registration).
 func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthResult, error) {
-	email := strings.ToLower(strings.TrimSpace(input.Email))
+	email, ok := validation.NormalizeEmail(input.Email)
+	if !ok {
+		return nil, errors.BadRequestError("iam.errors.invalidEmailFormat")
+	}
+
+	if input.Username != nil && strings.TrimSpace(*input.Username) != "" {
+		if _, valid := validation.NormalizeUsername(*input.Username); !valid {
+			return nil, errors.BadRequestError("iam.errors.invalidUsernameFormat")
+		}
+	}
 
 	// Check if account already exists
 	existingAccount, err := s.accountUsecase.GetAccountByEmail(ctx, email)
@@ -185,6 +196,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		account, txErr = s.accountUsecase.CreateAccount(txCtx, usecase.CreateAccountInput{
 			UserID:        user.ID,
 			Email:         email,
+			Username:      input.Username,
 			PasswordHash:  &passwordHashStr,
 			EmailVerified: false,
 			Status:        entity.AccountStatusPendingVerification,
@@ -244,10 +256,13 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 
 // Login authenticates a user and creates a new session.
 func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult, error) {
-	email := strings.ToLower(strings.TrimSpace(input.Email))
+	_, identifier, ok := validation.NormalizeIdentifier(input.Identifier)
+	if !ok {
+		return nil, errors.BadRequestError("iam.errors.invalidIdentifier")
+	}
 
-	// Get account by email
-	account, err := s.accountUsecase.GetAccountByEmail(ctx, email)
+	// Get account by email or username
+	account, err := s.accountUsecase.GetAccountByIdentifier(ctx, identifier)
 	if err != nil {
 		if err == iamerror.ErrAccountNotFound {
 			return nil, errors.UnauthorizedError("iam.errors.invalidCredentials")

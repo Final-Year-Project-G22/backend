@@ -35,6 +35,7 @@ func NewAuthHandler(authService service.AuthService, tokenService token.TokenSer
 func (h *AuthHandler) HandleRegister(ctx context.Context, input *dto.RegisterInput) (*dto.RegisterOutput, error) {
 	result, err := h.authService.Register(ctx, service.RegisterInput{
 		Email:     input.Body.Email,
+		Username:  input.Body.Username,
 		Password:  input.Body.Password,
 		FirstName: input.Body.FirstName,
 		LastName:  input.Body.LastName,
@@ -58,8 +59,8 @@ func (h *AuthHandler) HandleRegister(ctx context.Context, input *dto.RegisterInp
 // HandleLogin handles POST /api/v1/auth/login
 func (h *AuthHandler) HandleLogin(ctx context.Context, input *dto.LoginInput) (*dto.LoginOutput, error) {
 	result, err := h.authService.Login(ctx, service.LoginInput{
-		Email:    input.Body.Email,
-		Password: input.Body.Password,
+		Identifier: input.Body.Identifier,
+		Password:   input.Body.Password,
 		// TODO: Extract UserAgent and IPAddress from request headers if needed
 	})
 	if err != nil {
@@ -271,8 +272,9 @@ func toUserDTO(user *entity.User) dto.UserDTO {
 // toAccountDTO maps a domain Account entity to an AccountDTO.
 func toAccountDTO(account *entity.Account) dto.AccountDTO {
 	return dto.AccountDTO{
-		ID:     account.ID,
-		Email:  account.Email,
-		Status: string(account.Status),
+		ID:       account.ID,
+		Email:    account.Email,
+		Username: account.Username,
+		Status:   string(account.Status),
 	}
 }
