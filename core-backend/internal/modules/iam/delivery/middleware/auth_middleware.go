@@ -73,7 +73,7 @@ func AuthMiddleware(api huma.API, tokenService token.TokenService, authService s
 	}
 }
 
-func VerificationAuthMiddleware(api huma.API, authService service.AuthService) func(ctx huma.Context, next func(huma.Context)) {
+func AccountStatusMiddleware(api huma.API, authService service.AuthService) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		sessionID := contextkeys.GetSessionID(
 			ctx.Context().Value(contextkeys.SessionID),

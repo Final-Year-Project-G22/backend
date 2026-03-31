@@ -190,14 +190,14 @@ var Module = fx.Module("iam",
 	// Register routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, imageHandler *handler.ImageHandler, oauthHandler *handler.OAuthHandler, tokenService token.TokenService, authService service.AuthService) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
-		verificationAuthMiddleware := middleware.VerificationAuthMiddleware(api, authService)
+		AccountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
-			AuthHandler:                authHandler,
-			UserHandler:                userHandler,
-			ImageHandler:               imageHandler,
-			OAuthHandler:               oauthHandler,
-			AuthMiddleware:             authMiddleware,
-			VerificationAuthMiddleware: verificationAuthMiddleware,
+			AuthHandler:             authHandler,
+			UserHandler:             userHandler,
+			ImageHandler:            imageHandler,
+			OAuthHandler:            oauthHandler,
+			AuthMiddleware:          authMiddleware,
+			AccountStatusMiddleware: AccountStatusMiddleware,
 		})
 	}),
 

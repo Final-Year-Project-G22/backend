@@ -68,7 +68,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:       "Log out current session",
 		Description:   "Revokes the current session and clears the refresh token cookie.",
 		Tags:          []string{"Authentication"},
-		Middlewares:   huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares:   huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:      []map[string][]string{{"bearerAuth": {}}},
 		DefaultStatus: 200,
 	}, deps.AuthHandler.HandleLogout)
@@ -80,7 +80,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:       "Log out all sessions",
 		Description:   "Revokes all sessions for the current user's account and clears the refresh token cookie.",
 		Tags:          []string{"Authentication"},
-		Middlewares:   huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares:   huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:      []map[string][]string{{"bearerAuth": {}}},
 		DefaultStatus: 200,
 	}, deps.AuthHandler.HandleLogoutAll)
@@ -94,7 +94,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "Update account password",
 		Description: "Updates account password",
 		Tags:        []string{"Authentication"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AuthHandler.HandleAccountPasswordUpdate)
 
@@ -105,7 +105,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "Get current user",
 		Description: "Returns the current authenticated user's profile and account information.",
 		Tags:        []string{"Authentication"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AuthHandler.HandleGetCurrentUser)
 
@@ -157,7 +157,7 @@ func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "Initiate OAuth link",
 		Description: "Initiates linking an OAuth provider to the authenticated account.",
 		Tags:        []string{"OAuth"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.OAuthHandler.HandleInitiateLink)
 
@@ -168,7 +168,7 @@ func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "OAuth link callback",
 		Description: "Handles the OAuth callback when linking a provider.",
 		Tags:        []string{"OAuth"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.OAuthHandler.HandleLinkCallback)
 
@@ -179,7 +179,7 @@ func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "List linked OAuth identities",
 		Description: "Returns all OAuth providers linked to the authenticated account.",
 		Tags:        []string{"OAuth"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.OAuthHandler.HandleGetIdentities)
 
@@ -190,7 +190,7 @@ func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "Unlink OAuth provider",
 		Description: "Unlinks an OAuth provider from the authenticated account.",
 		Tags:        []string{"OAuth"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.VerificationAuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.OAuthHandler.HandleUnlink)
 }
