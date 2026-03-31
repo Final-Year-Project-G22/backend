@@ -57,6 +57,39 @@ func (r *accountRepository) GetByEmailNormalized(ctx context.Context, email stri
 	return &account, nil
 }
 
+func (r *accountRepository) GetByUsernameNormalized(ctx context.Context, username string) (*entity.Account, error) {
+	var account entity.Account
+	normalizedUsername := strings.ToLower(strings.TrimSpace(username))
+
+	err := r.getDB(ctx).
+		Where("username_normalized = ?", normalizedUsername).
+		First(&account).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, iamerror.ErrAccountNotFound
+		}
+		r.logger.Error("Failed to get account by username", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return &account, nil
+}
+
+func (r *accountRepository) GetByEmailOrUsername(ctx context.Context, identifier string) (*entity.Account, error) {
+	normalized := strings.ToLower(strings.TrimSpace(identifier))
+
+	account, err := r.GetByEmailNormalized(ctx, normalized)
+	if err == nil {
+		return account, nil
+	}
+	if err != iamerror.ErrAccountNotFound {
+		return nil, err
+	}
+
+	return r.GetByUsernameNormalized(ctx, normalized)
+}
+
 func (r *accountRepository) ListByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error) {
 	var accounts []*entity.Account
 
@@ -83,6 +116,23 @@ func (r *accountRepository) ExistsByEmailNormalized(ctx context.Context, email s
 
 	if err != nil {
 		r.logger.Error("Failed to check account existence by email", core.Error(err))
+		return false, errors.InternalError("errors.databaseError", err)
+	}
+
+	return count > 0, nil
+}
+
+func (r *accountRepository) ExistsByUsernameNormalized(ctx context.Context, username string) (bool, error) {
+	var count int64
+	normalizedUsername := strings.ToLower(strings.TrimSpace(username))
+
+	err := r.getDB(ctx).
+		Model(&entity.Account{}).
+		Where("username_normalized = ?", normalizedUsername).
+		Count(&count).Error
+
+	if err != nil {
+		r.logger.Error("Failed to check account existence by username", core.Error(err))
 		return false, errors.InternalError("errors.databaseError", err)
 	}
 
