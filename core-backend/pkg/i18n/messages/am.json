@@ -33,16 +33,28 @@
       "fileTooLarge": "የፋይል ልክ ከፍተኛ ነው (ከ5MB)",
       "readFileFailed": "ፋይል ለማንበብ ተሳካምንያለም",
       "uploadFileFailed": "ፋይል ለማስተላለፍ ተሳካምንያለም",
-      "updateFailed": "የተጠቃሚ ገጽ ለማዘመር ተሳካምንያለም"
+      "updateFailed": "የተጠቃሚ ገጽ ለማዘመር ተሳካምንያለም",
+      "failedToGenerateOtp": "የማረጋገጫ ኮድ ማመንጨት አልተሳካም",
+      "invalidOtp": "የማረጋገጫ ኮድ የተሳሳተ ወይም ጊዜው ያለፈ ነው",
+      "otpAttemptsExceeded": "ብዙ ጊዜ የተሳሳተ ኮድ ገብቷል። እባክዎ አዲስ ኮድ ይጠይቁ",
+      "emailAlreadyVerified": "ኢሜይሉ አስቀድሞ ተረጋግጧል",
+      "otpResendTooSoon": "ሌላ ኮድ ከመጠየቅዎ በፊት ትንሽ ይጠብቁ",
+      "otpResendLimitExceeded": "የኮድ ድጋሚ መላክ ገደብ ደርሷል። በኋላ ይሞክሩ"
     },
     "successes": {
-      "passwordUpdated": "የይለፍ ቃል ተዘምኗል"
+      "passwordUpdated": "የይለፍ ቃል ተዘምኗል",
+      "emailVerified":"ኢሜይሉ በተሳካ ሁኔታ ተረጋግጧል",
+      "otpResent":"የማረጋገጫ ኮድ ተልኳል"
     }
   },
   "email": {
     "welcome": {
       "subject": "ወደ አዲሱ ሰራተኛ እንኳን በደህና መጡ",
       "template": "<div style='font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;padding:24px'><div style='max-width:620px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb'><div style='background:#0f4c81;color:#ffffff;padding:18px 24px;font-size:20px;font-weight:700'>Adisu Serategna</div><div style='padding:24px;color:#111827;line-height:1.6'><p style='margin:0 0 12px'>ሰላም {{.firstName}},</p><p style='margin:0 0 12px'>ወደ አዲሱ ሰራተኛ እንኳን በደህና መጡ። ከእኛ ጋር በመሆንዎ ደስ ብሎናል።</p><p style='margin:0'>ከሰላምታ ጋር,<br/>የአዲሱ ሰራተኛ ቡድን</p></div></div></div>"
+    },
+    "verification": {
+      "subject": "ኢሜይልዎን ያረጋግጡ",
+      "template": "<div style='font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;padding:24px'><div style='max-width:620px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb'><div style='background:#0f4c81;color:#ffffff;padding:18px 24px;font-size:20px;font-weight:700'>Adisu Serategna</div><div style='padding:24px;color:#111827;line-height:1.6'><p style='margin:0 0 12px'>ሰላም {{.firstName}},</p><p style='margin:0 0 12px'>አካውንትዎን ለማረጋገጥ ይህን ኮድ ይጠቀሙ:</p><p style='margin:16px 0;font-size:28px;font-weight:700;letter-spacing:4px'>{{.otpCode}}</p><p style='margin:0 0 12px'>ኮዱ በ {{.expiresMinutes}} ደቂቃዎች ውስጥ ያበቃል።</p><p style='margin:0'>ይህን ጥያቄ እርስዎ ካልጠየቁት ይህን ኢሜይል ችላ ይበሉ።</p></div></div></div>"
     }
   },
   "errors": {

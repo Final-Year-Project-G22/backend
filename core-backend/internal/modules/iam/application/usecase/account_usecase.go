@@ -120,3 +120,15 @@ func (u *accountUsecase) ChangeAccountStatus(ctx context.Context, accountID uuid
 	)
 	return nil
 }
+
+func (u *accountUsecase) MarkEmailVerifiedAndActivate(ctx context.Context, accountID uuid.UUID) error {
+	if err := u.accountRepo.MarkEmailVerifiedAndActivate(ctx, accountID); err != nil {
+		return err
+	}
+
+	u.logger.Info("Account email verified and activated",
+		core.String("accountID", accountID.String()),
+	)
+
+	return nil
+}
