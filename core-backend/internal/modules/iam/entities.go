@@ -17,6 +17,7 @@ func (p *EntityProvider) Entities() []interface{} {
 	return []interface{}{
 		&entity.User{},
 		&entity.Account{},
+		&entity.AccountEmailOTP{},
 		&entity.Role{},
 		&entity.Permission{},
 		&entity.RolePermission{},

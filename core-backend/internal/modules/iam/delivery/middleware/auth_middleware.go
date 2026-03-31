@@ -50,7 +50,7 @@ func AuthMiddleware(api huma.API, tokenService token.TokenService, authService s
 			return
 		}
 
-		output, err := authService.ValidateAccessSession(ctx.Context(), claims.SessionID)
+		output, err := authService.ValidateAccessSession(ctx.Context(), claims.SessionID, false)
 
 		if err != nil {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -69,6 +69,28 @@ func AuthMiddleware(api huma.API, tokenService token.TokenService, authService s
 		ctx = huma.WithValue(ctx, contextkeys.UserID, output.UserID)
 
 		// Continue to next handler with enriched context
+		next(ctx)
+	}
+}
+
+func VerificationAuthMiddleware(api huma.API, authService service.AuthService) func(ctx huma.Context, next func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		sessionID := contextkeys.GetSessionID(
+			ctx.Context().Value(contextkeys.SessionID),
+		)
+		if sessionID == contextkeys.NilUUID {
+			_ = huma.WriteErr(api, ctx, 401, "missing session context")
+			return
+		}
+		_, err := authService.ValidateAccessSession(ctx.Context(), sessionID, true)
+		if err != nil {
+			if appErr, ok := err.(*apperrors.AppError); ok {
+				_ = huma.WriteErr(api, ctx, appErr.GetStatus(), appErr.GetMessage("en"))
+				return
+			}
+			_ = huma.WriteErr(api, ctx, 403, "account not active")
+			return
+		}
 		next(ctx)
 	}
 }

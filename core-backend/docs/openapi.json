@@ -654,6 +654,28 @@
         ],
         "type": "object"
       },
+      "ResendEmailOTPResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ResendEmailOTPResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "OTP resend status message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "UpdateAccountPasswordRequest": {
         "additionalProperties": false,
         "properties": {
@@ -830,6 +852,52 @@
           "id",
           "firstName",
           "lastName"
+        ],
+        "type": "object"
+      },
+      "VerifyEmailOTPRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/VerifyEmailOTPRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "otp": {
+            "description": "6-digit verification code",
+            "maxLength": 6,
+            "minLength": 6,
+            "type": "string"
+          }
+        },
+        "required": [
+          "otp"
+        ],
+        "type": "object"
+      },
+      "VerifyEmailOTPResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/VerifyEmailOTPResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Verification status message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       }
@@ -1501,6 +1569,43 @@
         ]
       }
     },
+    "/api/v1/auth/resend-email-otp": {
+      "post": {
+        "description": "Resends a new one-time password for email verification with cooldown and resend limits.",
+        "operationId": "resendEmailOTP",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendEmailOTPResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Resend account email OTP",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/auth/user/updatePassword": {
       "put": {
         "description": "Updates account password",
@@ -1543,6 +1648,53 @@
           }
         ],
         "summary": "Update account password",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email-otp": {
+      "post": {
+        "description": "Verifies pending account email using a one-time password and activates the account.",
+        "operationId": "verifyEmailOTP",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailOTPResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Verify account email with OTP",
         "tags": [
           "Authentication"
         ]

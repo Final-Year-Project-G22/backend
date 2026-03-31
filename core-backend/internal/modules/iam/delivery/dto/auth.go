@@ -96,6 +96,32 @@ type RegisterOutput struct {
 	Body      RegisterResponseBody
 }
 
+type VerifyEmailOTPRequest struct {
+	OTP string `json:"otp" doc:"6-digit verification code" minLength:"6" maxLength:"6"`
+}
+
+type VerifyEmailOTPInput struct {
+	Body VerifyEmailOTPRequest
+}
+
+type VerifyEmailOTPResponseBody struct {
+	Message string `json:"message" doc:"Verification status message"`
+}
+
+type VerifyEmailOTPOutput struct {
+	Body VerifyEmailOTPResponseBody
+}
+
+type ResendEmailOTPInput struct{}
+
+type ResendEmailOTPResponseBody struct {
+	Message string `json:"message" doc:"OTP resend status message"`
+}
+
+type ResendEmailOTPOutput struct {
+	Body ResendEmailOTPResponseBody
+}
+
 // LoginRequest is the input for user login.
 type LoginRequest struct {
 	Email    string `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`

@@ -52,6 +52,12 @@ var Module = fx.Module("iam",
 	),
 	fx.Provide(
 		fx.Annotate(
+			infrarepo.NewAccountEmailOTPRepository,
+			fx.As(new(repository.AccountEmailOTPRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
 			infrarepo.NewSessionRepository,
 			fx.As(new(repository.SessionRepository)),
 		),
@@ -139,6 +145,12 @@ var Module = fx.Module("iam",
 	),
 	fx.Provide(
 		fx.Annotate(
+			appusecase.NewAccountEmailOTPUsecase,
+			fx.As(new(usecase.AccountEmailOTPUsecase)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
 			appusecase.NewSessionUsecase,
 			fx.As(new(usecase.SessionUsecase)),
 		),
@@ -178,12 +190,14 @@ var Module = fx.Module("iam",
 	// Register routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, imageHandler *handler.ImageHandler, oauthHandler *handler.OAuthHandler, tokenService token.TokenService, authService service.AuthService) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
+		verificationAuthMiddleware := middleware.VerificationAuthMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
-			AuthHandler:    authHandler,
-			UserHandler:    userHandler,
-			ImageHandler:   imageHandler,
-			OAuthHandler:   oauthHandler,
-			AuthMiddleware: authMiddleware,
+			AuthHandler:                authHandler,
+			UserHandler:                userHandler,
+			ImageHandler:               imageHandler,
+			OAuthHandler:               oauthHandler,
+			AuthMiddleware:             authMiddleware,
+			VerificationAuthMiddleware: verificationAuthMiddleware,
 		})
 	}),
 

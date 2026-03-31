@@ -15,4 +15,5 @@ type AccountRepository interface {
 	ListByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Account, error)
 	ExistsByEmailNormalized(ctx context.Context, email string) (bool, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status entity.AccountStatus) error
+	MarkEmailVerifiedAndActivate(ctx context.Context, id uuid.UUID) error
 }
