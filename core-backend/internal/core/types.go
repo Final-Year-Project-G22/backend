@@ -95,9 +95,10 @@ type Cache interface {
 }
 
 type OAuthConfig struct {
-	EncryptionKey string `mapstructure:"encryption_key" validate:"required,min=32"`
-	CookieDomain  string `mapstructure:"cookie_domain"  validate:"required"`
-	Providers     []OAuthProviderConfig
+	EncryptionKey         string `mapstructure:"encryption_key" validate:"required,min=32"`
+	CookieDomain          string `mapstructure:"cookie_domain"  validate:"required"`
+	MobileRedirectBaseURL string `mapstructure:"mobile_redirect_base_url"`
+	Providers             []OAuthProviderConfig
 }
 
 type OAuthProviderConfig struct {

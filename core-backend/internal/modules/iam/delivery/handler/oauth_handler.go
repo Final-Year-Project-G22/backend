@@ -2,7 +2,10 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
@@ -141,6 +144,25 @@ func (h *OAuthHandler) HandleCallback(ctx context.Context, input *struct {
 			IsNewUser: callbackResult.IsNewUser,
 		},
 	}, nil
+}
+
+// HandleCallbackRedirect handles GET /api/v1/auth/oauth/callback/{provider}/mobile
+// Returns HTTP 302 redirect to mobile deep-link with tokens in URL.
+func (h *OAuthHandler) HandleCallbackRedirect(ctx context.Context, input *struct {
+	Provider string `path:"provider"`
+	Code     string `query:"code"`
+	State    string `query:"state"`
+}) (*dto.OAuthCallbackRedirectOutput, error) {
+	callbackResult, emailRequired, err := h.oauthService.HandleCallback(ctx, iamdomain.ProviderType(input.Provider), input.Code, input.State)
+	if err != nil {
+		return h.redirectError(err)
+	}
+
+	if emailRequired != nil {
+		return h.redirectEmailRequired(emailRequired)
+	}
+
+	return h.redirectSuccess(callbackResult)
 }
 
 // HandleCompleteWithEmail handles POST /api/v1/auth/oauth/complete
@@ -313,4 +335,44 @@ func (h *OAuthHandler) isSecureCookie() bool {
 		return false
 	}
 	return h.cfg.IsProduction()
+}
+
+func (h *OAuthHandler) redirectError(err error) (*dto.OAuthCallbackRedirectOutput, error) {
+	base := h.cfg.OAuth.MobileRedirectBaseURL
+	redirectURL := fmt.Sprintf("%s?error=%s", base, url.QueryEscape("oauth_error"))
+	return &dto.OAuthCallbackRedirectOutput{
+		Status:    http.StatusFound,
+		Location:  redirectURL,
+		SetCookie: http.Cookie{Name: "oauth_state", Value: "", MaxAge: -1},
+	}, nil
+}
+
+func (h *OAuthHandler) redirectEmailRequired(result *iamdomain.EmailRequiredResult) (*dto.OAuthCallbackRedirectOutput, error) {
+	base := h.cfg.OAuth.MobileRedirectBaseURL
+	redirectURL := fmt.Sprintf("%s?email_required=true&provider=%s&state=%s",
+		base,
+		url.QueryEscape(string(result.PartialUserInfo.Provider)),
+		url.QueryEscape(result.State),
+	)
+	return &dto.OAuthCallbackRedirectOutput{
+		Status:    http.StatusFound,
+		Location:  redirectURL,
+		SetCookie: http.Cookie{Name: "oauth_state", Value: "", MaxAge: -1},
+	}, nil
+}
+
+func (h *OAuthHandler) redirectSuccess(result *iamdomain.OAuthCallbackResult) (*dto.OAuthCallbackRedirectOutput, error) {
+	base := h.cfg.OAuth.MobileRedirectBaseURL
+	redirectURL := fmt.Sprintf("%s?access_token=%s&refresh_token=%s&expires_at=%s&is_new_user=%t",
+		base,
+		url.QueryEscape(result.AccessToken),
+		url.QueryEscape(result.RefreshToken),
+		url.QueryEscape(result.ExpiresAt.Format(time.RFC3339)),
+		result.IsNewUser,
+	)
+	return &dto.OAuthCallbackRedirectOutput{
+		Status:    http.StatusFound,
+		Location:  redirectURL,
+		SetCookie: http.Cookie{Name: "oauth_state", Value: "", MaxAge: -1},
+	}, nil
 }

@@ -264,12 +264,13 @@ func (s *oauthService) UnlinkProvider(ctx context.Context, accountID uuid.UUID, 
 }
 
 func (s *oauthService) processOAuthUser(ctx context.Context, provider iamdomain.ProviderType, userInfo *iamdomain.OAuthUserInfo) (*iamdomain.OAuthCallbackResult, *iamdomain.EmailRequiredResult, error) {
-	existingIdentities, _ := s.oauthUsecase.ListOAuthIdentities(ctx, uuid.Nil)
-	for _, ident := range existingIdentities {
-		if ident.Provider == string(provider) && ident.ProviderSubject == userInfo.Subject {
-			result, err := s.loginExistingUser(ctx, ident)
-			return result, nil, err
-		}
+	identity, err := s.oauthUsecase.GetByProviderSubject(ctx, string(provider), userInfo.Subject)
+	if err == nil && identity != nil {
+		result, err := s.loginExistingUser(ctx, identity)
+		return result, nil, err
+	}
+	if err != nil && err != iamerror.ErrOAuthIdentityNotFound {
+		return nil, nil, err
 	}
 
 	existingAccount, err := s.accountUsecase.GetAccountByEmail(ctx, strings.ToLower(userInfo.Email))
