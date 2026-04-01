@@ -92,6 +92,13 @@ func (u *oauthIdentityUsecase) LinkOAuthIdentity(
 	return identity, nil
 }
 
+func (u *oauthIdentityUsecase) GetByProviderSubject(
+	ctx context.Context,
+	provider, subject string,
+) (*entity.OAuthIdentity, error) {
+	return u.oauthRepo.GetByProviderSubject(ctx, provider, subject)
+}
+
 func (u *oauthIdentityUsecase) ListOAuthIdentities(
 	ctx context.Context,
 	accountID uuid.UUID,

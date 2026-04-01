@@ -15,6 +15,10 @@
           "status": {
             "description": "Account status (pending_verification, active, locked, suspended, disabled)",
             "type": "string"
+          },
+          "username": {
+            "description": "Account username",
+            "type": "string"
           }
         },
         "required": [
@@ -269,9 +273,8 @@
             "readOnly": true,
             "type": "string"
           },
-          "email": {
-            "description": "Email address",
-            "format": "email",
+          "identifier": {
+            "description": "Email or username",
             "maxLength": 255,
             "minLength": 1,
             "type": "string"
@@ -284,7 +287,7 @@
           }
         },
         "required": [
-          "email",
+          "identifier",
           "password"
         ],
         "type": "object"
@@ -606,6 +609,13 @@
             "maxLength": 128,
             "minLength": 8,
             "type": "string"
+          },
+          "username": {
+            "description": "Username (lowercase letters, digits, underscore)",
+            "maxLength": 32,
+            "minLength": 3,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
           }
         },
         "required": [
@@ -920,7 +930,7 @@
   "paths": {
     "/api/v1/auth/login": {
       "post": {
-        "description": "Authenticates a user with email and password, returns authentication tokens.",
+        "description": "Authenticates a user with email or username and password, returns authentication tokens.",
         "operationId": "login",
         "requestBody": {
           "content": {
@@ -1080,7 +1090,7 @@
     },
     "/api/v1/auth/oauth/callback/{provider}": {
       "get": {
-        "description": "Handles the OAuth callback from the provider.",
+        "description": "Handles the OAuth callback from the provider. Returns JSON response.",
         "operationId": "oauthCallback",
         "parameters": [
           {
@@ -1138,6 +1148,69 @@
           }
         },
         "summary": "OAuth callback",
+        "tags": [
+          "OAuth"
+        ]
+      }
+    },
+    "/api/v1/auth/oauth/callback/{provider}/mobile": {
+      "get": {
+        "description": "Handles the OAuth callback and returns HTTP 302 redirect to mobile deep-link.",
+        "operationId": "oauthCallbackMobile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "OAuth callback for mobile",
         "tags": [
           "OAuth"
         ]

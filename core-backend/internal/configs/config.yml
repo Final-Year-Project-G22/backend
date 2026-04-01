@@ -44,6 +44,7 @@ storage:
 oauth:
   encryption_key: ${OAUTH_ENCRYPTION_KEY}
   cookie_domain: "localhost"
+  mobile_redirect_base_url: ${OAUTH_MOBILE_REDIRECT_BASE_URL}
   providers:
     - name: "google"
       client_id: ${GOOGLE_CLIENT_ID}
