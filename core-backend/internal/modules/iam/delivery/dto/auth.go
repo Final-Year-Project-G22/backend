@@ -211,6 +211,13 @@ type OAuthCallbackOutput struct {
 	Body      OAuthCallbackResponse
 }
 
+// OAuthCallbackRedirectOutput returns an HTTP 302 redirect for mobile deep-links.
+type OAuthCallbackRedirectOutput struct {
+	Status    int         `status:"true"`
+	Location  string      `header:"Location"`
+	SetCookie http.Cookie `header:"Set-Cookie"`
+}
+
 // OAuthEmailRequiredResponse indicates email is required to complete OAuth.
 type OAuthEmailRequiredResponse struct {
 	Provider   string `json:"provider"`
