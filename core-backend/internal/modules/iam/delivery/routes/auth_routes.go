@@ -137,9 +137,19 @@ func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
 		Method:      "GET",
 		Path:        authBase + "/oauth/callback/{provider}",
 		Summary:     "OAuth callback",
-		Description: "Handles the OAuth callback from the provider.",
+		Description: "Handles the OAuth callback from the provider. Returns JSON response.",
 		Tags:        []string{"OAuth"},
 	}, deps.OAuthHandler.HandleCallback)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "oauthCallbackMobile",
+		Method:        "GET",
+		Path:          authBase + "/oauth/callback/{provider}/mobile",
+		Summary:       "OAuth callback for mobile",
+		Description:   "Handles the OAuth callback and returns HTTP 302 redirect to mobile deep-link.",
+		Tags:          []string{"OAuth"},
+		DefaultStatus: http.StatusFound,
+	}, deps.OAuthHandler.HandleCallbackRedirect)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "oauthCompleteWithEmail",
