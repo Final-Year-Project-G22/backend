@@ -138,6 +138,18 @@ func (r *stepRepository) GetConditions(ctx context.Context, stepID uuid.UUID) ([
 	return conditions, nil
 }
 
+func (r *stepRepository) GetCondition(ctx context.Context, condID uuid.UUID) (*entity.StepCondition, error) {
+	var condition entity.StepCondition
+	if err := r.getDB(ctx).Where("id = ?", condID).First(&condition).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, guideerror.ErrStepConditionNotFound
+		}
+		r.logger.Error("Failed to get step condition", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return &condition, nil
+}
+
 func (r *stepRepository) AddCondition(ctx context.Context, cond *entity.StepCondition) error {
 	if err := r.getDB(ctx).Create(cond).Error; err != nil {
 		r.logger.Error("Failed to add step condition", core.Error(err))
@@ -165,6 +177,18 @@ func (r *stepRepository) GetDependencies(ctx context.Context, stepID uuid.UUID) 
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
 	return dependencies, nil
+}
+
+func (r *stepRepository) GetDependency(ctx context.Context, depID uuid.UUID) (*entity.StepDependency, error) {
+	var dependency entity.StepDependency
+	if err := r.getDB(ctx).Preload("RequiredStep").Where("id = ?", depID).First(&dependency).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, guideerror.ErrDependencyNotFound
+		}
+		r.logger.Error("Failed to get step dependency", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return &dependency, nil
 }
 
 func (r *stepRepository) AddDependency(ctx context.Context, dep *entity.StepDependency) error {

@@ -267,7 +267,7 @@ func (r *progressRepository) ListRecentlyViewedGuides(ctx context.Context, accou
 		Select("guides.*").
 		Joins("JOIN user_guide_recent_views rv ON rv.guide_id = guides.id").
 		Where("rv.account_id = ? AND rv.user_id = ?", accountID, userID).
-		Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).
+		Preload("Translations", "language = ?", locale).
 		Order("rv.last_viewed_at desc")
 	if q.Page < 1 {
 		q.Page = query.DefaultPage
@@ -281,6 +281,16 @@ func (r *progressRepository) ListRecentlyViewedGuides(ctx context.Context, accou
 	if err := db.Offset((q.Page - 1) * q.PageSize).Limit(q.PageSize).Find(&guides).Error; err != nil {
 		r.logger.Error("Failed to list recently viewed guides", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	for i := range guides {
+		if len(guides[i].Translations) == 0 {
+			if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+				Where("id = ?", guides[i].ID).
+				First(guides[i]).Error; err != nil {
+				r.logger.Error("Failed to load fallback translation for recently viewed guide", core.Error(err))
+			}
+		}
 	}
 	return guides, nil
 }
