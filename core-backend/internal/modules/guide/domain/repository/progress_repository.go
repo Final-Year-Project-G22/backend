@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
@@ -27,4 +28,7 @@ type ProgressRepository interface {
 	ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions) ([]*entity.UserGuideBookmark, error)
 	UpsertBookmark(ctx context.Context, bookmark *entity.UserGuideBookmark) error
 	RemoveBookmark(ctx context.Context, accountID, userID, stepID uuid.UUID) error
+
+	UpsertRecentView(ctx context.Context, accountID, userID, guideID uuid.UUID) error
+	ListRecentlyViewedGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error)
 }

@@ -37,12 +37,19 @@ func (r *stepRepository) getDB(ctx context.Context) *gorm.DB {
 
 func (r *stepRepository) GetBySlug(ctx context.Context, guideID uuid.UUID, slug string, locale constants.Locale) (*entity.GuideStep, error) {
 	var step entity.GuideStep
-	if err := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).Where("guide_id = ? AND slug = ?", guideID, slug).First(&step).Error; err != nil {
+	if err := r.getDB(ctx).Preload("Translations", "language = ?", locale).Where("guide_id = ? AND slug = ?", guideID, slug).First(&step).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, guideerror.ErrStepNotFound
 		}
 		r.logger.Error("Failed to get step by slug", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	if len(step.Translations) == 0 {
+		if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+			Where("id = ?", step.ID).
+			First(&step).Error; err != nil {
+			return nil, errors.InternalError("errors.databaseError", err)
+		}
 	}
 	return &step, nil
 }
@@ -54,7 +61,7 @@ func (r *stepRepository) ListByGuide(ctx context.Context, guideID uuid.UUID, q q
 		db = db.Preload(preload)
 	}
 	if len(q.Preload) == 0 {
-		db = db.Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
+		db = db.Preload("Translations", "language = ?", locale)
 	}
 	if q.Search != "" {
 		db = db.Where("slug ILIKE ?", "%"+q.Search+"%")
@@ -83,6 +90,17 @@ func (r *stepRepository) ListByGuide(ctx context.Context, guideID uuid.UUID, q q
 		r.logger.Error("Failed to list steps by guide", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
+
+	for i := range steps {
+		if len(steps[i].Translations) == 0 {
+			if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+				Where("id = ?", steps[i].ID).
+				First(steps[i]).Error; err != nil {
+				r.logger.Error("Failed to load fallback translation for step", core.Error(err))
+			}
+		}
+	}
+
 	return steps, nil
 }
 

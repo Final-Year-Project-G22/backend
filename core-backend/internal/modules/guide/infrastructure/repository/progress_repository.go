@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	guiderepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -238,4 +239,48 @@ func (r *progressRepository) RemoveBookmark(ctx context.Context, accountID, user
 		return guideerror.ErrBookmarkNotFound
 	}
 	return nil
+}
+
+func (r *progressRepository) UpsertRecentView(ctx context.Context, accountID, userID, guideID uuid.UUID) error {
+	if err := r.getDB(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "account_id"}, {Name: "user_id"}, {Name: "guide_id"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"last_viewed_at": gorm.Expr("CURRENT_TIMESTAMP"),
+			"view_count":     gorm.Expr("view_count + 1"),
+			"updated_at":     gorm.Expr("CURRENT_TIMESTAMP"),
+		}),
+	}).Create(&entity.UserGuideRecentView{
+		AccountID: accountID,
+		UserID:    userID,
+		GuideID:   guideID,
+	}).Error; err != nil {
+		r.logger.Error("Failed to upsert recent view", core.Error(err))
+		return errors.InternalError("errors.databaseError", err)
+	}
+	return nil
+}
+
+func (r *progressRepository) ListRecentlyViewedGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error) {
+	var guides []*entity.Guide
+	db := r.getDB(ctx).
+		Model(&entity.Guide{}).
+		Select("guides.*").
+		Joins("JOIN user_guide_recent_views rv ON rv.guide_id = guides.id").
+		Where("rv.account_id = ? AND rv.user_id = ?", accountID, userID).
+		Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).
+		Order("rv.last_viewed_at desc")
+	if q.Page < 1 {
+		q.Page = query.DefaultPage
+	}
+	if q.PageSize < 1 {
+		q.PageSize = query.DefaultPageSize
+	}
+	if q.PageSize > query.MaxPageSize {
+		q.PageSize = query.MaxPageSize
+	}
+	if err := db.Offset((q.Page - 1) * q.PageSize).Limit(q.PageSize).Find(&guides).Error; err != nil {
+		r.logger.Error("Failed to list recently viewed guides", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return guides, nil
 }
