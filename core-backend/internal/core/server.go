@@ -23,6 +23,7 @@ func NewGinEngine(cfg *Config, log Logger) *gin.Engine {
 
 	// Apply standard middleware stack
 	router.Use(middleware.Recovery(log))
+	router.Use(middleware.RequestID())
 	router.Use(middleware.RequestLogger(log))
 	router.Use(middleware.CORSMiddleware("*"))
 	router.Use(middleware.ErrorHandler())

@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	appErrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/response"
@@ -139,31 +140,58 @@ func RequestLogger(logger Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
-		// Process request
 		c.Next()
 
-		// Calculate latency
 		latency := time.Since(start)
+		status := c.Writer.Status()
 
-		// Log every request
-		logger.Info("request",
+		requestID, _ := c.Get(RequestIDKey)
+		requestIDStr, _ := requestID.(string)
+
+		route := c.FullPath()
+		if route == "" {
+			route = c.Request.URL.Path
+		}
+
+		fields := []zap.Field{
+			zap.String("request_id", requestIDStr),
 			zap.String("method", c.Request.Method),
 			zap.String("path", c.Request.URL.Path),
-			zap.Int("status", c.Writer.Status()),
-			zap.Duration("latency", latency),
+			zap.String("route", route),
+			zap.Int("status", status),
+			zap.Int64("latency_ms", latency.Milliseconds()),
 			zap.String("ip", c.ClientIP()),
 			zap.String("user_agent", c.Request.UserAgent()),
-		)
+			zap.Int("response_size", c.Writer.Size()),
+			zap.Int("error_count", len(c.Errors)),
+		}
 
-		// Additionally log errors at warn level
-		if len(c.Errors) > 0 {
-			for _, e := range c.Errors {
-				logger.Warn("request error",
-					zap.String("method", c.Request.Method),
-					zap.String("path", c.Request.URL.Path),
-					zap.Error(e.Err),
-				)
+		if accountID := c.Value(contextkeys.AccountID); accountID != nil {
+			if id := contextkeys.GetAccountID(accountID); id != contextkeys.NilUUID {
+				fields = append(fields, zap.String("account_id", id.String()))
 			}
+		}
+		if userID := c.Value(contextkeys.UserID); userID != nil {
+			if id := contextkeys.GetUserID(userID); id != contextkeys.NilUUID {
+				fields = append(fields, zap.String("user_id", id.String()))
+			}
+		}
+		if sessionID := c.Value(contextkeys.SessionID); sessionID != nil {
+			if id := contextkeys.GetSessionID(sessionID); id != contextkeys.NilUUID {
+				fields = append(fields, zap.String("session_id", id.String()))
+			}
+		}
+		if len(c.Errors) > 0 {
+			fields = append(fields, zap.Error(c.Errors.Last().Err))
+		}
+
+		switch {
+		case status >= 500:
+			logger.Error("request", fields...)
+		case status >= 400:
+			logger.Warn("request", fields...)
+		default:
+			logger.Info("request", fields...)
 		}
 	}
 }
