@@ -35,31 +35,56 @@ func (r *categoryRepository) getDB(ctx context.Context) *gorm.DB {
 
 func (r *categoryRepository) GetBySlug(ctx context.Context, parentID *uuid.UUID, slug string, locale constants.Locale) (*entity.GuideCategory, error) {
 	var category entity.GuideCategory
-	db := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
+	db := r.getDB(ctx)
+
+	baseQuery := db.Where("slug = ?", slug)
 	if parentID == nil {
-		db = db.Where("parent_category_id IS NULL AND slug = ?", slug)
+		baseQuery = baseQuery.Where("parent_category_id IS NULL")
 	} else {
-		db = db.Where("parent_category_id = ? AND slug = ?", *parentID, slug)
+		baseQuery = baseQuery.Where("parent_category_id = ?", *parentID)
 	}
-	if err := db.First(&category).Error; err != nil {
+
+	if err := baseQuery.Preload("Translations", "language = ?", locale).First(&category).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, guideerror.ErrCategoryNotFound
 		}
 		r.logger.Error("Failed to get category by slug", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
+
+	if len(category.Translations) == 0 {
+		if err := db.Preload("Translations", "language = ?", constants.LocaleEnglish).
+			Where("id = ?", category.ID).
+			First(&category).Error; err != nil {
+			return nil, errors.InternalError("errors.databaseError", err)
+		}
+	}
+
 	return &category, nil
 }
 
 func (r *categoryRepository) ListTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error) {
 	var categories []*entity.GuideCategory
-	db := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).Order("sort_order asc, created_at asc")
+	db := r.getDB(ctx).
+		Preload("Translations", "language = ?", locale).
+		Order("sort_order asc, created_at asc")
 	// TODO: apply active/inactive filtering once publish-state exists in the guide domain.
 	_ = includeInactive
 	if err := db.Find(&categories).Error; err != nil {
 		r.logger.Error("Failed to list category tree", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
+
+	for i := range categories {
+		if len(categories[i].Translations) == 0 {
+			if err := db.Preload("Translations", "language = ?", constants.LocaleEnglish).
+				Where("id = ?", categories[i].ID).
+				First(categories[i]).Error; err != nil {
+				r.logger.Error("Failed to load fallback translation for category", core.Error(err))
+			}
+		}
+	}
+
 	return categories, nil
 }
 

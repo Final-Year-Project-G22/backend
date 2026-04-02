@@ -4,17 +4,18 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
 type GuideViewUseCase interface {
-	GetCategoryTree(ctx context.Context, accountID, userID uuid.UUID, language string) ([]*CategoryNode, error)
-	SearchGuides(ctx context.Context, accountID, userID uuid.UUID, keyword string, q query.QueryOptions) ([]*GuideCard, error)
-	GetRecentlyViewed(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions) ([]*GuideCard, error)
+	GetCategoryTree(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*CategoryNode, error)
+	SearchGuides(ctx context.Context, accountID, userID uuid.UUID, keyword string, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
+	GetRecentlyViewed(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 
-	GetPersonalizedGuide(ctx context.Context, accountID, userID uuid.UUID, guideSlug, language string) (*PersonalizedGuide, error)
-	GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug, language string) (*entity.GuideStep, error)
+	GetPersonalizedGuide(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*PersonalizedGuide, error)
+	GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*entity.GuideStep, error)
 
 	StartStep(ctx context.Context, accountID, userID, stepID uuid.UUID) error
 	CompleteStep(ctx context.Context, accountID, userID, stepID uuid.UUID, input CompleteStepInput) error
