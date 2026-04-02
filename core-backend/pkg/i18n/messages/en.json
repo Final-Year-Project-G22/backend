@@ -51,6 +51,25 @@
       "otpResent": "Verification code sent"
     }
   },
+  "guide": {
+    "errors": {
+      "invalidStatusTransition": "Invalid status transition for this step",
+      "dependenciesNotMet": "Required dependencies have not been completed",
+      "stepNotOptional": "This step cannot be skipped",
+      "dependencyCycle": "Dependency cycle detected",
+      "guideNotFound": "Guide not found",
+      "stepNotFound": "Step not found",
+      "categoryNotFound": "Category not found",
+      "bookmarkNotFound": "Bookmark not found"
+    },
+    "successes": {
+      "stepCompleted": "Step marked as completed",
+      "stepStarted": "Step started",
+      "bookmarkAdded": "Bookmark added",
+      "bookmarkRemoved": "Bookmark removed",
+      "bookmarkUpdated": "Bookmark updated"
+    }
+  },
   "email": {
     "welcome": {
       "subject": "Welcome to Adisu Serategna",

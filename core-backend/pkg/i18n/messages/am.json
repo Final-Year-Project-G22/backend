@@ -43,8 +43,27 @@
     },
     "successes": {
       "passwordUpdated": "የይለፍ ቃል ተዘምኗል",
-      "emailVerified":"ኢሜይሉ በተሳካ ሁኔታ ተረጋግጧል",
-      "otpResent":"የማረጋገጫ ኮድ ተልኳል"
+      "emailVerified": "ኢሜይሉ በተሳካ ሁኔታ ተረጋግጧል",
+      "otpResent": "የማረጋገጫ ኮድ ተልኳል"
+    }
+  },
+  "guide": {
+    "errors": {
+      "invalidStatusTransition": "ለዚህ ደረጃ ዋጋ የሌለው የሁኔታ ሽግግር",
+      "dependenciesNotMet": "የሚያስፈልጉ ጥገኝነቶች አልተጠናቀቁም",
+      "stepNotOptional": "ይህ ደረጃ ሊዘለል አይችልም",
+      "dependencyCycle": "የጥገኝነት ዑደት ተገኝቷል",
+      "guideNotFound": "መመሪያው አልተገኘም",
+      "stepNotFound": "ደረጃው አልተገኘም",
+      "categoryNotFound": "ምድቡ አልተገኘም",
+      "bookmarkNotFound": "ምልክት አልተገኘም"
+    },
+    "successes": {
+      "stepCompleted": "ደረጃው ተጠናቋል ተብሏል",
+      "stepStarted": "ደረጃው ተጀምሯል",
+      "bookmarkAdded": "ምልክት ተጨምሯል",
+      "bookmarkRemoved": "ምልክት ተወግዷል",
+      "bookmarkUpdated": "ምልክት ተዘምኗል"
     }
   },
   "email": {
