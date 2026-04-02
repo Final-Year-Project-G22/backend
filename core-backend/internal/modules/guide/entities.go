@@ -26,6 +26,7 @@ func (e *EntityProvider) Entities() []any {
 		&entity.GuideCategoryTranslation{},
 		&entity.GuideTranslation{},
 		&entity.GuideStepTranslation{},
+		&entity.UserGuideRecentView{},
 	}
 }
 
