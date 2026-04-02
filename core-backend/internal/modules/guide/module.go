@@ -3,10 +3,15 @@ package guide
 import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/application/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/handler"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/routes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/infrastructure/repository"
-	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
+	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
 
@@ -18,13 +23,6 @@ var Module = fx.Module(
 			panic(err)
 		}
 	}),
-
-	fx.Provide(
-		fx.Annotate(
-			func(db *core.Database) sharedrepo.Transactor { return db },
-			fx.As(new(sharedrepo.Transactor)),
-		),
-	),
 
 	fx.Provide(
 		fx.Annotate(
@@ -69,4 +67,16 @@ var Module = fx.Module(
 			fx.As(new(usecase.JourneyManagementUseCase)),
 		),
 	),
+
+	fx.Provide(handler.NewGuideViewHandler),
+
+	fx.Invoke(func(api huma.API, guideViewHandler *handler.GuideViewHandler, tokenService token.TokenService, authService iamservice.AuthService) {
+		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
+		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
+		routes.RegisterRoutes(api, routes.RouteDependencies{
+			GuideViewHandler:        guideViewHandler,
+			AuthMiddleware:          authMiddleware,
+			AccountStatusMiddleware: accountStatusMiddleware,
+		})
+	}),
 )
