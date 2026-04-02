@@ -65,6 +65,17 @@ func (u *roleUsecase) CreateRole(ctx context.Context, input usecase.CreateRoleIn
 		return nil, err
 	}
 
+	if len(input.PermissionIDs) > 0 {
+		permissions, err := u.getPermissionsByIDs(ctx, input.PermissionIDs)
+		if err != nil {
+			return nil, err
+		}
+		rolePermissions := buildRolePermissions(role.ID, permissions)
+		if err := u.rolePermissionRepo.CreateBulk(ctx, rolePermissions); err != nil {
+			return nil, err
+		}
+	}
+
 	u.logger.Info("Role created", core.String("roleID", role.ID.String()))
 	return role, nil
 }
@@ -112,6 +123,23 @@ func (u *roleUsecase) UpdateRole(ctx context.Context, roleID uuid.UUID, input us
 
 	if err := u.roleRepo.Update(ctx, role); err != nil {
 		return nil, err
+	}
+
+	if input.PermissionIDs != nil {
+		if err := u.rolePermissionRepo.DeleteByRoleID(ctx, roleID); err != nil {
+			return nil, err
+		}
+
+		if len(*input.PermissionIDs) > 0 {
+			permissions, err := u.getPermissionsByIDs(ctx, *input.PermissionIDs)
+			if err != nil {
+				return nil, err
+			}
+			rolePermissions := buildRolePermissions(role.ID, permissions)
+			if err := u.rolePermissionRepo.CreateBulk(ctx, rolePermissions); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	u.logger.Info("Role updated", core.String("roleID", role.ID.String()))
@@ -191,4 +219,39 @@ func (u *roleUsecase) ReplaceRolePermissions(ctx context.Context, roleID uuid.UU
 	}
 
 	return u.rolePermissionRepo.CreateBulk(ctx, rolePermissions)
+}
+
+func (u *roleUsecase) getPermissionsByIDs(ctx context.Context, ids []uuid.UUID) ([]*entity.Permission, error) {
+	permissions, err := u.permissionRepo.ListByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	uniqueIDs := make(map[uuid.UUID]struct{}, len(ids))
+	for _, id := range ids {
+		uniqueIDs[id] = struct{}{}
+	}
+
+	if len(permissions) != len(uniqueIDs) {
+		return nil, errors.NotFoundErrorWithKey("iam.errors.notFound")
+	}
+
+	return permissions, nil
+}
+
+func buildRolePermissions(roleID uuid.UUID, permissions []*entity.Permission) []*entity.RolePermission {
+	rolePermissions := make([]*entity.RolePermission, 0, len(permissions))
+	seen := make(map[uuid.UUID]struct{}, len(permissions))
+	for _, permission := range permissions {
+		if _, ok := seen[permission.ID]; ok {
+			continue
+		}
+		seen[permission.ID] = struct{}{}
+		rolePermissions = append(rolePermissions, &entity.RolePermission{
+			RoleID:       roleID,
+			PermissionID: permission.ID,
+		})
+	}
+
+	return rolePermissions
 }

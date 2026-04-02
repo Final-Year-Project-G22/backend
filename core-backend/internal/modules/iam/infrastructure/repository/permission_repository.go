@@ -75,6 +75,41 @@ func (r *permissionRepository) ListByCodes(ctx context.Context, codes []string) 
 	return permissions, nil
 }
 
+func (r *permissionRepository) ListByCodesAndModule(ctx context.Context, codes []string, module string) ([]*entity.Permission, error) {
+	var permissions []*entity.Permission
+
+	db := r.getDB(ctx)
+	if len(codes) > 0 {
+		db = db.Where("code IN ?", codes)
+	}
+	if strings.TrimSpace(module) != "" {
+		db = db.Where("module = ?", strings.TrimSpace(module))
+	}
+
+	if err := db.Find(&permissions).Error; err != nil {
+		r.logger.Error("Failed to list permissions by codes and module", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return permissions, nil
+}
+
+func (r *permissionRepository) ListByIDs(ctx context.Context, ids []uuid.UUID) ([]*entity.Permission, error) {
+	if len(ids) == 0 {
+		return []*entity.Permission{}, nil
+	}
+
+	var permissions []*entity.Permission
+	if err := r.getDB(ctx).
+		Where("id IN ?", ids).
+		Find(&permissions).Error; err != nil {
+		r.logger.Error("Failed to list permissions by IDs", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return permissions, nil
+}
+
 func (r *permissionRepository) ListByRoleID(ctx context.Context, roleID uuid.UUID) ([]*entity.Permission, error) {
 	var permissions []*entity.Permission
 

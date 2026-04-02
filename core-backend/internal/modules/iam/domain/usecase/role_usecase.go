@@ -19,20 +19,22 @@ type RoleUsecase interface {
 }
 
 type CreateRoleInput struct {
-	Code        string
-	Name        string
-	Description *string
-	Type        entity.RoleType
-	IsSystem    bool
-	IsMutable   bool
+	Code          string
+	Name          string
+	Description   *string
+	Type          entity.RoleType
+	IsSystem      bool
+	IsMutable     bool
+	PermissionIDs []uuid.UUID
 }
 
 type UpdateRoleInput struct {
-	Name        *string
-	Description *string
-	Type        *entity.RoleType
-	IsSystem    *bool
-	IsMutable   *bool
+	Name          *string
+	Description   *string
+	Type          *entity.RoleType
+	IsSystem      *bool
+	IsMutable     *bool
+	PermissionIDs *[]uuid.UUID
 }
 
 type AssignRoleInput struct {

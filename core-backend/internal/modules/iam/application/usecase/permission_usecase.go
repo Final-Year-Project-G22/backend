@@ -2,6 +2,7 @@ package appusecase
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
@@ -9,6 +10,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
@@ -40,4 +42,13 @@ func (u *permissionUsecase) GetPermissionByCode(ctx context.Context, code string
 
 func (u *permissionUsecase) ListPermissionsByRole(ctx context.Context, roleID uuid.UUID) ([]*entity.Permission, error) {
 	return u.permissionRepo.ListByRoleID(ctx, roleID)
+}
+
+func (u *permissionUsecase) ListPermissions(ctx context.Context, input usecase.ListPermissionsInput) ([]*entity.Permission, error) {
+	module := strings.TrimSpace(input.Module)
+	if module == "" && len(input.Codes) == 0 {
+		return u.permissionRepo.Find(ctx, query.QueryOptions{})
+	}
+
+	return u.permissionRepo.ListByCodesAndModule(ctx, input.Codes, module)
 }
