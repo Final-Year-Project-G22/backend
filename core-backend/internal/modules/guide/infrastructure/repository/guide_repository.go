@@ -54,7 +54,7 @@ func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UU
 		db = db.Preload(preload)
 	}
 	if len(q.Preload) == 0 {
-		db = db.Preload("Translations")
+		db = db.Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
 	}
 	// TODO: integrate condition evaluation against business profile once guide visibility rules are implemented.
 	if q.Search != "" {
