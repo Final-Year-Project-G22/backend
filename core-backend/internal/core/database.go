@@ -45,7 +45,7 @@ func NewDatabase(cfg *Config, log Logger) (*Database, error) {
 			LogLevel:                  getGormLogLevel(cfg.Logger.Level),
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  cfg.IsDevelopment(),
-			ParameterizedQueries:      true,
+			ParameterizedQueries:      !cfg.IsDevelopment() && !cfg.IsLocal(),
 		},
 	)
 
