@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"context"
+
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/usecase"
@@ -66,6 +68,30 @@ var Module = fx.Module("iam",
 		fx.Annotate(
 			infrarepo.NewOAuthIdentityRepository,
 			fx.As(new(repository.OAuthIdentityRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewRoleRepository,
+			fx.As(new(repository.RoleRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewPermissionRepository,
+			fx.As(new(repository.PermissionRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewRolePermissionRepository,
+			fx.As(new(repository.RolePermissionRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewRoleAssignmentRepository,
+			fx.As(new(repository.RoleAssignmentRepository)),
 		),
 	),
 
@@ -155,6 +181,25 @@ var Module = fx.Module("iam",
 			fx.As(new(usecase.SessionUsecase)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			appusecase.NewRoleUsecase,
+			fx.As(new(usecase.RoleUsecase)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			appusecase.NewPermissionUsecase,
+			fx.As(new(usecase.PermissionUsecase)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			appusecase.NewRoleAssignmentUsecase,
+			fx.As(new(usecase.RoleAssignmentUsecase)),
+		),
+	),
+	fx.Provide(service.NewRolePermissionSeeder),
 
 	// Application Layer - Auth Service
 	fx.Provide(
@@ -206,6 +251,15 @@ var Module = fx.Module("iam",
 		if googleProvider != nil {
 			registry.Register(googleProvider)
 		}
+	}),
+
+	// Seed IAM permissions and roles
+	fx.Invoke(func(lc fx.Lifecycle, seeder *service.RolePermissionSeeder) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return seeder.Seed(ctx)
+			},
+		})
 	}),
 )
 
