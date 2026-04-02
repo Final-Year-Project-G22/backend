@@ -200,6 +200,7 @@ var Module = fx.Module("iam",
 		),
 	),
 	fx.Provide(service.NewRolePermissionSeeder),
+	fx.Provide(service.NewSuperAdminSeeder),
 
 	// Application Layer - Auth Service
 	fx.Provide(
@@ -255,6 +256,15 @@ var Module = fx.Module("iam",
 
 	// Seed IAM permissions and roles
 	fx.Invoke(func(lc fx.Lifecycle, seeder *service.RolePermissionSeeder) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return seeder.Seed(ctx)
+			},
+		})
+	}),
+
+	// Seed super admin account
+	fx.Invoke(func(lc fx.Lifecycle, seeder *service.SuperAdminSeeder) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
 				return seeder.Seed(ctx)
