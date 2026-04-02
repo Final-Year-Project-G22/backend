@@ -13,5 +13,7 @@ type PermissionRepository interface {
 
 	GetByCode(ctx context.Context, code string) (*entity.Permission, error)
 	ListByCodes(ctx context.Context, codes []string) ([]*entity.Permission, error)
+	ListByCodesAndModule(ctx context.Context, codes []string, module string) ([]*entity.Permission, error)
+	ListByIDs(ctx context.Context, ids []uuid.UUID) ([]*entity.Permission, error)
 	ListByRoleID(ctx context.Context, roleID uuid.UUID) ([]*entity.Permission, error)
 }
