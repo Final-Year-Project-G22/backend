@@ -37,12 +37,38 @@ func (r *guideRepository) getDB(ctx context.Context) *gorm.DB {
 
 func (r *guideRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, locale constants.Locale) (*entity.Guide, error) {
 	var guide entity.Guide
-	if err := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).Where("category_id = ? AND slug = ?", categoryID, slug).First(&guide).Error; err != nil {
+	if err := r.getDB(ctx).Preload("Translations", "language = ?", locale).Where("category_id = ? AND slug = ?", categoryID, slug).First(&guide).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, guideerror.ErrGuideNotFound
 		}
 		r.logger.Error("Failed to get guide by slug", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	if len(guide.Translations) == 0 {
+		if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+			Where("id = ?", guide.ID).
+			First(&guide).Error; err != nil {
+			return nil, errors.InternalError("errors.databaseError", err)
+		}
+	}
+	return &guide, nil
+}
+
+func (r *guideRepository) GetBySlugGlobal(ctx context.Context, slug string, locale constants.Locale) (*entity.Guide, error) {
+	var guide entity.Guide
+	if err := r.getDB(ctx).Preload("Translations", "language = ?", locale).Where("slug = ?", slug).First(&guide).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, guideerror.ErrGuideNotFound
+		}
+		r.logger.Error("Failed to get guide by global slug", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	if len(guide.Translations) == 0 {
+		if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+			Where("id = ?", guide.ID).
+			First(&guide).Error; err != nil {
+			return nil, errors.InternalError("errors.databaseError", err)
+		}
 	}
 	return &guide, nil
 }
@@ -54,7 +80,7 @@ func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UU
 		db = db.Preload(preload)
 	}
 	if len(q.Preload) == 0 {
-		db = db.Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
+		db = db.Preload("Translations", "language = ?", locale)
 	}
 	// TODO: integrate condition evaluation against business profile once guide visibility rules are implemented.
 	if q.Search != "" {
@@ -84,6 +110,17 @@ func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UU
 		r.logger.Error("Failed to list guides by category", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
+
+	for i := range guides {
+		if len(guides[i].Translations) == 0 {
+			if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+				Where("id = ?", guides[i].ID).
+				First(guides[i]).Error; err != nil {
+				r.logger.Error("Failed to load fallback translation for guide", core.Error(err))
+			}
+		}
+	}
+
 	return guides, nil
 }
 
@@ -93,9 +130,9 @@ func (r *guideRepository) Search(ctx context.Context, keyword string, q query.Qu
 	db := r.getDB(ctx).
 		Model(&entity.Guide{}).
 		Distinct("guides.*").
-		Joins("LEFT JOIN guide_translations gt ON gt.guide_id = guides.id").
+		Joins("LEFT JOIN guide_translations gt ON gt.guide_id = guides.id AND gt.language = ?", locale).
 		Where("guides.slug ILIKE ? OR gt.name ILIKE ? OR gt.description ILIKE ?", search, search, search).
-		Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
+		Preload("Translations", "language = ?", locale)
 	if len(q.SortBy) > 0 {
 		for i, col := range q.SortBy {
 			order := "asc"
@@ -120,6 +157,17 @@ func (r *guideRepository) Search(ctx context.Context, keyword string, q query.Qu
 		r.logger.Error("Failed to search guides", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
+
+	for i := range guides {
+		if len(guides[i].Translations) == 0 {
+			if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+				Where("id = ?", guides[i].ID).
+				First(guides[i]).Error; err != nil {
+				r.logger.Error("Failed to load fallback translation for guide", core.Error(err))
+			}
+		}
+	}
+
 	return guides, nil
 }
 

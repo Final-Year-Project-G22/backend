@@ -14,6 +14,7 @@ type GuideRepository interface {
 	sharedrepo.GenericRepository[entity.Guide]
 
 	GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, locale constants.Locale) (*entity.Guide, error)
+	GetBySlugGlobal(ctx context.Context, slug string, locale constants.Locale) (*entity.Guide, error)
 	ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error)
 	Search(ctx context.Context, keyword string, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error)
 

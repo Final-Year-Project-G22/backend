@@ -18,10 +18,12 @@ type StepRepository interface {
 	Reorder(ctx context.Context, guideID uuid.UUID, stepIDsInOrder []uuid.UUID) error
 
 	GetConditions(ctx context.Context, stepID uuid.UUID) ([]*entity.StepCondition, error)
+	GetCondition(ctx context.Context, condID uuid.UUID) (*entity.StepCondition, error)
 	AddCondition(ctx context.Context, cond *entity.StepCondition) error
 	RemoveCondition(ctx context.Context, condID uuid.UUID) error
 
 	GetDependencies(ctx context.Context, stepID uuid.UUID) ([]*entity.StepDependency, error)
+	GetDependency(ctx context.Context, depID uuid.UUID) (*entity.StepDependency, error)
 	AddDependency(ctx context.Context, dep *entity.StepDependency) error
 	RemoveDependency(ctx context.Context, depID uuid.UUID) error
 

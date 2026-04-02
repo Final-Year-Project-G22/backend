@@ -16,4 +16,8 @@ var (
 	ErrBookmarkNotFound           = errors.New("guide: bookmark not found")
 	ErrStepVersionNotFound        = errors.New("guide: step version not found")
 	ErrVersionRestoreNotSupported = errors.New("guide: version restore not supported by current step model")
+	ErrInvalidStatusTransition    = errors.New("guide: invalid status transition")
+	ErrDependenciesNotMet         = errors.New("guide: dependencies not met")
+	ErrStepNotOptional            = errors.New("guide: step not optional")
+	ErrDependencyCycle            = errors.New("guide: dependency cycle detected")
 )
