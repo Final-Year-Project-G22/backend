@@ -7,6 +7,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	guiderepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
@@ -32,9 +33,9 @@ func (r *categoryRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *categoryRepository) GetBySlug(ctx context.Context, parentID *uuid.UUID, slug string) (*entity.GuideCategory, error) {
+func (r *categoryRepository) GetBySlug(ctx context.Context, parentID *uuid.UUID, slug string, locale constants.Locale) (*entity.GuideCategory, error) {
 	var category entity.GuideCategory
-	db := r.getDB(ctx).Preload("Translations")
+	db := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
 	if parentID == nil {
 		db = db.Where("parent_category_id IS NULL AND slug = ?", slug)
 	} else {
@@ -50,9 +51,9 @@ func (r *categoryRepository) GetBySlug(ctx context.Context, parentID *uuid.UUID,
 	return &category, nil
 }
 
-func (r *categoryRepository) ListTree(ctx context.Context, includeInactive bool) ([]*entity.GuideCategory, error) {
+func (r *categoryRepository) ListTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error) {
 	var categories []*entity.GuideCategory
-	db := r.getDB(ctx).Preload("Translations").Order("sort_order asc, created_at asc")
+	db := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).Order("sort_order asc, created_at asc")
 	// TODO: apply active/inactive filtering once publish-state exists in the guide domain.
 	_ = includeInactive
 	if err := db.Find(&categories).Error; err != nil {

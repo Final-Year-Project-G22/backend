@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
@@ -12,8 +13,8 @@ import (
 type StepRepository interface {
 	sharedrepo.GenericRepository[entity.GuideStep]
 
-	GetBySlug(ctx context.Context, guideID uuid.UUID, slug string) (*entity.GuideStep, error)
-	ListByGuide(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) ([]*entity.GuideStep, error)
+	GetBySlug(ctx context.Context, guideID uuid.UUID, slug string, locale constants.Locale) (*entity.GuideStep, error)
+	ListByGuide(ctx context.Context, guideID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.GuideStep, error)
 	Reorder(ctx context.Context, guideID uuid.UUID, stepIDsInOrder []uuid.UUID) error
 
 	GetConditions(ctx context.Context, stepID uuid.UUID) ([]*entity.StepCondition, error)

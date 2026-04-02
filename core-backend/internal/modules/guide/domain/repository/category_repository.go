@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/google/uuid"
 )
@@ -11,8 +12,8 @@ import (
 type CategoryRepository interface {
 	sharedrepo.GenericRepository[entity.GuideCategory]
 
-	GetBySlug(ctx context.Context, parentID *uuid.UUID, slug string) (*entity.GuideCategory, error)
-	ListTree(ctx context.Context, includeInactive bool) ([]*entity.GuideCategory, error)
+	GetBySlug(ctx context.Context, parentID *uuid.UUID, slug string, locale constants.Locale) (*entity.GuideCategory, error)
+	ListTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error)
 
 	GetConditions(ctx context.Context, categoryID uuid.UUID) ([]*entity.GuideCategoryCondition, error)
 	AddCondition(ctx context.Context, cond *entity.GuideCategoryCondition) error

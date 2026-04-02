@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	guiderepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -34,9 +35,9 @@ func (r *stepRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *stepRepository) GetBySlug(ctx context.Context, guideID uuid.UUID, slug string) (*entity.GuideStep, error) {
+func (r *stepRepository) GetBySlug(ctx context.Context, guideID uuid.UUID, slug string, locale constants.Locale) (*entity.GuideStep, error) {
 	var step entity.GuideStep
-	if err := r.getDB(ctx).Preload("Translations").Where("guide_id = ? AND slug = ?", guideID, slug).First(&step).Error; err != nil {
+	if err := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).Where("guide_id = ? AND slug = ?", guideID, slug).First(&step).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, guideerror.ErrStepNotFound
 		}
@@ -46,14 +47,14 @@ func (r *stepRepository) GetBySlug(ctx context.Context, guideID uuid.UUID, slug 
 	return &step, nil
 }
 
-func (r *stepRepository) ListByGuide(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) ([]*entity.GuideStep, error) {
+func (r *stepRepository) ListByGuide(ctx context.Context, guideID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.GuideStep, error) {
 	var steps []*entity.GuideStep
 	db := r.getDB(ctx).Where("guide_id = ?", guideID)
 	for _, preload := range q.Preload {
 		db = db.Preload(preload)
 	}
 	if len(q.Preload) == 0 {
-		db = db.Preload("Translations")
+		db = db.Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
 	}
 	if q.Search != "" {
 		db = db.Where("slug ILIKE ?", "%"+q.Search+"%")

@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	guiderepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -34,9 +35,9 @@ func (r *guideRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *guideRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string) (*entity.Guide, error) {
+func (r *guideRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, locale constants.Locale) (*entity.Guide, error) {
 	var guide entity.Guide
-	if err := r.getDB(ctx).Preload("Translations").Where("category_id = ? AND slug = ?", categoryID, slug).First(&guide).Error; err != nil {
+	if err := r.getDB(ctx).Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish).Where("category_id = ? AND slug = ?", categoryID, slug).First(&guide).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, guideerror.ErrGuideNotFound
 		}
@@ -46,7 +47,7 @@ func (r *guideRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, s
 	return &guide, nil
 }
 
-func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.Guide, error) {
+func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error) {
 	var guides []*entity.Guide
 	db := r.getDB(ctx).Where("category_id = ?", categoryID)
 	for _, preload := range q.Preload {
@@ -86,7 +87,7 @@ func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UU
 	return guides, nil
 }
 
-func (r *guideRepository) Search(ctx context.Context, keyword string, q query.QueryOptions) ([]*entity.Guide, error) {
+func (r *guideRepository) Search(ctx context.Context, keyword string, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error) {
 	var guides []*entity.Guide
 	search := "%" + keyword + "%"
 	db := r.getDB(ctx).
@@ -94,7 +95,7 @@ func (r *guideRepository) Search(ctx context.Context, keyword string, q query.Qu
 		Distinct("guides.*").
 		Joins("LEFT JOIN guide_translations gt ON gt.guide_id = guides.id").
 		Where("guides.slug ILIKE ? OR gt.name ILIKE ? OR gt.description ILIKE ?", search, search, search).
-		Preload("Translations")
+		Preload("Translations", "language = ? OR language = ?", locale, constants.LocaleEnglish)
 	if len(q.SortBy) > 0 {
 		for i, col := range q.SortBy {
 			order := "asc"
