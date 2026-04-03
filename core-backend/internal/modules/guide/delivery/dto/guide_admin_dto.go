@@ -1,0 +1,752 @@
+package dto
+
+import (
+	"time"
+
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
+	"github.com/google/uuid"
+)
+
+// --- Category ---
+
+type CreateCategoryRequest struct {
+	Slug         string                      `json:"slug" doc:"Category slug" minLength:"1" maxLength:"100"`
+	Icon         *string                     `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	SortOrder    int                         `json:"sortOrder" doc:"Display order"`
+	ParentID     *uuid.UUID                  `json:"parentId,omitempty" doc:"Parent category ID"`
+	Translations []CreateCategoryTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	Conditions   []CreateCategoryCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+}
+
+type CreateCategoryTranslation struct {
+	Language    string  `json:"language" doc:"Language code (en, am)" minLength:"2" maxLength:"5"`
+	Name        string  `json:"name" doc:"Localized name" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Localized description"`
+}
+
+type CreateCategoryCondition struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type CreateCategoryInput struct {
+	Body CreateCategoryRequest
+}
+
+type CreateCategoryOutput struct {
+	Body CreateCategoryResponseBody
+}
+
+type CreateCategoryResponseBody struct {
+	ID uuid.UUID `json:"id" doc:"Created category ID"`
+}
+
+type UpdateCategoryRequest struct {
+	Slug         *string                     `json:"slug,omitempty" doc:"Category slug" maxLength:"100"`
+	Icon         *string                     `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	SortOrder    *int                        `json:"sortOrder,omitempty" doc:"Display order"`
+	ParentID     *uuid.UUID                  `json:"parentId,omitempty" doc:"Parent category ID"`
+	Translations []UpdateCategoryTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	Conditions   []UpdateCategoryCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+}
+
+type UpdateCategoryTranslation struct {
+	Language    string  `json:"language" doc:"Language code (en, am)" minLength:"2" maxLength:"5"`
+	Name        string  `json:"name" doc:"Localized name" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Localized description"`
+}
+
+type UpdateCategoryCondition struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type UpdateCategoryInput struct {
+	ID   uuid.UUID `path:"id" doc:"Category ID"`
+	Body UpdateCategoryRequest
+}
+
+type UpdateCategoryOutput struct {
+	Body UpdateCategoryResponseBody
+}
+
+type UpdateCategoryResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type DeleteCategoryInput struct {
+	ID uuid.UUID `path:"id" doc:"Category ID"`
+}
+
+type DeleteCategoryOutput struct {
+	Body DeleteCategoryResponseBody
+}
+
+type DeleteCategoryResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type AddCategoryConditionRequest struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type AddCategoryConditionInput struct {
+	CategoryID uuid.UUID `path:"id" doc:"Category ID"`
+	Body       AddCategoryConditionRequest
+}
+
+type AddCategoryConditionOutput struct {
+	Body AddCategoryConditionResponseBody
+}
+
+type AddCategoryConditionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type RemoveCategoryConditionInput struct {
+	CondID uuid.UUID `path:"condId" doc:"Condition ID"`
+}
+
+type RemoveCategoryConditionOutput struct {
+	Body RemoveCategoryConditionResponseBody
+}
+
+type RemoveCategoryConditionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type SetCategoryTranslationsRequest struct {
+	Translations []UpdateCategoryTranslation `json:"translations" doc:"Full set of translations"`
+}
+
+type SetCategoryTranslationsInput struct {
+	ID   uuid.UUID `path:"id" doc:"Category ID"`
+	Body SetCategoryTranslationsRequest
+}
+
+type SetCategoryTranslationsOutput struct {
+	Body SetCategoryTranslationsResponseBody
+}
+
+type SetCategoryTranslationsResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+// --- Guide ---
+
+type CreateGuideRequest struct {
+	CategoryID   uuid.UUID                `json:"categoryId" doc:"Parent category ID"`
+	Slug         string                   `json:"slug" doc:"Guide slug" minLength:"1" maxLength:"100"`
+	Icon         *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	SortOrder    int                      `json:"sortOrder" doc:"Display order"`
+	Translations []CreateGuideTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	Conditions   []CreateGuideCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+}
+
+type CreateGuideTranslation struct {
+	Language    string  `json:"language" doc:"Language code (en, am)" minLength:"2" maxLength:"5"`
+	Name        string  `json:"name" doc:"Localized name" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Localized description"`
+}
+
+type CreateGuideCondition struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type CreateGuideInput struct {
+	Body CreateGuideRequest
+}
+
+type CreateGuideOutput struct {
+	Body CreateGuideResponseBody
+}
+
+type CreateGuideResponseBody struct {
+	ID uuid.UUID `json:"id" doc:"Created guide ID"`
+}
+
+type UpdateGuideRequest struct {
+	CategoryID   *uuid.UUID               `json:"categoryId,omitempty" doc:"Parent category ID"`
+	Slug         *string                  `json:"slug,omitempty" doc:"Guide slug" maxLength:"100"`
+	Icon         *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	SortOrder    *int                     `json:"sortOrder,omitempty" doc:"Display order"`
+	Translations []UpdateGuideTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	Conditions   []UpdateGuideCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+}
+
+type UpdateGuideTranslation struct {
+	Language    string  `json:"language" doc:"Language code (en, am)" minLength:"2" maxLength:"5"`
+	Name        string  `json:"name" doc:"Localized name" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Localized description"`
+}
+
+type UpdateGuideCondition struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type UpdateGuideInput struct {
+	ID   uuid.UUID `path:"id" doc:"Guide ID"`
+	Body UpdateGuideRequest
+}
+
+type UpdateGuideOutput struct {
+	Body UpdateGuideResponseBody
+}
+
+type UpdateGuideResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type DeleteGuideInput struct {
+	ID uuid.UUID `path:"id" doc:"Guide ID"`
+}
+
+type DeleteGuideOutput struct {
+	Body DeleteGuideResponseBody
+}
+
+type DeleteGuideResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type AddGuideConditionRequest struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type AddGuideConditionInput struct {
+	GuideID uuid.UUID `path:"id" doc:"Guide ID"`
+	Body    AddGuideConditionRequest
+}
+
+type AddGuideConditionOutput struct {
+	Body AddGuideConditionResponseBody
+}
+
+type AddGuideConditionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type RemoveGuideConditionInput struct {
+	CondID uuid.UUID `path:"condId" doc:"Condition ID"`
+}
+
+type RemoveGuideConditionOutput struct {
+	Body RemoveGuideConditionResponseBody
+}
+
+type RemoveGuideConditionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type SetGuideTranslationsRequest struct {
+	Translations []UpdateGuideTranslation `json:"translations" doc:"Full set of translations"`
+}
+
+type SetGuideTranslationsInput struct {
+	ID   uuid.UUID `path:"id" doc:"Guide ID"`
+	Body SetGuideTranslationsRequest
+}
+
+type SetGuideTranslationsOutput struct {
+	Body SetGuideTranslationsResponseBody
+}
+
+type SetGuideTranslationsResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+// --- Step ---
+
+type CreateStepRequest struct {
+	GuideID         uuid.UUID               `json:"guideId" doc:"Parent guide ID"`
+	Slug            string                  `json:"slug" doc:"Step slug" minLength:"1" maxLength:"100"`
+	StepType        entity.StepType         `json:"stepType" doc:"Step type"`
+	SortOrder       int                     `json:"sortOrder" doc:"Display order"`
+	IsOptional      bool                    `json:"isOptional" doc:"Whether step can be skipped"`
+	EstimatedTime   *int                    `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
+	DifficultyLevel *int                    `json:"difficultyLevel,omitempty" doc:"Difficulty level (1-5)"`
+	FeeEstimate     *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
+	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
+	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
+	Translations    []CreateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	Conditions      []CreateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+	Dependencies    []CreateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
+}
+
+type CreateStepTranslation struct {
+	Language        string      `json:"language" doc:"Language code (en, am)" minLength:"2" maxLength:"5"`
+	Title           string      `json:"title" doc:"Localized title" minLength:"1" maxLength:"200"`
+	Description     *string     `json:"description,omitempty" doc:"Localized description"`
+	DetailedContent interface{} `json:"detailedContent,omitempty" doc:"Rich content as JSON"`
+}
+
+type CreateStepCondition struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type CreateStepDependency struct {
+	RequiredStepID uuid.UUID             `json:"requiredStepId" doc:"Required step ID"`
+	DependencyType entity.DependencyType `json:"dependencyType" doc:"Dependency type"`
+}
+
+type CreateStepInput struct {
+	Body CreateStepRequest
+}
+
+type CreateStepOutput struct {
+	Body CreateStepResponseBody
+}
+
+type CreateStepResponseBody struct {
+	ID uuid.UUID `json:"id" doc:"Created step ID"`
+}
+
+type UpdateStepRequest struct {
+	Slug            *string                 `json:"slug,omitempty" doc:"Step slug" maxLength:"100"`
+	StepType        *entity.StepType        `json:"stepType,omitempty" doc:"Step type"`
+	SortOrder       *int                    `json:"sortOrder,omitempty" doc:"Display order"`
+	IsOptional      *bool                   `json:"isOptional,omitempty" doc:"Whether step can be skipped"`
+	EstimatedTime   *int                    `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
+	DifficultyLevel *int                    `json:"difficultyLevel,omitempty" doc:"Difficulty level (1-5)"`
+	FeeEstimate     *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
+	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
+	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
+	Translations    []UpdateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	Conditions      []UpdateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+	Dependencies    []UpdateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
+}
+
+type UpdateStepTranslation struct {
+	Language        string      `json:"language" doc:"Language code (en, am)" minLength:"2" maxLength:"5"`
+	Title           string      `json:"title" doc:"Localized title" minLength:"1" maxLength:"200"`
+	Description     *string     `json:"description,omitempty" doc:"Localized description"`
+	DetailedContent interface{} `json:"detailedContent,omitempty" doc:"Rich content as JSON"`
+}
+
+type UpdateStepCondition struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type UpdateStepDependency struct {
+	RequiredStepID uuid.UUID             `json:"requiredStepId" doc:"Required step ID"`
+	DependencyType entity.DependencyType `json:"dependencyType" doc:"Dependency type"`
+}
+
+type UpdateStepInput struct {
+	ID   uuid.UUID `path:"id" doc:"Step ID"`
+	Body UpdateStepRequest
+}
+
+type UpdateStepOutput struct {
+	Body UpdateStepResponseBody
+}
+
+type UpdateStepResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type DeleteStepInput struct {
+	ID uuid.UUID `path:"id" doc:"Step ID"`
+}
+
+type DeleteStepOutput struct {
+	Body DeleteStepResponseBody
+}
+
+type DeleteStepResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type ReorderStepsRequest struct {
+	GuideID uuid.UUID   `json:"guideId" doc:"Guide ID"`
+	StepIDs []uuid.UUID `json:"stepIds" doc:"Ordered list of step IDs"`
+}
+
+type ReorderStepsInput struct {
+	Body ReorderStepsRequest
+}
+
+type ReorderStepsOutput struct {
+	Body ReorderStepsResponseBody
+}
+
+type ReorderStepsResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type AddStepConditionRequest struct {
+	ConditionType  string      `json:"conditionType" doc:"Condition type" minLength:"1"`
+	Operator       string      `json:"operator" doc:"Comparison operator" minLength:"1"`
+	ConditionValue interface{} `json:"conditionValue" doc:"Condition value"`
+	IsInverse      bool        `json:"isInverse" doc:"Whether to invert the condition"`
+}
+
+type AddStepConditionInput struct {
+	StepID uuid.UUID `path:"id" doc:"Step ID"`
+	Body   AddStepConditionRequest
+}
+
+type AddStepConditionOutput struct {
+	Body AddStepConditionResponseBody
+}
+
+type AddStepConditionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type RemoveStepConditionInput struct {
+	CondID uuid.UUID `path:"condId" doc:"Condition ID"`
+}
+
+type RemoveStepConditionOutput struct {
+	Body RemoveStepConditionResponseBody
+}
+
+type RemoveStepConditionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type AddStepDependencyRequest struct {
+	RequiredStepID uuid.UUID             `json:"requiredStepId" doc:"Required step ID"`
+	DependencyType entity.DependencyType `json:"dependencyType" doc:"Dependency type"`
+}
+
+type AddStepDependencyInput struct {
+	StepID uuid.UUID `path:"id" doc:"Step ID"`
+	Body   AddStepDependencyRequest
+}
+
+type AddStepDependencyOutput struct {
+	Body AddStepDependencyResponseBody
+}
+
+type AddStepDependencyResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type RemoveStepDependencyInput struct {
+	DepID uuid.UUID `path:"depId" doc:"Dependency ID"`
+}
+
+type RemoveStepDependencyOutput struct {
+	Body RemoveStepDependencyResponseBody
+}
+
+type RemoveStepDependencyResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type SetStepTranslationsRequest struct {
+	Translations []UpdateStepTranslation `json:"translations" doc:"Full set of translations"`
+}
+
+type SetStepTranslationsInput struct {
+	ID   uuid.UUID `path:"id" doc:"Step ID"`
+	Body SetStepTranslationsRequest
+}
+
+type SetStepTranslationsOutput struct {
+	Body SetStepTranslationsResponseBody
+}
+
+type SetStepTranslationsResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type GetStepVersionsInput struct {
+	StepID   uuid.UUID `path:"id" doc:"Step ID"`
+	Page     int       `query:"page" doc:"Page number"`
+	PageSize int       `query:"pageSize" doc:"Items per page"`
+}
+
+type GetStepVersionsOutput struct {
+	Body GetStepVersionsResponseBody
+}
+
+type GetStepVersionsResponseBody struct {
+	Versions []StepVersionDTO `json:"versions"`
+}
+
+type StepVersionDTO struct {
+	ID            uuid.UUID  `json:"id" doc:"Version record ID"`
+	Version       int        `json:"version" doc:"Version number"`
+	StepID        uuid.UUID  `json:"stepId" doc:"Step ID"`
+	EffectiveDate time.Time  `json:"effectiveDate" doc:"When this version became active"`
+	CreatedAt     *time.Time `json:"createdAt" doc:"When this version was created"`
+}
+
+type RevertStepToVersionInput struct {
+	StepID  uuid.UUID `path:"id" doc:"Step ID"`
+	Version int       `path:"version" doc:"Version number to revert to"`
+}
+
+type RevertStepToVersionOutput struct {
+	Body RevertStepToVersionResponseBody
+}
+
+type RevertStepToVersionResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+// --- Journey ---
+
+type InvalidateUserJourneyRequest struct {
+	GuideID uuid.UUID `json:"guideId" doc:"Guide ID"`
+	UserID  uuid.UUID `json:"userId" doc:"User ID"`
+}
+
+type InvalidateUserJourneyInput struct {
+	Body InvalidateUserJourneyRequest
+}
+
+type InvalidateUserJourneyOutput struct {
+	Body InvalidateUserJourneyResponseBody
+}
+
+type InvalidateUserJourneyResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type InvalidateAllJourneysInput struct {
+	GuideID uuid.UUID `path:"guideId" doc:"Guide ID"`
+}
+
+type InvalidateAllJourneysOutput struct {
+	Body InvalidateAllJourneysResponseBody
+}
+
+type InvalidateAllJourneysResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+// --- Mappers ---
+
+func ToCreateCategoryInput(body CreateCategoryRequest) usecase.CreateCategoryInput {
+	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
+	for _, t := range body.Translations {
+		translations = append(translations, usecase.TranslationInput{
+			Language:    t.Language,
+			Name:        t.Name,
+			Description: t.Description,
+		})
+	}
+	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
+	for _, c := range body.Conditions {
+		conditions = append(conditions, usecase.ConditionInput{
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+	return usecase.CreateCategoryInput{
+		Slug:         body.Slug,
+		Icon:         body.Icon,
+		SortOrder:    body.SortOrder,
+		ParentID:     body.ParentID,
+		Translations: translations,
+		Conditions:   conditions,
+	}
+}
+
+func ToUpdateCategoryInput(body UpdateCategoryRequest) usecase.UpdateCategoryInput {
+	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
+	for _, t := range body.Translations {
+		translations = append(translations, usecase.TranslationInput{
+			Language:    t.Language,
+			Name:        t.Name,
+			Description: t.Description,
+		})
+	}
+	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
+	for _, c := range body.Conditions {
+		conditions = append(conditions, usecase.ConditionInput{
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+	return usecase.UpdateCategoryInput{
+		Slug:         body.Slug,
+		Icon:         body.Icon,
+		SortOrder:    body.SortOrder,
+		ParentID:     body.ParentID,
+		Translations: translations,
+		Conditions:   conditions,
+	}
+}
+
+func ToCreateGuideInput(body CreateGuideRequest) usecase.CreateGuideInput {
+	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
+	for _, t := range body.Translations {
+		translations = append(translations, usecase.TranslationInput{
+			Language:    t.Language,
+			Name:        t.Name,
+			Description: t.Description,
+		})
+	}
+	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
+	for _, c := range body.Conditions {
+		conditions = append(conditions, usecase.ConditionInput{
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+	return usecase.CreateGuideInput{
+		CategoryID:   body.CategoryID,
+		Slug:         body.Slug,
+		Icon:         body.Icon,
+		SortOrder:    body.SortOrder,
+		Translations: translations,
+		Conditions:   conditions,
+	}
+}
+
+func ToUpdateGuideInput(body UpdateGuideRequest) usecase.UpdateGuideInput {
+	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
+	for _, t := range body.Translations {
+		translations = append(translations, usecase.TranslationInput{
+			Language:    t.Language,
+			Name:        t.Name,
+			Description: t.Description,
+		})
+	}
+	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
+	for _, c := range body.Conditions {
+		conditions = append(conditions, usecase.ConditionInput{
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+	return usecase.UpdateGuideInput{
+		CategoryID:   body.CategoryID,
+		Slug:         body.Slug,
+		Icon:         body.Icon,
+		SortOrder:    body.SortOrder,
+		Translations: translations,
+		Conditions:   conditions,
+	}
+}
+
+func ToCreateStepInput(body CreateStepRequest) usecase.CreateStepInput {
+	translations := make([]usecase.StepTranslationInput, 0, len(body.Translations))
+	for _, t := range body.Translations {
+		translations = append(translations, usecase.StepTranslationInput{
+			Language:        t.Language,
+			Title:           t.Title,
+			Description:     t.Description,
+			DetailedContent: t.DetailedContent,
+		})
+	}
+	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
+	for _, c := range body.Conditions {
+		conditions = append(conditions, usecase.ConditionInput{
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+	dependencies := make([]usecase.DependencyInput, 0, len(body.Dependencies))
+	for _, d := range body.Dependencies {
+		dependencies = append(dependencies, usecase.DependencyInput{
+			RequiredStepID: d.RequiredStepID,
+			DependencyType: d.DependencyType,
+		})
+	}
+	return usecase.CreateStepInput{
+		GuideID:         body.GuideID,
+		Slug:            body.Slug,
+		StepType:        body.StepType,
+		SortOrder:       body.SortOrder,
+		IsOptional:      body.IsOptional,
+		EstimatedTime:   body.EstimatedTime,
+		DifficultyLevel: body.DifficultyLevel,
+		FeeEstimate:     body.FeeEstimate,
+		EffectiveDate:   body.EffectiveDate,
+		ExpiryDate:      body.ExpiryDate,
+		Translations:    translations,
+		Conditions:      conditions,
+		Dependencies:    dependencies,
+	}
+}
+
+func ToUpdateStepInput(body UpdateStepRequest) usecase.UpdateStepInput {
+	translations := make([]usecase.StepTranslationInput, 0, len(body.Translations))
+	for _, t := range body.Translations {
+		translations = append(translations, usecase.StepTranslationInput{
+			Language:        t.Language,
+			Title:           t.Title,
+			Description:     t.Description,
+			DetailedContent: t.DetailedContent,
+		})
+	}
+	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
+	for _, c := range body.Conditions {
+		conditions = append(conditions, usecase.ConditionInput{
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+	dependencies := make([]usecase.DependencyInput, 0, len(body.Dependencies))
+	for _, d := range body.Dependencies {
+		dependencies = append(dependencies, usecase.DependencyInput{
+			RequiredStepID: d.RequiredStepID,
+			DependencyType: d.DependencyType,
+		})
+	}
+	return usecase.UpdateStepInput{
+		Slug:            body.Slug,
+		StepType:        body.StepType,
+		SortOrder:       body.SortOrder,
+		IsOptional:      body.IsOptional,
+		EstimatedTime:   body.EstimatedTime,
+		DifficultyLevel: body.DifficultyLevel,
+		FeeEstimate:     body.FeeEstimate,
+		EffectiveDate:   body.EffectiveDate,
+		ExpiryDate:      body.ExpiryDate,
+		Translations:    translations,
+		Conditions:      conditions,
+		Dependencies:    dependencies,
+	}
+}
+
+func ToStepVersionDTO(v *entity.GuideStepVersion) StepVersionDTO {
+	return StepVersionDTO{
+		ID:            v.ID,
+		Version:       v.Version,
+		StepID:        v.StepID,
+		EffectiveDate: v.EffectiveDate,
+		CreatedAt:     v.CreatedAt,
+	}
+}

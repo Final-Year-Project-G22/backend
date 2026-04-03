@@ -215,7 +215,7 @@ func (s *guideViewUsecase) GetPersonalizedGuide(ctx context.Context, accountID, 
 	}, nil
 }
 
-func (s *guideViewUsecase) GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*entity.GuideStep, error) {
+func (s *guideViewUsecase) GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*usecase.GetCurrentStepResult, error) {
 	guide, err := s.guideRepo.GetBySlugGlobal(ctx, guideSlug, locale)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,16 @@ func (s *guideViewUsecase) GetCurrentStep(ctx context.Context, accountID, userID
 	for _, step := range steps {
 		status, exists := progressMap[step.ID]
 		if !exists || status == entity.ProgressStatusLocked {
-			return step, nil
+			return &usecase.GetCurrentStepResult{
+				ID:            step.ID,
+				Slug:          step.Slug,
+				Title:         s.resolveStepTitle(step, locale),
+				Description:   s.resolveStepDescription(step, locale),
+				StepType:      step.StepType,
+				SortOrder:     step.SortOrder,
+				IsOptional:    step.IsOptional,
+				EstimatedTime: step.EstimatedTime,
+			}, nil
 		}
 	}
 
@@ -505,6 +514,20 @@ func (s *guideViewUsecase) resolveGuideName(g *entity.Guide, locale constants.Lo
 func (s *guideViewUsecase) resolveGuideDescription(g *entity.Guide, locale constants.Locale) *string {
 	if len(g.Translations) > 0 {
 		return g.Translations[0].Description
+	}
+	return nil
+}
+
+func (s *guideViewUsecase) resolveStepTitle(step *entity.GuideStep, locale constants.Locale) string {
+	if len(step.Translations) > 0 {
+		return step.Translations[0].Title
+	}
+	return step.Slug
+}
+
+func (s *guideViewUsecase) resolveStepDescription(step *entity.GuideStep, locale constants.Locale) *string {
+	if len(step.Translations) > 0 {
+		return step.Translations[0].Description
 	}
 	return nil
 }
