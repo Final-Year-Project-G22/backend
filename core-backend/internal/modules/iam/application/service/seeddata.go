@@ -1,6 +1,10 @@
 package service
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
+)
 
 type seedPermission struct {
 	Code        string
@@ -18,26 +22,26 @@ type seedRole struct {
 func seedPermissions() []seedPermission {
 	return []seedPermission{
 		{
-			Code:        "read",
-			Name:        "Read access",
+			Code:        "iam.read",
+			Name:        permissions.ReadAccess,
 			Description: stringPtr("Read access to IAM resources"),
 			Module:      "iam",
 		},
 		{
-			Code:        "write",
-			Name:        "Write access",
+			Code:        "iam.write",
+			Name:        permissions.WriteAccess,
 			Description: stringPtr("Write access to IAM resources"),
 			Module:      "iam",
 		},
 		{
-			Code:        "update",
-			Name:        "Update access",
+			Code:        "iam.update",
+			Name:        permissions.UpdateAccess,
 			Description: stringPtr("Update access to IAM resources"),
 			Module:      "iam",
 		},
 		{
-			Code:        "delete",
-			Name:        "Delete access",
+			Code:        "iam.delete",
+			Name:        permissions.DeleteAccess,
 			Description: stringPtr("Delete access to IAM resources"),
 			Module:      "iam",
 		},
