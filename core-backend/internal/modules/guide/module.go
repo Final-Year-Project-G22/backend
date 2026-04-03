@@ -69,12 +69,14 @@ var Module = fx.Module(
 	),
 
 	fx.Provide(handler.NewGuideViewHandler),
+	fx.Provide(handler.NewGuideAdminHandler),
 
-	fx.Invoke(func(api huma.API, guideViewHandler *handler.GuideViewHandler, tokenService token.TokenService, authService iamservice.AuthService) {
+	fx.Invoke(func(api huma.API, guideViewHandler *handler.GuideViewHandler, guideAdminHandler *handler.GuideAdminHandler, tokenService token.TokenService, authService iamservice.AuthService) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			GuideViewHandler:        guideViewHandler,
+			GuideAdminHandler:       guideAdminHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 		})

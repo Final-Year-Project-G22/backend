@@ -15,7 +15,7 @@ type GuideViewUseCase interface {
 	GetRecentlyViewed(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 
 	GetPersonalizedGuide(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*PersonalizedGuide, error)
-	GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*entity.GuideStep, error)
+	GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*GetCurrentStepResult, error)
 
 	StartStep(ctx context.Context, accountID, userID, stepID uuid.UUID) error
 	CompleteStep(ctx context.Context, accountID, userID, stepID uuid.UUID, input CompleteStepInput) error
@@ -84,4 +84,15 @@ type BookmarkWithStep struct {
 	StepTitle string    `json:"stepTitle"`
 	GuideName string    `json:"guideName"`
 	CreatedAt string    `json:"createdAt"`
+}
+
+type GetCurrentStepResult struct {
+	ID            uuid.UUID       `json:"id"`
+	Slug          string          `json:"slug"`
+	Title         string          `json:"title"`
+	Description   *string         `json:"description,omitempty"`
+	StepType      entity.StepType `json:"stepType"`
+	SortOrder     int             `json:"sortOrder"`
+	IsOptional    bool            `json:"isOptional"`
+	EstimatedTime *int            `json:"estimatedTime,omitempty"`
 }
