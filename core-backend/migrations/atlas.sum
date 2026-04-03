@@ -1,4 +1,4 @@
-h1:2+g19OkpySX2XI+68tkc8xaRlrkwQHnGhaIhcUgYPps=
+h1:4zzXB4Gd594JaIAo4fZfak21rw9v0cNJu7sdqNItv08=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -6,3 +6,4 @@ h1:2+g19OkpySX2XI+68tkc8xaRlrkwQHnGhaIhcUgYPps=
 20260324213321_addAccountEmailOtps.sql h1:z1WZ9liIWUERdp6YEuINHEN+rJVKwzbHqelXa3xiu9E=
 20260331142346_updateOnEntitiesRelationWithAccountId.sql h1:JlXQ6vEqy8+u92+9Jt+ZCsY+g6QnIeKsgZ57X7rciT8=
 20260402195106_userGuideRecentView.sql h1:Kos4SIkW+dk+r57TSO8HVRzk+2/ceOMYq2XsAsOhRcU=
+20260403004720_isSystem-default-change.sql h1:rogex89hQ/cecgEWEI4lM1yD1h/3QtDnKBtZoea2nrI=
