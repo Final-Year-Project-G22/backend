@@ -120,8 +120,8 @@ func (h *GuideViewHandler) HandleGetCurrentStep(ctx context.Context, input *dto.
 		Body: dto.GetCurrentStepResponseBody{
 			ID:            step.ID,
 			Slug:          step.Slug,
-			Title:         step.Slug,
-			Description:   nil,
+			Title:         step.Title,
+			Description:   step.Description,
 			StepType:      step.StepType,
 			SortOrder:     step.SortOrder,
 			IsOptional:    step.IsOptional,
