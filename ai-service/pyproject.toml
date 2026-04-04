@@ -1,26 +1,191 @@
 [project]
 name = "ai-service"
-version = "0.0.1"
-description = "Add your description here"
+version = "0.1.0"
+description = "RAG-powered AI service for Adisu Serategna guide platform"
 readme = "README.md"
 requires-python = ">=3.11.9"
 dependencies = [
-    "fastapi[standard]>=0.133.0",
-    "pydantic-settings>=2.13.1",
-    "python-dotenv>=1.2.1",
-    "uvicorn[standard]>=0.41.0",
+    # Web framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+
+    # gRPC
+    "grpcio>=1.70.0",
+    "grpcio-tools>=1.70.0",
+    "protobuf>=5.29.0",
+
+    # Database
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "pgvector>=0.3.6",
+
+    # Dependency injection
+    "dependency-injector>=4.45.0",
+
+    # Configuration
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.2",
+
+    # Task queue
+    "arq>=0.26.0",
+
+    # Message bus
+    "aio-pika>=9.5.0",
+
+    # Embeddings & LLM
+    "cohere>=5.13.0",
+    "google-genai>=1.0.0",
+
+    # Reranking
+    "flashrank>=0.2.0",
+
+    # Observability
+    "opentelemetry-api>=1.29.0",
+    "opentelemetry-sdk>=1.29.0",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+    "prometheus-client>=0.21.0",
+
+    # Utilities
+    "tiktoken>=0.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "basedpyright>=1.29.0",
+    "bandit[toml]>=1.8.0",
+    "vulture>=2.14",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "factory-boy>=3.3.0",
+    "hypothesis>=6.120.0",
+    "respx>=0.22.0",
+    "pytest-xdist>=3.6.0",
 ]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+exclude = [".git", ".venv", "__pycache__", "grpc/generated"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "G", "PIE", "T20", "PT", "Q", "RET", "SIM", "ARG", "PTH", "ERA", "PL", "TRY", "NPY", "RSE", "ARG", "RUF"]
-ignore = ["E501"]
+select = [
+    "E",     # pycodestyle errors
+    "F",     # pyflakes
+    "W",     # pycodestyle warnings
+    "I",     # isort (import sorting)
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "A",     # flake8-builtins
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "T10",   # flake8-debugger
+    "EM",    # flake8-errmsg
+    "ISC",   # flake8-implicit-str-concat
+    "ICN",   # flake8-import-conventions
+    "G",     # flake8-logging-format
+    "PIE",   # flake8-pie
+    "T20",   # flake8-print
+    "PT",    # flake8-pytest-style
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "SIM",   # flake8-simplify
+    "ARG",   # flake8-unused-arguments
+    "PTH",   # flake8-use-pathlib
+    "ERA",   # eradicate (commented-out code)
+    "PL",    # pylint rules
+    "TRY",   # tryceratops
+    "RUF",   # ruff-specific rules
+    "S",     # flake8-bandit (security)
+    "FBT",   # flake8-boolean-trap
+    "PERF",  # perflint
+    "FURB",  # refurb
+]
+ignore = [
+    "E501",    # Line length (handled by formatter)
+    "PLR0913", # Too many arguments (common in services)
+    "TRY003",  # Avoid long messages outside exception classes
+    "EM101",   # Exception must not use string literal
+    "EM102",   # Exception must not use f-string
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ARG001", "T201"]
+"grpc/generated/*.py" = ["ALL"]
+"app/config.py" = ["S105"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "core", "grpc", "infrastructure", "workers"]
+split-on-trailing-comma = false
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+docstring-code-format = true
+
+[tool.basedpyright]
+pythonVersion = "3.11"
+pythonPlatform = "Linux"
+typeCheckingMode = "strict"
+include = ["app", "core", "grpc", "infrastructure", "workers"]
+exclude = [".venv", "__pycache__", "grpc/generated", "tests"]
+reportMissingTypeStubs = false
+reportUntypedFunctionDecorator = false
+reportUntypedClassDecorator = false
+reportImplicitStringConcatenation = false
+
+[tool.bandit]
+exclude_dirs = [".venv", "grpc/generated", "tests"]
+skips = ["B101"]
+
+[tool.vulture]
+exclude = [".venv", "__pycache__", "grpc/generated", "tests"]
+min-confidence = 80
+paths = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=app",
+    "--cov=core",
+    "--cov=infrastructure",
+    "--cov=grpc",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=80",
+    "-n", "auto",
+]
+markers = [
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (require DB)",
+    "slow: Slow tests (skip with -m 'not slow')",
+]
+
+[tool.coverage.run]
+source = ["app", "core", "infrastructure", "grpc"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/grpc/generated/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "\\.\\.\\.",
+]
+fail-under = 80
+show_missing = true

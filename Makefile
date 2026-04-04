@@ -123,3 +123,67 @@ dev-python:
 clean:
 	cd core-backend && rm -rf tmp
 	rm -rf .ruff_cache
+
+# ==============================================================================
+# AI Service
+# ==============================================================================
+
+typecheck-python:
+	cd ai-service && uv run basedpyright
+
+test-ai:
+	cd ai-service && uv run pytest -v
+
+test-ai-unit:
+	cd ai-service && uv run pytest -v -m unit
+
+test-ai-integration:
+	cd ai-service && uv run pytest -v -m integration
+
+security-ai:
+	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+
+dead-code-ai:
+	cd ai-service && uv run vulture . --min-confidence 80
+
+check-ai:
+	cd ai-service && uv run ruff format .
+	cd ai-service && uv run ruff check --fix .
+	cd ai-service && uv run basedpyright
+	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+
+test-all: test test-ai
+
+check-all: check check-ai
+
+# ==============================================================================
+# AI Service
+# ==============================================================================
+
+typecheck-python:
+	cd ai-service && uv run basedpyright
+
+test-ai:
+	cd ai-service && uv run pytest -v
+
+test-ai-unit:
+	cd ai-service && uv run pytest -v -m unit
+
+test-ai-integration:
+	cd ai-service && uv run pytest -v -m integration
+
+security-ai:
+	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+
+dead-code-ai:
+	cd ai-service && uv run vulture . --min-confidence 80
+
+check-ai:
+	cd ai-service && uv run ruff format .
+	cd ai-service && uv run ruff check --fix .
+	cd ai-service && uv run basedpyright
+	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+
+test-all: test test-ai
+
+check-all: check check-ai
