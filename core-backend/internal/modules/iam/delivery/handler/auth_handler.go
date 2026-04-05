@@ -158,8 +158,10 @@ func (h *AuthHandler) HandleGetCurrentUser(ctx context.Context, input *dto.GetCu
 
 	return &dto.GetCurrentUserOutput{
 		Body: dto.GetCurrentUserResponseBody{
-			User:    toUserDTO(result.User),
-			Account: toAccountDTO(result.Account),
+			User:        toUserDTO(result.User),
+			Account:     toAccountDTO(result.Account),
+			Roles:       toRoleDTOs(result.Roles),
+			Permissions: toPermissionDTOs(result.Permissions),
 		},
 	}, nil
 }
@@ -277,4 +279,40 @@ func toAccountDTO(account *entity.Account) dto.AccountDTO {
 		Username: account.Username,
 		Status:   string(account.Status),
 	}
+}
+
+func toRoleDTOs(roles []*entity.Role) []dto.RoleDTO {
+	if len(roles) == 0 {
+		return []dto.RoleDTO{}
+	}
+	result := make([]dto.RoleDTO, 0, len(roles))
+	for _, role := range roles {
+		result = append(result, dto.RoleDTO{
+			ID:          role.ID,
+			Code:        role.Code,
+			Name:        role.Name,
+			Description: role.Description,
+			Type:        string(role.Type),
+			IsSystem:    role.IsSystem,
+			IsMutable:   role.IsMutable,
+		})
+	}
+	return result
+}
+
+func toPermissionDTOs(permissions []*entity.Permission) []dto.PermissionDTO {
+	if len(permissions) == 0 {
+		return []dto.PermissionDTO{}
+	}
+	result := make([]dto.PermissionDTO, 0, len(permissions))
+	for _, permission := range permissions {
+		result = append(result, dto.PermissionDTO{
+			ID:          permission.ID,
+			Code:        permission.Code,
+			Name:        permission.Name,
+			Description: permission.Description,
+			Module:      permission.Module,
+		})
+	}
+	return result
 }

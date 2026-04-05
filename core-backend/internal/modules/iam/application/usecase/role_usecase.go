@@ -2,6 +2,7 @@ package appusecase
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -47,23 +48,26 @@ func (u *roleUsecase) CreateRole(ctx context.Context, input usecase.CreateRoleIn
 		return nil, err
 	}
 
-	roleType := input.Type
-	if roleType == "" {
-		roleType = entity.RoleTypeSystem
-	}
-
 	role := &entity.Role{
 		Code:        code,
 		Name:        name,
 		Description: input.Description,
-		Type:        roleType,
-		IsSystem:    input.IsSystem,
-		IsMutable:   input.IsMutable,
+		Type:        entity.RoleTypeCustom,
+		IsSystem:    false,
+		IsMutable:   true,
 	}
+	u.logger.Warn("Role Before", core.Bool("code", role.IsSystem))
+	fmt.Println(role)
+	tx := u.roleRepo.GetDB().
+		WithContext(ctx).
+		Select("code", "name", "description", "type", "is_system", "is_mutable").
+		Create(role)
 
-	if err := u.roleRepo.Create(ctx, role); err != nil {
-		return nil, err
+	if tx.Error != nil {
+		return nil, tx.Error
 	}
+	fmt.Println(role)
+	u.logger.Warn("Role after", core.Bool("code", role.IsSystem))
 
 	if len(input.PermissionIDs) > 0 {
 		permissions, err := u.getPermissionsByIDs(ctx, input.PermissionIDs)
@@ -111,16 +115,6 @@ func (u *roleUsecase) UpdateRole(ctx context.Context, roleID uuid.UUID, input us
 	if input.Description != nil {
 		role.Description = input.Description
 	}
-	if input.Type != nil {
-		role.Type = *input.Type
-	}
-	if input.IsSystem != nil {
-		role.IsSystem = *input.IsSystem
-	}
-	if input.IsMutable != nil {
-		role.IsMutable = *input.IsMutable
-	}
-
 	if err := u.roleRepo.Update(ctx, role); err != nil {
 		return nil, err
 	}
@@ -144,6 +138,18 @@ func (u *roleUsecase) UpdateRole(ctx context.Context, roleID uuid.UUID, input us
 
 	u.logger.Info("Role updated", core.String("roleID", role.ID.String()))
 	return role, nil
+}
+
+func (u *roleUsecase) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
+	role, err := u.roleRepo.GetByID(ctx, roleID)
+	if err != nil {
+		return err
+	}
+	if role.IsSystem {
+		return errors.ForbiddenError("iam.errors.forbidden")
+	}
+
+	return u.roleRepo.HardDelete(ctx, roleID)
 }
 
 func (u *roleUsecase) AssignPermissionsToRole(ctx context.Context, roleID uuid.UUID, permissionCodes []string) error {

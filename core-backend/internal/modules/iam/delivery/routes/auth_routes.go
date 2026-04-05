@@ -22,6 +22,28 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AuthHandler.HandleRegister)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "registerAdmin",
+		Method:      "POST",
+		Path:        authBase + "/admin/register",
+		Summary:     "Register a new admin",
+		Description: "Creates an admin account and emails the generated password.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleRegisterAdmin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "updateAdminRoles",
+		Method:      "PUT",
+		Path:        authBase + "/admin/{accountId}/roles",
+		Summary:     "Update admin roles",
+		Description: "Replaces roles assigned to an admin account.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleUpdateAdminRoles)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "login",
 		Method:      "POST",
 		Path:        authBase + "/login",

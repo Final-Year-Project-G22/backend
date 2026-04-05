@@ -16,7 +16,7 @@ type Role struct {
 	Name            string           `gorm:"type:varchar(100);not null"`
 	Description     *string          `gorm:"type:text"`
 	Type            RoleType         `gorm:"type:varchar(32);not null;default:'system'"`
-	IsSystem        bool             `gorm:"not null;default:true"`
+	IsSystem        bool             `gorm:"not null;default:false"`
 	IsMutable       bool             `gorm:"not null;default:false"`
 	RolePermissions []RolePermission `gorm:"foreignKey:RoleID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	RoleAssignments []RoleAssignment `gorm:"foreignKey:RoleID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
