@@ -14,6 +14,7 @@ type RoleUsecase interface {
 	GetRoleByCode(ctx context.Context, code string) (*entity.Role, error)
 	ListRoles(ctx context.Context) ([]*entity.Role, error)
 	UpdateRole(ctx context.Context, roleID uuid.UUID, input UpdateRoleInput) (*entity.Role, error)
+	DeleteRole(ctx context.Context, roleID uuid.UUID) error
 	AssignPermissionsToRole(ctx context.Context, roleID uuid.UUID, permissionCodes []string) error
 	ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissionCodes []string) error
 }
@@ -22,18 +23,12 @@ type CreateRoleInput struct {
 	Code          string
 	Name          string
 	Description   *string
-	Type          entity.RoleType
-	IsSystem      bool
-	IsMutable     bool
 	PermissionIDs []uuid.UUID
 }
 
 type UpdateRoleInput struct {
 	Name          *string
 	Description   *string
-	Type          *entity.RoleType
-	IsSystem      *bool
-	IsMutable     *bool
 	PermissionIDs *[]uuid.UUID
 }
 

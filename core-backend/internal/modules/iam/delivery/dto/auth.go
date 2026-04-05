@@ -60,8 +60,10 @@ type UpdateAccountPasswordOutput struct {
 	Body UpdateAccountPasswordResponseBody
 }
 type GetCurrentUserResponseBody struct {
-	User    UserDTO    `json:"user" doc:"Current user"`
-	Account AccountDTO `json:"account" doc:"Current user account"`
+	User        UserDTO         `json:"user" doc:"Current user"`
+	Account     AccountDTO      `json:"account" doc:"Current user account"`
+	Roles       []RoleDTO       `json:"roles" doc:"Current user roles"`
+	Permissions []PermissionDTO `json:"permissions" doc:"Current user permissions"`
 }
 
 type GetCurrentUserInput struct{}
@@ -245,6 +247,42 @@ type OAuthLinkCallbackOutput struct {
 // OAuthLinkEmailRequiredOutput is the response when email is required for linking.
 type OAuthLinkEmailRequiredOutput struct {
 	Body OAuthEmailRequiredResponse
+}
+
+type AdminRegisterRequest struct {
+	Email     string      `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
+	Username  *string     `json:"username,omitempty" doc:"Username (lowercase letters, digits, underscore)" minLength:"3" maxLength:"32" pattern:"^[a-z0-9_]+$"`
+	FirstName string      `json:"firstName" doc:"First name" minLength:"1" maxLength:"100"`
+	LastName  string      `json:"lastName" doc:"Last name" minLength:"1" maxLength:"100"`
+	RoleIDs   []uuid.UUID `json:"roleIds" doc:"Role IDs"`
+}
+
+type AdminRegisterInput struct {
+	Body AdminRegisterRequest
+}
+
+type AdminRegisterResponseBody struct {
+	AccountID uuid.UUID `json:"accountId" doc:"Created account ID"`
+	Message   string    `json:"message" doc:"Status message"`
+}
+
+type AdminRegisterOutput struct {
+	Body AdminRegisterResponseBody
+}
+
+type AdminUpdateRolesRequest struct {
+	RoleIDs []uuid.UUID `json:"roleIds" doc:"Role IDs"`
+}
+
+type AdminUpdateRolesInput struct {
+	AccountID uuid.UUID `path:"accountId" doc:"Admin account ID"`
+	Body      AdminUpdateRolesRequest
+}
+
+type AdminUpdateRolesOutput struct {
+	Body struct {
+		Message string `json:"message" doc:"Status message"`
+	}
 }
 
 // OAuthCompleteEmailRequest is the input for completing OAuth with email.

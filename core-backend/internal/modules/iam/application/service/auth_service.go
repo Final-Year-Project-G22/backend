@@ -87,20 +87,23 @@ type ValidatedAccessSessionOutput struct {
 	UserID    uuid.UUID
 }
 type GetCurrentUserOutput struct {
-	User    *entity.User
-	Account *entity.Account
+	User        *entity.User
+	Account     *entity.Account
+	Roles       []*entity.Role
+	Permissions []*entity.Permission
 }
 
 type authService struct {
-	transactor     sharedrepo.Transactor
-	userUsecase    usecase.UserUsecase
-	accountUsecase usecase.AccountUsecase
-	otpUsecase     usecase.AccountEmailOTPUsecase
-	sessionUsecase usecase.SessionUsecase
-	sessionRepo    repository.SessionRepository
-	tokenService   token.TokenService
-	logger         core.Logger
-	messageBus     rabbitmq.Bus
+	transactor            sharedrepo.Transactor
+	userUsecase           usecase.UserUsecase
+	accountUsecase        usecase.AccountUsecase
+	otpUsecase            usecase.AccountEmailOTPUsecase
+	sessionUsecase        usecase.SessionUsecase
+	roleAssignmentUsecase usecase.RoleAssignmentUsecase
+	sessionRepo           repository.SessionRepository
+	tokenService          token.TokenService
+	logger                core.Logger
+	messageBus            rabbitmq.Bus
 }
 
 const (
@@ -116,21 +119,23 @@ func NewAuthService(
 	accountUsecase usecase.AccountUsecase,
 	otpUsecase usecase.AccountEmailOTPUsecase,
 	sessionUsecase usecase.SessionUsecase,
+	roleAssignmentUsecase usecase.RoleAssignmentUsecase,
 	sessionRepo repository.SessionRepository,
 	tokenService token.TokenService,
 	logger core.Logger,
 	messageBus rabbitmq.Bus,
 ) AuthService {
 	return &authService{
-		transactor:     transactor,
-		userUsecase:    userUsecase,
-		accountUsecase: accountUsecase,
-		otpUsecase:     otpUsecase,
-		sessionUsecase: sessionUsecase,
-		sessionRepo:    sessionRepo,
-		tokenService:   tokenService,
-		logger:         logger,
-		messageBus:     messageBus,
+		transactor:            transactor,
+		userUsecase:           userUsecase,
+		accountUsecase:        accountUsecase,
+		otpUsecase:            otpUsecase,
+		sessionUsecase:        sessionUsecase,
+		roleAssignmentUsecase: roleAssignmentUsecase,
+		sessionRepo:           sessionRepo,
+		tokenService:          tokenService,
+		logger:                logger,
+		messageBus:            messageBus,
 	}
 }
 
@@ -671,9 +676,21 @@ func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID, acco
 		return nil, err
 	}
 
+	roles, err := s.roleAssignmentUsecase.ListAccountRoles(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions, err := s.roleAssignmentUsecase.GetEffectivePermissions(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &GetCurrentUserOutput{
-		User:    user,
-		Account: account,
+		User:        user,
+		Account:     account,
+		Roles:       roles,
+		Permissions: permissions,
 	}, nil
 }
 
