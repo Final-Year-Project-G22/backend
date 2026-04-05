@@ -33,6 +33,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # Message Broker
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: adisu_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   # SeaweedFS Master
   seaweed-master:
     image: chrislusf/seaweedfs:latest
@@ -87,3 +106,4 @@ volumes:
   seaweed_master_data:
   seaweed_volume_data:
   seaweed_filer_data:
+  rabbitmq_data:

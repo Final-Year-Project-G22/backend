@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
 	"os"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -30,7 +31,11 @@ func main() {
 
 	ctx := context.Background()
 	if err := app.Start(ctx); err != nil {
-		logger.Fatal(err.Error())
+		if logger != nil {
+			logger.Fatal(err.Error())
+		} else {
+			log.Fatal("Failed to start: ", err)
+		}
 	}
 	defer func() {
 		if err := app.Stop(ctx); err != nil {

@@ -117,6 +117,22 @@ func (c *Config) Validate() error {
 		}
 	}
 
+	// Conditional RabbitMQ validation
+	if c.RabbitMQ.Enabled {
+		rabbitValidate := validator.New()
+		if err := rabbitValidate.Struct(c.RabbitMQ); err != nil {
+			return fmt.Errorf("rabbitmq validation failed: %w", err)
+		}
+	}
+
+	// Conditional email validation
+	if c.Email.Enabled {
+		emailValidate := validator.New()
+		if err := emailValidate.Struct(c.Email); err != nil {
+			return fmt.Errorf("email validation failed: %w", err)
+		}
+	}
+
 	// Validate App.Environment (used directly in exec.Command)
 	if err := utils.IsSafeString(c.App.Environment); err != nil {
 		return fmt.Errorf("invalid app.environment: %w", err)

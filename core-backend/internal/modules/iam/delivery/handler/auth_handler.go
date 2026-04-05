@@ -12,6 +12,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 const refreshCookiePath = "/api/v1/auth/refresh"
@@ -34,6 +35,7 @@ func NewAuthHandler(authService service.AuthService, tokenService token.TokenSer
 func (h *AuthHandler) HandleRegister(ctx context.Context, input *dto.RegisterInput) (*dto.RegisterOutput, error) {
 	result, err := h.authService.Register(ctx, service.RegisterInput{
 		Email:     input.Body.Email,
+		Username:  input.Body.Username,
 		Password:  input.Body.Password,
 		FirstName: input.Body.FirstName,
 		LastName:  input.Body.LastName,
@@ -57,8 +59,8 @@ func (h *AuthHandler) HandleRegister(ctx context.Context, input *dto.RegisterInp
 // HandleLogin handles POST /api/v1/auth/login
 func (h *AuthHandler) HandleLogin(ctx context.Context, input *dto.LoginInput) (*dto.LoginOutput, error) {
 	result, err := h.authService.Login(ctx, service.LoginInput{
-		Email:    input.Body.Email,
-		Password: input.Body.Password,
+		Identifier: input.Body.Identifier,
+		Password:   input.Body.Password,
 		// TODO: Extract UserAgent and IPAddress from request headers if needed
 	})
 	if err != nil {
@@ -76,25 +78,90 @@ func (h *AuthHandler) HandleLogin(ctx context.Context, input *dto.LoginInput) (*
 	}, nil
 }
 
-func (h *AuthHandler) HandleUserUpdate(ctx context.Context, input *dto.UpdateUserProfileInput) (*dto.UpdateUserProfileOutput, error) {
+func (h *AuthHandler) HandleVerifyEmailOTP(ctx context.Context, input *dto.VerifyEmailOTPInput) (*dto.VerifyEmailOTPOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 	if userID == contextkeys.NilUUID {
 		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
 	}
-	result, err := h.authService.UpdateUserProfile(ctx, userID, service.UpdateUserProfileInput{
-		FirstName: input.Body.FirstName,
-		LastName:  input.Body.LastName,
-		Bio:       input.Body.Bio,
+
+	err := h.authService.VerifyEmailOTP(ctx, accountID, userID, input.Body.OTP)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.VerifyEmailOTPOutput{
+		Body: dto.VerifyEmailOTPResponseBody{
+			Message: i18n.Resolve("iam.successes.emailVerified", i18n.LocaleFromContext(ctx)),
+		},
+	}, nil
+}
+
+func (h *AuthHandler) HandleResendEmailOTP(ctx context.Context, _ *dto.ResendEmailOTPInput) (*dto.ResendEmailOTPOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	err := h.authService.ResendEmailOTP(ctx, accountID)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.ResendEmailOTPOutput{
+		Body: dto.ResendEmailOTPResponseBody{
+			Message: i18n.Resolve("iam.successes.otpResent", i18n.LocaleFromContext(ctx)),
+		},
+	}, nil
+}
+
+func (h *AuthHandler) HandleAccountPasswordUpdate(ctx context.Context, input *dto.UpdateAccountPasswordInput) (*dto.UpdateAccountPasswordOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	err := h.authService.UpdateAccountPassword(ctx, accountID, service.UpdateAccountPasswordInput{
+		ExistingPassword: input.Body.ExistingPassword,
+		NewPassword:      input.Body.NewPassword,
+		ConfirmPassword:  input.Body.ConfirmPassword,
 	})
 
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateUserProfileOutput{
-		Body: dto.UpdateUserProfileResponseBody{
-			FirstName: result.FirstName,
-			LastName:  result.LastName,
-			Bio:       result.Bio,
+
+	return &dto.UpdateAccountPasswordOutput{
+		Body: dto.UpdateAccountPasswordResponseBody{
+			Message: i18n.Resolve("iam.successes.passwordUpdated", i18n.LocaleFromContext(ctx)),
+		},
+	}, nil
+
+}
+
+func (h *AuthHandler) HandleGetCurrentUser(ctx context.Context, input *dto.GetCurrentUserInput) (*dto.GetCurrentUserOutput, error) {
+
+	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if userID == contextkeys.NilUUID {
+		return nil, apperrors.UnauthorizedError("iam.errors.unauthorized")
+	}
+
+	result, err := h.authService.GetCurrentUser(ctx, userID, accountID)
+
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.GetCurrentUserOutput{
+		Body: dto.GetCurrentUserResponseBody{
+			User:        toUserDTO(result.User),
+			Account:     toAccountDTO(result.Account),
+			Roles:       toRoleDTOs(result.Roles),
+			Permissions: toPermissionDTOs(result.Permissions),
 		},
 	}, nil
 }
@@ -207,8 +274,45 @@ func toUserDTO(user *entity.User) dto.UserDTO {
 // toAccountDTO maps a domain Account entity to an AccountDTO.
 func toAccountDTO(account *entity.Account) dto.AccountDTO {
 	return dto.AccountDTO{
-		ID:     account.ID,
-		Email:  account.Email,
-		Status: string(account.Status),
+		ID:       account.ID,
+		Email:    account.Email,
+		Username: account.Username,
+		Status:   string(account.Status),
 	}
+}
+
+func toRoleDTOs(roles []*entity.Role) []dto.RoleDTO {
+	if len(roles) == 0 {
+		return []dto.RoleDTO{}
+	}
+	result := make([]dto.RoleDTO, 0, len(roles))
+	for _, role := range roles {
+		result = append(result, dto.RoleDTO{
+			ID:          role.ID,
+			Code:        role.Code,
+			Name:        role.Name,
+			Description: role.Description,
+			Type:        string(role.Type),
+			IsSystem:    role.IsSystem,
+			IsMutable:   role.IsMutable,
+		})
+	}
+	return result
+}
+
+func toPermissionDTOs(permissions []*entity.Permission) []dto.PermissionDTO {
+	if len(permissions) == 0 {
+		return []dto.PermissionDTO{}
+	}
+	result := make([]dto.PermissionDTO, 0, len(permissions))
+	for _, permission := range permissions {
+		result = append(result, dto.PermissionDTO{
+			ID:          permission.ID,
+			Code:        permission.Code,
+			Name:        permission.Name,
+			Description: permission.Description,
+			Module:      permission.Module,
+		})
+	}
+	return result
 }

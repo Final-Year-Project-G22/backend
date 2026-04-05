@@ -4,18 +4,23 @@ import (
 	"context"
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/pkg/email"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"go.uber.org/zap"
 )
 
 type Config struct {
-	App      AppConfig      `mapstructure:"app"`
-	Database DatabaseConfig `mapstructure:"database"`
-	Cache    CacheConfig    `mapstructure:"cache"`
-	Logger   LoggerConfig   `mapstructure:"logger"`
-	Server   ServerConfig   `mapstructure:"server"`
-	Storage  storage.Config `mapstructure:"storage"`
-	JWT      JWTConfig      `mapstructure:"jwt"`
+	App      AppConfig       `mapstructure:"app"`
+	Database DatabaseConfig  `mapstructure:"database"`
+	Cache    CacheConfig     `mapstructure:"cache"`
+	Logger   LoggerConfig    `mapstructure:"logger"`
+	Server   ServerConfig    `mapstructure:"server"`
+	Storage  storage.Config  `mapstructure:"storage"`
+	JWT      JWTConfig       `mapstructure:"jwt"`
+	OAuth    OAuthConfig     `mapstructure:"oauth"`
+	RabbitMQ rabbitmq.Config `mapstructure:"rabbitmq"`
+	Email    email.Config    `mapstructure:"email"`
 }
 
 type AppConfig struct {
@@ -87,4 +92,19 @@ type Cache interface {
 	Expire(ctx context.Context, key string, expiration time.Duration) error
 	Health(ctx context.Context) error
 	Close() error
+}
+
+type OAuthConfig struct {
+	EncryptionKey         string `mapstructure:"encryption_key" validate:"required,min=32"`
+	CookieDomain          string `mapstructure:"cookie_domain"  validate:"required"`
+	MobileRedirectBaseURL string `mapstructure:"mobile_redirect_base_url"`
+	Providers             []OAuthProviderConfig
+}
+
+type OAuthProviderConfig struct {
+	Name         string   `mapstructure:"name"         validate:"required"`
+	ClientID     string   `mapstructure:"client_id"     validate:"required"`
+	ClientSecret string   `mapstructure:"client_secret" validate:"required"`
+	RedirectURI  string   `mapstructure:"redirect_uri"  validate:"required"`
+	Scopes       []string `mapstructure:"scopes"        validate:"required"`
 }

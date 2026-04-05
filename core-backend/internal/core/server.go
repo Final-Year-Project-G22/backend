@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Final-Year-Project-G22/backend/core/pkg/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
+	pkgmiddleware "github.com/Final-Year-Project-G22/backend/core/pkg/middleware"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
@@ -22,10 +23,12 @@ func NewGinEngine(cfg *Config, log Logger) *gin.Engine {
 	router := gin.New()
 
 	// Apply standard middleware stack
-	router.Use(middleware.Recovery(log))
-	router.Use(middleware.RequestLogger(log))
-	router.Use(middleware.CORSMiddleware("*"))
-	router.Use(middleware.ErrorHandler())
+	router.Use(pkgmiddleware.Recovery(log))
+	router.Use(pkgmiddleware.RequestID())
+	router.Use(middleware.LocaleResolver())
+	router.Use(pkgmiddleware.RequestLogger(log))
+	router.Use(pkgmiddleware.CORSMiddleware("*"))
+	router.Use(pkgmiddleware.ErrorHandler())
 
 	log.Info("Gin engine initialized",
 		String("mode", gin.Mode()),

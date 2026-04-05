@@ -40,3 +40,42 @@ storage:
     master_url: ${SEAWEED_MASTER_URL}
     filer_url: ${SEAWEED_FILER_URL}
     volume_url: ${SEAWEED_VOLUME_URL}
+
+oauth:
+  encryption_key: ${OAUTH_ENCRYPTION_KEY}
+  cookie_domain: "localhost"
+  mobile_redirect_base_url: ${OAUTH_MOBILE_REDIRECT_BASE_URL}
+  providers:
+    - name: "google"
+      client_id: ${GOOGLE_CLIENT_ID}
+      client_secret: ${GOOGLE_CLIENT_SECRET}
+      redirect_uri: ${OAUTH_GOOGLE_REDIRECT_URI}
+      scopes:
+        - https://www.googleapis.com/auth/userinfo.email
+        - https://www.googleapis.com/auth/userinfo.profile
+    - name: "facebook"
+      client_id: ${FACEBOOK_CLIENT_ID}
+      client_secret: ${FACEBOOK_CLIENT_SECRET}
+      redirect_uri: ${OAUTH_FACEBOOK_REDIRECT_URI}
+      scopes:
+        - email
+        - public_profile
+rabbitmq:
+  enabled: ${RABBITMQ_ENABLED}
+  host: ${RABBITMQ_HOST}
+  port: ${RABBITMQ_PORT}
+  username: ${RABBITMQ_USERNAME}
+  password: ${RABBITMQ_PASSWORD}
+  vhost: ${RABBITMQ_VHOST}
+  exchange: ${RABBITMQ_EXCHANGE}
+  service_name: ${RABBITMQ_SERVICE_NAME}
+
+email:
+  enabled: ${EMAIL_ENABLED}
+  host: ${EMAIL_HOST}
+  port: ${EMAIL_PORT}
+  username: ${EMAIL_USERNAME}
+  password: ${EMAIL_PASSWORD}
+  from: ${EMAIL_FROM}
+  from_name: ${EMAIL_FROM_NAME}
+  enable_tls: ${EMAIL_ENABLE_TLS}
