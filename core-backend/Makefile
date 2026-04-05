@@ -38,6 +38,12 @@ deps:
 	go mod download
 	go mod tidy
 
+migration-list:
+	go run ./cmd/schema -action=list
+
+migration-generate:
+	go run ./cmd/schema/main.go -action=generate -name=$(name)
+
 # Migration-apply
 migration-apply:
 	go run ./cmd/schema -action=apply

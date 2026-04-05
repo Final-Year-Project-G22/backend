@@ -8,7 +8,6 @@ import (
 )
 
 func NewHumaAPI(engine *gin.Engine, cfg *Config, log Logger) huma.API {
-	// Initialize custom error handler before creating API
 	errors.InitHumaErrorHandler()
 
 	config := huma.DefaultConfig(cfg.App.Name, cfg.App.Version)

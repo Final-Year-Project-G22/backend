@@ -19,9 +19,10 @@ type UserDTO struct {
 
 // AccountDTO represents an account in API responses.
 type AccountDTO struct {
-	ID     uuid.UUID `json:"id" doc:"Account's unique identifier"`
-	Email  string    `json:"email" doc:"Account email address"`
-	Status string    `json:"status" doc:"Account status (pending_verification, active, locked, suspended, disabled)"`
+	ID       uuid.UUID `json:"id" doc:"Account's unique identifier"`
+	Email    string    `json:"email" doc:"Account email address"`
+	Username *string   `json:"username,omitempty" doc:"Account username"`
+	Status   string    `json:"status" doc:"Account status (pending_verification, active, locked, suspended, disabled)"`
 }
 
 type UpdateUserProfileRequest struct {
@@ -43,13 +44,41 @@ type UpdateUserProfileResponseBody struct {
 type UpdateUserProfileOutput struct {
 	Body UpdateUserProfileResponseBody
 }
+type UpdateAccountPasswordRequest struct {
+	ExistingPassword string `json:"existingPassword" doc:"Password" minLength:"1" maxLength:"128"`
+	NewPassword      string `json:"newPassword" doc:"Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
+	ConfirmPassword  string `json:"confirmPassword" doc:"Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
+}
+
+type UpdateAccountPasswordInput struct {
+	Body UpdateAccountPasswordRequest
+}
+type UpdateAccountPasswordResponseBody struct {
+	Message string `json:"message" doc:"Message"`
+}
+type UpdateAccountPasswordOutput struct {
+	Body UpdateAccountPasswordResponseBody
+}
+type GetCurrentUserResponseBody struct {
+	User        UserDTO         `json:"user" doc:"Current user"`
+	Account     AccountDTO      `json:"account" doc:"Current user account"`
+	Roles       []RoleDTO       `json:"roles" doc:"Current user roles"`
+	Permissions []PermissionDTO `json:"permissions" doc:"Current user permissions"`
+}
+
+type GetCurrentUserInput struct{}
+
+type GetCurrentUserOutput struct {
+	Body GetCurrentUserResponseBody
+}
 
 // RegisterRequest is the input for user registration.
 type RegisterRequest struct {
-	Email     string `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
-	Password  string `json:"password" doc:"Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
-	FirstName string `json:"firstName" doc:"First name" minLength:"1" maxLength:"100"`
-	LastName  string `json:"lastName" doc:"Last name" minLength:"1" maxLength:"100"`
+	Email     string  `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
+	Username  *string `json:"username,omitempty" doc:"Username (lowercase letters, digits, underscore)" minLength:"3" maxLength:"32" pattern:"^[a-z0-9_]+$"`
+	Password  string  `json:"password" doc:"Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
+	FirstName string  `json:"firstName" doc:"First name" minLength:"1" maxLength:"100"`
+	LastName  string  `json:"lastName" doc:"Last name" minLength:"1" maxLength:"100"`
 }
 
 // RegisterInput wraps the register request body for Huma.
@@ -71,10 +100,36 @@ type RegisterOutput struct {
 	Body      RegisterResponseBody
 }
 
+type VerifyEmailOTPRequest struct {
+	OTP string `json:"otp" doc:"6-digit verification code" minLength:"6" maxLength:"6"`
+}
+
+type VerifyEmailOTPInput struct {
+	Body VerifyEmailOTPRequest
+}
+
+type VerifyEmailOTPResponseBody struct {
+	Message string `json:"message" doc:"Verification status message"`
+}
+
+type VerifyEmailOTPOutput struct {
+	Body VerifyEmailOTPResponseBody
+}
+
+type ResendEmailOTPInput struct{}
+
+type ResendEmailOTPResponseBody struct {
+	Message string `json:"message" doc:"OTP resend status message"`
+}
+
+type ResendEmailOTPOutput struct {
+	Body ResendEmailOTPResponseBody
+}
+
 // LoginRequest is the input for user login.
 type LoginRequest struct {
-	Email    string `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
-	Password string `json:"password" doc:"Password" minLength:"1" maxLength:"128"`
+	Identifier string `json:"identifier" doc:"Email or username" minLength:"1" maxLength:"255"`
+	Password   string `json:"password" doc:"Password" minLength:"1" maxLength:"128"`
 }
 
 // LoginInput wraps the login request body for Huma.
@@ -127,4 +182,152 @@ type LogoutAllInput struct{}
 // LogoutAllOutput clears the refresh token cookie.
 type LogoutAllOutput struct {
 	SetCookie http.Cookie `header:"Set-Cookie"`
+}
+
+// OAuthProviderDTO represents an OAuth provider.
+type OAuthProviderDTO struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Icon        string `json:"icon"`
+}
+
+// OAuthProvidersResponse is the response for listing OAuth providers.
+type OAuthProvidersResponse struct {
+	Providers []OAuthProviderDTO `json:"providers"`
+}
+
+// OAuthCallbackResponse is the response body for successful OAuth callback.
+type OAuthCallbackResponse struct {
+	AccessToken   string                      `json:"accessToken,omitempty"`
+	RefreshToken  string                      `json:"refreshToken,omitempty"`
+	ExpiresAt     time.Time                   `json:"expiresAt,omitempty"`
+	User          *UserDTO                    `json:"user,omitempty"`
+	Account       *AccountDTO                 `json:"account,omitempty"`
+	IsNewUser     bool                        `json:"isNewUser,omitempty"`
+	EmailRequired *OAuthEmailRequiredResponse `json:"emailRequired,omitempty"`
+}
+
+// OAuthCallbackOutput is the full response for OAuth callback.
+type OAuthCallbackOutput struct {
+	SetCookie http.Cookie `header:"Set-Cookie"`
+	Body      OAuthCallbackResponse
+}
+
+// OAuthCallbackRedirectOutput returns an HTTP 302 redirect for mobile deep-links.
+type OAuthCallbackRedirectOutput struct {
+	Status    int         `status:"true"`
+	Location  string      `header:"Location"`
+	SetCookie http.Cookie `header:"Set-Cookie"`
+}
+
+// OAuthEmailRequiredResponse indicates email is required to complete OAuth.
+type OAuthEmailRequiredResponse struct {
+	Provider   string `json:"provider"`
+	Subject    string `json:"subject"`
+	Name       string `json:"name"`
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	PictureURL string `json:"pictureUrl,omitempty"`
+	State      string `json:"state"`
+}
+
+// OAuthEmailRequiredOutput is the response when email is required.
+type OAuthEmailRequiredOutput struct {
+	Body OAuthEmailRequiredResponse
+}
+
+// OAuthLinkCallbackOutput is the response for OAuth link callback.
+type OAuthLinkCallbackOutput struct {
+	Body struct {
+		Provider string `json:"provider"`
+	} `json:"body"`
+	EmailRequired *OAuthEmailRequiredResponse `json:"emailRequired,omitempty"`
+}
+
+// OAuthLinkEmailRequiredOutput is the response when email is required for linking.
+type OAuthLinkEmailRequiredOutput struct {
+	Body OAuthEmailRequiredResponse
+}
+
+type AdminRegisterRequest struct {
+	Email     string      `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
+	Username  *string     `json:"username,omitempty" doc:"Username (lowercase letters, digits, underscore)" minLength:"3" maxLength:"32" pattern:"^[a-z0-9_]+$"`
+	FirstName string      `json:"firstName" doc:"First name" minLength:"1" maxLength:"100"`
+	LastName  string      `json:"lastName" doc:"Last name" minLength:"1" maxLength:"100"`
+	RoleIDs   []uuid.UUID `json:"roleIds" doc:"Role IDs"`
+}
+
+type AdminRegisterInput struct {
+	Body AdminRegisterRequest
+}
+
+type AdminRegisterResponseBody struct {
+	AccountID uuid.UUID `json:"accountId" doc:"Created account ID"`
+	Message   string    `json:"message" doc:"Status message"`
+}
+
+type AdminRegisterOutput struct {
+	Body AdminRegisterResponseBody
+}
+
+type AdminUpdateRolesRequest struct {
+	RoleIDs []uuid.UUID `json:"roleIds" doc:"Role IDs"`
+}
+
+type AdminUpdateRolesInput struct {
+	AccountID uuid.UUID `path:"accountId" doc:"Admin account ID"`
+	Body      AdminUpdateRolesRequest
+}
+
+type AdminUpdateRolesOutput struct {
+	Body struct {
+		Message string `json:"message" doc:"Status message"`
+	}
+}
+
+// OAuthCompleteEmailRequest is the input for completing OAuth with email.
+type OAuthCompleteEmailRequest struct {
+	Email string `json:"email" doc:"Email address" format:"email" minLength:"1" maxLength:"255"`
+	State string `json:"state" doc:"State token" minLength:"1"`
+}
+
+// OAuthCompleteEmailInput wraps the request body.
+type OAuthCompleteEmailInput struct {
+	Body OAuthCompleteEmailRequest
+}
+
+// OAuthLinkResponse is the response body for linking OAuth provider.
+type OAuthLinkResponse struct {
+	Provider string    `json:"provider"`
+	LinkedAt time.Time `json:"linkedAt"`
+}
+
+// OAuthLinkOutput is the response for linking OAuth provider.
+type OAuthLinkOutput struct {
+	Body OAuthLinkResponse
+}
+
+// OAuthIdentityDTO represents a linked OAuth identity.
+type OAuthIdentityDTO struct {
+	Provider      string     `json:"provider"`
+	ProviderEmail string     `json:"providerEmail,omitempty"`
+	LinkedAt      *time.Time `json:"linkedAt,omitempty"`
+	LastUsedAt    *time.Time `json:"lastUsedAt,omitempty"`
+}
+
+// OAuthIdentitiesResponse is the response for listing OAuth identities.
+type OAuthIdentitiesResponse struct {
+	Identities []OAuthIdentityDTO `json:"identities"`
+}
+
+// OAuthIdentitiesOutput is the response for listing OAuth identities.
+type OAuthIdentitiesOutput struct {
+	Body OAuthIdentitiesResponse
+}
+
+// OAuthUnlinkOutput is the response for unlinking OAuth provider.
+type OAuthUnlinkOutput struct {
+	Body struct {
+		Unlinked string `json:"unlinked"`
+	}
 }
