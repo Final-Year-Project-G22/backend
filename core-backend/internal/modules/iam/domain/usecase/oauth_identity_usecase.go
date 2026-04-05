@@ -10,6 +10,7 @@ import (
 
 type OAuthIdentityUsecase interface {
 	LinkOAuthIdentity(ctx context.Context, accountID uuid.UUID, input LinkOAuthIdentityInput) (*entity.OAuthIdentity, error)
+	GetByProviderSubject(ctx context.Context, provider, subject string) (*entity.OAuthIdentity, error)
 	ListOAuthIdentities(ctx context.Context, accountID uuid.UUID) ([]*entity.OAuthIdentity, error)
 	UnlinkOAuthIdentity(ctx context.Context, accountID, identityID uuid.UUID) error
 }

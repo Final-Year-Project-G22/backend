@@ -14,3 +14,6 @@ cache:
 jwt:
   access_token_ttl: 1h
   refresh_token_ttl: 720h
+
+oauth:
+  mobile_redirect_base_url: "adisu://auth/oauth/callback"

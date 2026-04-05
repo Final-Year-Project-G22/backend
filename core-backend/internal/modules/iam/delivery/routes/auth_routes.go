@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -20,13 +22,57 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AuthHandler.HandleRegister)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "registerAdmin",
+		Method:      "POST",
+		Path:        authBase + "/admin/register",
+		Summary:     "Register a new admin",
+		Description: "Creates an admin account and emails the generated password.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleRegisterAdmin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "updateAdminRoles",
+		Method:      "PUT",
+		Path:        authBase + "/admin/{accountId}/roles",
+		Summary:     "Update admin roles",
+		Description: "Replaces roles assigned to an admin account.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleUpdateAdminRoles)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "login",
 		Method:      "POST",
 		Path:        authBase + "/login",
 		Summary:     "Log in a user",
-		Description: "Authenticates a user with email and password, returns authentication tokens.",
+		Description: "Authenticates a user with email or username and password, returns authentication tokens.",
 		Tags:        []string{"Authentication"},
 	}, deps.AuthHandler.HandleLogin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "verifyEmailOTP",
+		Method:      "POST",
+		Path:        authBase + "/verify-email-otp",
+		Summary:     "Verify account email with OTP",
+		Description: "Verifies pending account email using a one-time password and activates the account.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AuthHandler.HandleVerifyEmailOTP)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "resendEmailOTP",
+		Method:      "POST",
+		Path:        authBase + "/resend-email-otp",
+		Summary:     "Resend account email OTP",
+		Description: "Resends a new one-time password for email verification with cooldown and resend limits.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AuthHandler.HandleResendEmailOTP)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "refresh",
@@ -44,7 +90,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:       "Log out current session",
 		Description:   "Revokes the current session and clears the refresh token cookie.",
 		Tags:          []string{"Authentication"},
-		Middlewares:   huma.Middlewares{deps.AuthMiddleware},
+		Middlewares:   huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:      []map[string][]string{{"bearerAuth": {}}},
 		DefaultStatus: 200,
 	}, deps.AuthHandler.HandleLogout)
@@ -56,23 +102,129 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:       "Log out all sessions",
 		Description:   "Revokes all sessions for the current user's account and clears the refresh token cookie.",
 		Tags:          []string{"Authentication"},
-		Middlewares:   huma.Middlewares{deps.AuthMiddleware},
+		Middlewares:   huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:      []map[string][]string{{"bearerAuth": {}}},
 		DefaultStatus: 200,
 	}, deps.AuthHandler.HandleLogoutAll)
 
+	registerOAuthRoutes(api, deps)
+
 	huma.Register(api, huma.Operation{
-		OperationID: "userUpdate",
+		OperationID: "AccountPassword",
 		Method:      "PUT",
-		Path:        authBase + "/user/update",
-		Summary:     "Update user profile",
-		Description: "Updates the authenticated user's profile information such as name, bio, or other editable account fields.",
+		Path:        authBase + "/user/updatePassword",
+		Summary:     "Update account password",
+		Description: "Updates account password",
 		Tags:        []string{"Authentication"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.AuthHandler.HandleUserUpdate)
+	}, deps.AuthHandler.HandleAccountPasswordUpdate)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "getCurrentUser",
+		Method:      "GET",
+		Path:        authBase + "/me",
+		Summary:     "Get current user",
+		Description: "Returns the current authenticated user's profile and account information.",
+		Tags:        []string{"Authentication"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AuthHandler.HandleGetCurrentUser)
 
 	registerSecurityScheme(api)
+}
+
+func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
+	huma.Register(api, huma.Operation{
+		OperationID: "getOAuthProviders",
+		Method:      "GET",
+		Path:        authBase + "/oauth/providers",
+		Summary:     "List OAuth providers",
+		Description: "Returns a list of available OAuth providers for authentication.",
+		Tags:        []string{"OAuth"},
+	}, deps.OAuthHandler.HandleGetProviders)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "initiateOAuthLogin",
+		Method:        "GET",
+		Path:          authBase + "/oauth/login/{provider}",
+		Summary:       "Initiate OAuth login",
+		Description:   "Redirects to the OAuth provider for authentication.",
+		Tags:          []string{"OAuth"},
+		DefaultStatus: http.StatusFound,
+	}, deps.OAuthHandler.HandleInitiateLogin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "oauthCallback",
+		Method:      "GET",
+		Path:        authBase + "/oauth/callback/{provider}",
+		Summary:     "OAuth callback",
+		Description: "Handles the OAuth callback from the provider. Returns JSON response.",
+		Tags:        []string{"OAuth"},
+	}, deps.OAuthHandler.HandleCallback)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "oauthCallbackMobile",
+		Method:        "GET",
+		Path:          authBase + "/oauth/callback/{provider}/mobile",
+		Summary:       "OAuth callback for mobile",
+		Description:   "Handles the OAuth callback and returns HTTP 302 redirect to mobile deep-link.",
+		Tags:          []string{"OAuth"},
+		DefaultStatus: http.StatusFound,
+	}, deps.OAuthHandler.HandleCallbackRedirect)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "oauthCompleteWithEmail",
+		Method:      "POST",
+		Path:        authBase + "/oauth/complete",
+		Summary:     "Complete OAuth with email",
+		Description: "Completes OAuth flow when email is required.",
+		Tags:        []string{"OAuth"},
+	}, deps.OAuthHandler.HandleCompleteWithEmail)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "initiateOAuthLink",
+		Method:      "GET",
+		Path:        authBase + "/oauth/link/{provider}",
+		Summary:     "Initiate OAuth link",
+		Description: "Initiates linking an OAuth provider to the authenticated account.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleInitiateLink)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "oauthLinkCallback",
+		Method:      "GET",
+		Path:        authBase + "/oauth/link/callback/{provider}",
+		Summary:     "OAuth link callback",
+		Description: "Handles the OAuth callback when linking a provider.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleLinkCallback)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "getOAuthIdentities",
+		Method:      "GET",
+		Path:        authBase + "/oauth/identities",
+		Summary:     "List linked OAuth identities",
+		Description: "Returns all OAuth providers linked to the authenticated account.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleGetIdentities)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "unlinkOAuthProvider",
+		Method:      "DELETE",
+		Path:        authBase + "/oauth/identities/{provider}",
+		Summary:     "Unlink OAuth provider",
+		Description: "Unlinks an OAuth provider from the authenticated account.",
+		Tags:        []string{"OAuth"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.OAuthHandler.HandleUnlink)
 }
 
 func registerSecurityScheme(api huma.API) {
