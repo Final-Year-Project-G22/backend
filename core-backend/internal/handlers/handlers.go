@@ -33,6 +33,9 @@ func RegisterEventHandlers(bus interface {
 		event.UserEmailOTPRequested: func(ctx context.Context, data []byte) error {
 			return handleUserEmailOTPRequested(ctx, data, emailer)
 		},
+		event.AdminCreated: func(ctx context.Context, data []byte) error {
+			return handleAdminCreated(ctx, data, emailer)
+		},
 	}
 
 	for eventName, handler := range handlers {
@@ -112,4 +115,32 @@ func handleUserEmailOTPRequested(ctx context.Context, data []byte, emailer email
 	}
 
 	return nil
+}
+
+func handleAdminCreated(ctx context.Context, data []byte, emailer email.Emailer) error {
+	var evt event.AdminCreatedEvent
+
+	if err := json.Unmarshal(data, &evt); err != nil {
+		return fmt.Errorf("failed to unmarshal admin credentials event: %w", err)
+	}
+
+	locale := evt.Locale
+	if locale == "" || !i18n.HasLocale(locale) {
+		locale = "en"
+	}
+
+	subject := i18n.Resolve("email.adminCredentials.subject", locale)
+	templateBody := i18n.Resolve("email.adminCredentials.template", locale)
+
+	return emailer.SendTemplate(ctx, email.SendTemplateInput{
+		To:       []string{evt.Email},
+		Subject:  subject,
+		Template: templateBody,
+		Data: map[string]string{
+			"firstName": evt.FirstName,
+			"lastName":  evt.LastName,
+			"email":     evt.Email,
+			"password":  evt.Password,
+		},
+	})
 }
