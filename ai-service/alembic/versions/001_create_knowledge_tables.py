@@ -7,8 +7,8 @@ Create Date: 2026-04-05
 
 from collections.abc import Sequence
 
-import pgvector
-import pgvector.alembic  # noqa: F401 — registers Vector with Alembic
+import pgvector  # type: ignore[reportUnusedImport]
+import pgvector.alembic  # type: ignore[import-not-found,reportUnusedImport]
 import sqlalchemy as sa
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
@@ -75,7 +75,7 @@ def upgrade() -> None:
         sa.Column("chunk_text", sa.Text, nullable=False),
         sa.Column("chunk_index", sa.Integer, nullable=False),
         sa.Column("token_count", sa.Integer, nullable=False, server_default="0"),
-        sa.Column("embedding", Vector(1024), nullable=True),
+        sa.Column("embedding", Vector(1024), nullable=True),  # type: ignore[reportUnknownArgumentType]
         sa.Column("status", sa.String(20), nullable=False, server_default="pending"),
         sa.Column("parent_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("section_heading", sa.String(500), nullable=True),
@@ -201,7 +201,7 @@ def upgrade() -> None:
         sa.Column("message_type", sa.String(20), nullable=False),
         sa.Column("user_query", sa.Text, nullable=True),
         sa.Column("query_language", sa.String(5), nullable=False, server_default="en"),
-        sa.Column("query_embedding", Vector(1024), nullable=True),
+        sa.Column("query_embedding", Vector(1024), nullable=True),  # type: ignore[reportUnknownArgumentType]
         sa.Column(
             "retrieved_chunk_ids", postgresql.ARRAY(postgresql.UUID(as_uuid=True)), nullable=True
         ),

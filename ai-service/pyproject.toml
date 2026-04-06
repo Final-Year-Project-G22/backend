@@ -120,7 +120,7 @@ ignore = [
 "app/config.py" = ["S105"]
 "app/container.py" = ["ERA001"]
 "alembic/env.py" = ["PLC0415"]
-"alembic/versions/*.py" = ["PLC0415"]
+"alembic/versions/*.py" = ["PLC0415", "F401"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "core", "grpc", "infrastructure", "workers"]
