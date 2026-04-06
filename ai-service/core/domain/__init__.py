@@ -18,6 +18,13 @@ from core.domain.exceptions import (
     RetrievalError,
     ValidationError,
 )
+from core.domain.value_objects import (
+    ResponseSource,
+    SearchFilters,
+    SearchHit,
+    TokenUsage,
+    UsageSnapshot,
+)
 
 __all__ = [
     "AIServiceError",
@@ -32,8 +39,13 @@ __all__ = [
     "MessageType",
     "QuotaExceededError",
     "RepositoryError",
+    "ResponseSource",
     "RetrievalError",
+    "SearchFilters",
+    "SearchHit",
     "SessionStatus",
     "Tier",
+    "TokenUsage",
+    "UsageSnapshot",
     "ValidationError",
 ]
