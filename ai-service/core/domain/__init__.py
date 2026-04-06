@@ -18,7 +18,13 @@ from core.domain.exceptions import (
     RetrievalError,
     ValidationError,
 )
-from core.domain.models import DocumentChunk, KnowledgeDocument
+from core.domain.models import (
+    AIChatMessage,
+    AIConversationSession,
+    AIUserQuota,
+    DocumentChunk,
+    KnowledgeDocument,
+)
 from core.domain.value_objects import (
     ResponseSource,
     SearchFilters,
@@ -28,7 +34,10 @@ from core.domain.value_objects import (
 )
 
 __all__ = [
+    "AIChatMessage",
+    "AIConversationSession",
     "AIServiceError",
+    "AIUserQuota",
     "CacheError",
     "ChunkStatus",
     "ConfigurationError",
