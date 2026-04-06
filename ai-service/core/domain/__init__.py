@@ -18,6 +18,7 @@ from core.domain.exceptions import (
     RetrievalError,
     ValidationError,
 )
+from core.domain.models import DocumentChunk, KnowledgeDocument
 from core.domain.value_objects import (
     ResponseSource,
     SearchFilters,
@@ -31,9 +32,11 @@ __all__ = [
     "CacheError",
     "ChunkStatus",
     "ConfigurationError",
+    "DocumentChunk",
     "DocumentSource",
     "DocumentStatus",
     "EmbeddingError",
+    "KnowledgeDocument",
     "LLMError",
     "Language",
     "MessageType",
