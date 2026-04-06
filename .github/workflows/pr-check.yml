@@ -107,6 +107,24 @@ jobs:
           cd ai-service
           echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff format --check
 
+      - name: Type check Python (ai-service)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No ai-service Python files changed"
+            exit 0
+          fi
+          cd ai-service && uv sync --all-extras && uv run basedpyright
+
+      - name: Security scan Python (ai-service)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No ai-service Python files changed"
+            exit 0
+          fi
+          cd ai-service && uv sync --all-extras && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+
   tests:
     runs-on: ubuntu-latest
     steps:
