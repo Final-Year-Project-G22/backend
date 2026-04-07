@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import cast
 
 from dependency_injector import containers, providers
 
@@ -17,9 +17,6 @@ from infrastructure.database.repositories import (
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
-
-if TYPE_CHECKING:
-    pass
 
 
 class Container(containers.DeclarativeContainer):
@@ -50,17 +47,20 @@ class Container(containers.DeclarativeContainer):
     llm_port: providers.Dependency[LLMPort] = providers.Dependency(
         instance_of=LLMPort,
     )
-    cache_port: providers.Dependency[CachePort] = providers.Dependency(
-        instance_of=CachePort,
+
+    cache_port: providers.Provider[CachePort | None] = cast(
+        providers.Provider[CachePort | None],
+        providers.Object(None),
     )
-    event_bus_port: providers.Dependency[EventBusPort] = providers.Dependency(
-        instance_of=EventBusPort,
+    event_bus_port: providers.Provider[EventBusPort | None] = cast(
+        providers.Provider[EventBusPort | None],
+        providers.Object(None),
     )
-    core_service_port: providers.Dependency[CoreServicePort] = providers.Dependency(
-        instance_of=CoreServicePort,
+    core_service_port: providers.Provider[CoreServicePort | None] = cast(
+        providers.Provider[CoreServicePort | None],
+        providers.Object(None),
     )
 
-    # Use-case providers
     quota_guard = providers.Factory(
         QuotaGuardUseCase,
         quota_repository=quota_repository,
