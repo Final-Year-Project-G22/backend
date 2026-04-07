@@ -1,0 +1,36 @@
+name: Main Release Title Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+jobs:
+  releasable-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title for release-please compatibility
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "PR title: $PR_TITLE"
+
+          if [[ "$PR_TITLE" == "chore: release main" ]]; then
+            echo "release-please PR title detected; allowing"
+            exit 0
+          fi
+
+          if [[ "$PR_TITLE" =~ ^(feat|fix|perf|revert)(\([a-z0-9._/-]+\))?(!)?:\ .+ ]]; then
+            echo "releasable conventional title detected"
+            exit 0
+          fi
+
+          echo "::error title=Invalid PR title::PRs targeting main must use a releasable conventional title so release-please can parse commits."
+          echo "Expected: feat(...): ..., fix(...): ..., perf(...): ..., or revert: ..."
+          echo "Special case allowed: chore: release main"
+          exit 1
