@@ -15,6 +15,7 @@ from core.usecases.defaults import (
     MAX_TOP_K,
     MIN_TOP_K,
 )
+from core.usecases.quota_guard import QuotaGuardUseCase
 
 __all__ = [
     "DEFAULT_BM25_TOP_K",
@@ -30,4 +31,5 @@ __all__ = [
     "AskAIResult",
     "CreateSessionCommand",
     "ListSessionsQuery",
+    "QuotaGuardUseCase",
 ]
