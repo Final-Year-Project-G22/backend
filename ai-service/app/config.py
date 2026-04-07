@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     EMBEDDING_PROVIDER: str = "cohere"
     COHERE_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
+    COHERE_EMBEDDING_MODEL: str = "embed-multilingual-v3.0"
+    GEMINI_EMBEDDING_MODEL: str = "text-embedding-004"
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    EMBEDDING_DIMENSIONS: int | None = None
 
     # LLM
     LLM_PROVIDER: str = "gemini"
