@@ -46,6 +46,9 @@ class Settings(BaseSettings):
 
     # LLM
     LLM_PROVIDER: str = "gemini"
+    COHERE_LLM_MODEL: str = "command-r"
+    GEMINI_LLM_MODEL: str = "gemini-1.5-flash"
+    OLLAMA_LLM_MODEL: str = "qwen2.5"
 
     # Observability
     OTEL_ENABLED: bool = False
