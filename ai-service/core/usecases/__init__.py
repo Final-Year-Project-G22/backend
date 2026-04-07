@@ -4,6 +4,7 @@ from core.usecases.contracts import (
     CreateSessionCommand,
     ListSessionsQuery,
 )
+from core.usecases.conversation import ConversationUseCase
 from core.usecases.defaults import (
     DEFAULT_BM25_TOP_K,
     DEFAULT_LLM_TEMPERATURE,
@@ -29,6 +30,7 @@ __all__ = [
     "MIN_TOP_K",
     "AskAICommand",
     "AskAIResult",
+    "ConversationUseCase",
     "CreateSessionCommand",
     "ListSessionsQuery",
     "QuotaGuardUseCase",
