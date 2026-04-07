@@ -128,49 +128,22 @@ clean:
 # AI Service
 # ==============================================================================
 
-typecheck-python:
-	cd ai-service && uv run basedpyright
+test-go:
+	cd core-backend && go test ./...
 
-test-ai:
-	cd ai-service && uv run pytest -v
-
-test-ai-unit:
-	cd ai-service && uv run pytest -v -m unit
-
-test-ai-integration:
-	cd ai-service && uv run pytest -v -m integration
-
-security-ai:
-	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
-
-dead-code-ai:
-	cd ai-service && uv run vulture . --min-confidence 80
-
-check-ai:
-	cd ai-service && uv run ruff format .
-	cd ai-service && uv run ruff check --fix .
-	cd ai-service && uv run basedpyright
-	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
-
-test-all: test test-ai
-
-check-all: check check-ai
-
-# ==============================================================================
-# AI Service
-# ==============================================================================
+test: test-go test-ai
 
 typecheck-python:
 	cd ai-service && uv run basedpyright
 
 test-ai:
-	cd ai-service && uv run pytest -v
+	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v
 
 test-ai-unit:
-	cd ai-service && uv run pytest -v -m unit
+	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m unit
 
 test-ai-integration:
-	cd ai-service && uv run pytest -v -m integration
+	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m integration
 
 security-ai:
 	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
