@@ -24,6 +24,10 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     async def create_session(self, session: AIConversationSession) -> AIConversationSession:
         model = to_orm_session(session)
         try:

@@ -2,8 +2,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from core.domain.enums import Language, MessageType, SessionStatus, Tier
-from core.domain.models import AIChatMessage, AIConversationSession, AIUserQuota
+from core.domain.enums import (
+    ChunkStatus,
+    DocumentSource,
+    DocumentStatus,
+    Language,
+    MessageType,
+    SessionStatus,
+    Tier,
+)
+from core.domain.models import (
+    AIChatMessage,
+    AIConversationSession,
+    AIUserQuota,
+    DocumentChunk,
+    KnowledgeDocument,
+)
 from core.domain.value_objects import ResponseSource, SearchHit, TokenUsage
 from infrastructure.database import models_sqlalchemy as sa_models
 
@@ -150,6 +164,86 @@ def to_orm_message(domain: AIChatMessage) -> sa_models.AIChatMessage:
     )
 
 
+def to_domain_document(model: sa_models.KnowledgeDocument) -> KnowledgeDocument:
+    return KnowledgeDocument(
+        id=model.id,
+        title=model.title,
+        source=DocumentSource(model.source),
+        external_id=model.external_id,
+        source_url=model.source_url,
+        effective_date=model.effective_date,
+        expiry_date=model.expiry_date,
+        language=Language(model.language),
+        status=DocumentStatus(model.status),
+        version=model.version,
+        uploaded_by=model.uploaded_by,
+        processed_at=model.processed_at,
+        metadata=model.metadata_ or {},
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+        deleted_at=model.deleted_at,
+    )
+
+
+def to_orm_document(domain: KnowledgeDocument) -> sa_models.KnowledgeDocument:
+    return sa_models.KnowledgeDocument(
+        id=domain.id,
+        title=domain.title,
+        source=domain.source.value,
+        external_id=domain.external_id,
+        source_url=domain.source_url,
+        effective_date=domain.effective_date,
+        expiry_date=domain.expiry_date,
+        language=domain.language.value,
+        status=domain.status.value,
+        version=domain.version,
+        uploaded_by=domain.uploaded_by,
+        processed_at=domain.processed_at,
+        metadata_=domain.metadata,
+        created_at=domain.created_at,
+        updated_at=domain.updated_at,
+        deleted_at=domain.deleted_at,
+    )
+
+
+def to_domain_chunk(model: sa_models.DocumentChunk) -> DocumentChunk:
+    return DocumentChunk(
+        id=model.id,
+        document_id=model.document_id,
+        content_type=DocumentSource(model.content_type),
+        language=Language(model.language),
+        chunk_text=model.chunk_text,
+        chunk_index=model.chunk_index,
+        token_count=model.token_count,
+        embedding=model.embedding,
+        status=ChunkStatus(model.status),
+        parent_id=model.parent_id,
+        section_heading=model.section_heading,
+        metadata=model.metadata_ or {},
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def to_orm_chunk(domain: DocumentChunk) -> sa_models.DocumentChunk:
+    return sa_models.DocumentChunk(
+        id=domain.id,
+        document_id=domain.document_id,
+        content_type=domain.content_type.value,
+        language=domain.language.value,
+        chunk_text=domain.chunk_text,
+        chunk_index=domain.chunk_index,
+        token_count=domain.token_count,
+        embedding=domain.embedding,
+        status=domain.status.value,
+        parent_id=domain.parent_id,
+        section_heading=domain.section_heading,
+        metadata_=domain.metadata,
+        created_at=domain.created_at,
+        updated_at=domain.updated_at,
+    )
+
+
 def _serialize_token_usage(token_usage: TokenUsage | None) -> dict[str, Any] | None:
     if token_usage is None:
         return None
@@ -187,9 +281,13 @@ def _deserialize_search_hits(raw: list[dict[str, Any]] | None) -> list[SearchHit
 
 
 __all__ = [
+    "to_domain_chunk",
+    "to_domain_document",
     "to_domain_message",
     "to_domain_quota",
     "to_domain_session",
+    "to_orm_chunk",
+    "to_orm_document",
     "to_orm_message",
     "to_orm_quota",
     "to_orm_session",

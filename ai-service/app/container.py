@@ -6,6 +6,7 @@ from app.config import Settings
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
+    SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
 
@@ -25,6 +26,10 @@ class Container(containers.DeclarativeContainer):
     )
     conversation_repository = providers.Factory(
         SqlAlchemyConversationRepository,
+        session=db_session,
+    )
+    knowledge_repository = providers.Factory(
+        SqlAlchemyKnowledgeRepository,
         session=db_session,
     )
 

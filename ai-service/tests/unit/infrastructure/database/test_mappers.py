@@ -3,14 +3,32 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
-from core.domain.enums import DocumentSource, Language, MessageType, SessionStatus, Tier
-from core.domain.models import AIChatMessage, AIConversationSession, AIUserQuota
+from core.domain.enums import (
+    ChunkStatus,
+    DocumentSource,
+    DocumentStatus,
+    Language,
+    MessageType,
+    SessionStatus,
+    Tier,
+)
+from core.domain.models import (
+    AIChatMessage,
+    AIConversationSession,
+    AIUserQuota,
+    DocumentChunk,
+    KnowledgeDocument,
+)
 from core.domain.value_objects import ResponseSource, SearchHit, TokenUsage
 from infrastructure.database import models_sqlalchemy as sa_models
 from infrastructure.database.repositories.mappers import (
+    to_domain_chunk,
+    to_domain_document,
     to_domain_message,
     to_domain_quota,
     to_domain_session,
+    to_orm_chunk,
+    to_orm_document,
     to_orm_message,
     to_orm_quota,
     to_orm_session,
@@ -149,3 +167,51 @@ def test_to_domain_message_uses_safe_defaults_for_optional_collections() -> None
     assert mapped.retrieved_chunk_ids == []
     assert mapped.response_sources == []
     assert mapped.context_chunks is None
+
+
+def test_document_mapper_round_trip() -> None:
+    now = datetime(2026, 4, 7, 8, 30, tzinfo=UTC)
+    domain_document = KnowledgeDocument(
+        title="Tax procedures",
+        source=DocumentSource.GOVERNMENT,
+        external_id="tax-001",
+        source_url="https://example.com/tax-procedures",
+        effective_date=date(2026, 1, 1),
+        expiry_date=date(2026, 12, 31),
+        language=Language.ENGLISH,
+        status=DocumentStatus.ACTIVE,
+        version=2,
+        uploaded_by=uuid.uuid4(),
+        processed_at=now,
+        metadata={"topic": "tax"},
+        created_at=now,
+        updated_at=now,
+    )
+
+    orm_document = to_orm_document(domain_document)
+    mapped_back = to_domain_document(orm_document)
+
+    assert mapped_back == domain_document
+
+
+def test_chunk_mapper_round_trip() -> None:
+    now = datetime(2026, 4, 7, 8, 45, tzinfo=UTC)
+    domain_chunk = DocumentChunk(
+        document_id=uuid.uuid4(),
+        content_type=DocumentSource.GUIDE,
+        language=Language.AMHARIC,
+        chunk_text="Bring the required forms.",
+        chunk_index=0,
+        token_count=5,
+        embedding=[0.1, 0.2, 0.3],
+        status=ChunkStatus.EMBEDDED,
+        section_heading="Registration",
+        metadata={"section": "registration"},
+        created_at=now,
+        updated_at=now,
+    )
+
+    orm_chunk = to_orm_chunk(domain_chunk)
+    mapped_back = to_domain_chunk(orm_chunk)
+
+    assert mapped_back == domain_chunk

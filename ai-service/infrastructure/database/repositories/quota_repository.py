@@ -18,6 +18,10 @@ class SqlAlchemyQuotaRepository(QuotaRepositoryPort):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    @property
+    def session(self) -> AsyncSession:
+        return self._session
+
     async def get_quota(self, user_id: uuid.UUID) -> AIUserQuota | None:
         try:
             model = await self._get_model_by_user_id(user_id)
