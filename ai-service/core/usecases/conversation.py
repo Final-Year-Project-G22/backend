@@ -97,5 +97,9 @@ class ConversationUseCase:
         quota = await self._quota_guard.get_quota(user_id)
         return quota.tier
 
+    @property
+    def conversation_repository(self) -> ConversationRepositoryPort:
+        return self._conversation_repository
+
 
 __all__ = ["ConversationUseCase"]

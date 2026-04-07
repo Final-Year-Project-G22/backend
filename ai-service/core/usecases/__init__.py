@@ -1,3 +1,4 @@
+from core.usecases.ask_ai import AskAIUseCase
 from core.usecases.contracts import (
     AskAICommand,
     AskAIResult,
@@ -30,6 +31,7 @@ __all__ = [
     "MIN_TOP_K",
     "AskAICommand",
     "AskAIResult",
+    "AskAIUseCase",
     "ConversationUseCase",
     "CreateSessionCommand",
     "ListSessionsQuery",
