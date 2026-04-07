@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+from typing import cast
+
 from dependency_injector import containers, providers
 
 from app.config import Settings
+from core.ports.cache import CachePort
+from core.ports.core_service import CoreServicePort
+from core.ports.embedding import EmbeddingPort
+from core.ports.event_bus import EventBusPort
+from core.ports.llm import LLMPort
+from core.usecases import AskAIUseCase, ConversationUseCase, QuotaGuardUseCase
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
@@ -33,9 +41,43 @@ class Container(containers.DeclarativeContainer):
         session=db_session,
     )
 
-    # Port providers — concrete adapters wired in Phase 3
-    # embedding_port = providers.Factory(CohereEmbeddingAdapter)
-    # llm_port = providers.Factory(GeminiProAdapter)
-    # repository_port = providers.Factory(PgVectorRepository)
-    # cache_port = providers.Factory(RedisCacheAdapter)
-    # event_bus_port = providers.Singleton(RabbitMQBus)
+    embedding_port: providers.Dependency[EmbeddingPort] = providers.Dependency(
+        instance_of=EmbeddingPort,
+    )
+    llm_port: providers.Dependency[LLMPort] = providers.Dependency(
+        instance_of=LLMPort,
+    )
+
+    cache_port: providers.Provider[CachePort | None] = cast(
+        providers.Provider[CachePort | None],
+        providers.Object(None),
+    )
+    event_bus_port: providers.Provider[EventBusPort | None] = cast(
+        providers.Provider[EventBusPort | None],
+        providers.Object(None),
+    )
+    core_service_port: providers.Provider[CoreServicePort | None] = cast(
+        providers.Provider[CoreServicePort | None],
+        providers.Object(None),
+    )
+
+    quota_guard = providers.Factory(
+        QuotaGuardUseCase,
+        quota_repository=quota_repository,
+        core_service=core_service_port,
+    )
+    conversation = providers.Factory(
+        ConversationUseCase,
+        conversation_repository=conversation_repository,
+        quota_guard=quota_guard,
+    )
+    ask_ai = providers.Factory(
+        AskAIUseCase,
+        conversation=conversation,
+        quota_guard=quota_guard,
+        knowledge_repository=knowledge_repository,
+        embedding_port=embedding_port,
+        llm_port=llm_port,
+        cache=cache_port,
+        event_bus=event_bus_port,
+    )
