@@ -136,6 +136,51 @@ async def test_get_document_returns_none_when_soft_deleted() -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_document_by_external_id_uses_source_filter() -> None:
+    document = _build_document()
+    orm_document = to_orm_document(document)
+
+    session = _build_session()
+    session.execute.return_value = _ScalarResult(orm_document)
+    repo = SqlAlchemyKnowledgeRepository(session)
+
+    result = await repo.get_document_by_external_id(
+        document.external_id or "",
+        source=DocumentSource.GUIDE,
+    )
+
+    assert result == document
+    statement = session.execute.await_args.args[0]
+    assert "knowledge_documents.external_id" in str(statement)
+    assert "knowledge_documents.source" in str(statement)
+
+
+@pytest.mark.asyncio
+async def test_list_documents_applies_optional_filters() -> None:
+    document = _build_document()
+    orm_document = to_orm_document(document)
+
+    session = _build_session()
+    session.execute.return_value = _ListResult([orm_document])
+    repo = SqlAlchemyKnowledgeRepository(session)
+
+    results = await repo.list_documents(
+        language=Language.ENGLISH,
+        source=DocumentSource.GUIDE,
+        status=DocumentStatus.ACTIVE,
+        limit=10,
+        offset=0,
+    )
+
+    assert results == [document]
+    statement = session.execute.await_args.args[0]
+    statement_str = str(statement)
+    assert "knowledge_documents.language" in statement_str
+    assert "knowledge_documents.source" in statement_str
+    assert "knowledge_documents.status" in statement_str
+
+
+@pytest.mark.asyncio
 async def test_soft_delete_document_marks_archived() -> None:
     document = _build_document()
     orm_document = to_orm_document(document)
@@ -150,6 +195,23 @@ async def test_soft_delete_document_marks_archived() -> None:
     assert deleted is True
     assert orm_document.status == DocumentStatus.ARCHIVED.value
     assert orm_document.deleted_at == deleted_at
+
+
+@pytest.mark.asyncio
+async def test_get_chunks_by_document_returns_domain_chunks() -> None:
+    document = _build_document()
+    chunk = _build_chunk(document_id=document.id)
+    orm_chunk = to_orm_chunk(chunk)
+
+    session = _build_session()
+    session.execute.return_value = _ListResult([orm_chunk])
+    repo = SqlAlchemyKnowledgeRepository(session)
+
+    results = await repo.get_chunks_by_document(document.id)
+
+    assert results == [chunk]
+    statement = session.execute.await_args.args[0]
+    assert "document_chunks.chunk_index" in str(statement)
 
 
 @pytest.mark.asyncio
