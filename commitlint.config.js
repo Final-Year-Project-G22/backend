@@ -6,5 +6,7 @@ module.exports = {
       "always",
       ["feat", "fix", "docs", "refactor", "test", "chore", "revert"],
     ],
+    "scope-empty": [2, "never"],
+    "scope-enum": [2, "always", ["core", "ai"]],
   },
 };
