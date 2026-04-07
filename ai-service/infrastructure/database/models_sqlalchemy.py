@@ -181,9 +181,9 @@ class AIChatMessage(Base):
     retrieved_chunk_ids: Mapped[list[uuid.UUID] | None] = mapped_column(
         ARRAY(UUID(as_uuid=True)), nullable=True
     )
-    context_chunks: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    context_chunks: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
     llm_response: Mapped[str | None] = mapped_column(Text, nullable=True)
-    response_sources: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    response_sources: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
     processing_time_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     token_usage: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     model_used: Mapped[str] = mapped_column(String(100), nullable=False, default="")
