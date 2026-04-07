@@ -33,7 +33,7 @@ def create_app() -> FastAPI:
     )
     app.state.settings = settings
     app.state.container = container
-    container.wire(modules=["main", "api.v1.router"])
+    container.wire(modules=["main"])
 
     app.add_middleware(
         CORSMiddleware,
