@@ -4,6 +4,7 @@ import inspect
 
 from core.ports.cache import CachePort
 from core.ports.conversation_repository import ConversationRepositoryPort
+from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.knowledge_repository import KnowledgeRepositoryPort
@@ -71,3 +72,9 @@ def test_event_bus_port_contract_shape() -> None:
     assert inspect.isabstract(EventBusPort)
     expected = {"publish", "subscribe"}
     assert expected.issubset(EventBusPort.__abstractmethods__)
+
+
+def test_core_service_port_contract_shape() -> None:
+    assert inspect.isabstract(CoreServicePort)
+    expected = {"get_user_profile", "get_user_tier"}
+    assert expected.issubset(CoreServicePort.__abstractmethods__)
