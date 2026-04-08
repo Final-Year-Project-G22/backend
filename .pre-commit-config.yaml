@@ -7,14 +7,14 @@ repos:
     hooks:
       - id: go-lint
         name: Go Linting
-        entry: bash -c 'cd core-backend && golangci-lint run'
+        entry: bash -c 'cd core-backend && golangci-lint run ./... --skip-dirs pb'
         language: system
         types: [go]
         pass_filenames: false
 
       - id: go-fmt
         name: Go Formatting (goimports)
-        entry: bash -c 'cd core-backend && goimports -l -w .'
+        entry: bash -c 'cd core-backend && goimports -l -w $(git ls-files "*.go" ":!:pb/**")'
         language: system
         types: [go]
         pass_filenames: false
@@ -28,6 +28,7 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+        exclude: ^ai-service/grpc/generated/
 
       - id: python-format
         name: Python Formatting (ruff)
@@ -35,6 +36,7 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+        exclude: ^ai-service/grpc/generated/
 
   # Python - Type Checking (ai-service only)
   - repo: local
@@ -45,6 +47,7 @@ repos:
         language: system
         types: [python]
         files: ^ai-service/.*\.py$
+        exclude: ^ai-service/grpc/generated/
         pass_filenames: false
 
   # Python - Security (ai-service only)
@@ -56,6 +59,7 @@ repos:
         language: system
         types: [python]
         files: ^ai-service/.*\.py$
+        exclude: ^ai-service/grpc/generated/
         pass_filenames: false
 
   # Commit Message
