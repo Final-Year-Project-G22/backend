@@ -24,6 +24,14 @@ def test_llm_port_contract_shape() -> None:
     assert expected.issubset(LLMPort.__abstractmethods__)
 
 
+def test_llm_port_generate_stream_is_not_coroutine_function() -> None:
+    assert inspect.iscoroutinefunction(LLMPort.generate) is True
+    assert inspect.iscoroutinefunction(LLMPort.generate_stream) is False
+
+    signature = inspect.signature(LLMPort.generate_stream)
+    assert str(signature.return_annotation) == "AsyncIterator[str]"
+
+
 def test_knowledge_repository_port_contract_shape() -> None:
     assert inspect.isabstract(KnowledgeRepositoryPort)
     expected = {
