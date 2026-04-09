@@ -142,7 +142,7 @@ jobs:
             exit 0
           fi
           cd ai-service && uv sync --all-extras
-          cd ai-service && uv run basedpyright
+          uv run basedpyright
 
       - name: Security scan Python (ai-service)
         run: |
