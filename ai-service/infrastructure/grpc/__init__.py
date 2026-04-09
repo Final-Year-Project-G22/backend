@@ -1,3 +1,3 @@
-from infrastructure.grpc.core_service import CoreServiceGrpcAdapter
+from infrastructure.grpc.core_service import CoreServiceGrpcAdapter, CoreUserGrpcClient
 
-__all__ = ["CoreServiceGrpcAdapter"]
+__all__ = ["CoreServiceGrpcAdapter", "CoreUserGrpcClient"]
