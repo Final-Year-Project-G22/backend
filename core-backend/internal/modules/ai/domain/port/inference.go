@@ -14,7 +14,7 @@ type AskRequest struct {
 	Query     string
 	Language  constants.Locale
 	SessionID *uuid.UUID
-	TopK      int
+	TopK      int32
 }
 
 type Citation struct {

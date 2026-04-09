@@ -12,6 +12,7 @@ import (
 
 type Config struct {
 	App      AppConfig       `mapstructure:"app"`
+	AI       AIConfig        `mapstructure:"ai"`
 	Database DatabaseConfig  `mapstructure:"database"`
 	Cache    CacheConfig     `mapstructure:"cache"`
 	Logger   LoggerConfig    `mapstructure:"logger"`
@@ -30,6 +31,12 @@ type AppConfig struct {
 	Port        int    `mapstructure:"port"        validate:"required,gt=0,lte=65535"`
 	GRPCPort    int    `mapstructure:"grpc_port"   validate:"required,gt=0,lte=65535"`
 	Debug       bool   `mapstructure:"debug"`
+}
+
+type AIConfig struct {
+	InferenceGRPCEndpoint string        `mapstructure:"inference_grpc_endpoint"`
+	InferenceAuthToken    string        `mapstructure:"inference_auth_token"`
+	InferenceTimeout      time.Duration `mapstructure:"inference_timeout" validate:"gt=0"`
 }
 
 type DatabaseConfig struct {
