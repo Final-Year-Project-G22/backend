@@ -28,7 +28,7 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
-        exclude: ^ai-service/grpc/generated/
+        exclude: ^ai-service/grpc_stubs/
 
       - id: python-format
         name: Python Formatting (ruff)
@@ -36,7 +36,7 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
-        exclude: ^ai-service/grpc/generated/
+        exclude: ^ai-service/grpc_stubs/
 
   # Python - Type Checking (ai-service only)
   - repo: local
@@ -47,7 +47,7 @@ repos:
         language: system
         types: [python]
         files: ^ai-service/.*\.py$
-        exclude: ^ai-service/grpc/generated/
+        exclude: ^ai-service/grpc_stubs/
         pass_filenames: false
 
   # Python - Security (ai-service only)
@@ -55,11 +55,11 @@ repos:
     hooks:
       - id: python-security
         name: Python Security Scan (bandit)
-        entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers'
+        entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers'
         language: system
         types: [python]
         files: ^ai-service/.*\.py$
-        exclude: ^ai-service/grpc/generated/
+        exclude: ^ai-service/grpc_stubs/
         pass_filenames: false
 
   # Commit Message

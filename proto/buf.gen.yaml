@@ -10,6 +10,6 @@ plugins:
     out: ../core-backend/pb
     opt: paths=source_relative
   - remote: buf.build/protocolbuffers/python:v33.0
-    out: ../ai-service/grpc/generated
+    out: ../ai-service/grpc_stubs
   - remote: buf.build/grpc/python:v1.75.1
-    out: ../ai-service/grpc/generated
+    out: ../ai-service/grpc_stubs

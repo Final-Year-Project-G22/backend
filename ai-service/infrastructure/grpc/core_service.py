@@ -5,10 +5,11 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 import grpc
+
 from core.domain.enums import Language, Tier
 from core.domain.exceptions import ConfigurationError, RepositoryError
 from core.ports.core_service import CoreServicePort, CoreUserProfile
-from grpc.generated.core.user.v1 import service_pb2, service_pb2_grpc
+from core.user.v1 import service_pb2, service_pb2_grpc
 
 GRPC_NOT_FOUND_CODE = 5
 
