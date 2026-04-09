@@ -28,6 +28,7 @@ type AppConfig struct {
 	Environment string `mapstructure:"environment" validate:"required,oneof=development production testing local"`
 	Version     string `mapstructure:"version"     validate:"required"`
 	Port        int    `mapstructure:"port"        validate:"required,gt=0,lte=65535"`
+	GRPCPort    int    `mapstructure:"grpc_port"   validate:"required,gt=0,lte=65535"`
 	Debug       bool   `mapstructure:"debug"`
 }
 

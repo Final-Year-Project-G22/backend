@@ -38,4 +38,3 @@ ENV/
 ai-service/htmlcov/
 ai-service/.coverage
 ai-service/.secrets.baseline
-ai-service/grpc/generated/
