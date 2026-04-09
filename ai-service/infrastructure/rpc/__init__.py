@@ -6,9 +6,6 @@ stubs_path = Path(__file__).resolve().parent.parent.parent / "grpc_stubs"
 if str(stubs_path) not in sys.path:
     sys.path.insert(0, str(stubs_path))
 
-from infrastructure.grpc.core_service import (  # noqa: E402
-    CoreServiceGrpcAdapter,
-    CoreUserGrpcClient,
-)
+from infrastructure.rpc.core_service import CoreServiceGrpcAdapter, CoreUserGrpcClient  # noqa: E402
 
 __all__ = ["CoreServiceGrpcAdapter", "CoreUserGrpcClient"]

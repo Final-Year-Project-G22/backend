@@ -7,7 +7,7 @@ import pytest
 
 from core.domain.enums import Language, Tier
 from core.domain.exceptions import ConfigurationError, RepositoryError
-from infrastructure.grpc.core_service import (
+from infrastructure.rpc.core_service import (
     CoreServiceGrpcAdapter,
     CoreUserGrpcClient,
     CoreUserResponse,
@@ -183,8 +183,8 @@ async def test_core_user_grpc_client_maps_response() -> None:
     user_id = uuid.uuid4()
     account_id = uuid.uuid4()
     client = CoreUserGrpcClient(endpoint="localhost:50052")
-    client._stub = AsyncMock()
-    client._stub.GetUserProfile.return_value = AsyncMock(
+    client._stub = AsyncMock()  # type: ignore[reportPrivateUsage]
+    client._stub.GetUserProfile.return_value = AsyncMock(  # type: ignore[reportPrivateUsage]
         user_id=str(user_id),
         account_id=str(account_id),
         tier="pro",
@@ -204,8 +204,8 @@ async def test_core_user_grpc_client_maps_response() -> None:
 async def test_core_user_grpc_client_raises_on_invalid_identifiers() -> None:
     user_id = uuid.uuid4()
     client = CoreUserGrpcClient(endpoint="localhost:50052")
-    client._stub = AsyncMock()
-    client._stub.GetUserProfile.return_value = AsyncMock(
+    client._stub = AsyncMock()  # type: ignore[reportPrivateUsage]
+    client._stub.GetUserProfile.return_value = AsyncMock(  # type: ignore[reportPrivateUsage]
         user_id="invalid-uuid",
         account_id=str(uuid.uuid4()),
         tier="pro",
