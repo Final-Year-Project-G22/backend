@@ -26,8 +26,19 @@ jobs:
           cache: true
           cache-dependency-path: core-backend/go.sum
 
+<<<<<<< HEAD
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
+=======
+      - name: Cache Go tools
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: go-tools-${{ runner.os }}-1.25.3-golangci-lint-v1.64.2-goimports-v0.30.0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+>>>>>>> 710752c (refactor(ai): optimize PR lint workflow runtime)
         with:
           version: v2.11.4
           working-directory: core-backend
@@ -56,8 +67,12 @@ jobs:
 
       - name: Install tooling
         run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
-          go install golang.org/x/tools/cmd/goimports@latest
+          if ! command -v golangci-lint >/dev/null 2>&1; then
+            go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
+          fi
+          if ! command -v goimports >/dev/null 2>&1; then
+            go install golang.org/x/tools/cmd/goimports@v0.30.0
+          fi
           uv pip install --system pre-commit ruff
 
       - name: Show golangci-lint version and config
@@ -68,8 +83,9 @@ jobs:
       - name: Determine changed files
         id: diff
         run: |
-          git fetch origin ${{ github.base_ref }}
-          git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          git diff --name-only --diff-filter=ACMR \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
           cat /tmp/changed_files.txt
 
       - name: Generate protobuf stubs
@@ -85,11 +101,8 @@ jobs:
             exit 0
           fi
           cd core-backend
-          printf '%s\n' "$GO_FILES" | sed 's|^core-backend/||' | xargs -n1 dirname | sort -u | while read -r dir; do
-            if [ -d "$dir" ]; then
-              golangci-lint run "$dir"
-            fi
-          done
+          DIRS=$(printf '%s\n' "$GO_FILES" | sed 's|^core-backend/||' | xargs -n1 dirname | sort -u | tr '\n' ' ')
+          golangci-lint run $DIRS
 
       - name: Format Go (check only)
         run: |
@@ -128,7 +141,8 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          cd ai-service && uv sync --all-extras && uv run basedpyright
+          cd ai-service && uv sync --all-extras
+          cd ai-service && uv run basedpyright
 
       - name: Security scan Python (ai-service)
         run: |
@@ -137,7 +151,7 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          cd ai-service && uv sync --all-extras && uv run bandit -c pyproject.toml -r app core infrastructure workers
+          cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers
 
   tests:
 >>>>>>> 202d4f9 (refactor(ai): fix gRPC package shadowing and clean codegen)
