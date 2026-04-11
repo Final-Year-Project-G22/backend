@@ -118,7 +118,6 @@ jobs:
           cat /tmp/changed_files.txt
 
       - name: Generate protobuf stubs
-        if: contains(github.event.pull_request.changed_files, 'proto/')
         run: |
           cd proto
           buf generate
