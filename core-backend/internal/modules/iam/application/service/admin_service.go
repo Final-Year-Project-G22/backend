@@ -162,7 +162,7 @@ func (s *adminService) RegisterAdmin(ctx context.Context, input RegisterAdminInp
 		return nil, err
 	}
 
-	go s.publishAdminCreated(context.Background(), account, user, password)
+	go s.publishAdminCreated(ctx, account, user, password)
 
 	return &RegisterAdminOutput{AccountID: account.ID}, nil
 }

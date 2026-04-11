@@ -15,9 +15,6 @@ linters:
   settings:
     errcheck:
       check-type-assertions: true
-    gosec:
-      excludes:
-        - G118
     gocritic:
       enabled-tags:
         - diagnostic
