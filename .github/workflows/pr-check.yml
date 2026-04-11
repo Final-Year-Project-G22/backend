@@ -117,6 +117,9 @@ jobs:
             "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
           cat /tmp/changed_files.txt
 
+      - name: Set up Buf
+        uses: bufbuild/buf-setup-action@v1
+
       - name: Generate protobuf stubs
         run: |
           cd proto
