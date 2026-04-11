@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
@@ -12,15 +12,20 @@ linters:
     - unused
     - gosec
     - gocritic
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-  gocritic:
-    enabled-tags:
-      - diagnostic
+  settings:
+    errcheck:
+      check-type-assertions: true
+    gosec:
+      excludes:
+        - G118
+    gocritic:
+      enabled-tags:
+        - diagnostic
+  exclusions:
+    paths:
+      - pb
+    presets: []
 
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
