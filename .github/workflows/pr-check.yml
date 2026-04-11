@@ -130,7 +130,7 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          cd ai-service && uv sync --frozen
+          cd ai-service && uv sync --frozen --all-groups
           uv run basedpyright
 
       - name: Security scan Python (ai-service)
