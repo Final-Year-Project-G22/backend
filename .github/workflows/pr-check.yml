@@ -24,13 +24,14 @@ jobs:
         with:
           go-version: "1.25.3"
           cache: true
+          cache-dependency-path: core-backend/go.sum
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.64.2
+          version: v2.11.4
           working-directory: core-backend
-          args: ./... --skip-dirs pb
+          args: ./...
 
   go-test:
     runs-on: ubuntu-latest
