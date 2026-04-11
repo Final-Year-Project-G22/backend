@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     # gRPC
     GRPC_PORT: int = 50051
     CORE_GRPC_ENDPOINT: str = "localhost:50052"
+    INTERNAL_GRPC_AUTH_TOKEN: str = ""
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/adisu_ai"

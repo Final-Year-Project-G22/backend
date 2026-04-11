@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package ai.inference.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb";
+
+service AIInferenceService {
+  rpc Ask(AskRequest) returns (AskResponse);
+}
+
+message AskRequest {
+  string request_id = 1 [(buf.validate.field).string.uuid = true];
+  string user_id = 2 [(buf.validate.field).string.uuid = true];
+  string account_id = 3 [(buf.validate.field).string.uuid = true];
+  string query = 4 [(buf.validate.field).string.min_len = 1];
+  string language = 5; // e.g. "en", "am"
+  optional string session_id = 6 [(buf.validate.field).string.uuid = true];
+  int32 top_k = 7 [(buf.validate.field).int32 = {gte: 1, lte: 20}];
+}
+
+message Citation {
+  string document_id = 1 [(buf.validate.field).string.uuid = true];
+  string chunk_id = 2 [(buf.validate.field).string.uuid = true];
+  string source_type = 3;
+  optional string title = 4;
+  double score = 5;
+}
+
+message Usage {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
+}
+
+message AskResponse {
+  string request_id = 1 [(buf.validate.field).string.uuid = true];
+  string session_id = 2 [(buf.validate.field).string.uuid = true];
+  string answer = 3;
+  repeated Citation citations = 4;
+  Usage usage = 5;
+  string model = 6;
+  int32 latency_ms = 7;
+}

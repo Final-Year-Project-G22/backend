@@ -117,8 +117,10 @@ jobs:
             "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
           cat /tmp/changed_files.txt
 
+      - name: Set up Buf
+        uses: bufbuild/buf-setup-action@v1
+
       - name: Generate protobuf stubs
-        if: contains(github.event.pull_request.changed_files, 'proto/')
         run: |
           cd proto
           buf generate
@@ -130,8 +132,7 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          cd ai-service && uv sync --frozen
-          uv run basedpyright
+          (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run basedpyright)
 
       - name: Security scan Python (ai-service)
         run: |
@@ -140,4 +141,4 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers
+          (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run bandit -c pyproject.toml -r app core infrastructure workers)

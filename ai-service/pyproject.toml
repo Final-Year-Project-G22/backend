@@ -70,7 +70,7 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-exclude = [".git", ".venv", "__pycache__", "grpc/generated"]
+exclude = [".git", ".venv", "__pycache__", "grpc_stubs"]
 
 [tool.ruff.lint]
 select = [
@@ -116,14 +116,14 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ARG001", "T201"]
-"grpc/generated/**/*.py" = ["ALL"]
+"grpc_stubs/**/*.py" = ["ALL"]
 "app/config.py" = ["S105"]
 "app/container.py" = ["ERA001"]
 "alembic/env.py" = ["PLC0415"]
 "alembic/versions/*.py" = ["PLC0415", "F401"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "core", "grpc", "infrastructure", "workers"]
+known-first-party = ["app", "core", "infrastructure", "workers"]
 split-on-trailing-comma = false
 
 [tool.ruff.format]
@@ -137,19 +137,20 @@ docstring-code-format = true
 pythonVersion = "3.11"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
-include = ["app", "core", "grpc", "infrastructure", "workers"]
-exclude = [".venv", "__pycache__", "grpc/generated", "tests"]
+include = ["app", "core", "infrastructure", "workers"]
+exclude = [".venv", "__pycache__", "grpc_stubs", "tests"]
+extraPaths = ["grpc_stubs"]
 reportMissingTypeStubs = false
 reportUntypedFunctionDecorator = false
 reportUntypedClassDecorator = false
 reportImplicitStringConcatenation = false
 
 [tool.bandit]
-exclude_dirs = [".venv", "grpc/generated", "tests"]
+exclude_dirs = [".venv", "grpc_stubs", "tests"]
 skips = ["B101"]
 
 [tool.vulture]
-exclude = [".venv", "__pycache__", "grpc/generated", "tests"]
+exclude = [".venv", "__pycache__", "grpc_stubs", "tests"]
 min-confidence = 80
 paths = ["."]
 
@@ -163,7 +164,6 @@ addopts = [
     "--cov=app",
     "--cov=core",
     "--cov=infrastructure",
-    "--cov=grpc",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
     "--cov-fail-under=80",
@@ -176,11 +176,11 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["app", "core", "infrastructure", "grpc"]
+source = ["app", "core", "infrastructure"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
-    "*/grpc/generated/*",
+    "*/grpc_stubs/*",
 ]
 
 [tool.coverage.report]

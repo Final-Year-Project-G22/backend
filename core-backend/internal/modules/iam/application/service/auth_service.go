@@ -248,7 +248,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		core.String("accountID", account.ID.String()),
 	)
 
-	go s.publishEmailOTPRequestedEvent(context.Background(), account, user, otpCode)
+	go s.publishEmailOTPRequestedEvent(ctx, account, user, otpCode)
 
 	return &AuthResult{
 		AccessToken:  accessToken,
@@ -551,7 +551,7 @@ func (s *authService) VerifyEmailOTP(ctx context.Context, accountID uuid.UUID, u
 		return err
 	}
 
-	go s.publishAccountRegisteredEvent(context.Background(), account, user)
+	go s.publishAccountRegisteredEvent(ctx, account, user)
 
 	return nil
 }
@@ -612,7 +612,7 @@ func (s *authService) ResendEmailOTP(ctx context.Context, accountID uuid.UUID) e
 		return err
 	}
 
-	go s.publishEmailOTPRequestedEvent(context.Background(), account, user, otpCode)
+	go s.publishEmailOTPRequestedEvent(ctx, account, user, otpCode)
 
 	return nil
 }

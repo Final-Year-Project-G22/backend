@@ -26,6 +26,7 @@ build/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+grpc_stubs/
 
 # FastAPI / Uvicorn
 *.log

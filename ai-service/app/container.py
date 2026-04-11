@@ -17,7 +17,7 @@ from infrastructure.database.repositories import (
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
-from infrastructure.grpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
+from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
 
 
 class Container(containers.DeclarativeContainer):
