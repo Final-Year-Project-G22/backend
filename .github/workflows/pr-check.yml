@@ -130,7 +130,7 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          (cd ai-service && uv sync --frozen --all-groups && uv run basedpyright)
+          (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run basedpyright)
 
       - name: Security scan Python (ai-service)
         run: |
@@ -139,4 +139,4 @@ jobs:
             echo "No ai-service Python files changed"
             exit 0
           fi
-          (cd ai-service && uv sync --frozen --all-groups && uv run bandit -c pyproject.toml -r app core infrastructure workers)
+          (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run bandit -c pyproject.toml -r app core infrastructure workers)
