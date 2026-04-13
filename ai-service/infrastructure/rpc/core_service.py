@@ -5,11 +5,10 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 import grpc
-
 from core.domain.enums import Language, Tier
 from core.domain.exceptions import ConfigurationError, RepositoryError
 from core.ports.core_service import CoreServicePort, CoreUserProfile
-from core.user.v1 import service_pb2, service_pb2_grpc
+from core.user.v1 import service_pb2, service_pb2_grpc  # type: ignore
 
 GRPC_NOT_FOUND_CODE = 5
 
@@ -81,7 +80,7 @@ class CoreUserGrpcClient(CoreServiceClient):
 
         self._endpoint = endpoint
         self._channel = _create_async_channel(endpoint)
-        self._stub: Any = service_pb2_grpc.CoreUserServiceStub(self._channel)
+        self._stub: Any = service_pb2_grpc.CoreUserServiceStub(self._channel)  # type: ignore
 
     async def get_user(self, user_id: uuid.UUID) -> CoreUserResponse | None:
         request: Any = _build_get_user_request(str(user_id))
@@ -162,7 +161,7 @@ def _create_async_channel(endpoint: str) -> Any:
 
 
 def _build_get_user_request(user_id: str) -> Any:
-    request_ctor: Any = getattr(service_pb2, "GetUserProfileRequest")  # noqa: B009
+    request_ctor: Any = getattr(service_pb2, "GetUserProfileRequest")  # type: ignore  # noqa: B009
     return request_ctor(user_id=user_id)
 
 

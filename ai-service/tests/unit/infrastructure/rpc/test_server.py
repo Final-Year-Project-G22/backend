@@ -3,9 +3,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-import grpc
 import pytest
 
+import grpc
 from infrastructure.rpc.server import TokenAuthInterceptor
 
 
