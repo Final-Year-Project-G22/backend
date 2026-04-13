@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.4.0...core-backend-v0.5.0) (2026-04-13)
+
+
+### Features
+
+* **dev:** merge dev to main with all latest changes ([#65](https://github.com/Final-Year-Project-G22/backend/issues/65)) ([6b556e3](https://github.com/Final-Year-Project-G22/backend/commit/6b556e3f544222af1d4d81b7e6460413cd24785a))
+
 ## [0.4.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.3.0...core-backend-v0.4.0) (2026-04-07)
 
 
