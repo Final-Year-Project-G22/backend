@@ -26,14 +26,118 @@ jobs:
           cache: true
           cache-dependency-path: core-backend/go.sum
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v9
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
         with:
-          version: v2.11.4
-          working-directory: core-backend
-          args: ./...
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('ai-service/uv.lock') }}
+
+      - name: Install tooling
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
+          go install golang.org/x/tools/cmd/goimports@latest
+          uv pip install --system pre-commit ruff
+
+      - name: Show golangci-lint version and config
+        run: |
+          golangci-lint --version
+          cat core-backend/.golangci.yml
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Lint Go (changed packages)
+        run: |
+          GO_FILES=$(grep '^core-backend/.*\.go$' /tmp/changed_files.txt || true)
+          if [ -z "$GO_FILES" ]; then
+            echo "No Go files changed"
+            exit 0
+          fi
+          cd core-backend
+          printf '%s\n' "$GO_FILES" | sed 's|^core-backend/||' | xargs -n1 dirname | sort -u | while read -r dir; do
+            if [ -d "$dir" ]; then
+              golangci-lint run "$dir"
+            fi
+          done
+
+      - name: Format Go (check only)
+        run: |
+          GO_FILES=$(grep '^core-backend/.*\.go$' /tmp/changed_files.txt || true)
+          if [ -z "$GO_FILES" ]; then
+            echo "No Go files changed"
+            exit 0
+          fi
+          cd core-backend
+          echo "$GO_FILES" | sed 's|^core-backend/||' | xargs goimports -l
+
+      - name: Lint Python (changed files)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          cd ai-service
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff check
+
+      - name: Format Python (check only)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          cd ai-service
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff format --check
+
+      - name: Type check Python (ai-service)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No ai-service Python files changed"
+            exit 0
+          fi
+          cd ai-service && uv sync --all-extras && uv run basedpyright
+
+      - name: Security scan Python (ai-service)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No ai-service Python files changed"
+            exit 0
+          fi
+          cd ai-service && uv sync --all-extras && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
 
   go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.3"
+          cache: true
+          cache-dependency-path: core-backend/go.sum
+
+      - name: Run Go tests
+        run: cd core-backend && go test ./...
+
+  tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -129,7 +233,7 @@ jobs:
         run: |
           PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
           if [ -z "$PY_FILES" ]; then
-            echo "No ai-service Python files changed"
+            echo "No Python files changed"
             exit 0
           fi
           (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run basedpyright)
@@ -138,7 +242,7 @@ jobs:
         run: |
           PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
           if [ -z "$PY_FILES" ]; then
-            echo "No ai-service Python files changed"
+            echo "No Python files changed"
             exit 0
           fi
           (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run bandit -c pyproject.toml -r app core infrastructure workers)
