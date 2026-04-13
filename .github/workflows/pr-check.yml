@@ -45,7 +45,7 @@ jobs:
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
           go install golang.org/x/tools/cmd/goimports@latest
-          uv pip install --system pre-commit ruff
+          uvx --system pre-commit ruff || uv pip install --system --break-system-packages pre-commit ruff
 
       - name: Show golangci-lint version and config
         run: |
