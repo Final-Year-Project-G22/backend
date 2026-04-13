@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Final-Year-Project-G22/backend/compare/ai-service-v0.2.0...ai-service-v0.3.0) (2026-04-13)
+
+
+### Features
+
+* **dev:** merge dev to main with all latest changes ([#65](https://github.com/Final-Year-Project-G22/backend/issues/65)) ([6b556e3](https://github.com/Final-Year-Project-G22/backend/commit/6b556e3f544222af1d4d81b7e6460413cd24785a))
+
 ## [0.2.0](https://github.com/Final-Year-Project-G22/backend/compare/ai-service-v0.1.0...ai-service-v0.2.0) (2026-04-07)
 
 
