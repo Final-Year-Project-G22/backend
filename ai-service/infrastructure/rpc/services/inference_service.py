@@ -16,7 +16,7 @@ from core.usecases.contracts import AskAICommand
 logger = logging.getLogger(__name__)
 
 
-class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):
+class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: ignore
     def __init__(self, ask_ai_usecase: AskAIUseCase):
         self._ask_ai_usecase = ask_ai_usecase
 
