@@ -5,7 +5,6 @@ import uuid
 from typing import Any
 
 from ai.inference.v1 import service_pb2, service_pb2_grpc  # type: ignore
-from typing_extensions import override
 
 import grpc
 from core.domain.enums import Language
@@ -20,8 +19,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
     def __init__(self, ask_ai_usecase: AskAIUseCase):
         self._ask_ai_usecase = ask_ai_usecase
 
-    @override
-    async def Ask(self, request: Any, context: Any) -> Any:
+    async def Ask(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802
         try:
             # Parse request fields
             try:
