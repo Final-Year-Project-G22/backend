@@ -7,14 +7,14 @@ repos:
     hooks:
       - id: go-lint
         name: Go Linting
-        entry: bash -c 'cd core-backend && golangci-lint run'
+        entry: bash -c 'cd core-backend && golangci-lint run ./... --skip-dirs pb'
         language: system
         types: [go]
         pass_filenames: false
 
       - id: go-fmt
         name: Go Formatting (goimports)
-        entry: bash -c 'cd core-backend && goimports -l -w .'
+        entry: bash -c 'cd core-backend && goimports -l -w $(git ls-files "*.go" ":!:pb/**")'
         language: system
         types: [go]
         pass_filenames: false
@@ -28,12 +28,38 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+        exclude: ^ai-service/grpc_stubs/
 
       - id: python-format
         name: Python Formatting (ruff)
         entry: bash -c 'cd ai-service && uv run ruff format .'
         language: system
         types: [python]
+        pass_filenames: false
+        exclude: ^ai-service/grpc_stubs/
+
+  # Python - Type Checking (ai-service only)
+  - repo: local
+    hooks:
+      - id: python-typecheck
+        name: Python Type Checking (basedpyright)
+        entry: bash -c 'cd ai-service && uv run basedpyright'
+        language: system
+        types: [python]
+        files: ^ai-service/.*\.py$
+        exclude: ^ai-service/grpc_stubs/
+        pass_filenames: false
+
+  # Python - Security (ai-service only)
+  - repo: local
+    hooks:
+      - id: python-security
+        name: Python Security Scan (bandit)
+        entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers'
+        language: system
+        types: [python]
+        files: ^ai-service/.*\.py$
+        exclude: ^ai-service/grpc_stubs/
         pass_filenames: false
 
   # Python - Type Checking (ai-service only)

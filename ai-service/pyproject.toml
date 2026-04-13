@@ -70,7 +70,7 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-exclude = [".git", ".venv", "__pycache__", "grpc/generated"]
+exclude = [".git", ".venv", "__pycache__", "grpc_stubs", "grpc/generated"]
 
 [tool.ruff.lint]
 select = [
@@ -116,6 +116,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ARG001", "T201"]
+"grpc_stubs/**/*.py" = ["ALL"]
 "grpc/generated/*.py" = ["ALL"]
 "app/config.py" = ["S105"]
 "app/container.py" = ["ERA001"]
@@ -137,19 +138,20 @@ docstring-code-format = true
 pythonVersion = "3.11"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
-include = ["app", "core", "grpc", "infrastructure", "workers"]
-exclude = [".venv", "__pycache__", "grpc/generated", "tests"]
+include = ["app", "core", "infrastructure", "workers"]
+exclude = [".venv", "__pycache__", "grpc_stubs", "grpc", "grpc/generated", "tests"]
+extraPaths = ["grpc_stubs"]
 reportMissingTypeStubs = false
 reportUntypedFunctionDecorator = false
 reportUntypedClassDecorator = false
 reportImplicitStringConcatenation = false
 
 [tool.bandit]
-exclude_dirs = [".venv", "grpc/generated", "tests"]
+exclude_dirs = [".venv", "grpc_stubs", "grpc/generated", "tests"]
 skips = ["B101"]
 
 [tool.vulture]
-exclude = [".venv", "__pycache__", "grpc/generated", "tests"]
+exclude = [".venv", "__pycache__", "grpc_stubs", "grpc/generated", "tests"]
 min-confidence = 80
 paths = ["."]
 
@@ -180,6 +182,7 @@ source = ["app", "core", "infrastructure", "grpc"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
+    "*/grpc_stubs/*",
     "*/grpc/generated/*",
 ]
 

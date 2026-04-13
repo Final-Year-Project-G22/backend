@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package core.user.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb";
+
+service CoreUserService {
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse);
+}
+
+message GetUserProfileRequest {
+  string user_id = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+}
+
+message GetUserProfileResponse {
+  string user_id = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+
+  string account_id = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+
+  string tier = 3 [(buf.validate.field).string = {
+    in: ["basic", "pro", "premium"],
+  }];
+
+  string preferred_language = 4 [(buf.validate.field).string = {
+    in: ["en", "am"],
+  }];
+}

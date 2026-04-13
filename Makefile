@@ -128,12 +128,16 @@ clean:
 # AI Service
 # ==============================================================================
 
+proto-gen:
+	cd proto && buf generate
+
 test-go:
 	cd core-backend && go test ./...
 
 test: test-go test-ai
 
 typecheck-python:
+	$(MAKE) proto-gen
 	cd ai-service && uv run basedpyright
 
 test-ai:
@@ -152,6 +156,7 @@ dead-code-ai:
 	cd ai-service && uv run vulture . --min-confidence 80
 
 check-ai:
+	$(MAKE) proto-gen
 	cd ai-service && uv run ruff format .
 	cd ai-service && uv run ruff check --fix .
 	cd ai-service && uv run basedpyright
