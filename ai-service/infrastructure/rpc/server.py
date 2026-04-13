@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import grpc
 from ai.inference.v1 import service_pb2_grpc  # type: ignore
 
+import grpc
 from core.usecases.ask_ai import AskAIUseCase
 from infrastructure.rpc.services.inference_service import AIInferenceService
 

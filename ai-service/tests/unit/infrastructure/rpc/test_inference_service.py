@@ -4,9 +4,9 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-import grpc
 import pytest
 
+import grpc
 from core.domain.exceptions import AIServiceError, QuotaExceededError, RepositoryError
 from core.usecases.contracts import AskAICommand
 from infrastructure.rpc.services.inference_service import AIInferenceService

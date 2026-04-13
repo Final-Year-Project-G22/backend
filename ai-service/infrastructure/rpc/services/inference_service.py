@@ -4,10 +4,10 @@ import logging
 import uuid
 from typing import Any
 
-import grpc
 from ai.inference.v1 import service_pb2, service_pb2_grpc  # type: ignore
 from typing_extensions import override
 
+import grpc
 from core.domain.enums import Language
 from core.domain.exceptions import AIServiceError, QuotaExceededError, RepositoryError
 from core.usecases.ask_ai import AskAIUseCase
