@@ -17,6 +17,7 @@ from infrastructure.database.repositories import (
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
+from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
 
 
 class Container(containers.DeclarativeContainer):
@@ -25,6 +26,11 @@ class Container(containers.DeclarativeContainer):
     )
 
     config = providers.Singleton(Settings)
+
+    core_grpc_client = providers.Singleton(
+        CoreUserGrpcClient,
+        endpoint=config.provided.CORE_GRPC_ENDPOINT,
+    )
 
     db_session = providers.Callable(async_session_factory)
 
@@ -58,7 +64,11 @@ class Container(containers.DeclarativeContainer):
     )
     core_service_port: providers.Provider[CoreServicePort | None] = cast(
         providers.Provider[CoreServicePort | None],
-        providers.Object(None),
+        providers.Singleton(
+            CoreServiceGrpcAdapter,
+            endpoint=config.provided.CORE_GRPC_ENDPOINT,
+            client=core_grpc_client,
+        ),
     )
 
     quota_guard = providers.Factory(

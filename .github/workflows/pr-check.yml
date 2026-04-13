@@ -11,13 +11,13 @@ on:
       - reopened
 
 jobs:
-  lint-format:
+  go-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -25,11 +25,6 @@ jobs:
           go-version: "1.25.3"
           cache: true
           cache-dependency-path: core-backend/go.sum
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -50,7 +45,6 @@ jobs:
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.2
           go install golang.org/x/tools/cmd/goimports@latest
-          uv pip install --system pre-commit ruff
 
       - name: Show golangci-lint version and config
         run: |
@@ -96,7 +90,7 @@ jobs:
             exit 0
           fi
           cd ai-service
-          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff check
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx ruff check
 
       - name: Format Python (check only)
         run: |
@@ -106,7 +100,7 @@ jobs:
             exit 0
           fi
           cd ai-service
-          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs ruff format --check
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx ruff format --check
 
       - name: Type check Python (ai-service)
         run: |
@@ -126,6 +120,22 @@ jobs:
           fi
           cd ai-service && uv sync --all-extras && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
 
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.3"
+          cache: true
+          cache-dependency-path: core-backend/go.sum
+
+      - name: Run Go tests
+        run: cd core-backend && go test ./...
+
   tests:
     runs-on: ubuntu-latest
     steps:
@@ -141,3 +151,97 @@ jobs:
 
       - name: Run Go tests
         run: cd core-backend && go test ./...
+
+  python-lint-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          git diff --name-only --diff-filter=ACMR \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Lint Python (changed files)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          cd ai-service
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx ruff check
+
+      - name: Format Python (check only)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          cd ai-service
+          echo "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx ruff format --check
+
+  python-typecheck-security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          git diff --name-only --diff-filter=ACMR \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Set up Buf
+        uses: bufbuild/buf-setup-action@v1
+
+      - name: Generate protobuf stubs
+        run: |
+          cd proto
+          buf generate
+
+      - name: Type check Python (ai-service)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run basedpyright)
+
+      - name: Security scan Python (ai-service)
+        run: |
+          PY_FILES=$(grep '^ai-service/.*\.py$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+          if [ -z "$PY_FILES" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+          (cd ai-service && uv sync --frozen --all-groups --extra dev && uv run bandit -c pyproject.toml -r app core infrastructure workers)

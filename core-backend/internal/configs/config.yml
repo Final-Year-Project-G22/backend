@@ -3,7 +3,13 @@ app:
   environment: "local"
   version: "0.1.0"
   port: 4000
+  grpc_port: 50051
   debug: true
+
+ai:
+  inference_grpc_endpoint: ${AI_INFERENCE_GRPC_ENDPOINT:-localhost:50051}
+  inference_auth_token: ${AI_INFERENCE_AUTH_TOKEN:-}
+  inference_timeout: 10s
 
 database:
   type: "postgres"

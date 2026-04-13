@@ -4,6 +4,7 @@ go 1.25.3
 
 require (
 	ariga.io/atlas-provider-gorm v0.6.0
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
 	github.com/danielgtaylor/huma/v2 v2.37.2
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.30.1
@@ -19,6 +20,8 @@ require (
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.48.0
 	golang.org/x/image v0.37.0
+	google.golang.org/grpc v1.74.2
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.0

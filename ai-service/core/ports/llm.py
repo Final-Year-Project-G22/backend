@@ -23,7 +23,7 @@ class LLMPort(ABC):
     ) -> str: ...
 
     @abstractmethod
-    async def generate_stream(
+    def generate_stream(
         self,
         prompt: str,
         *,
