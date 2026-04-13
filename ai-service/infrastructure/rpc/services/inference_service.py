@@ -37,7 +37,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):
                 if request.language:
                     language = Language(request.language)
             except ValueError as e:
-                await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID or enum: {e}")
+                await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID or enum: {e}")  # type: ignore
                 return service_pb2.AskResponse()  # type: ignore
 
             domain_req = AskAICommand(
@@ -84,15 +84,15 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):
 
         except QuotaExceededError as e:
             logger.warning("Quota exceeded: %s", e)
-            await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, str(e))
+            await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, str(e))  # type: ignore
         except RepositoryError:
             logger.exception("Repository error in Ask endpoint")
-            await context.abort(grpc.StatusCode.INTERNAL, "Internal data error")
+            await context.abort(grpc.StatusCode.INTERNAL, "Internal data error")  # type: ignore
         except AIServiceError:
             logger.exception("AI provider error in Ask endpoint")
-            await context.abort(grpc.StatusCode.INTERNAL, "AI provider error")
+            await context.abort(grpc.StatusCode.INTERNAL, "AI provider error")  # type: ignore
         except Exception:
             logger.exception("Unexpected error in Ask endpoint")
-            await context.abort(grpc.StatusCode.INTERNAL, "Internal server error")
+            await context.abort(grpc.StatusCode.INTERNAL, "Internal server error")  # type: ignore
 
         return service_pb2.AskResponse()  # type: ignore
