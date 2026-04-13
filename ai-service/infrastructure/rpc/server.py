@@ -50,7 +50,7 @@ async def _build_unauthorized_handler(continuation: Any, handler_call_details: A
 
 async def _unauthorized_unary_unary(request: Any, context: Any) -> Any:
     _ = request
-    await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or missing token")
+    await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or missing token")  # type: ignore
 
 
 async def serve_rpc(
