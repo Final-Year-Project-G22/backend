@@ -6,7 +6,9 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/delivery/handler"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/delivery/routes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/port"
+	airepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/repository"
 	aiinfraclient "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/client"
+	aiinfrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -23,6 +25,18 @@ var Module = fx.Module("ai",
 		fx.Annotate(
 			aiinfraclient.NewInferenceGRPCClient,
 			fx.As(new(port.AIInferencePort)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			aiinfrarepo.NewIngestionDocumentRepository,
+			fx.As(new(airepository.IngestionDocumentRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			aiinfrarepo.NewIngestionOutboxRepository,
+			fx.As(new(airepository.IngestionOutboxRepository)),
 		),
 	),
 	fx.Provide(service.NewIngestionService),
