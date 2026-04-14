@@ -182,13 +182,14 @@ Status:
 Goal:
 - Lock non-negotiable test gates for PRD1.
 
-Implemented (ongoing):
+Implemented:
 - Added outbox dispatcher unit coverage for success, retry, and dead-letter paths.
 - Added ingestion service unit coverage for validation, idempotency, persistence, and failure paths.
-- Remaining: broader end-to-end contract/integration wiring across service boundary.
+- Hardened signer canonicalization stability guarantees.
+- Added AI verifier settings parsing tests for active/previous key scenarios.
 
 Status:
-- In progress.
+- Completed and committed.
 
 ---
 
@@ -226,4 +227,4 @@ Status:
 - Commit 6: committed.
 - Commit 7: committed.
 - Commit 8: committed.
-- Commit 9: in progress (unit-level hardening completed).
+- Commit 9: committed.
