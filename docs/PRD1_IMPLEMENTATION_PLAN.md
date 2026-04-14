@@ -198,13 +198,13 @@ Status:
 Goal:
 - Rollout and key-rotation readiness.
 
-Planned:
-- Add runbook for key rotation.
-- Add ingest toggle behavior and rollback notes.
-- Add alerting/metrics checklist.
+Implemented:
+- Added runbook with rollout sequence, key rotation procedure, ingestion toggle operations, retry/dead-letter behavior, and rollback steps.
+- Documented required environment variables for core and AI services.
+- Documented operational checks and alerting recommendations for outbox health.
 
 Status:
-- Not started.
+- Completed and committed.
 
 ---
 
@@ -228,3 +228,4 @@ Status:
 - Commit 7: committed.
 - Commit 8: committed.
 - Commit 9: committed.
+- Commit 10: completed (pending commit for docs updates in workspace).
