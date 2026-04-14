@@ -23,6 +23,7 @@ const (
 )
 
 type IngestionService struct {
+	enabled      bool
 	storage      storage.Storage
 	documentRepo airepo.IngestionDocumentRepository
 	outboxRepo   airepo.IngestionOutboxRepository
@@ -65,12 +66,14 @@ type FinalizeUploadOutput struct {
 }
 
 func NewIngestionService(
+	enabled bool,
 	storage storage.Storage,
 	documentRepo airepo.IngestionDocumentRepository,
 	outboxRepo airepo.IngestionOutboxRepository,
 	transactor sharedrepo.Transactor,
 ) *IngestionService {
 	return &IngestionService{
+		enabled:      enabled,
 		storage:      storage,
 		documentRepo: documentRepo,
 		outboxRepo:   outboxRepo,
@@ -83,6 +86,10 @@ func (s *IngestionService) Ping(_ context.Context) error {
 }
 
 func (s *IngestionService) CreateUploadIntent(ctx context.Context, in CreateUploadIntentInput) (*CreateUploadIntentOutput, error) {
+	if !s.enabled {
+		return nil, apperrors.ForbiddenError("ingestion.errors.ingestionDisabled")
+	}
+
 	contentType := strings.TrimSpace(in.ContentType)
 	if contentType == "" {
 		return nil, apperrors.BadRequestError("ingestion.errors.contentTypeRequired")
@@ -121,6 +128,10 @@ func (s *IngestionService) CreateUploadIntent(ctx context.Context, in CreateUplo
 }
 
 func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUploadInput) (*FinalizeUploadOutput, error) {
+	if !s.enabled {
+		return nil, apperrors.ForbiddenError("ingestion.errors.ingestionDisabled")
+	}
+
 	if in.AccountID == uuid.Nil || in.UserID == uuid.Nil {
 		return nil, apperrors.UnauthorizedError("ingestion.errors.unauthorized")
 	}

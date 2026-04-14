@@ -107,8 +107,16 @@ func (f *fakeTransactor) WithinTransaction(ctx context.Context, fn func(ctx cont
 	return fn(ctx)
 }
 
+func newEnabledService(fs *fakeStorage, docRepo *fakeDocRepo, outboxRepo *fakeOutboxRepo2) *IngestionService {
+	return NewIngestionService(true, fs, docRepo, outboxRepo, &fakeTransactor{})
+}
+
+func newDisabledService(fs *fakeStorage, docRepo *fakeDocRepo, outboxRepo *fakeOutboxRepo2) *IngestionService {
+	return NewIngestionService(false, fs, docRepo, outboxRepo, &fakeTransactor{})
+}
+
 func TestCreateUploadIntent_ValidatesContentType(t *testing.T) {
-	svc := NewIngestionService(&fakeStorage{}, &fakeDocRepo{}, &fakeOutboxRepo2{}, &fakeTransactor{})
+	svc := newEnabledService(&fakeStorage{}, &fakeDocRepo{}, &fakeOutboxRepo2{})
 	_, err := svc.CreateUploadIntent(context.Background(), CreateUploadIntentInput{ContentType: ""})
 	if err == nil {
 		t.Fatalf("expected error for missing content type")
@@ -117,7 +125,7 @@ func TestCreateUploadIntent_ValidatesContentType(t *testing.T) {
 
 func TestCreateUploadIntent_ReturnsStorageIntent(t *testing.T) {
 	intent := &storage.UploadIntent{Key: "k", UploadURL: "u", Method: "PUT", ExpiresAt: time.Now().Add(10 * time.Minute)}
-	svc := NewIngestionService(&fakeStorage{intent: intent}, &fakeDocRepo{}, &fakeOutboxRepo2{}, &fakeTransactor{})
+	svc := newEnabledService(&fakeStorage{intent: intent}, &fakeDocRepo{}, &fakeOutboxRepo2{})
 
 	out, err := svc.CreateUploadIntent(context.Background(), CreateUploadIntentInput{ContentType: "application/pdf"})
 	if err != nil {
@@ -128,18 +136,21 @@ func TestCreateUploadIntent_ReturnsStorageIntent(t *testing.T) {
 	}
 }
 
+func TestCreateUploadIntent_RejectsWhenIngestionDisabled(t *testing.T) {
+	svc := newDisabledService(&fakeStorage{}, &fakeDocRepo{}, &fakeOutboxRepo2{})
+	_, err := svc.CreateUploadIntent(context.Background(), CreateUploadIntentInput{ContentType: "application/pdf"})
+	if err == nil {
+		t.Fatalf("expected forbidden error when ingestion is disabled")
+	}
+}
+
 func TestFinalizeUpload_ReturnsExistingForDuplicateIdempotencyKey(t *testing.T) {
 	id := uuid.New()
 	eventID := uuid.New()
 	docRepo := &fakeDocRepo{existing: &entity.IngestionDocument{BaseModel: entity.IngestionDocument{}.BaseModel, EventID: eventID, Status: entity.IngestionDocumentStatusQueued}}
 	docRepo.existing.ID = id
 
-	svc := NewIngestionService(
-		&fakeStorage{},
-		docRepo,
-		&fakeOutboxRepo2{},
-		&fakeTransactor{},
-	)
+	svc := newEnabledService(&fakeStorage{}, docRepo, &fakeOutboxRepo2{})
 
 	out, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
 		AccountID:      uuid.New(),
@@ -159,7 +170,7 @@ func TestFinalizeUpload_ReturnsExistingForDuplicateIdempotencyKey(t *testing.T) 
 func TestFinalizeUpload_PersistsDocumentAndOutbox(t *testing.T) {
 	docRepo := &fakeDocRepo{}
 	outboxRepo := &fakeOutboxRepo2{}
-	svc := NewIngestionService(
+	svc := newEnabledService(
 		&fakeStorage{
 			exists: true,
 			fileInfo: &storage.FileInfo{
@@ -169,7 +180,6 @@ func TestFinalizeUpload_PersistsDocumentAndOutbox(t *testing.T) {
 		},
 		docRepo,
 		outboxRepo,
-		&fakeTransactor{},
 	)
 
 	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
@@ -193,7 +203,7 @@ func TestFinalizeUpload_PersistsDocumentAndOutbox(t *testing.T) {
 }
 
 func TestFinalizeUpload_FailsWhenObjectMissing(t *testing.T) {
-	svc := NewIngestionService(&fakeStorage{exists: false}, &fakeDocRepo{}, &fakeOutboxRepo2{}, &fakeTransactor{})
+	svc := newEnabledService(&fakeStorage{exists: false}, &fakeDocRepo{}, &fakeOutboxRepo2{})
 	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
 		AccountID:      uuid.New(),
 		UserID:         uuid.New(),
@@ -207,7 +217,7 @@ func TestFinalizeUpload_FailsWhenObjectMissing(t *testing.T) {
 }
 
 func TestFinalizeUpload_RequiresIdempotencyKey(t *testing.T) {
-	svc := NewIngestionService(&fakeStorage{exists: true}, &fakeDocRepo{}, &fakeOutboxRepo2{}, &fakeTransactor{})
+	svc := newEnabledService(&fakeStorage{exists: true}, &fakeDocRepo{}, &fakeOutboxRepo2{})
 	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
 		AccountID:      uuid.New(),
 		UserID:         uuid.New(),
@@ -222,7 +232,7 @@ func TestFinalizeUpload_RequiresIdempotencyKey(t *testing.T) {
 
 func TestFinalizeUpload_PropagatesRepositoryLookupError(t *testing.T) {
 	docRepo := &fakeDocRepo{getErr: errors.New("db down")}
-	svc := NewIngestionService(&fakeStorage{exists: true}, docRepo, &fakeOutboxRepo2{}, &fakeTransactor{})
+	svc := newEnabledService(&fakeStorage{exists: true}, docRepo, &fakeOutboxRepo2{})
 	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
 		AccountID:      uuid.New(),
 		UserID:         uuid.New(),
@@ -236,9 +246,73 @@ func TestFinalizeUpload_PropagatesRepositoryLookupError(t *testing.T) {
 }
 
 func TestCreateUploadIntent_PropagatesStorageFailure(t *testing.T) {
-	svc := NewIngestionService(&fakeStorage{intentErr: errors.New("boom")}, &fakeDocRepo{}, &fakeOutboxRepo2{}, &fakeTransactor{})
+	svc := newEnabledService(&fakeStorage{intentErr: errors.New("boom")}, &fakeDocRepo{}, &fakeOutboxRepo2{})
 	_, err := svc.CreateUploadIntent(context.Background(), CreateUploadIntentInput{ContentType: "application/pdf"})
 	if err == nil {
 		t.Fatalf("expected error")
+	}
+}
+
+func TestFinalizeUpload_FailsWhenSizeMismatch(t *testing.T) {
+	svc := newEnabledService(
+		&fakeStorage{
+			exists: true,
+			fileInfo: &storage.FileInfo{
+				Size:        256,
+				ContentType: "application/pdf",
+			},
+		},
+		&fakeDocRepo{},
+		&fakeOutboxRepo2{},
+	)
+	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
+		AccountID:      uuid.New(),
+		UserID:         uuid.New(),
+		StorageKey:     "docs/size.pdf",
+		ContentType:    "application/pdf",
+		SizeBytes:      128,
+		IdempotencyKey: "idem-size",
+	})
+	if err == nil {
+		t.Fatalf("expected size mismatch error")
+	}
+}
+
+func TestFinalizeUpload_FailsWhenContentTypeMismatch(t *testing.T) {
+	svc := newEnabledService(
+		&fakeStorage{
+			exists: true,
+			fileInfo: &storage.FileInfo{
+				Size:        128,
+				ContentType: "image/png",
+			},
+		},
+		&fakeDocRepo{},
+		&fakeOutboxRepo2{},
+	)
+	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
+		AccountID:      uuid.New(),
+		UserID:         uuid.New(),
+		StorageKey:     "docs/type.pdf",
+		ContentType:    "application/pdf",
+		SizeBytes:      128,
+		IdempotencyKey: "idem-type",
+	})
+	if err == nil {
+		t.Fatalf("expected content type mismatch error")
+	}
+}
+
+func TestFinalizeUpload_RejectsWhenIngestionDisabled(t *testing.T) {
+	svc := newDisabledService(&fakeStorage{exists: true}, &fakeDocRepo{}, &fakeOutboxRepo2{})
+	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
+		AccountID:      uuid.New(),
+		UserID:         uuid.New(),
+		StorageKey:     "docs/file.pdf",
+		ContentType:    "application/pdf",
+		IdempotencyKey: "idem-disabled",
+	})
+	if err == nil {
+		t.Fatalf("expected forbidden error when ingestion is disabled")
 	}
 }

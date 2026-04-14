@@ -16,6 +16,8 @@ import (
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	stg "github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -52,7 +54,9 @@ var Module = fx.Module("ai",
 			fx.As(new(aisvc.EnvelopeSigner)),
 		),
 	),
-	fx.Provide(service.NewIngestionService),
+	fx.Provide(func(cfg *core.Config, s stg.Storage, docRepo airepository.IngestionDocumentRepository, outboxRepo airepository.IngestionOutboxRepository, transactor sharedrepo.Transactor) *service.IngestionService {
+		return service.NewIngestionService(cfg.Ingestion.Enabled, s, docRepo, outboxRepo, transactor)
+	}),
 	fx.Provide(service.NewOutboxDispatcher),
 	fx.Provide(handler.NewIngestionHandler),
 	fx.Invoke(func(api huma.API, ingestionHandler *handler.IngestionHandler, tokenService token.TokenService, authService iamservice.AuthService) {
