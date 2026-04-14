@@ -38,7 +38,11 @@ class EnvelopeVerifier:
 
         payload = dict(envelope)
         payload.pop("signature", None)
-        canonical = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
+        canonical = _canonical_json(payload)
         expected = hmac.new(secret.encode("utf-8"), canonical, hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, signature):
             raise EnvelopeVerificationError("invalid envelope signature")
+
+
+def _canonical_json(value: Any) -> bytes:
+    return json.dumps(value, separators=(",", ":"), sort_keys=True).encode("utf-8")

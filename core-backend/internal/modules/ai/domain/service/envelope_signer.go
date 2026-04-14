@@ -1,12 +1,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	aievent "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/event"
@@ -55,10 +57,62 @@ func canonicalizeEnvelope(envelope map[string]any) ([]byte, error) {
 		clone["schema_version"] = aievent.EnvelopeSchemaVersion
 	}
 
-	b, err := json.Marshal(clone)
+	b, err := canonicalJSON(clone)
 	if err != nil {
 		return nil, fmt.Errorf("failed to canonicalize envelope: %w", err)
 	}
 
 	return b, nil
+}
+
+func canonicalJSON(value any) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	if err := writeCanonicalJSON(buf, value); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func writeCanonicalJSON(buf *bytes.Buffer, value any) error {
+	switch v := value.(type) {
+	case map[string]any:
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		buf.WriteByte('{')
+		for i, k := range keys {
+			if i > 0 {
+				buf.WriteByte(',')
+			}
+			keyBytes, _ := json.Marshal(k)
+			buf.Write(keyBytes)
+			buf.WriteByte(':')
+			if err := writeCanonicalJSON(buf, v[k]); err != nil {
+				return err
+			}
+		}
+		buf.WriteByte('}')
+		return nil
+	case []any:
+		buf.WriteByte('[')
+		for i, item := range v {
+			if i > 0 {
+				buf.WriteByte(',')
+			}
+			if err := writeCanonicalJSON(buf, item); err != nil {
+				return err
+			}
+		}
+		buf.WriteByte(']')
+		return nil
+	default:
+		encoded, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		buf.Write(encoded)
+		return nil
+	}
 }

@@ -105,13 +105,13 @@ Status:
 Goal:
 - Add direct-to-storage upload signing capability for PRD flow.
 
-Planned:
-- Extend storage abstraction for upload presign/ticket.
-- Implement provider-specific support (SeaweedFS + MinIO).
-- Add unit coverage for both adapters.
+Implemented:
+- Extended storage abstraction with upload intent contract.
+- Implemented SeaweedFS direct upload intent generation.
+- Added MinIO non-implementation stub to keep interface compatibility.
 
 Status:
-- Not started.
+- Completed and committed.
 
 ---
 
@@ -120,13 +120,14 @@ Status:
 Goal:
 - Implement finalize endpoint with idempotent transactional write.
 
-Planned:
-- Add finalize DTO + handler + routes.
-- Validate object metadata (`exists`, `size`, `checksum`, `content-type`).
-- Write `ingestion_documents` + `ingestion_outbox` in one DB tx.
+Implemented:
+- Added ingestion DTOs for upload intent and finalize endpoints.
+- Added authenticated ingestion routes and handlers.
+- Implemented transactional finalize flow with idempotency handling.
+- Persisted ingestion document + outbox record atomically.
 
 Status:
-- Not started.
+- Completed and committed.
 
 ---
 
@@ -135,13 +136,13 @@ Status:
 Goal:
 - Enforce signed envelopes with key rotation support.
 
-Planned:
-- Add signing utility and canonical payload serialization.
-- Add config for active/previous keys.
-- Add ingestion toggle and dispatcher knobs.
+Implemented:
+- Added envelope signer service with HMAC signing.
+- Added ingestion signing configuration.
+- Added outbox dispatcher lifecycle integration.
 
 Status:
-- Not started.
+- Completed and committed.
 
 ---
 
@@ -150,13 +151,14 @@ Status:
 Goal:
 - Publish asynchronously with durable retry behavior.
 
-Planned:
-- Background dispatcher lifecycle wiring.
-- Retry/backoff/jitter.
-- Persist publish/fail transitions.
+Implemented:
+- Added configurable dispatcher batch and interval controls.
+- Added exponential retry backoff with max delay.
+- Added dead-letter transition after max attempts.
+- Updated outbox repository contract for retry/dead-letter state transitions.
 
 Status:
-- Not started.
+- Completed and committed.
 
 ---
 
@@ -165,12 +167,13 @@ Status:
 Goal:
 - Consumer trust checks for signature/schema/event-shape.
 
-Planned:
-- Add envelope verification utility in AI service.
-- Add validation tests (valid/invalid sig, unknown key, schema mismatch).
+Implemented:
+- Added AI-side envelope verifier utility.
+- Added schema/key/signature verification checks.
+- Added unit tests for valid, invalid, unknown-key, and schema-mismatch cases.
 
 Status:
-- Not started.
+- Completed and committed.
 
 ---
 
@@ -179,13 +182,13 @@ Status:
 Goal:
 - Lock non-negotiable test gates for PRD1.
 
-Planned:
-- Contract tests (schema/version/signature).
-- Finalize -> outbox -> publish integration tests.
-- Idempotency and retry-path tests.
+Implemented (ongoing):
+- Added outbox dispatcher unit coverage for success, retry, and dead-letter paths.
+- Added ingestion service unit coverage for validation, idempotency, persistence, and failure paths.
+- Remaining: broader end-to-end contract/integration wiring across service boundary.
 
 Status:
-- Not started.
+- In progress.
 
 ---
 
@@ -217,4 +220,10 @@ Status:
 
 - Commit 1: committed.
 - Commit 2: committed.
-- Commit 3: implemented in code; awaiting migration generation and your review before commit.
+- Commit 3: committed.
+- Commit 4: committed.
+- Commit 5: committed.
+- Commit 6: committed.
+- Commit 7: committed.
+- Commit 8: committed.
+- Commit 9: in progress (unit-level hardening completed).

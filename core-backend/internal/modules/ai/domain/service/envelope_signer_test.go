@@ -45,3 +45,46 @@ func TestEnvelopeSigner_MissingConfig(t *testing.T) {
 		t.Fatalf("expected error for missing signing config")
 	}
 }
+
+func TestEnvelopeSigner_IsStableAcrossMapInsertionOrder(t *testing.T) {
+	signer := NewEnvelopeSigner(&core.Config{
+		Ingestion: core.IngestionConfig{
+			Signing: core.IngestionSigningConfig{
+				ActiveKeyID:     "ingestion-v1",
+				ActiveKeySecret: "top-secret",
+			},
+		},
+	})
+
+	a := map[string]any{
+		"event_type":      "document.ingestion.requested.v1",
+		"event_id":        "11111111-1111-1111-1111-111111111111",
+		"idempotency_key": "idem-1",
+		"payload": map[string]any{
+			"b": 2,
+			"a": 1,
+		},
+	}
+	b := map[string]any{
+		"idempotency_key": "idem-1",
+		"payload": map[string]any{
+			"a": 1,
+			"b": 2,
+		},
+		"event_id":   "11111111-1111-1111-1111-111111111111",
+		"event_type": "document.ingestion.requested.v1",
+	}
+
+	sa, _, err := signer.SignEnvelope(context.Background(), a)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	sb, _, err := signer.SignEnvelope(context.Background(), b)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if string(sa) != string(sb) {
+		t.Fatalf("expected stable signature across insertion order")
+	}
+}

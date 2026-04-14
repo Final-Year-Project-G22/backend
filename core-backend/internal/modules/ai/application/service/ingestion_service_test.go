@@ -57,6 +57,7 @@ func (f *fakeStorage) Exists(context.Context, string) (bool, error) {
 type fakeDocRepo struct {
 	existing *entity.IngestionDocument
 	created  *entity.IngestionDocument
+	getErr   error
 }
 
 func (f *fakeDocRepo) Create(_ context.Context, doc *entity.IngestionDocument) error {
@@ -67,6 +68,9 @@ func (f *fakeDocRepo) GetByID(context.Context, uuid.UUID) (*entity.IngestionDocu
 	return nil, nil
 }
 func (f *fakeDocRepo) GetByIdempotencyKey(context.Context, uuid.UUID, string) (*entity.IngestionDocument, error) {
+	if f.getErr != nil {
+		return nil, f.getErr
+	}
 	return f.existing, nil
 }
 func (f *fakeDocRepo) UpdateStatus(context.Context, uuid.UUID, entity.IngestionDocumentStatus, *string) error {
@@ -199,6 +203,35 @@ func TestFinalizeUpload_FailsWhenObjectMissing(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("expected not found error")
+	}
+}
+
+func TestFinalizeUpload_RequiresIdempotencyKey(t *testing.T) {
+	svc := NewIngestionService(&fakeStorage{exists: true}, &fakeDocRepo{}, &fakeOutboxRepo2{}, &fakeTransactor{})
+	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
+		AccountID:      uuid.New(),
+		UserID:         uuid.New(),
+		StorageKey:     "docs/file.pdf",
+		ContentType:    "application/pdf",
+		IdempotencyKey: "",
+	})
+	if err == nil {
+		t.Fatalf("expected idempotency key validation error")
+	}
+}
+
+func TestFinalizeUpload_PropagatesRepositoryLookupError(t *testing.T) {
+	docRepo := &fakeDocRepo{getErr: errors.New("db down")}
+	svc := NewIngestionService(&fakeStorage{exists: true}, docRepo, &fakeOutboxRepo2{}, &fakeTransactor{})
+	_, err := svc.FinalizeUpload(context.Background(), FinalizeUploadInput{
+		AccountID:      uuid.New(),
+		UserID:         uuid.New(),
+		StorageKey:     "docs/file.pdf",
+		ContentType:    "application/pdf",
+		IdempotencyKey: "idem-x",
+	})
+	if err == nil {
+		t.Fatalf("expected repository lookup error")
 	}
 }
 
