@@ -56,6 +56,12 @@ func NewMinIO(config MinIOConfig) (*MinIO, error) {
 	return m, nil
 }
 
+// CreateUploadIntent generates a direct-upload contract.
+// MinIO support is intentionally not implemented in this phase.
+func (m *MinIO) CreateUploadIntent(_ context.Context, _ UploadIntentOptions) (*UploadIntent, error) {
+	return nil, fmt.Errorf("create upload intent is not implemented for minio")
+}
+
 // ensureBucket creates the bucket if it doesn't exist.
 func (m *MinIO) ensureBucket(ctx context.Context) error {
 	exists, err := m.client.BucketExists(ctx, m.bucket)

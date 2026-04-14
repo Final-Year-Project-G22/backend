@@ -7,6 +7,6 @@ module.exports = {
       ["feat", "fix", "docs", "refactor", "test", "chore", "revert"],
     ],
     "scope-empty": [2, "never"],
-    "scope-enum": [2, "always", ["core", "ai"]],
+    "scope-enum": [2, "always", ["core", "ai", "cross"]],
   },
 };
