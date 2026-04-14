@@ -11,6 +11,13 @@ ai:
   inference_auth_token: ${AI_INFERENCE_AUTH_TOKEN:-}
   inference_timeout: 10s
 
+ingestion:
+  enabled: ${INGESTION_ENABLED:-true}
+  signing:
+    active_key_id: ${INGESTION_SIGNING_ACTIVE_KEY_ID:-ingestion-v1}
+    active_key_secret: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET:-change-me}
+    previous_keys: []
+
 database:
   type: "postgres"
   host: "localhost"
