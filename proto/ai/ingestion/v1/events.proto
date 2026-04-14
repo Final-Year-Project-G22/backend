@@ -1,0 +1,184 @@
+syntax = "proto3";
+
+package ai.ingestion.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb";
+
+// ---------------------------------------------------------------------------
+// Ingestion Event Envelope
+// ---------------------------------------------------------------------------
+//
+// Every ingestion event published to the message bus MUST be wrapped in
+// IngestionEventEnvelope.  The envelope carries all cross-cutting metadata
+// required for trust (HMAC signature), idempotency, tenancy, and
+// observability.  Consumers MUST validate the envelope before processing
+// the payload.
+//
+// Transport binding: RabbitMQ topic exchange.
+//   routing-key = envelope.event_type   (e.g. "document.ingestion.requested.v1")
+//   content-type = application/json      (JSON-serialised proto3)
+//
+// Schema evolution rules (enforced by buf breaking-change detection):
+//   1. Field numbers are never reused.
+//   2. New fields are always additive with new tag numbers.
+//   3. No field is deleted; mark deprecated instead.
+//   4. No semantic change to existing fields without a schema_version bump.
+//   5. Oneof payload is closed per major version; new payload types require a
+//      new schema_version and a corresponding oneof addition.
+// ---------------------------------------------------------------------------
+
+message IngestionEventEnvelope {
+  // Globally unique event identifier (UUID v4).
+  string event_id = 1 [(buf.validate.field).string.uuid = true];
+
+  // Dot-notation event type with version suffix.
+  // Example: "document.ingestion.requested.v1"
+  string event_type = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Semantic schema version following the envelope contract.
+  // Example: "1.0.0"
+  string schema_version = 3 [(buf.validate.field).string.min_len = 1];
+
+  // ISO 8601 / RFC 3339 timestamp of when the event occurred.
+  string occurred_at = 4 [(buf.validate.field).string.min_len = 1];
+
+  // Identity of the service that produced the event.
+  // Example: "core-backend"
+  string producer = 5 [(buf.validate.field).string.min_len = 1];
+
+  // HMAC key identifier used to produce the signature.
+  // Enables key rotation: consumers look up the key by id.
+  string key_id = 6 [(buf.validate.field).string.min_len = 1];
+
+  // HMAC-SHA256 signature over the canonical serialisation of the envelope
+  // (see doc.md for canonical ordering).  The signature covers all fields
+  // except itself.  When verifying, the consumer MUST exclude this field
+  // from the signed payload and recompute.
+  bytes signature = 7;
+
+  // Deduplication key.  Producers MUST set this to a stable value per
+  // business operation (e.g. finalise-upload request idempotency key).
+  // Consumers MUST treat duplicate deliveries of the same idempotency_key
+  // as no-ops.
+  string idempotency_key = 8 [(buf.validate.field).string.min_len = 1];
+
+  // Account (tenant) that owns the document.
+  string account_id = 9 [(buf.validate.field).string.uuid = true];
+
+  // User who initiated the operation.
+  string user_id = 10 [(buf.validate.field).string.uuid = true];
+
+  // Optional grouping key for batch uploads.  When set, all events that
+  // share the same batch_id belong to the same logical upload batch.
+  string batch_id = 11;
+
+  // Number of times this event has been re-delivered from the outbox.
+  // First delivery = 0.  Increments on each outbox retry.
+  int32 replay_count = 12;
+
+  // Typed payload.  Exactly one variant MUST be set.
+  IngestionPayload payload = 13 [(buf.validate.field).required = true];
+}
+
+// ---------------------------------------------------------------------------
+// Payload union
+// ---------------------------------------------------------------------------
+// Each variant corresponds to a specific event_type.  The producer sets
+// the variant matching event_type; the consumer selects the variant
+// identified by event_type.
+//
+// New payload types MUST be added as new oneof options (additive-only).
+// ---------------------------------------------------------------------------
+
+message IngestionPayload {
+  oneof payload {
+    DocumentIngestionRequestedPayload ingestion_requested = 1;
+    DocumentIngestionStatusUpdatedPayload ingestion_status_updated = 2;
+    DocumentLifecycleArchivedPayload lifecycle_archived = 3;
+    DocumentLifecycleRemovedPayload lifecycle_removed = 4;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// document.ingestion.requested.v1
+// ---------------------------------------------------------------------------
+// Emitted by core-backend after a successful upload finalisation.
+// Payload is pointer-only: contains storage metadata, never file bytes.
+// AI service workers consume this event to begin parsing and indexing.
+// ---------------------------------------------------------------------------
+
+message DocumentIngestionRequestedPayload {
+  // Unique identifier for the ingestion job/document record.
+  string document_id = 1 [(buf.validate.field).string.uuid = true];
+
+  // Storage object key (path) pointing to the uploaded file.
+  // AI workers fetch content via short-lived signed URLs.
+  string storage_key = 2 [(buf.validate.field).string.min_len = 1];
+
+  // MIME content type as declared by the client during finalisation.
+  // Example: "application/pdf"
+  string content_type = 3 [(buf.validate.field).string.min_len = 1];
+
+  // Object size in bytes as declared by the client and verified by core.
+  int64 size_bytes = 4 [(buf.validate.field).int64.gte = 0];
+
+  // SHA-256 hex digest of the uploaded object, verified by core.
+  string checksum_sha256 = 5 [(buf.validate.field).string.min_len = 1];
+
+  // Original filename as provided by the client (optional).
+  string source_filename = 6;
+
+  // Language hint declared by the client (optional).
+  // ISO 639-1 code, e.g. "en", "am".
+  string declared_language = 7;
+
+  // Schema version of the ingestion-requested payload itself.
+  // Allows the payload contract to evolve independently of the envelope.
+  string payload_schema_version = 8 [(buf.validate.field).string.min_len = 1];
+}
+
+// ---------------------------------------------------------------------------
+// document.ingestion.status.updated.v1
+// ---------------------------------------------------------------------------
+// Emitted by AI service workers as they progress through the ingestion
+// state machine.  Core consumes this to maintain a status projection
+// for client-facing APIs and SSE delivery.
+//
+// Field additions will be made incrementally in future commits.
+// ---------------------------------------------------------------------------
+
+message DocumentIngestionStatusUpdatedPayload {
+  string document_id = 1 [(buf.validate.field).string.uuid = true];
+  string ingestion_id = 2 [(buf.validate.field).string.uuid = true];
+
+  // Ingestion stage, matching the AI worker state machine.
+  // One of: queued, validating, fetching, chunking, embedding, indexing,
+  // completed, failed, cancelled.
+  string stage = 3 [(buf.validate.field).string.min_len = 1];
+
+  // Human-readable detail or error message (optional).
+  string message = 4;
+
+  // Schema version of this payload type.
+  string payload_schema_version = 5 [(buf.validate.field).string.min_len = 1];
+}
+
+// ---------------------------------------------------------------------------
+// document.lifecycle.archived.v1  (reserved for future use)
+// ---------------------------------------------------------------------------
+
+message DocumentLifecycleArchivedPayload {
+  string document_id = 1 [(buf.validate.field).string.uuid = true];
+  string payload_schema_version = 2 [(buf.validate.field).string.min_len = 1];
+}
+
+// ---------------------------------------------------------------------------
+// document.lifecycle.removed.v1  (reserved for future use)
+// ---------------------------------------------------------------------------
+
+message DocumentLifecycleRemovedPayload {
+  string document_id = 1 [(buf.validate.field).string.uuid = true];
+  string payload_schema_version = 2 [(buf.validate.field).string.min_len = 1];
+}

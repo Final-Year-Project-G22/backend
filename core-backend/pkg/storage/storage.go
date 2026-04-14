@@ -33,6 +33,11 @@ import (
 // Storage defines the interface for file storage operations.
 // Implement this interface to add support for different storage backends.
 type Storage interface {
+	// CreateUploadIntent generates a direct-upload contract for clients.
+	// The returned upload URL and headers can be used by clients to upload
+	// directly to the storage backend without proxying file bytes through core.
+	CreateUploadIntent(ctx context.Context, opts UploadIntentOptions) (*UploadIntent, error)
+
 	// Upload uploads a file from byte slice.
 	// The key is the unique identifier for the file (e.g., "avatars/user123.jpg").
 	Upload(ctx context.Context, opts UploadOptions) (*FileInfo, error)
@@ -85,6 +90,40 @@ type UploadOptions struct {
 
 	// Metadata is optional custom metadata stored with the file.
 	Metadata map[string]string
+}
+
+// UploadIntentOptions contains options for generating a direct upload intent.
+type UploadIntentOptions struct {
+	// Key is the desired object key. If empty, provider may generate one.
+	Key string
+
+	// ContentType is the MIME type expected for the upload.
+	ContentType string
+
+	// Metadata are provider-specific metadata hints.
+	Metadata map[string]string
+
+	// Expiry defines how long the intent should be considered valid.
+	// Provider may cap this value.
+	Expiry time.Duration
+}
+
+// UploadIntent represents a client-facing direct upload contract.
+type UploadIntent struct {
+	// Key is the object key that should be persisted by callers.
+	Key string `json:"key"`
+
+	// UploadURL is where the client should upload file bytes.
+	UploadURL string `json:"upload_url"`
+
+	// Method is the HTTP method to use for upload.
+	Method string `json:"method"`
+
+	// Headers are required request headers for the upload request.
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// ExpiresAt is when this intent should be treated as expired.
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
 // FileInfo contains metadata about a stored file.

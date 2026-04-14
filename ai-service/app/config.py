@@ -29,6 +29,12 @@ class Settings(BaseSettings):
 
     RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
 
+    # Ingestion envelope verification
+    INGESTION_SIGNING_ACTIVE_KEY_ID: str = "ingestion-v1"
+    INGESTION_SIGNING_ACTIVE_KEY_SECRET: str = "change-me"
+    INGESTION_SIGNING_PREVIOUS_KEYS_JSON: str = "{}"
+
+    # Embeddings
     EMBEDDING_PROVIDER: str = "cohere"
     COHERE_API_KEY: str = ""
     GEMINI_API_KEY: str = ""

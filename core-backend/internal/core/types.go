@@ -11,17 +11,18 @@ import (
 )
 
 type Config struct {
-	App      AppConfig       `mapstructure:"app"`
-	AI       AIConfig        `mapstructure:"ai"`
-	Database DatabaseConfig  `mapstructure:"database"`
-	Cache    CacheConfig     `mapstructure:"cache"`
-	Logger   LoggerConfig    `mapstructure:"logger"`
-	Server   ServerConfig    `mapstructure:"server"`
-	Storage  storage.Config  `mapstructure:"storage"`
-	JWT      JWTConfig       `mapstructure:"jwt"`
-	OAuth    OAuthConfig     `mapstructure:"oauth"`
-	RabbitMQ rabbitmq.Config `mapstructure:"rabbitmq"`
-	Email    email.Config    `mapstructure:"email"`
+	App       AppConfig       `mapstructure:"app"`
+	AI        AIConfig        `mapstructure:"ai"`
+	Ingestion IngestionConfig `mapstructure:"ingestion"`
+	Database  DatabaseConfig  `mapstructure:"database"`
+	Cache     CacheConfig     `mapstructure:"cache"`
+	Logger    LoggerConfig    `mapstructure:"logger"`
+	Server    ServerConfig    `mapstructure:"server"`
+	Storage   storage.Config  `mapstructure:"storage"`
+	JWT       JWTConfig       `mapstructure:"jwt"`
+	OAuth     OAuthConfig     `mapstructure:"oauth"`
+	RabbitMQ  rabbitmq.Config `mapstructure:"rabbitmq"`
+	Email     email.Config    `mapstructure:"email"`
 }
 
 type AppConfig struct {
@@ -37,6 +38,31 @@ type AIConfig struct {
 	InferenceGRPCEndpoint string        `mapstructure:"inference_grpc_endpoint"`
 	InferenceAuthToken    string        `mapstructure:"inference_auth_token"`
 	InferenceTimeout      time.Duration `mapstructure:"inference_timeout" validate:"gt=0"`
+}
+
+type IngestionConfig struct {
+	Enabled    bool                      `mapstructure:"enabled"`
+	Signing    IngestionSigningConfig    `mapstructure:"signing"`
+	Dispatcher IngestionDispatcherConfig `mapstructure:"dispatcher"`
+}
+
+type IngestionDispatcherConfig struct {
+	BatchSize            int           `mapstructure:"batch_size"`
+	Interval             time.Duration `mapstructure:"interval"`
+	RetryBaseDelay       time.Duration `mapstructure:"retry_base_delay"`
+	RetryMaxDelay        time.Duration `mapstructure:"retry_max_delay"`
+	MaxAttemptsBeforeDLQ int           `mapstructure:"max_attempts_before_dlq"`
+}
+
+type IngestionSigningConfig struct {
+	ActiveKeyID     string                `mapstructure:"active_key_id"`
+	ActiveKeySecret string                `mapstructure:"active_key_secret"`
+	PreviousKeys    []IngestionSigningKey `mapstructure:"previous_keys"`
+}
+
+type IngestionSigningKey struct {
+	KeyID  string `mapstructure:"key_id"`
+	Secret string `mapstructure:"secret"`
 }
 
 type DatabaseConfig struct {

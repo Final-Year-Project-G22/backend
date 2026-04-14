@@ -84,6 +84,47 @@ func (s *SeaweedFS) Upload(ctx context.Context, opts UploadOptions) (*FileInfo, 
 	return s.UploadFromReader(ctx, opts, bytes.NewReader(opts.Content))
 }
 
+// CreateUploadIntent creates a direct-upload intent for SeaweedFS.
+func (s *SeaweedFS) CreateUploadIntent(ctx context.Context, opts UploadIntentOptions) (*UploadIntent, error) {
+	key := opts.Key
+	if key == "" {
+		key = generateKey(opts.ContentType)
+	}
+
+	assignURL, err := s.getAssignURL(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get assign URL: %w", err)
+	}
+
+	if assignURL.Fid == "" {
+		return nil, fmt.Errorf("missing file id from assign response")
+	}
+
+	contentType := opts.ContentType
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	metadata := map[string]string{}
+	for k, v := range opts.Metadata {
+		metadata["X-Meta-"+k] = v
+	}
+	metadata["Content-Type"] = contentType
+
+	expiresAt := time.Now().Add(opts.Expiry)
+	if opts.Expiry <= 0 {
+		expiresAt = time.Now().Add(15 * time.Minute)
+	}
+
+	return &UploadIntent{
+		Key:       key,
+		UploadURL: s.volumeURL + "/" + assignURL.Fid,
+		Method:    http.MethodPut,
+		Headers:   metadata,
+		ExpiresAt: expiresAt,
+	}, nil
+}
+
 // UploadFromReader uploads a file from an io.Reader.
 func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, reader io.Reader) (*FileInfo, error) {
 	if opts.Key == "" {

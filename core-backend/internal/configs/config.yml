@@ -11,6 +11,19 @@ ai:
   inference_auth_token: ${AI_INFERENCE_AUTH_TOKEN:-}
   inference_timeout: 10s
 
+ingestion:
+  enabled: ${INGESTION_ENABLED:-true}
+  signing:
+    active_key_id: ${INGESTION_SIGNING_ACTIVE_KEY_ID:-ingestion-v1}
+    active_key_secret: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET:-change-me}
+    previous_keys: []
+  dispatcher:
+    batch_size: ${INGESTION_DISPATCHER_BATCH_SIZE:-50}
+    interval: ${INGESTION_DISPATCHER_INTERVAL:-5s}
+    retry_base_delay: ${INGESTION_DISPATCHER_RETRY_BASE_DELAY:-30s}
+    retry_max_delay: ${INGESTION_DISPATCHER_RETRY_MAX_DELAY:-10m}
+    max_attempts_before_dlq: ${INGESTION_DISPATCHER_MAX_ATTEMPTS_BEFORE_DLQ:-10}
+
 database:
   type: "postgres"
   host: "localhost"
