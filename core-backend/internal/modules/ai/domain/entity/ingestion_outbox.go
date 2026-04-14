@@ -13,7 +13,7 @@ type OutboxStatus string
 const (
 	OutboxStatusPending   OutboxStatus = "pending"
 	OutboxStatusPublished OutboxStatus = "published"
-	OutboxStatusFailed    OutboxStatus = "failed"
+	OutboxStatusDead      OutboxStatus = "dead"
 )
 
 type IngestionOutbox struct {

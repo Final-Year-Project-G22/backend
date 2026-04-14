@@ -41,8 +41,17 @@ type AIConfig struct {
 }
 
 type IngestionConfig struct {
-	Enabled bool                   `mapstructure:"enabled"`
-	Signing IngestionSigningConfig `mapstructure:"signing"`
+	Enabled    bool                      `mapstructure:"enabled"`
+	Signing    IngestionSigningConfig    `mapstructure:"signing"`
+	Dispatcher IngestionDispatcherConfig `mapstructure:"dispatcher"`
+}
+
+type IngestionDispatcherConfig struct {
+	BatchSize            int           `mapstructure:"batch_size"`
+	Interval             time.Duration `mapstructure:"interval"`
+	RetryBaseDelay       time.Duration `mapstructure:"retry_base_delay"`
+	RetryMaxDelay        time.Duration `mapstructure:"retry_max_delay"`
+	MaxAttemptsBeforeDLQ int           `mapstructure:"max_attempts_before_dlq"`
 }
 
 type IngestionSigningConfig struct {

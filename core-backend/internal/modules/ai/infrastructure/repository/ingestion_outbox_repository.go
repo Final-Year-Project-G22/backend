@@ -83,7 +83,7 @@ func (r *ingestionOutboxRepository) MarkPublished(ctx context.Context, id uuid.U
 	return nil
 }
 
-func (r *ingestionOutboxRepository) MarkFailed(ctx context.Context, id uuid.UUID, attemptCount int, nextAttemptAt time.Time, replayCount int32, lastError string) error {
+func (r *ingestionOutboxRepository) MarkRetryScheduled(ctx context.Context, id uuid.UUID, attemptCount int, nextAttemptAt time.Time, replayCount int32, lastError string) error {
 	updates := map[string]any{
 		"status":          entity.OutboxStatusPending,
 		"attempt_count":   attemptCount,
@@ -93,7 +93,23 @@ func (r *ingestionOutboxRepository) MarkFailed(ctx context.Context, id uuid.UUID
 	}
 
 	if err := r.getDB(ctx).Model(&entity.IngestionOutbox{}).Where("id = ?", id).Updates(updates).Error; err != nil {
-		r.logger.Error("Failed to mark outbox row as failed", core.Error(err))
+		r.logger.Error("Failed to mark outbox row for retry", core.Error(err))
+		return apperrors.InternalError("errors.databaseError", err)
+	}
+
+	return nil
+}
+
+func (r *ingestionOutboxRepository) MarkDeadLetter(ctx context.Context, id uuid.UUID, attemptCount int, replayCount int32, lastError string) error {
+	updates := map[string]any{
+		"status":        entity.OutboxStatusDead,
+		"attempt_count": attemptCount,
+		"replay_count":  replayCount,
+		"last_error":    lastError,
+	}
+
+	if err := r.getDB(ctx).Model(&entity.IngestionOutbox{}).Where("id = ?", id).Updates(updates).Error; err != nil {
+		r.logger.Error("Failed to mark outbox row as dead-letter", core.Error(err))
 		return apperrors.InternalError("errors.databaseError", err)
 	}
 

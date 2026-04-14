@@ -72,14 +72,14 @@ var Module = fx.Module("ai",
 		lc.Append(fx.Hook{
 			OnStart: func(context.Context) error {
 				go func() {
-					ticker := time.NewTicker(5 * time.Second)
+					ticker := time.NewTicker(dispatcher.Interval())
 					defer ticker.Stop()
 					for {
 						select {
 						case <-ctx.Done():
 							return
 						case <-ticker.C:
-							_ = dispatcher.DispatchBatch(ctx, 50)
+							_ = dispatcher.DispatchBatch(ctx, dispatcher.BatchSize())
 						}
 					}
 				}()

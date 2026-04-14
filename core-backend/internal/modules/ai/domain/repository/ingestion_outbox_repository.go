@@ -13,5 +13,6 @@ type IngestionOutboxRepository interface {
 	GetByEventID(ctx context.Context, eventID uuid.UUID) (*entity.IngestionOutbox, error)
 	ListPending(ctx context.Context, dueBefore time.Time, limit int) ([]*entity.IngestionOutbox, error)
 	MarkPublished(ctx context.Context, id uuid.UUID, publishedAt time.Time, signature []byte) error
-	MarkFailed(ctx context.Context, id uuid.UUID, attemptCount int, nextAttemptAt time.Time, replayCount int32, lastError string) error
+	MarkRetryScheduled(ctx context.Context, id uuid.UUID, attemptCount int, nextAttemptAt time.Time, replayCount int32, lastError string) error
+	MarkDeadLetter(ctx context.Context, id uuid.UUID, attemptCount int, replayCount int32, lastError string) error
 }
