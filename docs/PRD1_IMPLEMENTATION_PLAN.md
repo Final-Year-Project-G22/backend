@@ -228,4 +228,5 @@ Status:
 - Commit 7: committed.
 - Commit 8: committed.
 - Commit 9: committed.
-- Commit 10: completed (pending commit for docs updates in workspace).
+- Commit 10: committed.
+- Toggle guard + missing validation tests: committed (043501b).
