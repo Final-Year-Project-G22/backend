@@ -45,13 +45,22 @@ type CreatePostInput struct {
 }
 
 type UpdatePostInput struct {
-	Content        *string
-	AttachmentURL  *string
-	AttachmentType *string
+	Content          *string
+	AttachmentURL    *string
+	AttachmentType   *string
+	RemoveAttachment *bool
 }
 
 type ReportInput struct {
 	TargetType entity.TargetType
 	TargetID   uuid.UUID
 	Reason     string
+}
+
+type BlockUserInput struct {
+	ActorID   uuid.UUID
+	ThreadID  uuid.UUID
+	BlockedID uuid.UUID
+	Reason    *string
+	IsAdmin   bool
 }

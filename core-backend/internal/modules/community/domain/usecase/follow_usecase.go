@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
@@ -11,4 +13,6 @@ type CommunityFollowUsecase interface {
 	UnfollowThread(ctx context.Context, accountID, threadID uuid.UUID) error
 	FollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
 	UnfollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
+	ListFollowedThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserThreadSettings, error)
+	ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error)
 }
