@@ -68,7 +68,7 @@ Primary paths:
 - `ai-service/workers/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -289,4 +289,5 @@ Status:
 ## Current Execution State
 
 - Commit 1: completed.
-- Commit 2-12: planned.
+- Commit 2: completed.
+- Commit 3-12: planned.

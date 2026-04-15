@@ -5,6 +5,7 @@ from typing import cast
 from dependency_injector import containers, providers
 
 from app.config import Settings
+from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
 from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
@@ -73,7 +74,14 @@ class Container(containers.DeclarativeContainer):
         ),
     )
 
-    ingestion_requested_task_handler = providers.Factory(IngestionRequestedTaskHandler)
+    ingestion_envelope_verifier = providers.Factory(
+        build_ingestion_envelope_verifier,
+        settings=config,
+    )
+    ingestion_requested_task_handler = providers.Factory(
+        IngestionRequestedTaskHandler,
+        envelope_verifier=ingestion_envelope_verifier,
+    )
     ingestion_consumer = providers.Factory(
         IngestionRequestedConsumer,
         rabbitmq_url=config.provided.RABBITMQ_URL,

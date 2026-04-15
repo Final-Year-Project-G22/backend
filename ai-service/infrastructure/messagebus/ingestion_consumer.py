@@ -19,6 +19,14 @@ IngestionMessageHandler = Callable[[dict[str, Any]], Awaitable[None]]
 logger = logging.getLogger(__name__)
 
 
+class MessageHandlingRejectError(Exception):
+    pass
+
+
+class MessageHandlingRetryError(Exception):
+    pass
+
+
 class IngestionRequestedConsumer:
     def __init__(
         self,
@@ -106,6 +114,14 @@ class IngestionRequestedConsumer:
 
         try:
             await handler(payload)
+        except MessageHandlingRejectError:
+            await message.nack(requeue=False)
+            logger.warning("ingestion message rejected by handler")
+            return
+        except MessageHandlingRetryError:
+            await message.nack(requeue=True)
+            logger.warning("ingestion message scheduled for retry by handler")
+            return
         except Exception:
             await message.nack(requeue=self._requeue_on_failure)
             logger.exception("ingestion handler failed")
@@ -126,4 +142,9 @@ def _decode_payload(raw: bytes) -> dict[str, Any]:
     return cast(dict[str, Any], decoded)
 
 
-__all__ = ["IngestionMessageHandler", "IngestionRequestedConsumer"]
+__all__ = [
+    "IngestionMessageHandler",
+    "IngestionRequestedConsumer",
+    "MessageHandlingRejectError",
+    "MessageHandlingRetryError",
+]
