@@ -17,12 +17,14 @@ from infrastructure.database.repositories import (
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
+from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
+from workers.tasks import IngestionRequestedTaskHandler
 
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
-        modules=["main"],
+        modules=["main", "workers.ingestion_worker"],
     )
 
     config = providers.Singleton(Settings)
@@ -69,6 +71,17 @@ class Container(containers.DeclarativeContainer):
             endpoint=config.provided.CORE_GRPC_ENDPOINT,
             client=core_grpc_client,
         ),
+    )
+
+    ingestion_requested_task_handler = providers.Factory(IngestionRequestedTaskHandler)
+    ingestion_consumer = providers.Factory(
+        IngestionRequestedConsumer,
+        rabbitmq_url=config.provided.RABBITMQ_URL,
+        queue_name=config.provided.INGESTION_WORKER_QUEUE,
+        exchange_name=config.provided.INGESTION_WORKER_EXCHANGE,
+        routing_key=config.provided.INGESTION_WORKER_ROUTING_KEY,
+        prefetch_count=config.provided.INGESTION_WORKER_PREFETCH_COUNT,
+        requeue_on_failure=config.provided.INGESTION_WORKER_REQUEUE_ON_FAILURE,
     )
 
     quota_guard = providers.Factory(
