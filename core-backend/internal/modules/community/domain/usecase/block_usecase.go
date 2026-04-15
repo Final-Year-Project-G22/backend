@@ -7,7 +7,7 @@ import (
 )
 
 type ThreadBlockUsecase interface {
-	BlockUser(ctx context.Context, actorID, threadID, blockedID uuid.UUID, reason *string) error
-	UnblockUser(ctx context.Context, actorID, threadID, blockedID uuid.UUID) error
+	BlockUser(ctx context.Context, input BlockUserInput) error
+	UnblockUser(ctx context.Context, input BlockUserInput) error
 	IsBlocked(ctx context.Context, threadID, accountID uuid.UUID) (bool, error)
 }
