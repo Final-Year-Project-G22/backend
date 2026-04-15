@@ -66,6 +66,28 @@
       "bookmarkUpdated": "ምልክት ተዘምኗል"
     }
   },
+  "community": {
+    "errors": {
+      "permissionDenied": "ፈቃድ ተከልክሏል",
+      "categoryInactive": "ምድቡ እስካሁን አልተንቀሳቀሰም",
+      "threadInactive": "ውይይቱ እስካሁን አይሰራም",
+      "threadBlocked": "ከዚህ ውይይት ተከልክለዋል",
+      "postLocked": "ይህ ልጥፍ መቀየር አይቻልም",
+      "editWindowExpired": "የልጥፍ ማሻሻያ ጊዜ አልፏል",
+      "deleteWindowExpired": "የልጥፍ ማጥፊያ ጊዜ አልፏል",
+      "invalidParentPost": "የወላጅ ልጥፉ ከዚህ ውይይት ጋር አይዛመድም",
+      "invalidPost": "ልጥፉ ከዚህ ውይይት ጋር አይዛመድም",
+      "invalidTargetType": "የሪፖርት አይነት ተሳሳተ",
+      "invalidBlockedUser": "ተከልክለው የተመረጡ ተጠቃሚ ዋጋ የሌለው ነው",
+      "invalidInput": "የግብዓት ዋጋ ትክክል አይደለም",
+      "invalidFile": "ዋጋ የማይሰራ ፋይል ተላልፏል",
+      "invalidFileType": "ዋጋ የማይሰራ የፋይል አይነት። የተፈቀዱት: JPEG, PNG, GIF, WebP, PDF",
+      "fileTooLarge": "የፋይል ልክ ከፍተኛ ነው (ከ10MB)",
+      "readFileFailed": "ፋይል ለማንበብ አልተሳካም",
+      "uploadFailed": "ፋይል ለማስተላለፍ አልተሳካም",
+      "noChanges": "ማሻሻያ አልተገኘም"
+    }
+  },
   "email": {
     "welcome": {
       "subject": "ወደ አዲሱ ሰራተኛ እንኳን በደህና መጡ",
