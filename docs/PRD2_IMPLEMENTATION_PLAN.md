@@ -89,7 +89,7 @@ Primary paths:
 - `ai-service/alembic/versions/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -290,4 +290,5 @@ Status:
 
 - Commit 1: completed.
 - Commit 2: completed.
-- Commit 3-12: planned.
+- Commit 3: completed.
+- Commit 4-12: planned.

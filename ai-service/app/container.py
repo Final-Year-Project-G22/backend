@@ -15,6 +15,7 @@ from core.usecases import AskAIUseCase, ConversationUseCase, QuotaGuardUseCase
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
+    SqlAlchemyIngestionEventLedgerRepository,
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
@@ -49,6 +50,10 @@ class Container(containers.DeclarativeContainer):
         SqlAlchemyKnowledgeRepository,
         session=db_session,
     )
+    ingestion_event_ledger_repository = providers.Factory(
+        SqlAlchemyIngestionEventLedgerRepository,
+        session=db_session,
+    )
 
     embedding_port: providers.Dependency[EmbeddingPort] = providers.Dependency(
         instance_of=EmbeddingPort,
@@ -81,6 +86,7 @@ class Container(containers.DeclarativeContainer):
     ingestion_requested_task_handler = providers.Factory(
         IngestionRequestedTaskHandler,
         envelope_verifier=ingestion_envelope_verifier,
+        ingestion_event_ledger_repository=ingestion_event_ledger_repository,
     )
     ingestion_consumer = providers.Factory(
         IngestionRequestedConsumer,

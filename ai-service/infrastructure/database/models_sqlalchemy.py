@@ -203,3 +203,25 @@ class AIChatMessage(Base):
         Index("ix_ai_chat_messages_conversation_order", "conversation_id", "message_order"),
         Index("ix_ai_chat_messages_created_at", "created_at"),
     )
+
+
+class IngestionEventLedger(Base):
+    __tablename__ = "ingestion_event_ledger"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    idempotency_key: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    account_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index(
+            "ix_ingestion_event_ledger_document_occurred",
+            "document_id",
+            "occurred_at",
+        ),
+    )
