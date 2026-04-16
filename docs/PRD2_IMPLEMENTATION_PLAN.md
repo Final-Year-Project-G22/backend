@@ -150,7 +150,7 @@ Primary paths:
 - `ai-service/alembic/versions/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
