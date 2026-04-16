@@ -11,7 +11,12 @@ from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.llm import LLMPort
-from core.usecases import AskAIUseCase, ConversationUseCase, QuotaGuardUseCase
+from core.usecases import (
+    AskAIUseCase,
+    ConversationUseCase,
+    IngestionOrchestratorUseCase,
+    QuotaGuardUseCase,
+)
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
@@ -83,10 +88,12 @@ class Container(containers.DeclarativeContainer):
         build_ingestion_envelope_verifier,
         settings=config,
     )
+    ingestion_orchestrator = providers.Factory(IngestionOrchestratorUseCase)
     ingestion_requested_task_handler = providers.Factory(
         IngestionRequestedTaskHandler,
         envelope_verifier=ingestion_envelope_verifier,
         ingestion_event_ledger_repository=ingestion_event_ledger_repository,
+        ingestion_orchestrator=ingestion_orchestrator,
     )
     ingestion_consumer = providers.Factory(
         IngestionRequestedConsumer,

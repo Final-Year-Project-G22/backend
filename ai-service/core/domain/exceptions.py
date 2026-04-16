@@ -57,11 +57,17 @@ class ConfigurationError(AIServiceError):
         super().__init__(message, code="CONFIGURATION_ERROR", details=details)
 
 
+class InvalidStateTransitionError(AIServiceError):
+    def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
+        super().__init__(message, code="INVALID_STATE_TRANSITION", details=details)
+
+
 __all__ = [
     "AIServiceError",
     "CacheError",
     "ConfigurationError",
     "EmbeddingError",
+    "InvalidStateTransitionError",
     "LLMError",
     "QuotaExceededError",
     "RepositoryError",

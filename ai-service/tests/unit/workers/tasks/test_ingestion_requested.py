@@ -12,6 +12,7 @@ import pytest
 from core.domain.ingestion_events import DOCUMENT_INGESTION_REQUESTED_V1
 from core.ports.ingestion_event_ledger import RecordIngestionEventResult
 from core.security import EnvelopeVerifier
+from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase
 from infrastructure.messagebus import MessageHandlingRejectError
 from workers.tasks.ingestion_requested import IngestionRequestedTaskHandler, _parse_iso_datetime
 
@@ -50,22 +51,27 @@ async def test_handle_accepts_valid_ingestion_requested_envelope() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
     ledger.record_or_classify.return_value = RecordIngestionEventResult.RECORDED
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
 
     await handler.handle(_valid_envelope())
     ledger.record_or_classify.assert_awaited_once()
+    orchestrator.start_ingestion.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_handle_rejects_unsupported_event_type() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
     envelope = _valid_envelope()
     envelope["event_type"] = "document.lifecycle.archived.v1"
@@ -79,9 +85,11 @@ async def test_handle_rejects_unsupported_event_type() -> None:
 async def test_handle_rejects_unsupported_payload_schema() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
     envelope = _valid_envelope()
 
@@ -101,9 +109,11 @@ async def test_handle_rejects_unsupported_payload_schema() -> None:
 async def test_handle_rejects_invalid_signature() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
     envelope = _valid_envelope()
     envelope["signature"] = "invalid"
@@ -117,9 +127,11 @@ async def test_handle_rejects_duplicate_event_id() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
     ledger.record_or_classify.return_value = RecordIngestionEventResult.DUPLICATE_EVENT
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
 
     with pytest.raises(MessageHandlingRejectError):
@@ -131,9 +143,11 @@ async def test_handle_rejects_stale_lineage_event() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
     ledger.record_or_classify.return_value = RecordIngestionEventResult.STALE_LINEAGE
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
 
     with pytest.raises(MessageHandlingRejectError):
@@ -143,9 +157,11 @@ async def test_handle_rejects_stale_lineage_event() -> None:
 def test_handler_constructor_receives_dependencies() -> None:
     verifier = EnvelopeVerifier(active_key_id="ingestion-v1", active_secret=TEST_SECRET)
     ledger = AsyncMock()
+    orchestrator = AsyncMock(spec=IngestionOrchestratorUseCase)
     handler = IngestionRequestedTaskHandler(
         envelope_verifier=verifier,
         ingestion_event_ledger_repository=ledger,
+        ingestion_orchestrator=orchestrator,
     )
 
     assert handler is not None

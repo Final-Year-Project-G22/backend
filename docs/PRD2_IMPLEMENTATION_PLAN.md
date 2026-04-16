@@ -108,7 +108,7 @@ Primary paths:
 - `ai-service/core/domain/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -291,4 +291,5 @@ Status:
 - Commit 1: completed.
 - Commit 2: completed.
 - Commit 3: completed.
-- Commit 4-12: planned.
+- Commit 4: completed.
+- Commit 5-12: planned.

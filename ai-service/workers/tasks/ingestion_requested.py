@@ -12,6 +12,7 @@ from core.domain.ingestion_events import (
 )
 from core.ports.ingestion_event_ledger import IngestionEventLedgerPort, RecordIngestionEventResult
 from core.security import EnvelopeVerificationError, EnvelopeVerifier
+from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase
 from infrastructure.messagebus import MessageHandlingRejectError, MessageHandlingRetryError
 
 logger = logging.getLogger(__name__)
@@ -23,9 +24,11 @@ class IngestionRequestedTaskHandler:
         *,
         envelope_verifier: EnvelopeVerifier,
         ingestion_event_ledger_repository: IngestionEventLedgerPort,
+        ingestion_orchestrator: IngestionOrchestratorUseCase,
     ) -> None:
         self._envelope_verifier = envelope_verifier
         self._ingestion_event_ledger_repository = ingestion_event_ledger_repository
+        self._ingestion_orchestrator = ingestion_orchestrator
 
     async def handle(self, payload: dict[str, Any]) -> None:
         try:
@@ -78,6 +81,8 @@ class IngestionRequestedTaskHandler:
             raise MessageHandlingRejectError("duplicate idempotency key")
         if ledger_result is RecordIngestionEventResult.STALE_LINEAGE:
             raise MessageHandlingRejectError("stale ingestion lineage event")
+
+        await self._ingestion_orchestrator.start_ingestion(payload)
 
         logger.info(
             "ingestion event received event_id=%s event_type=%s",
