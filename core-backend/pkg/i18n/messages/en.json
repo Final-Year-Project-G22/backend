@@ -70,6 +70,28 @@
       "bookmarkUpdated": "Bookmark updated"
     }
   },
+  "community": {
+    "errors": {
+      "permissionDenied": "Permission denied",
+      "categoryInactive": "Category is inactive",
+      "threadInactive": "Thread is not active",
+      "threadBlocked": "You are blocked from this thread",
+      "postLocked": "This post cannot be modified",
+      "editWindowExpired": "Post edit window has expired",
+      "deleteWindowExpired": "Post delete window has expired",
+      "invalidParentPost": "Parent post does not belong to this thread",
+      "invalidPost": "Post does not belong to this thread",
+      "invalidTargetType": "Invalid report target type",
+      "invalidBlockedUser": "Invalid blocked user",
+      "invalidInput": "Invalid input",
+      "invalidFile": "Invalid file provided",
+      "invalidFileType": "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF",
+      "fileTooLarge": "File size exceeds maximum allowed (10MB)",
+      "readFileFailed": "Failed to read file",
+      "uploadFailed": "Failed to upload file",
+      "noChanges": "No changes provided"
+    }
+  },
   "email": {
     "welcome": {
       "subject": "Welcome to Adisu Serategna",
