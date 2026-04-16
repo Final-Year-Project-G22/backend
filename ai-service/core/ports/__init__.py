@@ -6,6 +6,7 @@ from core.ports.event_bus import EventBusPort, EventHandler, EventPayload
 from core.ports.ingestion_event_ledger import IngestionEventLedgerPort, RecordIngestionEventResult
 from core.ports.knowledge_repository import KnowledgeRepositoryPort
 from core.ports.llm import LLMPort
+from core.ports.parser import ParsedDocument, ParsedDocumentSection, ParserPort
 from core.ports.quota_repository import QuotaRepositoryPort
 
 __all__ = [
@@ -20,6 +21,9 @@ __all__ = [
     "IngestionEventLedgerPort",
     "KnowledgeRepositoryPort",
     "LLMPort",
+    "ParsedDocument",
+    "ParsedDocumentSection",
+    "ParserPort",
     "QuotaRepositoryPort",
     "RecordIngestionEventResult",
 ]
