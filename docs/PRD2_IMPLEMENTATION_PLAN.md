@@ -128,7 +128,7 @@ Primary paths:
 - `ai-service/infrastructure/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 

@@ -1,4 +1,5 @@
 from core.ports.cache import CachePort
+from core.ports.chunking import Chunk, ChunkingPort, ChunkingStrategy, ChunkProvenance
 from core.ports.conversation_repository import ConversationRepositoryPort
 from core.ports.core_service import CoreServicePort, CoreUserProfile
 from core.ports.embedding import EmbeddingPort
@@ -11,6 +12,10 @@ from core.ports.quota_repository import QuotaRepositoryPort
 
 __all__ = [
     "CachePort",
+    "Chunk",
+    "ChunkProvenance",
+    "ChunkingPort",
+    "ChunkingStrategy",
     "ConversationRepositoryPort",
     "CoreServicePort",
     "CoreUserProfile",
