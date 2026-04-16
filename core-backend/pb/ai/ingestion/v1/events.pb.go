@@ -7,13 +7,12 @@
 package pb
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -41,7 +40,7 @@ type IngestionEventEnvelope struct {
 	// HMAC key identifier used to produce the signature.
 	// Enables key rotation: consumers look up the key by id.
 	KeyId string `protobuf:"bytes,6,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
-	// HMAC-SHA256 signature over the canonical serialization of the envelope
+	// HMAC-SHA256 signature over the canonical serialisation of the envelope
 	// (see doc.md for canonical ordering).  The signature covers all fields
 	// except itself.  When verifying, the consumer MUST exclude this field
 	// from the signed payload and recompute.

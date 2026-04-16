@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from core.domain.enums import DocumentSource, Language, Tier
+from core.domain.enums import DocumentSource, IngestionStage, Language, Tier
 
 
 class TokenUsage(BaseModel):
@@ -43,6 +43,7 @@ class SearchFilters(BaseModel):
     sources: list[DocumentSource] | None = None
     effective_on: date | None = None
     only_active: bool = True
+    only_active_profile: bool = True
     metadata: dict[str, Any] | None = None
 
     @field_validator("sources")
@@ -97,7 +98,31 @@ class UsageSnapshot(BaseModel):
         return self
 
 
+class IngestionTransitionContext(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    event_id: str = Field(min_length=1)
+    document_id: uuid.UUID
+    account_id: uuid.UUID
+    idempotency_key: str = Field(min_length=1)
+    from_stage: IngestionStage | None = None
+    to_stage: IngestionStage
+    occurred_at: str = Field(min_length=1)
+    retry_count: int = Field(default=0, ge=0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class IngestionTransitionResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    context: IngestionTransitionContext
+    is_terminal: bool
+    status: str = Field(min_length=1)
+
+
 __all__ = [
+    "IngestionTransitionContext",
+    "IngestionTransitionResult",
     "ResponseSource",
     "SearchFilters",
     "SearchHit",

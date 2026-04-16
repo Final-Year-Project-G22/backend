@@ -46,10 +46,23 @@ class MessageType(StrEnum):
     AI_RESPONSE = "ai_response"
 
 
+class IngestionStage(StrEnum):
+    QUEUED = "queued"
+    VALIDATING = "validating"
+    FETCHING = "fetching"
+    CHUNKING = "chunking"
+    EMBEDDING = "embedding"
+    INDEXING = "indexing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 __all__ = [
     "ChunkStatus",
     "DocumentSource",
     "DocumentStatus",
+    "IngestionStage",
     "Language",
     "MessageType",
     "SessionStatus",
