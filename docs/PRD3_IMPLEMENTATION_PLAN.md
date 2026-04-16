@@ -66,7 +66,7 @@ Primary paths:
 - `core-backend/internal/modules/ai/application/service/status_projection_service.go`
 
 Status:
-- Completed.
+- Completed (Commit: 0bd3f9c).
 
 ---
 
@@ -86,7 +86,7 @@ Primary paths:
 - `core-backend/internal/modules/ai/domain/entity/`
 
 Status:
-- Planned.
+- Completed (Commit 3 merged with Commit 2).
 
 ---
 
@@ -106,7 +106,7 @@ Primary paths:
 - `core-backend/internal/modules/ai/delivery/`
 
 Status:
-- Planned.
+- Completed (Commit ff66ad8).
 
 ---
 
@@ -127,7 +127,7 @@ Primary paths:
 - `core-backend/internal/modules/ai/delivery/`
 
 Status:
-- Planned.
+- Completed (Commit 979a4bb).
 
 ---
 
@@ -146,7 +146,7 @@ Primary paths:
 - `core-backend/internal/modules/ai/infrastructure/`
 
 Status:
-- Planned.
+- Completed (Commit 2e37b27).
 
 ---
 
