@@ -166,7 +166,7 @@ Primary paths:
 - `core-backend/internal/modules/ai/domain/`
 
 Status:
-- Planned.
+- Completed (Commit b901ba7).
 
 ---
 
@@ -207,7 +207,7 @@ Primary paths:
 - `ai-service/core/domain/`
 
 Status:
-- Planned.
+- Completed (Commit b9a4214 merged with Commit 7).
 
 ---
 
@@ -227,7 +227,7 @@ Primary paths:
 - `core-backend/tests/`
 
 Status:
-- Planned.
+- Completed (Commit 0de0703 merged with Commit 9).
 
 ---
 
@@ -270,4 +270,4 @@ Status:
 
 ## Current Execution State
 
-- Commit 1-10: planned.
+- Commit 1-10: completed.
