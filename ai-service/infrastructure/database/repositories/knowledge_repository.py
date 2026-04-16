@@ -177,13 +177,44 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
         try:
             result = await self._session.execute(statement)
         except SQLAlchemyError as exc:
-            raise RepositoryError(
-                "failed to list chunks by document",
-                details={"document_id": str(document_id)},
-            ) from exc
+            raise RepositoryError("failed to fetch document chunks") from exc
 
-        models = result.scalars().all()
-        return [to_domain_chunk(model) for model in models]
+        return [to_domain_chunk(model) for model in result.scalars().all()]
+
+    async def complete_ingestion_atomically(
+        self,
+        document_id: uuid.UUID,
+        *,
+        status: DocumentStatus,
+        chunks: list[DocumentChunk],
+    ) -> tuple[KnowledgeDocument, int]:
+        document_result = await self._session.execute(
+            select(sa_models.KnowledgeDocument).where(sa_models.KnowledgeDocument.id == document_id)
+        )
+        document_model = document_result.scalar_one_or_none()
+        if document_model is None:
+            raise RepositoryError(
+                "document not found",
+                details={"document_id": str(document_id)},
+            )
+
+        try:
+            document_model.status = status.value
+            document_model.updated_at = func.now()
+
+            for chunk in chunks:
+                if chunk.id in (c.id for c in document_model.chunks):
+                    continue
+                orm_chunk = to_orm_chunk(chunk)
+                orm_chunk.document_id = document_id
+                self._session.add(orm_chunk)
+
+            await self._session.flush()
+        except SQLAlchemyError as exc:
+            raise RepositoryError("failed to complete ingestion atomically") from exc
+
+        document = to_domain_document(document_model)
+        return document, len(chunks)
 
     async def delete_chunks_by_document(self, document_id: uuid.UUID) -> int:
         try:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -65,3 +66,34 @@ async def test_start_ingestion_rejects_invalid_stage_value() -> None:
 
     with pytest.raises(InvalidStateTransitionError):
         await use_case.start_ingestion(_payload(current_stage="broken"))
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_emits_status_event_on_transition() -> None:
+    mock_event_bus = AsyncMock()
+    use_case = IngestionOrchestratorUseCase(event_bus=mock_event_bus, emit_status_events=True)
+
+    payload = _payload()
+    await use_case.start_ingestion(payload)
+
+    mock_event_bus.publish.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_skips_event_emission_when_disabled() -> None:
+    mock_event_bus = AsyncMock()
+    use_case = IngestionOrchestratorUseCase(event_bus=mock_event_bus, emit_status_events=False)
+
+    payload = _payload()
+    await use_case.start_ingestion(payload)
+
+    mock_event_bus.publish.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_terminal_stage_sets_is_terminal_true() -> None:
+    use_case = IngestionOrchestratorUseCase()
+
+    result = await use_case.start_ingestion(_payload(current_stage=IngestionStage.INDEXING.value))
+
+    assert result.is_terminal is True

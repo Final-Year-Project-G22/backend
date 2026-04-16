@@ -50,6 +50,15 @@ class KnowledgeRepositoryPort(ABC):
     async def delete_chunks_by_document(self, document_id: uuid.UUID) -> int: ...
 
     @abstractmethod
+    async def complete_ingestion_atomically(
+        self,
+        document_id: uuid.UUID,
+        *,
+        status: DocumentStatus,
+        chunks: list[DocumentChunk],
+    ) -> tuple[KnowledgeDocument, int]: ...
+
+    @abstractmethod
     async def search_vector(
         self,
         query_embedding: list[float],

@@ -273,7 +273,7 @@ Primary paths:
 - `ai-service/tests/integration/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -299,4 +299,4 @@ Status:
 - Commit 9: completed.
 - Commit 10: completed.
 - Commit 11: completed.
-- Commit 12: planned.
+- Commit 12: completed.
