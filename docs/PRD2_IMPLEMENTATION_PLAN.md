@@ -252,7 +252,7 @@ Primary paths:
 - `proto/ai/ingestion/v1/events.proto` (only if additive payload fields are required)
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -298,4 +298,5 @@ Status:
 - Commit 8: completed.
 - Commit 9: completed.
 - Commit 10: completed.
-- Commit 11-12: planned.
+- Commit 11: completed.
+- Commit 12: planned.

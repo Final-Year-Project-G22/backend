@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, cast
 
 from core.domain.enums import IngestionStage
 from core.domain.exceptions import InvalidStateTransitionError
+from core.domain.ingestion_events import DOCUMENT_INGESTION_STATUS_UPDATED_V1
+from core.domain.ingestion_status_events import build_status_updated_payload
 from core.domain.value_objects import IngestionTransitionContext, IngestionTransitionResult
+from core.ports.event_bus import EventBusPort
 
 _NEXT_STAGE_BY_FROM: dict[IngestionStage | None, IngestionStage] = {
     None: IngestionStage.QUEUED,
@@ -28,6 +31,15 @@ _TERMINAL_STAGES = frozenset(
 
 
 class IngestionOrchestratorUseCase:
+    def __init__(
+        self,
+        *,
+        event_bus: EventBusPort | None = None,
+        emit_status_events: bool = True,
+    ) -> None:
+        self._event_bus = event_bus
+        self._emit_status_events = emit_status_events
+
     async def start_ingestion(self, payload: dict[str, Any]) -> IngestionTransitionResult:
         event_id = str(payload.get("event_id", ""))
         idempotency_key = str(payload.get("idempotency_key", ""))
@@ -66,10 +78,58 @@ class IngestionOrchestratorUseCase:
             },
         )
 
+        is_terminal = to_stage in _TERMINAL_STAGES
+
+        if self._emit_status_events and self._event_bus is not None:
+            await self._publish_status_event(
+                event_id=event_id,
+                document_id=document_id,
+                from_stage=from_stage,
+                to_stage=to_stage,
+                is_terminal=is_terminal,
+                retry_count=context.retry_count,
+            )
+
         return IngestionTransitionResult(
             context=context,
-            is_terminal=to_stage in _TERMINAL_STAGES,
+            is_terminal=is_terminal,
             status="ok",
+        )
+
+    async def _publish_status_event(
+        self,
+        *,
+        event_id: str,
+        document_id: uuid.UUID,
+        from_stage: IngestionStage | None,
+        to_stage: IngestionStage,
+        is_terminal: bool,
+        retry_count: int,
+        error_message: str | None = None,
+    ) -> None:
+        if self._event_bus is None:
+            return
+
+        status_payload = build_status_updated_payload(
+            document_id=str(document_id),
+            from_stage=from_stage,
+            to_stage=to_stage,
+            is_terminal=is_terminal,
+            retry_count=retry_count,
+            error_message=error_message,
+        )
+
+        envelope = {
+            "event_id": f"{event_id}-status-{to_stage.value}",
+            "event_type": DOCUMENT_INGESTION_STATUS_UPDATED_V1,
+            "schema_version": "1.0.0",
+            "payload": status_payload,
+            "occurred_at": datetime.now(tz=UTC).isoformat(),
+        }
+
+        await self._event_bus.publish(
+            DOCUMENT_INGESTION_STATUS_UPDATED_V1,
+            envelope,
         )
 
     def _next_stage(self, from_stage: IngestionStage | None) -> IngestionStage:
