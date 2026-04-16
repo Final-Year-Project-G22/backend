@@ -55,3 +55,55 @@ type FinalizeUploadResponseBody struct {
 type FinalizeUploadOutput struct {
 	Body FinalizeUploadResponseBody
 }
+
+type IngestionStatusProjectionResponse struct {
+	DocumentID           uuid.UUID  `json:"documentId" doc:"Document identifier"`
+	AccountID            uuid.UUID  `json:"accountId" doc:"Account identifier"`
+	UserID               uuid.UUID  `json:"userId" doc:"User identifier"`
+	CurrentStage         string     `json:"currentStage" doc:"Current ingestion stage"`
+	IsTerminal           bool       `json:"isTerminal" doc:"Whether this is a terminal stage"`
+	StartedAt            time.Time  `json:"startedAt" doc:"Ingestion start timestamp"`
+	UpdatedAt            time.Time  `json:"updatedAt" doc:"Last update timestamp"`
+	CompletedAt          *time.Time `json:"completedAt,omitempty" doc:"Completion timestamp if terminal"`
+	LastError            *string    `json:"lastError,omitempty" doc:"Last error message if failed"`
+	ChunksProcessedCount int        `json:"chunksProcessedCount" doc:"Number of chunks processed"`
+	ChunksFailedCount    int        `json:"chunksFailedCount" doc:"Number of chunks failed"`
+	EventSequence        int64      `json:"eventSequence" doc:"Monotonic event sequence number"`
+}
+
+type GetStatusByDocumentInput struct {
+	Body struct{} `path:"documentId"`
+}
+
+type GetStatusByDocumentOutput struct {
+	Body IngestionStatusProjectionResponse
+}
+
+type PaginationQuery struct {
+	Limit  *int `json:"limit,omitempty" query:"limit" default:"20" doc:"Max results to return" minimum:"1" maximum:"100"`
+	Offset *int `json:"offset,omitempty" query:"offset" default:"0" doc:"Offset for pagination" minimum:"0"`
+}
+
+type ListStatusByAccountInput struct {
+	Body  struct{}
+	Query PaginationQuery
+}
+
+type ListStatusByAccountOutput struct {
+	Body struct {
+		Projections []IngestionStatusProjectionResponse `json:"projections" doc:"List of status projections"`
+		Total       int                                 `json:"total" doc:"Total count for pagination"`
+	}
+}
+
+type ListStatusByUserInput struct {
+	Body  struct{}
+	Query PaginationQuery
+}
+
+type ListStatusByUserOutput struct {
+	Body struct {
+		Projections []IngestionStatusProjectionResponse `json:"projections" doc:"List of status projections"`
+		Total       int                                 `json:"total" doc:"Total count for pagination"`
+	}
+}

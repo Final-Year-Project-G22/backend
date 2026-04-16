@@ -50,6 +50,12 @@ var Module = fx.Module("ai",
 	),
 	fx.Provide(
 		fx.Annotate(
+			aiinfrarepo.NewIngestionStatusProjectionRepository,
+			fx.As(new(airepository.IngestionStatusProjectionRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
 			aisvc.NewEnvelopeSigner,
 			fx.As(new(aisvc.EnvelopeSigner)),
 		),
@@ -59,11 +65,13 @@ var Module = fx.Module("ai",
 	}),
 	fx.Provide(service.NewOutboxDispatcher),
 	fx.Provide(handler.NewIngestionHandler),
-	fx.Invoke(func(api huma.API, ingestionHandler *handler.IngestionHandler, tokenService token.TokenService, authService iamservice.AuthService) {
+	fx.Provide(handler.NewStatusHandler),
+	fx.Invoke(func(api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, tokenService token.TokenService, authService iamservice.AuthService) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			IngestionHandler:        ingestionHandler,
+			StatusHandler:           statusHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 		})
