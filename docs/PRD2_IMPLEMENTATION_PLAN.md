@@ -211,7 +211,7 @@ Primary paths:
 - `ai-service/app/config.py`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -296,4 +296,5 @@ Status:
 - Commit 6: completed.
 - Commit 7: completed.
 - Commit 8: completed.
-- Commit 9-12: planned.
+- Commit 9: completed.
+- Commit 10-12: planned.

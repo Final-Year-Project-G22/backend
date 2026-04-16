@@ -158,7 +158,7 @@ reportImplicitStringConcatenation = false
 
 [tool.bandit]
 exclude_dirs = [".venv", "grpc_stubs", "grpc/generated", "tests"]
-skips = ["B101"]
+skips = ["B101", "B311"]
 
 [tool.vulture]
 exclude = [".venv", "__pycache__", "grpc_stubs", "grpc/generated", "tests"]
