@@ -231,7 +231,7 @@ Primary paths:
 - `ai-service/core/usecases/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -297,4 +297,5 @@ Status:
 - Commit 7: completed.
 - Commit 8: completed.
 - Commit 9: completed.
-- Commit 10-12: planned.
+- Commit 10: completed.
+- Commit 11-12: planned.

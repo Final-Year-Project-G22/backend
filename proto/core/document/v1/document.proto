@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package core.document.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb";
+
+service DocumentFetchService {
+  rpc GetSignedUrl(GetSignedUrlRequest) returns (GetSignedUrlResponse);
+}
+
+message GetSignedUrlRequest {
+  string document_id = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+  string account_id = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+  int32 expires_in_seconds = 3;
+}
+
+message GetSignedUrlResponse {
+  string signed_url = 1;
+  int64 expires_at = 2;
+  string content_type = 3;
+  int64 content_length = 4;
+}

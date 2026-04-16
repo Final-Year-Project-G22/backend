@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from functools import lru_cache
 from types import ModuleType, SimpleNamespace
 from typing import Any, Protocol
@@ -10,7 +11,7 @@ from typing import Any, Protocol
 import grpc
 from core.domain.enums import Language, Tier
 from core.domain.exceptions import ConfigurationError, RepositoryError
-from core.ports.core_service import CoreServicePort, CoreUserProfile
+from core.ports.core_service import CoreServicePort, CoreUserProfile, SignedUrlResult
 
 GRPC_NOT_FOUND_CODE = 5
 
@@ -23,8 +24,25 @@ class CoreUserResponse:
     preferred_language: str | None = None
 
 
+@dataclass(frozen=True)
+class SignedUrlResponse:
+    signed_url: str
+    expires_at: int
+    content_type: str | None = None
+    content_length: int | None = None
+
+
 class CoreServiceClient(Protocol):
     async def get_user(self, user_id: uuid.UUID) -> CoreUserResponse | None: ...
+
+
+class DocumentFetchClient(Protocol):
+    async def get_signed_url(
+        self,
+        document_id: uuid.UUID,
+        account_id: uuid.UUID,
+        expires_in_seconds: int,
+    ) -> SignedUrlResponse: ...
 
 
 class CoreServiceGrpcAdapter(CoreServicePort):
@@ -33,11 +51,13 @@ class CoreServiceGrpcAdapter(CoreServicePort):
         *,
         endpoint: str,
         client: CoreServiceClient,
+        document_fetch_channel: Any | None = None,
     ) -> None:
         if not endpoint.strip():
             raise ConfigurationError("core grpc endpoint is required")
         self._endpoint = endpoint
         self._client = client
+        object.__setattr__(self, "_document_fetch_channel", document_fetch_channel)
 
     async def get_user_tier(self, user_id: uuid.UUID) -> Tier | None:
         response = await self._fetch_user(user_id)
@@ -57,6 +77,56 @@ class CoreServiceGrpcAdapter(CoreServicePort):
             user_id=response.user_id,
             tier=tier,
             preferred_language=preferred_language,
+        )
+
+    async def get_signed_url(
+        self,
+        document_id: uuid.UUID,
+        account_id: uuid.UUID,
+        *,
+        expires_in_seconds: int = 3600,
+    ) -> SignedUrlResult:
+        channel = getattr(self, "_document_fetch_channel", None)
+        if channel is None:
+            raise RepositoryError(
+                "document fetch channel not configured",
+                details={"endpoint": self._endpoint},
+            )
+
+        document_fetch_client = _build_document_fetch_client(channel)
+        if document_fetch_client is None:
+            raise RepositoryError(
+                "document fetch stubs are not available",
+                details={"endpoint": self._endpoint},
+            )
+
+        try:
+            request = _build_get_signed_url_request(
+                document_id,
+                account_id,
+                expires_in_seconds,
+            )
+            response = await document_fetch_client.get_signed_url(request)
+        except Exception as exc:
+            raise RepositoryError(
+                "failed to fetch signed url from core service",
+                details={
+                    "document_id": str(document_id),
+                    "account_id": str(account_id),
+                    "endpoint": self._endpoint,
+                },
+            ) from exc
+
+        expires_at = datetime.fromtimestamp(
+            response.expires_at,
+            tz=UTC,
+        )
+
+        return SignedUrlResult(
+            signed_url=response.signed_url,
+            expires_at=expires_at,
+            content_type=response.content_type,
+            content_length=response.content_length,
         )
 
     async def _fetch_user(self, user_id: uuid.UUID) -> CoreUserResponse | None:
@@ -208,4 +278,52 @@ def _build_get_user_request(user_id: str) -> Any:
     return SimpleNamespace(user_id=user_id)
 
 
-__all__ = ["CoreServiceClient", "CoreServiceGrpcAdapter", "CoreUserGrpcClient", "CoreUserResponse"]
+@lru_cache(maxsize=1)
+def _load_document_proto_modules() -> tuple[ModuleType | None, ModuleType | None]:
+    service_pb2_mod = _import_optional_module("core.document.v1.document_pb2")
+    service_pb2_grpc_mod = _import_optional_module("core.document.v1.document_pb2_grpc")
+    return service_pb2_mod, service_pb2_grpc_mod
+
+
+def _build_document_fetch_client(channel: Any) -> Any | None:
+    _, service_pb2_grpc = _load_document_proto_modules()
+    if service_pb2_grpc is None:
+        return None
+
+    stub_ctor: Any = getattr(service_pb2_grpc, "DocumentFetchServiceStub", None)
+    if not callable(stub_ctor):
+        return None
+
+    return stub_ctor(channel)
+
+
+def _build_get_signed_url_request(
+    document_id: uuid.UUID,
+    account_id: uuid.UUID,
+    expires_in_seconds: int,
+) -> Any:
+    service_pb2, _ = _load_document_proto_modules()
+    if service_pb2 is not None:
+        request_ctor: Any = getattr(service_pb2, "GetSignedUrlRequest", None)
+        if callable(request_ctor):
+            return request_ctor(
+                document_id=str(document_id),
+                account_id=str(account_id),
+                expires_in_seconds=expires_in_seconds,
+            )
+
+    return SimpleNamespace(
+        document_id=str(document_id),
+        account_id=str(account_id),
+        expires_in_seconds=expires_in_seconds,
+    )
+
+
+__all__ = [
+    "CoreServiceClient",
+    "CoreServiceGrpcAdapter",
+    "CoreUserGrpcClient",
+    "CoreUserResponse",
+    "DocumentFetchClient",
+    "SignedUrlResponse",
+]
