@@ -153,7 +153,7 @@ async def test_get_user_profile_raises_on_unknown_language() -> None:
             user_id=user_id,
             account_id=uuid.uuid4(),
             tier="pro",
-            preferred_language="fr",
+            preferred_language="unsupported_lang_code",
         )
     )
     adapter = CoreServiceGrpcAdapter(endpoint="localhost:50052", client=client)

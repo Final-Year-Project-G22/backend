@@ -5,24 +5,33 @@ from typing import cast
 from dependency_injector import containers, providers
 
 from app.config import Settings
+from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
 from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.llm import LLMPort
-from core.usecases import AskAIUseCase, ConversationUseCase, QuotaGuardUseCase
+from core.usecases import (
+    AskAIUseCase,
+    ConversationUseCase,
+    IngestionOrchestratorUseCase,
+    QuotaGuardUseCase,
+)
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
+    SqlAlchemyIngestionEventLedgerRepository,
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
+from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
+from workers.tasks import IngestionRequestedTaskHandler
 
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
-        modules=["main"],
+        modules=["main", "workers.ingestion_worker"],
     )
 
     config = providers.Singleton(Settings)
@@ -44,6 +53,10 @@ class Container(containers.DeclarativeContainer):
     )
     knowledge_repository = providers.Factory(
         SqlAlchemyKnowledgeRepository,
+        session=db_session,
+    )
+    ingestion_event_ledger_repository = providers.Factory(
+        SqlAlchemyIngestionEventLedgerRepository,
         session=db_session,
     )
 
@@ -69,6 +82,27 @@ class Container(containers.DeclarativeContainer):
             endpoint=config.provided.CORE_GRPC_ENDPOINT,
             client=core_grpc_client,
         ),
+    )
+
+    ingestion_envelope_verifier = providers.Factory(
+        build_ingestion_envelope_verifier,
+        settings=config,
+    )
+    ingestion_orchestrator = providers.Factory(IngestionOrchestratorUseCase)
+    ingestion_requested_task_handler = providers.Factory(
+        IngestionRequestedTaskHandler,
+        envelope_verifier=ingestion_envelope_verifier,
+        ingestion_event_ledger_repository=ingestion_event_ledger_repository,
+        ingestion_orchestrator=ingestion_orchestrator,
+    )
+    ingestion_consumer = providers.Factory(
+        IngestionRequestedConsumer,
+        rabbitmq_url=config.provided.RABBITMQ_URL,
+        queue_name=config.provided.INGESTION_WORKER_QUEUE,
+        exchange_name=config.provided.INGESTION_WORKER_EXCHANGE,
+        routing_key=config.provided.INGESTION_WORKER_ROUTING_KEY,
+        prefetch_count=config.provided.INGESTION_WORKER_PREFETCH_COUNT,
+        requeue_on_failure=config.provided.INGESTION_WORKER_REQUEUE_ON_FAILURE,
     )
 
     quota_guard = providers.Factory(

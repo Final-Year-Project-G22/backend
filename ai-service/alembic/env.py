@@ -13,6 +13,7 @@ from infrastructure.database.models_sqlalchemy import (  # noqa: F401 — regist
     AIConversationSession,
     AIUserQuota,
     DocumentChunk,
+    IngestionEventLedger,
     KnowledgeDocument,
 )
 

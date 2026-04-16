@@ -17,6 +17,7 @@ from core.usecases.defaults import (
     MAX_TOP_K,
     MIN_TOP_K,
 )
+from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase
 from core.usecases.quota_guard import QuotaGuardUseCase
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "AskAIUseCase",
     "ConversationUseCase",
     "CreateSessionCommand",
+    "IngestionOrchestratorUseCase",
     "ListSessionsQuery",
     "QuotaGuardUseCase",
 ]

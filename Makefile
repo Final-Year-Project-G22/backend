@@ -141,12 +141,15 @@ typecheck-python:
 	cd ai-service && uv run basedpyright
 
 test-ai:
+	$(MAKE) proto-gen
 	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v
 
 test-ai-unit:
+	$(MAKE) proto-gen
 	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m unit
 
 test-ai-integration:
+	$(MAKE) proto-gen
 	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m integration
 
 security-ai:

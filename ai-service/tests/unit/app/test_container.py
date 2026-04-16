@@ -11,12 +11,19 @@ from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.llm import LLMPort
-from core.usecases import AskAIUseCase, ConversationUseCase, QuotaGuardUseCase
+from core.usecases import (
+    AskAIUseCase,
+    ConversationUseCase,
+    IngestionOrchestratorUseCase,
+    QuotaGuardUseCase,
+)
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
     SqlAlchemyKnowledgeRepository,
     SqlAlchemyQuotaRepository,
 )
+from infrastructure.messagebus import IngestionRequestedConsumer
+from workers.tasks import IngestionRequestedTaskHandler
 
 
 @pytest.mark.asyncio
@@ -55,3 +62,21 @@ def test_container_wires_use_cases_with_dependency_overrides() -> None:
     assert isinstance(quota_guard, QuotaGuardUseCase)
     assert isinstance(conversation, ConversationUseCase)
     assert isinstance(ask_ai, AskAIUseCase)
+
+
+def test_container_wires_ingestion_worker_dependencies() -> None:
+    container = Container()
+
+    task_handler = container.ingestion_requested_task_handler()
+    consumer = container.ingestion_consumer()
+
+    assert isinstance(task_handler, IngestionRequestedTaskHandler)
+    assert isinstance(consumer, IngestionRequestedConsumer)
+
+
+def test_container_wires_ingestion_orchestrator() -> None:
+    container = Container()
+
+    orchestrator = container.ingestion_orchestrator()
+
+    assert isinstance(orchestrator, IngestionOrchestratorUseCase)

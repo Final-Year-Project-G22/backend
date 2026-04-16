@@ -29,6 +29,20 @@ class Settings(BaseSettings):
 
     RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
 
+    INGESTION_WORKER_QUEUE: str = "ai.ingestion.requested.v1"
+    INGESTION_WORKER_EXCHANGE: str = "ai.ingestion.events"
+    INGESTION_WORKER_ROUTING_KEY: str = "document.ingestion.requested.v1"
+    INGESTION_WORKER_PREFETCH_COUNT: int = 16
+    INGESTION_WORKER_REQUEUE_ON_FAILURE: bool = True
+    INGESTION_WORKER_MAX_RETRIES: int = 3
+    INGESTION_WORKER_RETRY_BASE_DELAY_MS: int = 1000
+    INGESTION_WORKER_RETRY_MAX_DELAY_MS: int = 30000
+    INGESTION_WORKER_RETRY_JITTER_FACTOR: float = 0.1
+
+    INGESTION_WORKER_DLQ_ENABLED: bool = True
+    INGESTION_WORKER_DLQ_EXCHANGE: str = "ai.ingestion.dlq"
+    INGESTION_WORKER_DLQ_ROUTING_KEY: str = "document.ingestion.dlq.v1"
+
     # Ingestion envelope verification
     INGESTION_SIGNING_ACTIVE_KEY_ID: str = "ingestion-v1"
     INGESTION_SIGNING_ACTIVE_KEY_SECRET: str = "change-me"
