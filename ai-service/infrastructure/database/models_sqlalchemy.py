@@ -90,6 +90,17 @@ class DocumentChunk(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+    embedding_profile_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("embedding_profiles.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    embedding_profile: Mapped[EmbeddingProfile | None] = relationship(
+        "EmbeddingProfile", back_populates="chunks"
+    )
+
     document: Mapped[KnowledgeDocument] = relationship("KnowledgeDocument", back_populates="chunks")
 
     __table_args__ = (
@@ -225,3 +236,25 @@ class IngestionEventLedger(Base):
             "occurred_at",
         ),
     )
+
+
+class EmbeddingProfile(Base):
+    __tablename__ = "embedding_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    model_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    dimensions: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(100)), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    chunks: Mapped[list[DocumentChunk]] = relationship(
+        "DocumentChunk", back_populates="embedding_profile"
+    )
+
+    __table_args__ = (Index("ix_embedding_profiles_active_name", "is_active", "name"),)

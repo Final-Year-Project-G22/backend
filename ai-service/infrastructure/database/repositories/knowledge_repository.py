@@ -236,6 +236,10 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
                 sa_models.KnowledgeDocument,
                 sa_models.KnowledgeDocument.id == sa_models.DocumentChunk.document_id,
             )
+            .outerjoin(
+                sa_models.EmbeddingProfile,
+                sa_models.EmbeddingProfile.id == sa_models.DocumentChunk.embedding_profile_id,
+            )
             .where(sa_models.DocumentChunk.embedding.is_not(None))
         )
         statement = self._apply_search_filters(statement, filters)
@@ -278,6 +282,10 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
             .join(
                 sa_models.KnowledgeDocument,
                 sa_models.KnowledgeDocument.id == sa_models.DocumentChunk.document_id,
+            )
+            .outerjoin(
+                sa_models.EmbeddingProfile,
+                sa_models.EmbeddingProfile.id == sa_models.DocumentChunk.embedding_profile_id,
             )
             .where(sa_models.DocumentChunk.content_tsvector.op("@@")(ts_query))
         )
@@ -335,6 +343,7 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
         model.chunk_index = chunk.chunk_index
         model.token_count = chunk.token_count
         model.embedding = chunk.embedding
+        model.embedding_profile_id = chunk.embedding_profile_id
         model.status = chunk.status.value
         model.parent_id = chunk.parent_id
         model.section_heading = chunk.section_heading
@@ -359,6 +368,11 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
             statement = statement.where(
                 sa_models.KnowledgeDocument.status == DocumentStatus.ACTIVE.value,
                 sa_models.DocumentChunk.status == ChunkStatus.EMBEDDED.value,
+            )
+        if filters.only_active_profile:
+            statement = statement.where(
+                (sa_models.EmbeddingProfile.is_active.is_(True))
+                | (sa_models.EmbeddingProfile.id.is_(None))
             )
         if filters.language is not None:
             statement = statement.where(sa_models.DocumentChunk.language == filters.language.value)

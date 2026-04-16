@@ -170,7 +170,7 @@ Primary paths:
 - `ai-service/app/config.py`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -190,7 +190,7 @@ Primary paths:
 - `ai-service/alembic/versions/`
 
 Status:
-- Planned.
+- Completed.
 
 ---
 
@@ -292,4 +292,8 @@ Status:
 - Commit 2: completed.
 - Commit 3: completed.
 - Commit 4: completed.
-- Commit 5-12: planned.
+- Commit 5: completed.
+- Commit 6: completed.
+- Commit 7: completed.
+- Commit 8: completed.
+- Commit 9-12: planned.

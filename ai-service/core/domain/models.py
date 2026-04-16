@@ -80,6 +80,7 @@ class DocumentChunk(BaseModel):
     chunk_index: int = Field(ge=0)
     token_count: int = Field(ge=0)
     embedding: list[float] | None = None
+    embedding_profile_id: uuid.UUID | None = None
     status: ChunkStatus = ChunkStatus.PENDING
     parent_id: uuid.UUID | None = None
     section_heading: str | None = Field(default=None, max_length=500)

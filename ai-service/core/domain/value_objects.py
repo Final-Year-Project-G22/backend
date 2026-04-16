@@ -43,6 +43,7 @@ class SearchFilters(BaseModel):
     sources: list[DocumentSource] | None = None
     effective_on: date | None = None
     only_active: bool = True
+    only_active_profile: bool = True
     metadata: dict[str, Any] | None = None
 
     @field_validator("sources")
