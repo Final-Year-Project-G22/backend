@@ -7,10 +7,12 @@ import (
 
 type RouteDependencies struct {
 	IngestionHandler        *handler.IngestionHandler
+	StatusHandler           *handler.StatusHandler
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 }
 
 func RegisterRoutes(api huma.API, deps RouteDependencies) {
 	registerIngestionRoutes(api, deps)
+	registerStatusRoutes(api, deps)
 }

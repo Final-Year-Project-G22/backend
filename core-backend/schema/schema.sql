@@ -173,6 +173,16 @@ CREATE UNIQUE INDEX IF NOT EXISTS "idx_ingestion_outbox_dedupe" ON "ingestion_ou
 CREATE INDEX IF NOT EXISTS "idx_ingestion_outbox_event_type" ON "ingestion_outbox" ("event_type");
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_ingestion_outbox_event_id" ON "ingestion_outbox" ("event_id");
 CREATE INDEX IF NOT EXISTS "idx_ingestion_outbox_deleted_at" ON "ingestion_outbox" ("deleted_at");
+CREATE TABLE "ingestion_status_events" ("id" uuid,"event_id" varchar(100) NOT NULL,"document_id" uuid NOT NULL,"account_id" uuid NOT NULL,"user_id" uuid NOT NULL,"event_type" varchar(100) NOT NULL,"schema_version" varchar(32) NOT NULL,"occurred_at" timestamp with time zone NOT NULL,"created_at" timestamp with time zone NOT NULL,"from_stage" varchar(32),"to_stage" varchar(32) NOT NULL,"is_terminal" boolean NOT NULL DEFAULT false,"retry_count" bigint NOT NULL DEFAULT 0,"error_message" text,"chunks_processed_count" bigint NOT NULL,"chunks_failed_count" bigint NOT NULL,"event_sequence" bigint NOT NULL DEFAULT 0,PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_ingestion_status_events_event_sequence" ON "ingestion_status_events" ("event_sequence");
+CREATE INDEX IF NOT EXISTS "idx_status_user" ON "ingestion_status_events" ("user_id");
+CREATE INDEX IF NOT EXISTS "idx_status_account" ON "ingestion_status_events" ("account_id");
+CREATE INDEX IF NOT EXISTS "idx_status_document_occurred" ON "ingestion_status_events" ("document_id","occurred_at");
+CREATE INDEX IF NOT EXISTS "idx_ingestion_status_events_event_id" ON "ingestion_status_events" ("event_id");
+CREATE TABLE "ingestion_status_projections" ("id" uuid,"document_id" uuid NOT NULL,"account_id" uuid NOT NULL,"user_id" uuid NOT NULL,"event_id" varchar(100) NOT NULL,"current_stage" varchar(32) NOT NULL,"is_terminal" boolean NOT NULL DEFAULT false,"started_at" timestamp with time zone NOT NULL,"updated_at" timestamp with time zone NOT NULL,"completed_at" timestamp with time zone,"last_error" text,"chunks_processed_count" bigint NOT NULL DEFAULT 0,"chunks_failed_count" bigint NOT NULL DEFAULT 0,"last_event_sequence" bigint NOT NULL DEFAULT 0,PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "idx_projection_user" ON "ingestion_status_projections" ("user_id");
+CREATE INDEX IF NOT EXISTS "idx_projection_account" ON "ingestion_status_projections" ("account_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_projection_document" ON "ingestion_status_projections" ("document_id");
 ALTER TABLE "accounts" ADD CONSTRAINT "fk_users_accounts" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "account_email_otps" ADD CONSTRAINT "fk_account_email_otps_account" FOREIGN KEY ("account_id") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "role_permissions" ADD CONSTRAINT "fk_permissions_role_permissions" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
