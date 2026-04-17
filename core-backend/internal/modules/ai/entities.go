@@ -12,6 +12,8 @@ func (p *EntityProvider) Entities() []any {
 	return []any{
 		&entity.IngestionDocument{},
 		&entity.IngestionOutbox{},
+		&entity.IngestionStatusEvent{},
+		&entity.IngestionStatusProjection{},
 	}
 }
 
