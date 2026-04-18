@@ -73,6 +73,10 @@ func (m *AskRequest) validate(all bool) error {
 		// no validation rules for SessionId
 	}
 
+	if m.Title != nil {
+		// no validation rules for Title
+	}
+
 	if len(errors) > 0 {
 		return AskRequestMultiError(errors)
 	}
@@ -536,3 +540,742 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AskResponseValidationError{}
+
+// Validate checks the field values on AskStreamChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *AskStreamChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AskStreamChunk with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AskStreamChunkMultiError,
+// or nil if none found.
+func (m *AskStreamChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AskStreamChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	switch v := m.Chunk.(type) {
+	case *AskStreamChunk_Text:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetText()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Text",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Text",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetText()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "Text",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AskStreamChunk_Citations:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetCitations()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Citations",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Citations",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetCitations()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "Citations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AskStreamChunk_Done:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetDone()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Done",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Done",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetDone()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "Done",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AskStreamChunk_Error:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetError()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Error",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Error",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetError()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "Error",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
+	if len(errors) > 0 {
+		return AskStreamChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// AskStreamChunkMultiError is an error wrapping multiple validation errors
+// returned by AskStreamChunk.ValidateAll() if the designated constraints
+// aren't met.
+type AskStreamChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AskStreamChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AskStreamChunkMultiError) AllErrors() []error { return m }
+
+// AskStreamChunkValidationError is the validation error returned by
+// AskStreamChunk.Validate if the designated constraints aren't met.
+type AskStreamChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AskStreamChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AskStreamChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AskStreamChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AskStreamChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AskStreamChunkValidationError) ErrorName() string { return "AskStreamChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AskStreamChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAskStreamChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AskStreamChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AskStreamChunkValidationError{}
+
+// Validate checks the field values on TextChunk with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TextChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TextChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TextChunkMultiError, or nil
+// if none found.
+func (m *TextChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TextChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Text
+
+	if len(errors) > 0 {
+		return TextChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// TextChunkMultiError is an error wrapping multiple validation errors returned
+// by TextChunk.ValidateAll() if the designated constraints aren't met.
+type TextChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TextChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TextChunkMultiError) AllErrors() []error { return m }
+
+// TextChunkValidationError is the validation error returned by
+// TextChunk.Validate if the designated constraints aren't met.
+type TextChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TextChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TextChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TextChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TextChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TextChunkValidationError) ErrorName() string { return "TextChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TextChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTextChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TextChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TextChunkValidationError{}
+
+// Validate checks the field values on CitationsChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CitationsChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CitationsChunk with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CitationsChunkMultiError,
+// or nil if none found.
+func (m *CitationsChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CitationsChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetCitations() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CitationsChunkValidationError{
+						field:  fmt.Sprintf("Citations[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CitationsChunkValidationError{
+						field:  fmt.Sprintf("Citations[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CitationsChunkValidationError{
+					field:  fmt.Sprintf("Citations[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return CitationsChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// CitationsChunkMultiError is an error wrapping multiple validation errors
+// returned by CitationsChunk.ValidateAll() if the designated constraints
+// aren't met.
+type CitationsChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CitationsChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CitationsChunkMultiError) AllErrors() []error { return m }
+
+// CitationsChunkValidationError is the validation error returned by
+// CitationsChunk.Validate if the designated constraints aren't met.
+type CitationsChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CitationsChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CitationsChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CitationsChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CitationsChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CitationsChunkValidationError) ErrorName() string { return "CitationsChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CitationsChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCitationsChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CitationsChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CitationsChunkValidationError{}
+
+// Validate checks the field values on DoneChunk with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *DoneChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DoneChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in DoneChunkMultiError, or nil
+// if none found.
+func (m *DoneChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DoneChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for LatencyMs
+
+	// no validation rules for Model
+
+	if all {
+		switch v := interface{}(m.GetUsage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DoneChunkValidationError{
+					field:  "Usage",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DoneChunkValidationError{
+					field:  "Usage",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DoneChunkValidationError{
+				field:  "Usage",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return DoneChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// DoneChunkMultiError is an error wrapping multiple validation errors returned
+// by DoneChunk.ValidateAll() if the designated constraints aren't met.
+type DoneChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DoneChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DoneChunkMultiError) AllErrors() []error { return m }
+
+// DoneChunkValidationError is the validation error returned by
+// DoneChunk.Validate if the designated constraints aren't met.
+type DoneChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DoneChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DoneChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DoneChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DoneChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DoneChunkValidationError) ErrorName() string { return "DoneChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DoneChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDoneChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DoneChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DoneChunkValidationError{}
+
+// Validate checks the field values on ErrorChunk with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ErrorChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ErrorChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ErrorChunkMultiError, or
+// nil if none found.
+func (m *ErrorChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ErrorChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if len(errors) > 0 {
+		return ErrorChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// ErrorChunkMultiError is an error wrapping multiple validation errors
+// returned by ErrorChunk.ValidateAll() if the designated constraints aren't met.
+type ErrorChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ErrorChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ErrorChunkMultiError) AllErrors() []error { return m }
+
+// ErrorChunkValidationError is the validation error returned by
+// ErrorChunk.Validate if the designated constraints aren't met.
+type ErrorChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ErrorChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ErrorChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ErrorChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ErrorChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ErrorChunkValidationError) ErrorName() string { return "ErrorChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ErrorChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sErrorChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ErrorChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ErrorChunkValidationError{}
