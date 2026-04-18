@@ -9,25 +9,38 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/port"
 	pb "github.com/Final-Year-Project-G22/backend/core/pb/ai/inference/v1"
 	"github.com/google/uuid"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	grpclib "google.golang.org/grpc"
 )
 
 type fakeInferenceClient struct {
-	askFn func(ctx context.Context, in *pb.AskRequest, opts ...grpc.CallOption) (*pb.AskResponse, error)
+	askFn       func(ctx context.Context, in *pb.AskRequest, opts ...grpclib.CallOption) (*pb.AskResponse, error)
+	askStreamFn func(ctx context.Context, in *pb.AskRequest, opts ...grpclib.CallOption) (grpclib.ServerStreamingClient[pb.AskStreamChunk], error)
 }
 
 func (f *fakeInferenceClient) Ask(
 	ctx context.Context,
 	in *pb.AskRequest,
-	opts ...grpc.CallOption,
+	opts ...grpclib.CallOption,
 ) (*pb.AskResponse, error) {
 	if f.askFn == nil {
 		return nil, errors.New("askFn not set")
 	}
 	return f.askFn(ctx, in, opts...)
+}
+
+func (f *fakeInferenceClient) AskStream(
+	ctx context.Context,
+	in *pb.AskRequest,
+	opts ...grpclib.CallOption,
+) (grpclib.ServerStreamingClient[pb.AskStreamChunk], error) {
+	if f.askStreamFn == nil {
+		return nil, errors.New("askStreamFn not set")
+	}
+	return f.askStreamFn(ctx, in, opts...)
 }
 
 func TestInferenceGRPCClientAskMapsResponseAndAuthHeader(t *testing.T) {
@@ -41,7 +54,7 @@ func TestInferenceGRPCClientAskMapsResponseAndAuthHeader(t *testing.T) {
 	c := &InferenceGRPCClient{
 		timeout:   2 * time.Second,
 		authToken: "test-token",
-		client: &fakeInferenceClient{askFn: func(ctx context.Context, in *pb.AskRequest, _ ...grpc.CallOption) (*pb.AskResponse, error) {
+		client: &fakeInferenceClient{askFn: func(ctx context.Context, in *pb.AskRequest, _ ...grpclib.CallOption) (*pb.AskResponse, error) {
 			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				t.Fatal("expected outgoing metadata")
@@ -114,7 +127,7 @@ func TestInferenceGRPCClientAskMapsResponseAndAuthHeader(t *testing.T) {
 func TestInferenceGRPCClientAskRejectsOutOfRangeTopK(t *testing.T) {
 	c := &InferenceGRPCClient{
 		timeout: 1 * time.Second,
-		client: &fakeInferenceClient{askFn: func(_ context.Context, _ *pb.AskRequest, _ ...grpc.CallOption) (*pb.AskResponse, error) {
+		client: &fakeInferenceClient{askFn: func(_ context.Context, _ *pb.AskRequest, _ ...grpclib.CallOption) (*pb.AskResponse, error) {
 			t.Fatal("client call should not happen for invalid top_k")
 			return nil, nil
 		}},
