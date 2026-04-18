@@ -3,10 +3,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from ai.conversation.v1 import service_pb2_grpc as conversation_grpc  # type: ignore
 from ai.inference.v1 import service_pb2_grpc  # type: ignore
 
 import grpc
 from core.usecases.ask_ai import AskAIUseCase
+from core.usecases.conversation import ConversationUseCase
+from infrastructure.rpc.services.conversation_service import AIConversationService
 from infrastructure.rpc.services.inference_service import AIInferenceService
 
 logger = logging.getLogger(__name__)
@@ -56,6 +59,7 @@ async def _unauthorized_unary_unary(request: Any, context: Any) -> Any:
 async def serve_rpc(
     port: int,
     ask_ai_usecase: AskAIUseCase,
+    conversation_usecase: ConversationUseCase,
     auth_token: str | None = None,
 ) -> Any:
     interceptors: list[Any] = []
@@ -68,6 +72,9 @@ async def serve_rpc(
 
     inference_service = AIInferenceService(ask_ai_usecase)
     service_pb2_grpc.add_AIInferenceServiceServicer_to_server(inference_service, server)  # type: ignore
+
+    conversation_service = AIConversationService(conversation_usecase)
+    conversation_grpc.add_AIConversationServiceServicer_to_server(conversation_service, server)  # type: ignore
 
     listen_addr = f"[::]:{port}"
     server.add_insecure_port(listen_addr)
