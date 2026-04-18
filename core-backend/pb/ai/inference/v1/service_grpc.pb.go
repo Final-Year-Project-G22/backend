@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AIInferenceService_Ask_FullMethodName = "/ai.inference.v1.AIInferenceService/Ask"
+	AIInferenceService_Ask_FullMethodName       = "/ai.inference.v1.AIInferenceService/Ask"
+	AIInferenceService_AskStream_FullMethodName = "/ai.inference.v1.AIInferenceService/AskStream"
 )
 
 // AIInferenceServiceClient is the client API for AIInferenceService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AIInferenceServiceClient interface {
 	Ask(ctx context.Context, in *AskRequest, opts ...grpc.CallOption) (*AskResponse, error)
+	AskStream(ctx context.Context, in *AskRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AskStreamChunk], error)
 }
 
 type aIInferenceServiceClient struct {
@@ -47,11 +49,31 @@ func (c *aIInferenceServiceClient) Ask(ctx context.Context, in *AskRequest, opts
 	return out, nil
 }
 
+func (c *aIInferenceServiceClient) AskStream(ctx context.Context, in *AskRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AskStreamChunk], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AIInferenceService_ServiceDesc.Streams[0], AIInferenceService_AskStream_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[AskRequest, AskStreamChunk]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AIInferenceService_AskStreamClient = grpc.ServerStreamingClient[AskStreamChunk]
+
 // AIInferenceServiceServer is the server API for AIInferenceService service.
 // All implementations must embed UnimplementedAIInferenceServiceServer
 // for forward compatibility.
 type AIInferenceServiceServer interface {
 	Ask(context.Context, *AskRequest) (*AskResponse, error)
+	AskStream(*AskRequest, grpc.ServerStreamingServer[AskStreamChunk]) error
 	mustEmbedUnimplementedAIInferenceServiceServer()
 }
 
@@ -64,6 +86,9 @@ type UnimplementedAIInferenceServiceServer struct{}
 
 func (UnimplementedAIInferenceServiceServer) Ask(context.Context, *AskRequest) (*AskResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Ask not implemented")
+}
+func (UnimplementedAIInferenceServiceServer) AskStream(*AskRequest, grpc.ServerStreamingServer[AskStreamChunk]) error {
+	return status.Error(codes.Unimplemented, "method AskStream not implemented")
 }
 func (UnimplementedAIInferenceServiceServer) mustEmbedUnimplementedAIInferenceServiceServer() {}
 func (UnimplementedAIInferenceServiceServer) testEmbeddedByValue()                            {}
@@ -104,6 +129,17 @@ func _AIInferenceService_Ask_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AIInferenceService_AskStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AskRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AIInferenceServiceServer).AskStream(m, &grpc.GenericServerStream[AskRequest, AskStreamChunk]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AIInferenceService_AskStreamServer = grpc.ServerStreamingServer[AskStreamChunk]
+
 // AIInferenceService_ServiceDesc is the grpc.ServiceDesc for AIInferenceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +152,12 @@ var AIInferenceService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AIInferenceService_Ask_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AskStream",
+			Handler:       _AIInferenceService_AskStream_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "ai/inference/v1/service.proto",
 }
