@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/entity"
@@ -24,7 +25,7 @@ func NewDLQController(db *core.Database, logger core.Logger) *DLQController {
 
 var _ port.DLQController = (*DLQController)(nil)
 
-func (c *DLQController) ListDeadEvents(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*entity.IngestionOutbox, error) {
+func (c *DLQController) ListDeadEvents(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*port.DLQEvent, error) {
 	var events []*entity.IngestionOutbox
 	err := c.db.WithContext(ctx).
 		Where("account_id = ? AND status = ?", accountID, entity.OutboxStatusDead).
@@ -36,10 +37,23 @@ func (c *DLQController) ListDeadEvents(ctx context.Context, accountID uuid.UUID,
 		c.logger.Error("Failed to list dead events", core.Error(err))
 		return nil, err
 	}
-	return events, nil
+
+	result := make([]*port.DLQEvent, 0, len(events))
+	for _, e := range events {
+		result = append(result, &port.DLQEvent{
+			EventID:      e.EventID,
+			EventType:    e.EventType,
+			Payload:      e.Payload,
+			Status:       e.Status,
+			ErrorMessage: e.LastError,
+			CreatedAt:    derefTime(e.CreatedAt),
+			ReplayCount:  e.ReplayCount,
+		})
+	}
+	return result, nil
 }
 
-func (c *DLQController) GetDeadEvent(ctx context.Context, eventID uuid.UUID) (*entity.IngestionOutbox, error) {
+func (c *DLQController) GetDeadEvent(ctx context.Context, eventID uuid.UUID) (*port.DLQEvent, error) {
 	var event entity.IngestionOutbox
 	err := c.db.WithContext(ctx).
 		Where("event_id = ? AND status = ?", eventID, entity.OutboxStatusDead).
@@ -51,7 +65,15 @@ func (c *DLQController) GetDeadEvent(ctx context.Context, eventID uuid.UUID) (*e
 		c.logger.Error("Failed to get dead event", core.Error(err))
 		return nil, err
 	}
-	return &event, nil
+	return &port.DLQEvent{
+		EventID:      event.EventID,
+		EventType:    event.EventType,
+		Payload:      event.Payload,
+		Status:       event.Status,
+		ErrorMessage: event.LastError,
+		CreatedAt:    derefTime(event.CreatedAt),
+		ReplayCount:  event.ReplayCount,
+	}, nil
 }
 
 func (c *DLQController) ReDriveEvent(ctx context.Context, eventID uuid.UUID, operatorID uuid.UUID) error {
@@ -123,4 +145,11 @@ func (c *DLQController) ReDriveBatch(ctx context.Context, eventIDs []uuid.UUID, 
 
 func (c *DLQController) GetReDriveHistory(ctx context.Context, eventID uuid.UUID) ([]port.DLQReDriveAudit, error) {
 	return []port.DLQReDriveAudit{}, nil
+}
+
+func derefTime(ts *time.Time) time.Time {
+	if ts == nil {
+		return time.Time{}
+	}
+	return *ts
 }
