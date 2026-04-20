@@ -72,7 +72,15 @@ Create a `.env` file:
 DATABASE_USER=user_adisu
 DATABASE_PASSWORD=your_password
 DATABASE_DBNAME=adisu_db
+AI_INFERENCE_GRPC_ENDPOINT=localhost:50051
+AI_INFERENCE_AUTH_TOKEN=
+AI_ASK_ENABLED=true
 ```
+
+### Ask Feature Flag
+
+- `AI_ASK_ENABLED=true` enables Ask REST endpoints (`/api/v1/ai/ask`, `/api/v1/ai/ask/stream`, conversations routes).
+- `AI_ASK_ENABLED=false` disables Ask route registration (endpoints return `404` because they are not mounted).
 
 ## Features
 

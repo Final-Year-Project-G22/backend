@@ -17,10 +17,20 @@ logger = logging.getLogger(__name__)
 
 
 class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: ignore
-    def __init__(self, ask_ai_usecase: AskAIUseCase):
+    def __init__(self, ask_ai_usecase: AskAIUseCase, *, ask_enabled: bool = True):
         self._ask_ai_usecase = ask_ai_usecase
+        self._ask_enabled = ask_enabled
+
+    async def _ensure_ask_enabled(self, context: Any) -> bool:
+        if self._ask_enabled:
+            return True
+        await context.abort(grpc.StatusCode.UNAVAILABLE, "Ask API is disabled")
+        return False
 
     async def Ask(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802
+        if not await self._ensure_ask_enabled(context):
+            return service_pb2.AskResponse()  # type: ignore
+
         try:
             # Parse request fields
             try:
@@ -98,6 +108,9 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
     async def AskStream(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802
         # context arg required by gRPC streaming signature
+        if not await self._ensure_ask_enabled(context):
+            return
+
         start_time = time.perf_counter()
 
         try:

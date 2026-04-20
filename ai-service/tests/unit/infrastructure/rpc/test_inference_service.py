@@ -118,3 +118,20 @@ async def test_ask_maps_domain_errors_to_grpc_status(
 
     context.abort.assert_awaited_once()
     assert context.abort.await_args.args[0] is status_code
+
+
+@pytest.mark.asyncio
+async def test_ask_aborts_when_feature_flag_disabled() -> None:
+    usecase = AsyncMock()
+    service = AIInferenceService(ask_ai_usecase=usecase, ask_enabled=False)
+
+    request = _make_request()
+    context = AsyncMock()
+
+    await service.Ask(request, context)
+
+    context.abort.assert_awaited_once_with(
+        grpc.StatusCode.UNAVAILABLE,
+        "Ask API is disabled",
+    )
+    usecase.execute.assert_not_awaited()
