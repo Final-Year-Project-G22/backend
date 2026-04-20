@@ -60,7 +60,9 @@ async def serve_rpc(
     port: int,
     ask_ai_usecase: AskAIUseCase,
     conversation_usecase: ConversationUseCase,
+    *,
     auth_token: str | None = None,
+    ask_enabled: bool = True,
 ) -> Any:
     interceptors: list[Any] = []
     if auth_token:
@@ -70,7 +72,7 @@ async def serve_rpc(
     server_ctor: Any = getattr(grpc_aio, "server")  # noqa: B009
     server = server_ctor(interceptors=interceptors)
 
-    inference_service = AIInferenceService(ask_ai_usecase)
+    inference_service = AIInferenceService(ask_ai_usecase, ask_enabled=ask_enabled)
     service_pb2_grpc.add_AIInferenceServiceServicer_to_server(inference_service, server)  # type: ignore
 
     conversation_service = AIConversationService(conversation_usecase)
