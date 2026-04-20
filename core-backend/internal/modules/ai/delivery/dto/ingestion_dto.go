@@ -107,3 +107,20 @@ type ListStatusByUserOutput struct {
 		Total       int                                 `json:"total" doc:"Total count for pagination"`
 	}
 }
+
+type StreamStatusInput struct {
+	Body struct{}
+}
+
+type StreamStatusOutput struct {
+	Body struct{}
+}
+
+type StatusEventDTO struct {
+	DocumentID      uuid.UUID  `json:"documentId"`
+	Status          string     `json:"status"`
+	ErrorMessage    *string    `json:"errorMessage,omitempty"`
+	ProcessedAt     *time.Time `json:"processedAt,omitempty"`
+	TotalChunks     int        `json:"totalChunks"`
+	ProcessedChunks int        `json:"processedChunks"`
+}
