@@ -2,6 +2,9 @@ package handler
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/application/service"
@@ -27,30 +30,14 @@ func (h *AskHandler) HandleAsk(ctx context.Context, input *dto.AskInput) (*dto.A
 		return nil, apperrors.ToHumaError(ctx, apperrors.UnauthorizedError("ask.errors.unauthorized"))
 	}
 
-	var sessionID *uuid.UUID
-	if input.Body.SessionID != nil && *input.Body.SessionID != "" {
-		sid, err := uuid.Parse(*input.Body.SessionID)
-		if err != nil {
-			return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("ask.errors.invalidSessionId"))
-		}
-		sessionID = &sid
-	}
-
-	var topK int32 = 5
-	if input.Body.TopK != nil && *input.Body.TopK > 0 {
-		topK = *input.Body.TopK
-	}
-
-	out, err := h.askService.Ask(ctx, service.AskInput{
-		UserID:    userID,
-		AccountID: accountID,
-		Query:     input.Body.Query,
-		Language:  input.Body.Language,
-		SessionID: sessionID,
-		TopK:      topK,
-	})
+	askIn, err := h.parseAskInput(ctx, input.Body, accountID, userID)
 	if err != nil {
-		return nil, mapAskError(err)
+		return nil, err
+	}
+
+	out, err := h.askService.Ask(ctx, askIn)
+	if err != nil {
+		return nil, mapAskError(ctx, err)
 	}
 
 	citations := make([]dto.CitationDTO, 0, len(out.Citations))
@@ -81,6 +68,29 @@ func (h *AskHandler) HandleAsk(ctx context.Context, input *dto.AskInput) (*dto.A
 	}, nil
 }
 
+func (h *AskHandler) HandleAskStream(ctx context.Context, input *dto.AskStreamInput) (<-chan service.AskStreamChunk, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
+
+	if accountID == contextkeys.NilUUID || userID == contextkeys.NilUUID {
+		return nil, apperrors.ToHumaError(ctx, apperrors.UnauthorizedError("ask.errors.unauthorized"))
+	}
+
+	askIn, err := h.parseAskInput(ctx, input.Body, accountID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	streamIn := service.AskStreamInput(askIn)
+
+	ch, streamErr := h.askService.AskStream(ctx, streamIn)
+	if streamErr != nil {
+		return nil, mapAskError(ctx, streamErr)
+	}
+
+	return ch, nil
+}
+
 func (h *AskHandler) HandleListConversations(ctx context.Context, input *dto.ListConversationsInput, accountID, userID uuid.UUID) (*dto.ListConversationsOutput, error) {
 	limit := int32(20)
 	if input.Query.Limit != nil && *input.Query.Limit > 0 {
@@ -98,7 +108,7 @@ func (h *AskHandler) HandleListConversations(ctx context.Context, input *dto.Lis
 		Offset:    offset,
 	})
 	if err != nil {
-		return nil, mapConversationError(err)
+		return nil, mapConversationError(ctx, err)
 	}
 
 	sessions := make([]dto.ConversationDTO, 0, len(out.Sessions))
@@ -146,7 +156,7 @@ func (h *AskHandler) HandleGetConversation(ctx context.Context, input *dto.GetCo
 		IncludeDeleted: includeDeleted,
 	})
 	if err != nil {
-		return nil, mapConversationError(err)
+		return nil, mapConversationError(ctx, err)
 	}
 
 	messages := make([]dto.MessageDTO, 0, len(out.Messages))
@@ -205,7 +215,7 @@ func (h *AskHandler) HandleArchiveConversation(ctx context.Context, input *dto.A
 		AccountID: accountID,
 	})
 	if err != nil {
-		return nil, mapConversationError(err)
+		return nil, mapConversationError(ctx, err)
 	}
 
 	return &dto.ArchiveConversationOutput{
@@ -215,16 +225,88 @@ func (h *AskHandler) HandleArchiveConversation(ctx context.Context, input *dto.A
 	}, nil
 }
 
-func mapAskError(err error) error {
-	if err == nil {
-		return nil
+func (h *AskHandler) parseAskInput(
+	ctx context.Context,
+	body dto.AskRequest,
+	accountID uuid.UUID,
+	userID uuid.UUID,
+) (service.AskInput, error) {
+	query := strings.TrimSpace(body.Query)
+	if query == "" {
+		return service.AskInput{}, apperrors.ToHumaError(ctx, apperrors.BadRequestError("ask.errors.queryRequired"))
 	}
-	return apperrors.UnauthorizedError("ask.errors.unauthorized")
+
+	var sessionID *uuid.UUID
+	if body.SessionID != nil && strings.TrimSpace(*body.SessionID) != "" {
+		sid, err := uuid.Parse(strings.TrimSpace(*body.SessionID))
+		if err != nil {
+			return service.AskInput{}, apperrors.ToHumaError(ctx, apperrors.BadRequestError("ask.errors.invalidSessionId"))
+		}
+		sessionID = &sid
+	}
+
+	topK := int32(5)
+	if body.TopK != nil {
+		if *body.TopK < 1 || *body.TopK > 20 {
+			return service.AskInput{}, apperrors.ToHumaError(ctx, apperrors.BadRequestError("ask.errors.invalidTopK"))
+		}
+		topK = *body.TopK
+	}
+
+	return service.AskInput{
+		UserID:    userID,
+		AccountID: accountID,
+		Query:     query,
+		Language:  strings.TrimSpace(body.Language),
+		SessionID: sessionID,
+		TopK:      topK,
+	}, nil
 }
 
-func mapConversationError(err error) error {
+func mapAskError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
-	return apperrors.NotFoundError("conversation", "session not found")
+
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "invalid argument"):
+		return apperrors.ToHumaError(ctx, apperrors.BadRequestError("ask.errors.invalidInput"))
+	case strings.Contains(msg, "quota exceeded"):
+		return apperrors.ToHumaError(ctx, apperrors.NewError(apperrors.ErrCodeBadRequest, "ask.errors.quotaExceeded", 429))
+	case strings.Contains(msg, "authentication failed"), strings.Contains(msg, "unauthenticated"):
+		return apperrors.ToHumaError(ctx, apperrors.UnauthorizedError("ask.errors.unauthorized"))
+	case strings.Contains(msg, "timeout"), strings.Contains(msg, "deadline exceeded"):
+		return apperrors.ToHumaError(ctx, apperrors.NewError(apperrors.ErrCodeInternal, "ask.errors.timeout", 504))
+	default:
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return apperrors.ToHumaError(ctx, appErr)
+		}
+		return apperrors.ToHumaError(ctx, apperrors.InternalError("ask.errors.failed", fmt.Errorf("%w", err)))
+	}
+}
+
+func mapConversationError(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "not found"):
+		return apperrors.ToHumaError(ctx, apperrors.NotFoundErrorWithKey("conversation.errors.notFound"))
+	case strings.Contains(msg, "invalid argument"):
+		return apperrors.ToHumaError(ctx, apperrors.BadRequestError("conversation.errors.invalidInput"))
+	case strings.Contains(msg, "permission denied"), strings.Contains(msg, "forbidden"):
+		return apperrors.ToHumaError(ctx, apperrors.ForbiddenError("conversation.errors.permissionDenied"))
+	case strings.Contains(msg, "unauthenticated"):
+		return apperrors.ToHumaError(ctx, apperrors.UnauthorizedError("conversation.errors.unauthorized"))
+	default:
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return apperrors.ToHumaError(ctx, appErr)
+		}
+		return apperrors.ToHumaError(ctx, apperrors.InternalError("conversation.errors.failed", fmt.Errorf("%w", err)))
+	}
 }

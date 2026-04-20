@@ -18,6 +18,8 @@ func NewAskService(inferencePort port.AIInferencePort) *AskService {
 	return &AskService{inferencePort: inferencePort}
 }
 
+type AskStreamChunk = port.AskStreamChunk
+
 type AskInput struct {
 	UserID    uuid.UUID
 	AccountID uuid.UUID

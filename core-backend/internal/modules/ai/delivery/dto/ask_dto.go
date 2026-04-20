@@ -45,6 +45,29 @@ type AskOutput struct {
 	Body AskResponseBody
 }
 
+type AskStreamInput struct {
+	Body AskRequest
+}
+
+type AskStreamChunkEventBody struct {
+	Text string `json:"text"`
+}
+
+type AskStreamCitationEventBody struct {
+	Citations []CitationDTO `json:"citations"`
+}
+
+type AskStreamDoneEventBody struct {
+	Model     string   `json:"model"`
+	LatencyMS int      `json:"latencyMs"`
+	Usage     UsageDTO `json:"usage"`
+}
+
+type AskStreamErrorEventBody struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 type ConversationDTO struct {
 	ID        uuid.UUID `json:"id"`
 	AccountID uuid.UUID `json:"accountId"`
