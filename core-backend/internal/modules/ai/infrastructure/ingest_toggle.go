@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -16,14 +17,14 @@ const (
 )
 
 type IngestToggle struct {
-	client *redis.Client
+	cache  core.Cache
 	logger core.Logger
 	mu     sync.RWMutex
 }
 
-func NewIngestToggle(client *redis.Client, logger core.Logger) *IngestToggle {
+func NewIngestToggle(cache core.Cache, logger core.Logger) *IngestToggle {
 	return &IngestToggle{
-		client: client,
+		cache:  cache,
 		logger: logger,
 	}
 }
@@ -34,8 +35,8 @@ func (t *IngestToggle) IsEnabled(ctx context.Context) bool {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
-	val, err := t.client.Get(ctx, IngestToggleKey).Result()
-	if err == redis.Nil {
+	val, err := t.cache.Get(ctx, IngestToggleKey)
+	if errors.Is(err, redis.Nil) {
 		return true
 	}
 	if err != nil {
@@ -55,7 +56,7 @@ func (t *IngestToggle) SetEnabled(ctx context.Context, enabled bool) error {
 		value = "true"
 	}
 
-	err := t.client.Set(ctx, IngestToggleKey, value, IngestToggleTTL).Err()
+	err := t.cache.Set(ctx, IngestToggleKey, value, IngestToggleTTL)
 	if err != nil {
 		t.logger.Error("Failed to set ingest toggle", core.Error(err))
 		return err
@@ -66,8 +67,8 @@ func (t *IngestToggle) SetEnabled(ctx context.Context, enabled bool) error {
 }
 
 func (t *IngestToggle) GetToggleState(ctx context.Context) (bool, bool, error) {
-	val, err := t.client.Get(ctx, IngestToggleKey).Result()
-	if err == redis.Nil {
+	val, err := t.cache.Get(ctx, IngestToggleKey)
+	if errors.Is(err, redis.Nil) {
 		return true, false, nil
 	}
 	if err != nil {
