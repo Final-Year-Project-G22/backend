@@ -41,6 +41,79 @@ type AskResponse struct {
 	LatencyMS int
 }
 
+type Conversation struct {
+	ID        uuid.UUID
+	AccountID uuid.UUID
+	Title     string
+	Language  constants.Locale
+}
+
+type Message struct {
+	ID         uuid.UUID
+	Role       string
+	Content    string
+	Citations  []Citation
+	TokenUsage Usage
+	CreatedAt  string
+}
+
+type ListConversationsRequest struct {
+	UserID    uuid.UUID
+	AccountID uuid.UUID
+	Limit     int32
+	Offset    int32
+}
+
+type ListConversationsResponse struct {
+	Sessions []Conversation
+	Total    int32
+}
+
+type GetConversationRequest struct {
+	SessionID      uuid.UUID
+	AccountID      uuid.UUID
+	MessageLimit   int32
+	MessageOffset  int32
+	IncludeDeleted bool
+}
+
+type GetConversationResponse struct {
+	Session   Conversation
+	Messages  []Message
+	TotalMsgs int32
+}
+
+type ArchiveConversationRequest struct {
+	SessionID uuid.UUID
+	AccountID uuid.UUID
+}
+
+type ArchiveConversationResponse struct {
+	Success bool
+}
+
+type AskStreamChunk struct {
+	Text      *string
+	Citations []Citation
+	Done      *DoneInfo
+	Error     *ErrorInfo
+}
+
+type DoneInfo struct {
+	Model     string
+	Usage     Usage
+	LatencyMs int
+}
+
+type ErrorInfo struct {
+	Code    string
+	Message string
+}
+
 type AIInferencePort interface {
 	Ask(ctx context.Context, req AskRequest) (AskResponse, error)
+	AskStream(ctx context.Context, req AskRequest) (<-chan AskStreamChunk, error)
+	ListConversations(ctx context.Context, req ListConversationsRequest) (ListConversationsResponse, error)
+	GetConversation(ctx context.Context, req GetConversationRequest) (GetConversationResponse, error)
+	ArchiveConversation(ctx context.Context, req ArchiveConversationRequest) (ArchiveConversationResponse, error)
 }
