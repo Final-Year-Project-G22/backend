@@ -10,6 +10,7 @@ ai:
   inference_grpc_endpoint: ${AI_INFERENCE_GRPC_ENDPOINT:-localhost:50051}
   inference_auth_token: ${AI_INFERENCE_AUTH_TOKEN:-}
   inference_timeout: 10s
+  ask_enabled: ${AI_ASK_ENABLED:-true}
 
 ingestion:
   enabled: ${INGESTION_ENABLED:-true}
