@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+import grpc
 from core.domain.exceptions import QuotaExceededError
 from infrastructure.rpc.services.inference_service import AIInferenceService
 
@@ -139,3 +140,20 @@ async def test_ask_stream_error_on_quota_exceeded() -> None:
     error_chunk = chunks[0]
     assert error_chunk.HasField("error")
     assert error_chunk.error.code == "RESOURCE_EXHAUSTED"
+
+
+@pytest.mark.asyncio
+async def test_ask_stream_aborts_when_feature_flag_disabled() -> None:
+    usecase = AsyncMock()
+    service = AIInferenceService(ask_ai_usecase=usecase, ask_enabled=False)
+    request = _make_request()
+
+    context = SimpleNamespace(abort=AsyncMock())
+    chunks = [chunk async for chunk in service.AskStream(request, context)]
+
+    assert chunks == []
+    context.abort.assert_awaited_once_with(
+        grpc.StatusCode.UNAVAILABLE,
+        "Ask API is disabled",
+    )
+    usecase.execute.assert_not_awaited()

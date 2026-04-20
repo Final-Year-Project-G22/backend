@@ -26,6 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         ask_ai_usecase=ask_ai_usecase,
         conversation_usecase=conversation_usecase,
         auth_token=settings.INTERNAL_GRPC_AUTH_TOKEN or None,
+        ask_enabled=settings.AI_ASK_ENABLED,
     )
     app.state.rpc_server = rpc_server
 
