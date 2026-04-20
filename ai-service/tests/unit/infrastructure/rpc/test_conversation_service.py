@@ -81,7 +81,10 @@ async def test_list_conversations_invalid_user_id_aborts() -> None:
 
     await service.ListConversations(request, context)
 
-    abort.assert_called_once_with(grpc.StatusCode.INVALID_ARGUMENT)
+    abort.assert_called_once_with(
+        grpc.StatusCode.INVALID_ARGUMENT,
+        "Invalid UUID or enum: badly formed hexadecimal UUID string",
+    )
 
 
 @pytest.mark.asyncio
@@ -134,7 +137,7 @@ async def test_get_conversation_not_found_aborts() -> None:
 
     await service.GetConversation(request, context)
 
-    abort.assert_called_once_with(grpc.StatusCode.NOT_FOUND)
+    abort.assert_called_once_with(grpc.StatusCode.NOT_FOUND, "Session not found")
 
 
 @pytest.mark.asyncio
@@ -166,4 +169,4 @@ async def test_archive_conversation_not_found_aborts() -> None:
 
     await service.ArchiveConversation(request, context)
 
-    abort.assert_called_once_with(grpc.StatusCode.NOT_FOUND)
+    abort.assert_called_once_with(grpc.StatusCode.NOT_FOUND, "Session not found")

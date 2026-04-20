@@ -125,7 +125,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ARG001", "T201"]
+"tests/**/*.py" = ["S101", "ARG001", "T201", "PLR2004"]
 "grpc_stubs/**/*.py" = ["ALL"]
 "grpc/generated/*.py" = ["ALL"]
 "app/config.py" = ["S105"]
