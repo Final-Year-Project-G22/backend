@@ -7,10 +7,15 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/google/uuid"
 )
 
+type sseStreamer interface {
+	StreamStatusByAccount(ctx context.Context, accountID uuid.UUID, lastEventID string, sendFunc service.SSEDeliveryFunc) error
+}
+
 type SSEHandler struct {
-	gateway *service.SSEGateway
+	gateway sseStreamer
 }
 
 func NewSSEHandler(gateway *service.SSEGateway) *SSEHandler {
@@ -24,11 +29,11 @@ func (h *SSEHandler) StreamAccountStatus(ctx context.Context, lastEventID string
 	}
 
 	return h.gateway.StreamStatusByAccount(ctx, accountID, lastEventID, func(eventID string, data []byte) error {
-		var payload map[string]any
-		if err := json.Unmarshal(data, &payload); err != nil {
+		var pl map[string]any
+		if err := json.Unmarshal(data, &pl); err != nil {
 			return err
 		}
-		payload["eventId"] = eventID
-		return send("status", payload)
+		pl["eventId"] = eventID
+		return send("status", pl)
 	})
 }
