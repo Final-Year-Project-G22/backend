@@ -25,5 +25,6 @@ func RegisterRoutes(api huma.API, deps RouteDependencies) {
 	}
 	registerDLQRoutes(api, deps)
 	registerIngestionStatusStreamRoute(api, deps)
+	registerIngestionStatusDocumentStreamRoute(api, deps)
 	registerIngestToggleRoute(api, deps)
 }

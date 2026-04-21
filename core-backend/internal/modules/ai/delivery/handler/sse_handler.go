@@ -12,6 +12,7 @@ import (
 
 type sseStreamer interface {
 	StreamStatusByAccount(ctx context.Context, accountID uuid.UUID, lastEventID string, sendFunc service.SSEDeliveryFunc) error
+	StreamStatusByDocument(ctx context.Context, documentID uuid.UUID, lastEventID string, sendFunc service.SSEDeliveryFunc) error
 }
 
 type SSEHandler struct {
@@ -29,6 +30,17 @@ func (h *SSEHandler) StreamAccountStatus(ctx context.Context, lastEventID string
 	}
 
 	return h.gateway.StreamStatusByAccount(ctx, accountID, lastEventID, func(eventID string, data []byte) error {
+		var pl map[string]any
+		if err := json.Unmarshal(data, &pl); err != nil {
+			return err
+		}
+		pl["eventId"] = eventID
+		return send("status", pl)
+	})
+}
+
+func (h *SSEHandler) StreamStatusByDocument(ctx context.Context, documentID uuid.UUID, lastEventID string, send func(event string, payload any) error) error {
+	return h.gateway.StreamStatusByDocument(ctx, documentID, lastEventID, func(eventID string, data []byte) error {
 		var pl map[string]any
 		if err := json.Unmarshal(data, &pl); err != nil {
 			return err

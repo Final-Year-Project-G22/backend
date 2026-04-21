@@ -124,7 +124,7 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "getConversation",
 		Method:      "GET",
-		Path:        aiBase + "/conversations/:sessionId",
+		Path:        aiBase + "/conversations/{sessionId}",
 		Summary:     "Get conversation",
 		Description: "Get a conversation with its messages.",
 		Tags:        []string{"AI Conversations"},
@@ -139,7 +139,7 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "archiveConversation",
 		Method:      "DELETE",
-		Path:        aiBase + "/conversations/:sessionId",
+		Path:        aiBase + "/conversations/{sessionId}",
 		Summary:     "Archive conversation",
 		Description: "Archive (soft-delete) a conversation session.",
 		Tags:        []string{"AI Conversations"},
@@ -153,7 +153,7 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 }
 
 func getSessionIDFromContext(ctx context.Context) uuid.UUID {
-	val := ctx.Value("sessionId")
+	val := ctx.Value(contextkeys.SessionID)
 	if s, ok := val.(string); ok {
 		if id, err := uuid.Parse(s); err == nil {
 			return id

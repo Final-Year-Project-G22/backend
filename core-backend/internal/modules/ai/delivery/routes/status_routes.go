@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
@@ -23,7 +24,11 @@ func registerStatusRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, func(ctx context.Context, input *dto.GetStatusByDocumentInput) (*dto.GetStatusByDocumentOutput, error) {
-		docIDStr, ok := ctx.Value("documentId").(string)
+		docIDVal := ctx.Value(contextkeys.DocumentID)
+		if docIDVal == nil {
+			return nil, nil
+		}
+		docIDStr, ok := docIDVal.(string)
 		if !ok {
 			return nil, nil
 		}
