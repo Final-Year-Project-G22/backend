@@ -10,11 +10,15 @@ import (
 )
 
 type mockSSEGateway struct {
-	called  bool
-	account uuid.UUID
-	lastID  string
-	sendErr error
-	callSeq int
+	called          bool
+	account         uuid.UUID
+	lastID          string
+	sendErr         error
+	callSeq         int
+	documentID      uuid.UUID
+	documentLastID  string
+	documentSendErr error
+	documentCallSeq int
 }
 
 func (m *mockSSEGateway) StreamStatusByAccount(ctx context.Context, accountID uuid.UUID, lastEventID string, sendFunc service.SSEDeliveryFunc) error {
@@ -24,6 +28,18 @@ func (m *mockSSEGateway) StreamStatusByAccount(ctx context.Context, accountID uu
 	m.callSeq++
 	if m.sendErr != nil {
 		return m.sendErr
+	}
+	_ = sendFunc("0", []byte(`{"status":"completed"}`))
+	return nil
+}
+
+func (m *mockSSEGateway) StreamStatusByDocument(ctx context.Context, documentID uuid.UUID, lastEventID string, sendFunc service.SSEDeliveryFunc) error {
+	m.called = true
+	m.documentID = documentID
+	m.documentLastID = lastEventID
+	m.documentCallSeq++
+	if m.documentSendErr != nil {
+		return m.documentSendErr
 	}
 	_ = sendFunc("0", []byte(`{"status":"completed"}`))
 	return nil
@@ -74,6 +90,42 @@ func TestSSEHandler_StreamAccountStatus_GatewayError(t *testing.T) {
 	h := &SSEHandler{gateway: mock}
 
 	err := h.StreamAccountStatus(ctx, "", func(event string, payload any) error {
+		return nil
+	})
+	if err == nil {
+		t.Error("expected error from gateway")
+	}
+}
+
+func TestSSEHandler_StreamStatusByDocument(t *testing.T) {
+	documentID := uuid.New()
+	ctx := context.WithValue(context.Background(), contextkeys.AccountID, uuid.New())
+
+	mock := &mockSSEGateway{}
+	h := &SSEHandler{gateway: mock}
+	_ = h.StreamStatusByDocument(ctx, documentID, "200", func(event string, payload any) error {
+		return nil
+	})
+
+	if !mock.called {
+		t.Error("expected gateway.StreamStatusByDocument to be called")
+	}
+	if mock.documentID != documentID {
+		t.Errorf("documentID = %v, want %v", mock.documentID, documentID)
+	}
+	if mock.documentLastID != "200" {
+		t.Errorf("lastEventID = %v, want %v", mock.documentLastID, "200")
+	}
+}
+
+func TestSSEHandler_StreamStatusByDocument_GatewayError(t *testing.T) {
+	documentID := uuid.New()
+	ctx := context.WithValue(context.Background(), contextkeys.AccountID, uuid.New())
+
+	mock := &mockSSEGateway{documentSendErr: context.DeadlineExceeded}
+	h := &SSEHandler{gateway: mock}
+
+	err := h.StreamStatusByDocument(ctx, documentID, "", func(event string, payload any) error {
 		return nil
 	})
 	if err == nil {
