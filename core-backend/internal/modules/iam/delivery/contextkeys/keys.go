@@ -24,6 +24,8 @@ var (
 	AccountID = contextKey{"account_id"}
 
 	UserID = contextKey{"user_id"}
+
+	DocumentID = contextKey{"document_id"}
 )
 
 // GetSessionID extracts the session ID from context values.
