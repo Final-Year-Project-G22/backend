@@ -26,12 +26,15 @@ type AskInput struct {
 	Query     string
 	Language  string
 	SessionID *uuid.UUID
+	Title     *string
 	TopK      int32
 }
 
 type AskOutput struct {
 	RequestID uuid.UUID
 	SessionID uuid.UUID
+	CreatedAt string
+	UpdatedAt string
 	Answer    string
 	Citations []port.Citation
 	Usage     port.Usage
@@ -59,6 +62,7 @@ func (s *AskService) Ask(ctx context.Context, in AskInput) (AskOutput, error) {
 		Query:     in.Query,
 		Language:  language,
 		SessionID: in.SessionID,
+		Title:     in.Title,
 		TopK:      in.TopK,
 	}
 
@@ -73,6 +77,8 @@ func (s *AskService) Ask(ctx context.Context, in AskInput) (AskOutput, error) {
 	return AskOutput{
 		RequestID: resp.RequestID,
 		SessionID: resp.SessionID,
+		CreatedAt: resp.CreatedAt,
+		UpdatedAt: resp.UpdatedAt,
 		Answer:    resp.Answer,
 		Citations: resp.Citations,
 		Usage:     resp.Usage,
@@ -87,6 +93,7 @@ type AskStreamInput struct {
 	Query     string
 	Language  string
 	SessionID *uuid.UUID
+	Title     *string
 	TopK      int32
 }
 
@@ -110,6 +117,7 @@ func (s *AskService) AskStream(ctx context.Context, in AskStreamInput) (<-chan p
 		Query:     in.Query,
 		Language:  language,
 		SessionID: in.SessionID,
+		Title:     in.Title,
 		TopK:      in.TopK,
 	}
 
@@ -202,7 +210,8 @@ type ArchiveConversationInput struct {
 }
 
 type ArchiveConversationOutput struct {
-	Success bool
+	Success   bool
+	UpdatedAt string
 }
 
 func (s *AskService) ArchiveConversation(ctx context.Context, in ArchiveConversationInput) (ArchiveConversationOutput, error) {
@@ -211,10 +220,10 @@ func (s *AskService) ArchiveConversation(ctx context.Context, in ArchiveConversa
 		AccountID: in.AccountID,
 	}
 
-	_, err := s.inferencePort.ArchiveConversation(ctx, req)
+	resp, err := s.inferencePort.ArchiveConversation(ctx, req)
 	if err != nil {
 		return ArchiveConversationOutput{}, fmt.Errorf("archive conversation failed: %w", err)
 	}
 
-	return ArchiveConversationOutput{Success: true}, nil
+	return ArchiveConversationOutput{Success: resp.Success, UpdatedAt: resp.UpdatedAt}, nil
 }

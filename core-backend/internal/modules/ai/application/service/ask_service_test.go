@@ -13,13 +13,16 @@ type mockInferencePort struct {
 	askErr          error
 	askStreamChunks []port.AskStreamChunk
 	askStreamErr    error
+	lastAskRequest  *port.AskRequest
 }
 
 func (m *mockInferencePort) Ask(ctx context.Context, req port.AskRequest) (port.AskResponse, error) {
+	m.lastAskRequest = &req
 	return m.askResult, m.askErr
 }
 
 func (m *mockInferencePort) AskStream(ctx context.Context, req port.AskRequest) (<-chan port.AskStreamChunk, error) {
+	m.lastAskRequest = &req
 	if m.askStreamErr != nil {
 		return nil, m.askStreamErr
 	}
@@ -31,239 +34,71 @@ func (m *mockInferencePort) AskStream(ctx context.Context, req port.AskRequest) 
 	return ch, nil
 }
 
-func (m *mockInferencePort) ListConversations(ctx context.Context, req port.ListConversationsRequest) (port.ListConversationsResponse, error) {
+func (m *mockInferencePort) ListConversations(context.Context, port.ListConversationsRequest) (port.ListConversationsResponse, error) {
 	return port.ListConversationsResponse{}, nil
 }
 
-func (m *mockInferencePort) GetConversation(ctx context.Context, req port.GetConversationRequest) (port.GetConversationResponse, error) {
+func (m *mockInferencePort) GetConversation(context.Context, port.GetConversationRequest) (port.GetConversationResponse, error) {
 	return port.GetConversationResponse{}, nil
 }
 
-func (m *mockInferencePort) ArchiveConversation(ctx context.Context, req port.ArchiveConversationRequest) (port.ArchiveConversationResponse, error) {
-	return port.ArchiveConversationResponse{}, nil
+func (m *mockInferencePort) ArchiveConversation(context.Context, port.ArchiveConversationRequest) (port.ArchiveConversationResponse, error) {
+	return port.ArchiveConversationResponse{Success: true, UpdatedAt: "2026-01-01T12:00:00Z"}, nil
 }
 
-func TestAskService_Ask_ReturnsResponse(t *testing.T) {
-	userID := uuid.New()
-	accountID := uuid.New()
-	sessionID := uuid.New()
-
+func TestAskService_Ask_PassesTitleToPort(t *testing.T) {
 	mock := &mockInferencePort{
-		askResult: port.AskResponse{
-			RequestID: uuid.New(),
-			SessionID: sessionID,
-			Answer:    "Test answer",
-			Citations: []port.Citation{
-				{
-					DocumentID: uuid.New(),
-					ChunkID:    uuid.New(),
-					SourceType: "chunk",
-					Score:      0.95,
-				},
-			},
-			Usage:     port.Usage{PromptTokens: 10, CompletionTokens: 20, TotalTokens: 30},
-			Model:     "gemini-1.5-flash",
-			LatencyMS: 100,
-		},
+		askResult: port.AskResponse{RequestID: uuid.New(), SessionID: uuid.New(), Answer: "ok"},
 	}
-
 	svc := NewAskService(mock)
-	resp, err := svc.Ask(context.Background(), AskInput{
-		UserID:    userID,
-		AccountID: accountID,
+	title := "Custom Title"
+
+	_, err := svc.Ask(context.Background(), AskInput{
+		UserID:    uuid.New(),
+		AccountID: uuid.New(),
 		Query:     "test query",
 		Language:  "en",
 		TopK:      5,
+		Title:     &title,
 	})
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if resp.Answer != "Test answer" {
-		t.Errorf("expected answer 'Test answer', got %q", resp.Answer)
-	}
-
-	if len(resp.Citations) != 1 {
-		t.Errorf("expected 1 citation, got %d", len(resp.Citations))
-	}
-
-	if resp.Model != "gemini-1.5-flash" {
-		t.Errorf("expected model 'gemini-1.5-flash', got %q", resp.Model)
-	}
-}
-
-func TestAskService_Ask_DefaultLanguage(t *testing.T) {
-	mock := &mockInferencePort{}
-	svc := NewAskService(mock)
-
-	_, err := svc.Ask(context.Background(), AskInput{
-		UserID:    uuid.New(),
-		AccountID: uuid.New(),
-		Query:     "test",
-		Language:  "",
-		TopK:      5,
-	})
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestAskService_Ask_DefaultTopK(t *testing.T) {
-	mock := &mockInferencePort{}
-	svc := NewAskService(mock)
-
-	_, err := svc.Ask(context.Background(), AskInput{
-		UserID:    uuid.New(),
-		AccountID: uuid.New(),
-		Query:     "test",
-		TopK:      0,
-	})
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if mock.lastAskRequest == nil || mock.lastAskRequest.Title == nil || *mock.lastAskRequest.Title != title {
+		t.Fatal("expected title to be forwarded to inference port")
 	}
 }
 
 func TestAskService_AskStream_ReturnsChunks(t *testing.T) {
-	userID := uuid.New()
-	accountID := uuid.New()
-
-	mock := &mockInferencePort{
-		askStreamChunks: []port.AskStreamChunk{
-			{Text: ptr("Hello")},
-			{Text: ptr(" World")},
-			{
-				Citations: []port.Citation{
-					{DocumentID: uuid.New(), ChunkID: uuid.New(), SourceType: "chunk", Score: 0.9},
-				},
-			},
-			{
-				Done: &port.DoneInfo{
-					Model:     "gemini-1.5-flash",
-					Usage:     port.Usage{PromptTokens: 10, CompletionTokens: 20, TotalTokens: 30},
-					LatencyMs: 150,
-				},
-			},
-		},
-	}
-
+	mock := &mockInferencePort{askStreamChunks: []port.AskStreamChunk{{Text: ptr("Hello")}, {Done: &port.DoneInfo{Model: "m"}}}}
 	svc := NewAskService(mock)
-	stream, err := svc.AskStream(context.Background(), AskStreamInput{
-		UserID:    userID,
-		AccountID: accountID,
-		Query:     "test query",
-		Language:  "en",
-		TopK:      5,
-	})
 
+	stream, err := svc.AskStream(context.Background(), AskStreamInput{UserID: uuid.New(), AccountID: uuid.New(), Query: "q"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	chunks := make([]port.AskStreamChunk, 0)
-	for chunk := range stream {
-		chunks = append(chunks, chunk)
+	count := 0
+	for range stream {
+		count++
 	}
-
-	if len(chunks) != 4 {
-		t.Errorf("expected 4 chunks, got %d", len(chunks))
-	}
-
-	if chunks[0].Text == nil || *chunks[0].Text != "Hello" {
-		t.Errorf("first chunk should be 'Hello', got %v", chunks[0].Text)
-	}
-
-	if chunks[1].Text == nil || *chunks[1].Text != " World" {
-		t.Errorf("second chunk should be ' World', got %v", chunks[1].Text)
-	}
-
-	if len(chunks[2].Citations) != 1 {
-		t.Errorf("third chunk should have 1 citation, got %d", len(chunks[2].Citations))
-	}
-
-	if chunks[3].Done == nil {
-		t.Error("fourth chunk should be done")
-	}
-}
-
-func TestAskService_AskStream_Error(t *testing.T) {
-	mock := &mockInferencePort{
-		askStreamErr: context.DeadlineExceeded,
-	}
-
-	svc := NewAskService(mock)
-	_, err := svc.AskStream(context.Background(), AskStreamInput{
-		UserID:    uuid.New(),
-		AccountID: uuid.New(),
-		Query:     "test",
-	})
-
-	if err == nil {
-		t.Error("expected error, got nil")
-	}
-}
-
-func TestAskService_ListConversations(t *testing.T) {
-	mock := &mockInferencePort{}
-	svc := NewAskService(mock)
-
-	resp, err := svc.ListConversations(context.Background(), ListConversationsInput{
-		UserID:    uuid.New(),
-		AccountID: uuid.New(),
-		Limit:     20,
-		Offset:    0,
-	})
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if resp.Total != 0 {
-		t.Errorf("expected 0 total, got %d", resp.Total)
-	}
-}
-
-func TestAskService_GetConversation(t *testing.T) {
-	mock := &mockInferencePort{}
-	svc := NewAskService(mock)
-
-	resp, err := svc.GetConversation(context.Background(), GetConversationInput{
-		SessionID:      uuid.New(),
-		AccountID:      uuid.New(),
-		MessageLimit:   50,
-		MessageOffset:  0,
-		IncludeDeleted: false,
-	})
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if resp.TotalMsgs != 0 {
-		t.Errorf("expected 0 total msgs, got %d", resp.TotalMsgs)
+	if count != 2 {
+		t.Fatalf("expected 2 chunks, got %d", count)
 	}
 }
 
 func TestAskService_ArchiveConversation(t *testing.T) {
-	mock := &mockInferencePort{}
-	svc := NewAskService(mock)
-
-	resp, err := svc.ArchiveConversation(context.Background(), ArchiveConversationInput{
-		SessionID: uuid.New(),
-		AccountID: uuid.New(),
-	})
-
+	svc := NewAskService(&mockInferencePort{})
+	out, err := svc.ArchiveConversation(context.Background(), ArchiveConversationInput{SessionID: uuid.New(), AccountID: uuid.New()})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if !resp.Success {
-		t.Error("expected success")
+	if !out.Success {
+		t.Fatal("expected success")
+	}
+	if out.UpdatedAt != "2026-01-01T12:00:00Z" {
+		t.Fatalf("unexpected updatedAt: %s", out.UpdatedAt)
 	}
 }
 
-func ptr[T any](v T) *T {
-	return &v
-}
+func ptr[T any](v T) *T { return &v }

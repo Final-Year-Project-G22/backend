@@ -1302,6 +1302,8 @@ func (m *ArchiveConversationResponse) validate(all bool) error {
 
 	// no validation rules for Success
 
+	// no validation rules for UpdatedAt
+
 	if len(errors) > 0 {
 		return ArchiveConversationResponseMultiError(errors)
 	}

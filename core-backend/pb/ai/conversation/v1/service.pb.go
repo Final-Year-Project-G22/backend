@@ -729,6 +729,7 @@ func (x *ArchiveConversationRequest) GetAccountId() string {
 type ArchiveConversationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,2,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -768,6 +769,13 @@ func (x *ArchiveConversationResponse) GetSuccess() bool {
 		return x.Success
 	}
 	return false
+}
+
+func (x *ArchiveConversationResponse) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
 }
 
 var File_ai_conversation_v1_service_proto protoreflect.FileDescriptor
@@ -842,9 +850,11 @@ const file_ai_conversation_v1_service_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tsessionId\x12'\n" +
 	"\n" +
-	"account_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\taccountId\"7\n" +
+	"account_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\taccountId\"V\n" +
 	"\x1bArchiveConversationResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xed\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x02 \x01(\tR\tupdatedAt2\xed\x02\n" +
 	"\x15AIConversationService\x12p\n" +
 	"\x11ListConversations\x12,.ai.conversation.v1.ListConversationsRequest\x1a-.ai.conversation.v1.ListConversationsResponse\x12j\n" +
 	"\x0fGetConversation\x12*.ai.conversation.v1.GetConversationRequest\x1a+.ai.conversation.v1.GetConversationResponse\x12v\n" +

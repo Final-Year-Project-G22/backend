@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/delivery/dto"
@@ -89,6 +90,9 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 									CompletionTokens: chunk.Done.Usage.CompletionTokens,
 									TotalTokens:      chunk.Done.Usage.TotalTokens,
 								},
+								SessionID: chunk.Done.SessionID,
+								CreatedAt: parseTimeFromRFC3339(chunk.Done.CreatedAt),
+								UpdatedAt: parseTimeFromRFC3339(chunk.Done.UpdatedAt),
 							})
 							return
 						}
@@ -160,4 +164,19 @@ func getSessionIDFromContext(ctx context.Context) uuid.UUID {
 		}
 	}
 	return uuid.Nil
+}
+
+func parseTimeFromRFC3339(value string) time.Time {
+	if value == "" {
+		return time.Time{}
+	}
+	t, err := time.Parse(time.RFC3339Nano, value)
+	if err == nil {
+		return t
+	}
+	t, err = time.Parse(time.RFC3339, value)
+	if err == nil {
+		return t
+	}
+	return time.Time{}
 }
