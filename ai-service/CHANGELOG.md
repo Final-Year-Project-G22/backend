@@ -1,5 +1,19 @@
 # Changelog
 
+<<<<<<< HEAD
+=======
+## [0.5.0](https://github.com/Final-Year-Project-G22/backend/compare/ai-service-v0.4.0...ai-service-v0.5.0) (2026-04-22)
+
+
+### Features
+
+* **ai:** add conversation service for ask stream ([#79](https://github.com/Final-Year-Project-G22/backend/issues/79)) ([5f18878](https://github.com/Final-Year-Project-G22/backend/commit/5f18878f7a10c821129cacc69709ba2275760924))
+* **ai:** Ai feature flags and integration ([#84](https://github.com/Final-Year-Project-G22/backend/issues/84)) ([6a0b8f2](https://github.com/Final-Year-Project-G22/backend/commit/6a0b8f2df924be300de5d370933f71aba2548cb2))
+* **ai:** Ask stream implementation ([#80](https://github.com/Final-Year-Project-G22/backend/issues/80)) ([9d2f2a5](https://github.com/Final-Year-Project-G22/backend/commit/9d2f2a5cd2fdc7070c7beee08c5b3f91491ca14c))
+* **core:** ai stream, and cache related implementations ([e6ce03a](https://github.com/Final-Year-Project-G22/backend/commit/e6ce03a1255ed2b64920e54a31a3d228a8098440))
+* **cross:** align ask title, stream persistence, and timestamps ([#86](https://github.com/Final-Year-Project-G22/backend/issues/86)) ([f5f9c5a](https://github.com/Final-Year-Project-G22/backend/commit/f5f9c5a376145589ff667655500f05d3db2c47cc))
+
+>>>>>>> bd4c71f8427feaaadc11657e6b19b478ea3a4c04
 ## [0.4.0](https://github.com/Final-Year-Project-G22/backend/compare/ai-service-v0.3.0...ai-service-v0.4.0) (2026-04-17)
 
 
