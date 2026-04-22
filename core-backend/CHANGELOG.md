@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.6.0...core-backend-v0.7.0) (2026-04-22)
+
+
+### Features
+
+* **ai:** Ai feature flags and integration ([#84](https://github.com/Final-Year-Project-G22/backend/issues/84)) ([6a0b8f2](https://github.com/Final-Year-Project-G22/backend/commit/6a0b8f2df924be300de5d370933f71aba2548cb2))
+* **core:** add read-through cache for conversation queries ([#87](https://github.com/Final-Year-Project-G22/backend/issues/87)) ([c2d8066](https://github.com/Final-Year-Project-G22/backend/commit/c2d80660cab898bb2c70448057273556809b2cd8))
+* **core:** Admin document ingestion endpoints ([#83](https://github.com/Final-Year-Project-G22/backend/issues/83)) ([9964a35](https://github.com/Final-Year-Project-G22/backend/commit/9964a3529b72564c692823d57363e9de846ea9c4))
+* **core:** ai stream, and cache related implementations ([e6ce03a](https://github.com/Final-Year-Project-G22/backend/commit/e6ce03a1255ed2b64920e54a31a3d228a8098440))
+* **core:** Conversation service proto contracts ([#78](https://github.com/Final-Year-Project-G22/backend/issues/78)) ([4ac04b8](https://github.com/Final-Year-Project-G22/backend/commit/4ac04b8c8495ad11b9a00d8ca957195de9e650c0))
+* **core:** Core ask rest handlers ([#82](https://github.com/Final-Year-Project-G22/backend/issues/82)) ([4d4490e](https://github.com/Final-Year-Project-G22/backend/commit/4d4490ed19ac338aabe25e3916dc2facdecd8bfe))
+* **core:** Core backend grpc client extension ([#81](https://github.com/Final-Year-Project-G22/backend/issues/81)) ([e332e83](https://github.com/Final-Year-Project-G22/backend/commit/e332e83c3f2acb1acd44ae31225bf4f0c1b1a797))
+* **cross:** align ask title, stream persistence, and timestamps ([#86](https://github.com/Final-Year-Project-G22/backend/issues/86)) ([f5f9c5a](https://github.com/Final-Year-Project-G22/backend/commit/f5f9c5a376145589ff667655500f05d3db2c47cc))
+
+
+### Bug Fixes
+
+* **core:** route fixes & document-level ingestion SSE ([#85](https://github.com/Final-Year-Project-G22/backend/issues/85)) ([10726e0](https://github.com/Final-Year-Project-G22/backend/commit/10726e053e061c5f065fb499f9849bc6966452f7))
+
 ## [0.6.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.5.0...core-backend-v0.6.0) (2026-04-17)
 
 
