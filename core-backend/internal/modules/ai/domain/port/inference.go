@@ -14,6 +14,7 @@ type AskRequest struct {
 	Query     string
 	Language  constants.Locale
 	SessionID *uuid.UUID
+	Title     *string
 	TopK      int32
 }
 
@@ -34,6 +35,8 @@ type Usage struct {
 type AskResponse struct {
 	RequestID uuid.UUID
 	SessionID uuid.UUID
+	CreatedAt string
+	UpdatedAt string
 	Answer    string
 	Citations []Citation
 	Usage     Usage
@@ -46,6 +49,8 @@ type Conversation struct {
 	AccountID uuid.UUID
 	Title     string
 	Language  constants.Locale
+	CreatedAt string
+	UpdatedAt string
 }
 
 type Message struct {
@@ -89,7 +94,8 @@ type ArchiveConversationRequest struct {
 }
 
 type ArchiveConversationResponse struct {
-	Success bool
+	Success   bool
+	UpdatedAt string
 }
 
 type AskStreamChunk struct {
@@ -103,6 +109,9 @@ type DoneInfo struct {
 	Model     string
 	Usage     Usage
 	LatencyMs int
+	SessionID uuid.UUID
+	CreatedAt string
+	UpdatedAt string
 }
 
 type ErrorInfo struct {

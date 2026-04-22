@@ -55,6 +55,8 @@ func (h *AskHandler) HandleAsk(ctx context.Context, input *dto.AskInput) (*dto.A
 		Body: dto.AskResponseBody{
 			RequestID: out.RequestID,
 			SessionID: out.SessionID,
+			CreatedAt: parseTimeFromRFC3339(out.CreatedAt),
+			UpdatedAt: parseTimeFromRFC3339(out.UpdatedAt),
 			Answer:    out.Answer,
 			Citations: citations,
 			Usage: dto.UsageDTO{
@@ -118,8 +120,8 @@ func (h *AskHandler) HandleListConversations(ctx context.Context, input *dto.Lis
 			AccountID: s.AccountID,
 			Title:     s.Title,
 			Language:  string(s.Language),
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			CreatedAt: parseTimeFromRFC3339(s.CreatedAt),
+			UpdatedAt: parseTimeFromRFC3339(s.UpdatedAt),
 		})
 	}
 
@@ -185,7 +187,7 @@ func (h *AskHandler) HandleGetConversation(ctx context.Context, input *dto.GetCo
 			Content:   m.Content,
 			Citations: citations,
 			Usage:     usage,
-			CreatedAt: time.Now(),
+			CreatedAt: parseTimeFromRFC3339(m.CreatedAt),
 		})
 	}
 
@@ -200,8 +202,8 @@ func (h *AskHandler) HandleGetConversation(ctx context.Context, input *dto.GetCo
 				AccountID: out.Session.AccountID,
 				Title:     out.Session.Title,
 				Language:  string(out.Session.Language),
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+				CreatedAt: parseTimeFromRFC3339(out.Session.CreatedAt),
+				UpdatedAt: parseTimeFromRFC3339(out.Session.UpdatedAt),
 			},
 			Messages:  messages,
 			TotalMsgs: int(out.TotalMsgs),
@@ -220,8 +222,9 @@ func (h *AskHandler) HandleArchiveConversation(ctx context.Context, input *dto.A
 
 	return &dto.ArchiveConversationOutput{
 		Body: struct {
-			Success bool `json:"success"`
-		}{Success: out.Success},
+			Success   bool      `json:"success"`
+			UpdatedAt time.Time `json:"updatedAt"`
+		}{Success: out.Success, UpdatedAt: parseTimeFromRFC3339(out.UpdatedAt)},
 	}, nil
 }
 
@@ -245,6 +248,12 @@ func (h *AskHandler) parseAskInput(
 		sessionID = &sid
 	}
 
+	var title *string
+	if body.Title != nil && strings.TrimSpace(*body.Title) != "" {
+		t := strings.TrimSpace(*body.Title)
+		title = &t
+	}
+
 	topK := int32(5)
 	if body.TopK != nil {
 		if *body.TopK < 1 || *body.TopK > 20 {
@@ -259,6 +268,7 @@ func (h *AskHandler) parseAskInput(
 		Query:     query,
 		Language:  strings.TrimSpace(body.Language),
 		SessionID: sessionID,
+		Title:     title,
 		TopK:      topK,
 	}, nil
 }
@@ -309,4 +319,19 @@ func mapConversationError(ctx context.Context, err error) error {
 		}
 		return apperrors.ToHumaError(ctx, apperrors.InternalError("conversation.errors.failed", fmt.Errorf("%w", err)))
 	}
+}
+
+func parseTimeFromRFC3339(value string) time.Time {
+	if value == "" {
+		return time.Time{}
+	}
+	t, err := time.Parse(time.RFC3339Nano, value)
+	if err == nil {
+		return t
+	}
+	t, err = time.Parse(time.RFC3339, value)
+	if err == nil {
+		return t
+	}
+	return time.Time{}
 }

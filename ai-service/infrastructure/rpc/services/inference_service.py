@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from ai.inference.v1 import service_pb2, service_pb2_grpc  # type: ignore
@@ -54,6 +55,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 prompt=request.query,
                 language=language,
                 conversation_id=session_id,
+                title=request.title if getattr(request, "title", "") else None,
                 vector_top_k=request.top_k if request.top_k > 0 else 5,
             )
 
@@ -84,6 +86,8 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
             return service_pb2.AskResponse(  # type: ignore
                 request_id=str(request_id),
                 session_id=str(response.conversation.id),
+                session_created_at=response.conversation.created_at.isoformat(),
+                session_updated_at=response.conversation.updated_at.isoformat(),
                 answer=response.ai_message.llm_response or "",
                 citations=citations,
                 usage=usage,
@@ -130,21 +134,48 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 prompt=request.query,
                 language=language,
                 conversation_id=session_id,
+                title=request.title if getattr(request, "title", "") else None,
                 vector_top_k=request.top_k if request.top_k > 0 else 5,
             )
 
-            response = await self._ask_ai_usecase.execute(command)
-
-            prompt = self._ask_ai_usecase._build_prompt(
-                command.prompt,
-                response.retrieved_hits,
+            now = datetime.now(UTC)
+            conversation = await self._ask_ai_usecase._resolve_conversation(command, now)
+            user_message = await self._ask_ai_usecase._persist_user_message(
+                command, conversation, now
             )
+
+            query_embedding = await self._ask_ai_usecase._embedding_port.embed_query(command.prompt)
+            user_message = await self._ask_ai_usecase._update_user_message_embedding(
+                user_message,
+                query_embedding,
+                now,
+            )
+
+            vector_hits, bm25_hits = await self._ask_ai_usecase._retrieve_context(
+                command, query_embedding
+            )
+            merged_hits = self._ask_ai_usecase._merge_and_dedupe_hits(vector_hits, bm25_hits)
+
+            prompt = self._ask_ai_usecase._build_prompt(command.prompt, merged_hits)
 
             llm_port = self._ask_ai_usecase._llm_port
             full_response_parts = []
             async for chunk in llm_port.generate_stream(prompt):
                 full_response_parts.append(chunk)
                 yield service_pb2.AskStreamChunk(text=service_pb2.TextChunk(text=chunk))
+
+            full_response = "".join(full_response_parts)
+            ai_message = await self._ask_ai_usecase._persist_ai_message(
+                command,
+                conversation,
+                full_response,
+                now,
+                retrieved_hits=merged_hits,
+            )
+
+            cache_key = self._ask_ai_usecase._build_cache_key(command, conversation.id)
+            await self._ask_ai_usecase._cache_response(cache_key, full_response)
+            await self._ask_ai_usecase._publish_query_event(command, conversation, ai_message)
 
             citations = [
                 service_pb2.Citation(
@@ -153,7 +184,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                     source_type="chunk",
                     score=hit.score,
                 )
-                for hit in response.retrieved_hits
+                for hit in merged_hits
             ]
 
             yield service_pb2.AskStreamChunk(
@@ -161,11 +192,11 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
             )
 
             usage = None
-            if response.ai_message.token_usage:
+            if ai_message.token_usage:
                 usage = service_pb2.Usage(
-                    prompt_tokens=response.ai_message.token_usage.prompt_tokens,
-                    completion_tokens=response.ai_message.token_usage.completion_tokens,
-                    total_tokens=response.ai_message.token_usage.total_tokens,
+                    prompt_tokens=ai_message.token_usage.prompt_tokens,
+                    completion_tokens=ai_message.token_usage.completion_tokens,
+                    total_tokens=ai_message.token_usage.total_tokens,
                 )
 
             latency_ms = int((time.perf_counter() - start_time) * 1000)
@@ -174,6 +205,9 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                     latency_ms=latency_ms,
                     model=llm_port.model,
                     usage=usage,
+                    session_id=str(conversation.id),
+                    session_created_at=conversation.created_at.isoformat(),
+                    session_updated_at=conversation.updated_at.isoformat(),
                 )
             )
 

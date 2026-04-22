@@ -44,6 +44,8 @@ message AskResponse {
   Usage usage = 5;
   string model = 6;
   int32 latency_ms = 7;
+  string session_created_at = 8;
+  string session_updated_at = 9;
 }
 
 message AskStreamChunk {
@@ -67,6 +69,9 @@ message DoneChunk {
   int32 latency_ms = 1;
   string model = 2;
   Usage usage = 3;
+  string session_id = 4 [(buf.validate.field).string.uuid = true];
+  string session_created_at = 5;
+  string session_updated_at = 6;
 }
 
 message ErrorChunk {

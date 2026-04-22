@@ -87,4 +87,5 @@ message ArchiveConversationRequest {
 
 message ArchiveConversationResponse {
   bool success = 1;
+  string updated_at = 2;
 }

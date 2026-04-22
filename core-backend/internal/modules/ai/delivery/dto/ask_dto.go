@@ -10,6 +10,7 @@ type AskRequest struct {
 	Query     string  `json:"query" doc:"User question" minLength:"1" maxLength:"10000"`
 	Language  string  `json:"language,omitempty" doc:"Language code (e.g. en, am)"`
 	SessionID *string `json:"sessionId,omitempty" doc:"Optional conversation ID to continue"`
+	Title     *string `json:"title,omitempty" doc:"Custom conversation title"`
 	TopK      *int32  `json:"topK,omitempty" doc:"Number of context chunks to retrieve" default:"5"`
 }
 
@@ -34,6 +35,8 @@ type UsageDTO struct {
 type AskResponseBody struct {
 	RequestID uuid.UUID     `json:"requestId"`
 	SessionID uuid.UUID     `json:"sessionId"`
+	CreatedAt time.Time     `json:"createdAt"`
+	UpdatedAt time.Time     `json:"updatedAt"`
 	Answer    string        `json:"answer"`
 	Citations []CitationDTO `json:"citations"`
 	Usage     UsageDTO      `json:"usage"`
@@ -58,9 +61,12 @@ type AskStreamCitationEventBody struct {
 }
 
 type AskStreamDoneEventBody struct {
-	Model     string   `json:"model"`
-	LatencyMS int      `json:"latencyMs"`
-	Usage     UsageDTO `json:"usage"`
+	Model     string    `json:"model"`
+	LatencyMS int       `json:"latencyMs"`
+	Usage     UsageDTO  `json:"usage"`
+	SessionID uuid.UUID `json:"sessionId"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type AskStreamErrorEventBody struct {
@@ -128,6 +134,7 @@ type ArchiveConversationInput struct {
 
 type ArchiveConversationOutput struct {
 	Body struct {
-		Success bool `json:"success"`
+		Success   bool      `json:"success"`
+		UpdatedAt time.Time `json:"updatedAt"`
 	}
 }

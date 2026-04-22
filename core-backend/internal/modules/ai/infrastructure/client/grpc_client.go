@@ -72,6 +72,9 @@ func (c *InferenceGRPCClient) Ask(ctx context.Context, req port.AskRequest) (por
 		sid := req.SessionID.String()
 		protoReq.SessionId = &sid
 	}
+	if req.Title != nil {
+		protoReq.Title = req.Title
+	}
 
 	resp, err := c.client.Ask(callCtx, protoReq)
 	if err != nil {
@@ -128,6 +131,8 @@ func (c *InferenceGRPCClient) Ask(ctx context.Context, req port.AskRequest) (por
 	return port.AskResponse{
 		RequestID: requestID,
 		SessionID: sessionID,
+		CreatedAt: resp.GetSessionCreatedAt(),
+		UpdatedAt: resp.GetSessionUpdatedAt(),
 		Answer:    resp.GetAnswer(),
 		Citations: citations,
 		Usage:     usageData,
@@ -180,6 +185,9 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 		sid := req.SessionID.String()
 		protoReq.SessionId = &sid
 	}
+	if req.Title != nil {
+		protoReq.Title = req.Title
+	}
 
 	stream, err := c.client.AskStream(callCtx, protoReq)
 	if err != nil {
@@ -201,10 +209,14 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 				out.Text = &t
 			}
 			if done := chunk.GetDone(); done != nil {
+				sessionID, _ := uuid.Parse(done.GetSessionId())
 				out.Done = &port.DoneInfo{
 					Model:     done.GetModel(),
 					Usage:     mapUsage(done.GetUsage()),
 					LatencyMs: int(done.GetLatencyMs()),
+					SessionID: sessionID,
+					CreatedAt: done.GetSessionCreatedAt(),
+					UpdatedAt: done.GetSessionUpdatedAt(),
 				}
 			}
 			if errChunk := chunk.GetError(); errChunk != nil {
@@ -273,6 +285,8 @@ func (c *InferenceGRPCClient) ListConversations(ctx context.Context, req port.Li
 			AccountID: accID,
 			Title:     s.GetTitle(),
 			Language:  constants.Locale(s.GetLanguage()),
+			CreatedAt: s.GetCreatedAt(),
+			UpdatedAt: s.GetUpdatedAt(),
 		})
 	}
 
@@ -325,6 +339,8 @@ func (c *InferenceGRPCClient) GetConversation(ctx context.Context, req port.GetC
 			AccountID: accID,
 			Title:     s.GetTitle(),
 			Language:  constants.Locale(s.GetLanguage()),
+			CreatedAt: s.GetCreatedAt(),
+			UpdatedAt: s.GetUpdatedAt(),
 		},
 		Messages:  messages,
 		TotalMsgs: resp.GetTotalMessages(),
@@ -344,12 +360,12 @@ func (c *InferenceGRPCClient) ArchiveConversation(ctx context.Context, req port.
 		AccountId: req.AccountID.String(),
 	}
 
-	_, err := c.conversationClient.ArchiveConversation(callCtx, protoReq)
+	resp, err := c.conversationClient.ArchiveConversation(callCtx, protoReq)
 	if err != nil {
 		return port.ArchiveConversationResponse{}, mapConversationError(err)
 	}
 
-	return port.ArchiveConversationResponse{Success: true}, nil
+	return port.ArchiveConversationResponse{Success: resp.GetSuccess(), UpdatedAt: resp.GetUpdatedAt()}, nil
 }
 
 func mapConversationError(err error) error {

@@ -259,16 +259,18 @@ func (x *Usage) GetTotalTokens() int32 {
 }
 
 type AskResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	SessionId     string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Answer        string                 `protobuf:"bytes,3,opt,name=answer,proto3" json:"answer,omitempty"`
-	Citations     []*Citation            `protobuf:"bytes,4,rep,name=citations,proto3" json:"citations,omitempty"`
-	Usage         *Usage                 `protobuf:"bytes,5,opt,name=usage,proto3" json:"usage,omitempty"`
-	Model         string                 `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty"`
-	LatencyMs     int32                  `protobuf:"varint,7,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	RequestId        string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	SessionId        string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Answer           string                 `protobuf:"bytes,3,opt,name=answer,proto3" json:"answer,omitempty"`
+	Citations        []*Citation            `protobuf:"bytes,4,rep,name=citations,proto3" json:"citations,omitempty"`
+	Usage            *Usage                 `protobuf:"bytes,5,opt,name=usage,proto3" json:"usage,omitempty"`
+	Model            string                 `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty"`
+	LatencyMs        int32                  `protobuf:"varint,7,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
+	SessionCreatedAt string                 `protobuf:"bytes,8,opt,name=session_created_at,json=sessionCreatedAt,proto3" json:"session_created_at,omitempty"`
+	SessionUpdatedAt string                 `protobuf:"bytes,9,opt,name=session_updated_at,json=sessionUpdatedAt,proto3" json:"session_updated_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *AskResponse) Reset() {
@@ -348,6 +350,20 @@ func (x *AskResponse) GetLatencyMs() int32 {
 		return x.LatencyMs
 	}
 	return 0
+}
+
+func (x *AskResponse) GetSessionCreatedAt() string {
+	if x != nil {
+		return x.SessionCreatedAt
+	}
+	return ""
+}
+
+func (x *AskResponse) GetSessionUpdatedAt() string {
+	if x != nil {
+		return x.SessionUpdatedAt
+	}
+	return ""
 }
 
 type AskStreamChunk struct {
@@ -553,12 +569,15 @@ func (x *CitationsChunk) GetCitations() []*Citation {
 }
 
 type DoneChunk struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	LatencyMs     int32                  `protobuf:"varint,1,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
-	Model         string                 `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
-	Usage         *Usage                 `protobuf:"bytes,3,opt,name=usage,proto3" json:"usage,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	LatencyMs        int32                  `protobuf:"varint,1,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
+	Model            string                 `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
+	Usage            *Usage                 `protobuf:"bytes,3,opt,name=usage,proto3" json:"usage,omitempty"`
+	SessionId        string                 `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	SessionCreatedAt string                 `protobuf:"bytes,5,opt,name=session_created_at,json=sessionCreatedAt,proto3" json:"session_created_at,omitempty"`
+	SessionUpdatedAt string                 `protobuf:"bytes,6,opt,name=session_updated_at,json=sessionUpdatedAt,proto3" json:"session_updated_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *DoneChunk) Reset() {
@@ -610,6 +629,27 @@ func (x *DoneChunk) GetUsage() *Usage {
 		return x.Usage
 	}
 	return nil
+}
+
+func (x *DoneChunk) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *DoneChunk) GetSessionCreatedAt() string {
+	if x != nil {
+		return x.SessionCreatedAt
+	}
+	return ""
+}
+
+func (x *DoneChunk) GetSessionUpdatedAt() string {
+	if x != nil {
+		return x.SessionUpdatedAt
+	}
+	return ""
 }
 
 type ErrorChunk struct {
@@ -696,7 +736,7 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\x05Usage\x12#\n" +
 	"\rprompt_tokens\x18\x01 \x01(\x05R\fpromptTokens\x12+\n" +
 	"\x11completion_tokens\x18\x02 \x01(\x05R\x10completionTokens\x12!\n" +
-	"\ftotal_tokens\x18\x03 \x01(\x05R\vtotalTokens\"\x93\x02\n" +
+	"\ftotal_tokens\x18\x03 \x01(\x05R\vtotalTokens\"\xef\x02\n" +
 	"\vAskResponse\x12'\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\trequestId\x12'\n" +
@@ -707,7 +747,9 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\x05usage\x18\x05 \x01(\v2\x16.ai.inference.v1.UsageR\x05usage\x12\x14\n" +
 	"\x05model\x18\x06 \x01(\tR\x05model\x12\x1d\n" +
 	"\n" +
-	"latency_ms\x18\a \x01(\x05R\tlatencyMs\"\xf3\x01\n" +
+	"latency_ms\x18\a \x01(\x05R\tlatencyMs\x12,\n" +
+	"\x12session_created_at\x18\b \x01(\tR\x10sessionCreatedAt\x12,\n" +
+	"\x12session_updated_at\x18\t \x01(\tR\x10sessionUpdatedAt\"\xf3\x01\n" +
 	"\x0eAskStreamChunk\x120\n" +
 	"\x04text\x18\x01 \x01(\v2\x1a.ai.inference.v1.TextChunkH\x00R\x04text\x12?\n" +
 	"\tcitations\x18\x02 \x01(\v2\x1f.ai.inference.v1.CitationsChunkH\x00R\tcitations\x120\n" +
@@ -717,12 +759,16 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\tTextChunk\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\"I\n" +
 	"\x0eCitationsChunk\x127\n" +
-	"\tcitations\x18\x01 \x03(\v2\x19.ai.inference.v1.CitationR\tcitations\"n\n" +
+	"\tcitations\x18\x01 \x03(\v2\x19.ai.inference.v1.CitationR\tcitations\"\xf3\x01\n" +
 	"\tDoneChunk\x12\x1d\n" +
 	"\n" +
 	"latency_ms\x18\x01 \x01(\x05R\tlatencyMs\x12\x14\n" +
 	"\x05model\x18\x02 \x01(\tR\x05model\x12,\n" +
-	"\x05usage\x18\x03 \x01(\v2\x16.ai.inference.v1.UsageR\x05usage\":\n" +
+	"\x05usage\x18\x03 \x01(\v2\x16.ai.inference.v1.UsageR\x05usage\x12'\n" +
+	"\n" +
+	"session_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tsessionId\x12,\n" +
+	"\x12session_created_at\x18\x05 \x01(\tR\x10sessionCreatedAt\x12,\n" +
+	"\x12session_updated_at\x18\x06 \x01(\tR\x10sessionUpdatedAt\":\n" +
 	"\n" +
 	"ErrorChunk\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
