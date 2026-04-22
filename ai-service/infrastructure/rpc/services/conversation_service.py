@@ -124,7 +124,14 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
 
         success = await self._conversation_usecase.archive_session(session_id)
 
-        return service_pb2.ArchiveConversationResponse(success=success)
+        refreshed_session = await self._conversation_usecase.get_session(
+            session_id, include_deleted=True
+        )
+        updated_at = ""
+        if refreshed_session is not None:
+            updated_at = refreshed_session.updated_at.isoformat()
+
+        return service_pb2.ArchiveConversationResponse(success=success, updated_at=updated_at)
 
     def _map_message_to_detail(self, message: AIChatMessage) -> Any:
         content = message.user_query or message.llm_response or ""

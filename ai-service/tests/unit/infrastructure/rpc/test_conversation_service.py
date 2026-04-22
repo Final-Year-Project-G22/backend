@@ -144,7 +144,12 @@ async def test_get_conversation_not_found_aborts() -> None:
 async def test_archive_conversation_returns_success() -> None:
     usecase = AsyncMock()
     session_id = uuid.uuid4()
-    usecase.get_session.return_value = SimpleNamespace(id=session_id)
+    usecase.get_session.side_effect = [
+        SimpleNamespace(id=session_id),
+        SimpleNamespace(
+            id=session_id, updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T12:00:00Z")
+        ),
+    ]
     usecase.archive_session.return_value = True
 
     service = AIConversationService(conversation_usecase=usecase)
@@ -154,6 +159,7 @@ async def test_archive_conversation_returns_success() -> None:
     response = await service.ArchiveConversation(request, context)
 
     assert response.success is True
+    assert response.updated_at == "2026-01-01T12:00:00Z"
     usecase.archive_session.assert_called_once_with(session_id)
 
 

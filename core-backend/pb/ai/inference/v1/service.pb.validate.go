@@ -464,6 +464,10 @@ func (m *AskResponse) validate(all bool) error {
 
 	// no validation rules for LatencyMs
 
+	// no validation rules for SessionCreatedAt
+
+	// no validation rules for SessionUpdatedAt
+
 	if len(errors) > 0 {
 		return AskResponseMultiError(errors)
 	}
@@ -1099,6 +1103,12 @@ func (m *DoneChunk) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for SessionId
+
+	// no validation rules for SessionCreatedAt
+
+	// no validation rules for SessionUpdatedAt
 
 	if len(errors) > 0 {
 		return DoneChunkMultiError(errors)

@@ -197,6 +197,52 @@ async def test_execute_uses_existing_conversation_when_provided() -> None:
 
 
 @pytest.mark.asyncio
+async def test_execute_uses_custom_title_for_new_conversation() -> None:
+    user_id = uuid.uuid4()
+    conversation = _build_conversation(user_id=user_id)
+    user_message = _build_user_message(conversation_id=conversation.id)
+    ai_message = _build_ai_message(conversation_id=conversation.id)
+
+    conversation_usecase, _ = _make_conversation_usecase(
+        conversation=conversation,
+        user_message=user_message,
+        ai_message=ai_message,
+    )
+
+    quota_guard = AsyncMock()
+    knowledge_repository = AsyncMock()
+    knowledge_repository.search_vector.return_value = []
+    knowledge_repository.search_bm25.return_value = []
+    embedding_port = AsyncMock()
+    embedding_port.embed_query.return_value = [0.1, 0.2, 0.3]
+    llm_port = AsyncMock()
+    llm_port.generate.return_value = "Visit the office."
+
+    usecase = AskAIUseCase(
+        conversation=conversation_usecase,
+        quota_guard=quota_guard,
+        knowledge_repository=knowledge_repository,
+        embedding_port=embedding_port,
+        llm_port=llm_port,
+    )
+
+    command = AskAICommand(
+        user_id=user_id,
+        prompt="How do I register my business?",
+        title="My Custom Title",
+        language=Language.ENGLISH,
+        conversation_id=None,
+        vector_top_k=3,
+        bm25_top_k=3,
+    )
+    await usecase.execute(command)
+
+    create_args = cast(AsyncMock, conversation_usecase.create_session).await_args.args
+    create_cmd = create_args[0]
+    assert create_cmd.title == "My Custom Title"
+
+
+@pytest.mark.asyncio
 async def test_execute_returns_cache_hit_when_cached() -> None:
     user_id = uuid.uuid4()
     conversation = _build_conversation(user_id=user_id)

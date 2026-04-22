@@ -25,6 +25,7 @@ def _make_request(**overrides: object) -> SimpleNamespace:
         "query": "How do I register a business?",
         "language": "en",
         "session_id": "",
+        "title": "",
         "top_k": 5,
     }
     payload.update(overrides)
@@ -40,7 +41,11 @@ async def test_ask_maps_successful_response() -> None:
     hit_document_id = uuid.uuid4()
     hit_chunk_id = uuid.uuid4()
     usecase.execute.return_value = SimpleNamespace(
-        conversation=SimpleNamespace(id=convo_id),
+        conversation=SimpleNamespace(
+            id=convo_id,
+            created_at=SimpleNamespace(isoformat=lambda: "2026-01-01T10:00:00Z"),
+            updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T11:00:00Z"),
+        ),
         ai_message=SimpleNamespace(
             llm_response="Start by obtaining your trade license.",
             token_usage=SimpleNamespace(
@@ -58,7 +63,7 @@ async def test_ask_maps_successful_response() -> None:
         ],
     )
 
-    request = _make_request(language="am", top_k=TOP_K_INPUT)
+    request = _make_request(language="am", top_k=TOP_K_INPUT, title="Custom Conversation")
     context = AsyncMock()
 
     response = await service.Ask(request, context)
@@ -68,10 +73,13 @@ async def test_ask_maps_successful_response() -> None:
     assert isinstance(command, AskAICommand)
     assert command.user_id == uuid.UUID(request.user_id)
     assert command.prompt == request.query
+    assert command.title == "Custom Conversation"
     assert command.vector_top_k == TOP_K_INPUT
 
     assert response.request_id == request.request_id
     assert response.session_id == str(convo_id)
+    assert response.session_created_at == "2026-01-01T10:00:00Z"
+    assert response.session_updated_at == "2026-01-01T11:00:00Z"
     assert response.answer == "Start by obtaining your trade license."
     assert len(response.citations) == 1
     assert response.citations[0].document_id == str(hit_document_id)

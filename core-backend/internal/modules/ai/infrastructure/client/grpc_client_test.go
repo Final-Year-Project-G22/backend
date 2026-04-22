@@ -100,14 +100,19 @@ func TestInferenceGRPCClientAskMapsResponseAndAuthHeader(t *testing.T) {
 			if in.GetAccountId() != accountID.String() {
 				t.Fatalf("unexpected account id: %s", in.GetAccountId())
 			}
+			if in.GetTitle() != "Custom Title" {
+				t.Fatalf("unexpected title: %s", in.GetTitle())
+			}
 
 			title := "doc title"
 			return &pb_inference.AskResponse{
-				RequestId: requestID.String(),
-				SessionId: sessionID.String(),
-				Answer:    "Hello there",
-				Model:     "gemini-1.5-flash",
-				LatencyMs: 123,
+				RequestId:        requestID.String(),
+				SessionId:        sessionID.String(),
+				SessionCreatedAt: "2026-01-01T10:00:00Z",
+				SessionUpdatedAt: "2026-01-01T11:00:00Z",
+				Answer:           "Hello there",
+				Model:            "gemini-1.5-flash",
+				LatencyMs:        123,
 				Citations: []*pb_inference.Citation{{
 					DocumentId: documentID.String(),
 					ChunkId:    chunkID.String(),
@@ -120,11 +125,14 @@ func TestInferenceGRPCClientAskMapsResponseAndAuthHeader(t *testing.T) {
 		}},
 	}
 
+	title := "Custom Title"
+
 	res, err := c.Ask(context.Background(), port.AskRequest{
 		RequestID: requestID,
 		UserID:    userID,
 		AccountID: accountID,
 		Query:     "hello",
+		Title:     &title,
 		TopK:      5,
 	})
 	if err != nil {
@@ -136,6 +144,12 @@ func TestInferenceGRPCClientAskMapsResponseAndAuthHeader(t *testing.T) {
 	}
 	if res.SessionID != sessionID {
 		t.Fatalf("unexpected response session id: %s", res.SessionID)
+	}
+	if res.CreatedAt != "2026-01-01T10:00:00Z" {
+		t.Fatalf("unexpected created at: %s", res.CreatedAt)
+	}
+	if res.UpdatedAt != "2026-01-01T11:00:00Z" {
+		t.Fatalf("unexpected updated at: %s", res.UpdatedAt)
 	}
 	if res.Answer != "Hello there" {
 		t.Fatalf("unexpected answer: %s", res.Answer)
@@ -194,7 +208,7 @@ func TestInferenceGRPCClientAskStreamReturnsChunks(t *testing.T) {
 		{Chunk: &pb_inference.AskStreamChunk_Citations{Citations: &pb_inference.CitationsChunk{Citations: []*pb_inference.Citation{
 			{DocumentId: uuid.New().String(), ChunkId: uuid.New().String(), SourceType: "chunk", Score: 0.9},
 		}}}},
-		{Chunk: &pb_inference.AskStreamChunk_Done{Done: &pb_inference.DoneChunk{Model: "gemini-1.5-flash", LatencyMs: 100}}},
+		{Chunk: &pb_inference.AskStreamChunk_Done{Done: &pb_inference.DoneChunk{Model: "gemini-1.5-flash", LatencyMs: 100, SessionId: uuid.New().String(), SessionCreatedAt: "2026-01-01T10:00:00Z", SessionUpdatedAt: "2026-01-01T11:00:00Z"}}},
 	}}
 
 	c := &InferenceGRPCClient{
@@ -236,6 +250,9 @@ func TestInferenceGRPCClientAskStreamReturnsChunks(t *testing.T) {
 	if chunks[3].Done == nil || chunks[3].Done.Model != "gemini-1.5-flash" {
 		t.Fatalf("unexpected done chunk: %+v", chunks[3])
 	}
+	if chunks[3].Done.CreatedAt != "2026-01-01T10:00:00Z" || chunks[3].Done.UpdatedAt != "2026-01-01T11:00:00Z" {
+		t.Fatalf("unexpected done timestamps: %+v", chunks[3].Done)
+	}
 }
 
 func TestInferenceGRPCClientListConversations(t *testing.T) {
@@ -256,6 +273,8 @@ func TestInferenceGRPCClientListConversations(t *testing.T) {
 					AccountId: accountID.String(),
 					Title:     "Test Chat",
 					Language:  "en",
+					CreatedAt: "2026-01-01T10:00:00Z",
+					UpdatedAt: "2026-01-01T11:00:00Z",
 				}},
 				Total: 1,
 			}, nil
@@ -276,6 +295,12 @@ func TestInferenceGRPCClientListConversations(t *testing.T) {
 	}
 	if res.Sessions[0].Title != "Test Chat" {
 		t.Fatalf("unexpected title: %s", res.Sessions[0].Title)
+	}
+	if res.Sessions[0].CreatedAt != "2026-01-01T10:00:00Z" {
+		t.Fatalf("unexpected created_at: %s", res.Sessions[0].CreatedAt)
+	}
+	if res.Sessions[0].UpdatedAt != "2026-01-01T11:00:00Z" {
+		t.Fatalf("unexpected updated_at: %s", res.Sessions[0].UpdatedAt)
 	}
 	if res.Total != 1 {
 		t.Fatalf("unexpected total: %d", res.Total)
@@ -300,6 +325,8 @@ func TestInferenceGRPCClientGetConversation(t *testing.T) {
 					AccountId: accountID.String(),
 					Title:     "My Chat",
 					Language:  "en",
+					CreatedAt: "2026-01-01T10:00:00Z",
+					UpdatedAt: "2026-01-01T11:00:00Z",
 				},
 				Messages: []*pb.MessageDetail{{
 					Id:        messageID.String(),
@@ -325,6 +352,12 @@ func TestInferenceGRPCClientGetConversation(t *testing.T) {
 	if res.Session.Title != "My Chat" {
 		t.Fatalf("unexpected title: %s", res.Session.Title)
 	}
+	if res.Session.CreatedAt != "2026-01-01T10:00:00Z" {
+		t.Fatalf("unexpected created_at: %s", res.Session.CreatedAt)
+	}
+	if res.Session.UpdatedAt != "2026-01-01T11:00:00Z" {
+		t.Fatalf("unexpected updated_at: %s", res.Session.UpdatedAt)
+	}
 	if len(res.Messages) != 1 {
 		t.Fatalf("unexpected messages count: %d", len(res.Messages))
 	}
@@ -347,7 +380,7 @@ func TestInferenceGRPCClientArchiveConversation(t *testing.T) {
 			if in.GetSessionId() != sessionID.String() {
 				t.Fatalf("unexpected session id: %s", in.GetSessionId())
 			}
-			return &pb.ArchiveConversationResponse{}, nil
+			return &pb.ArchiveConversationResponse{Success: true, UpdatedAt: "2026-01-01T12:00:00Z"}, nil
 		}},
 	}
 
@@ -360,6 +393,9 @@ func TestInferenceGRPCClientArchiveConversation(t *testing.T) {
 	}
 	if !res.Success {
 		t.Fatal("expected success")
+	}
+	if res.UpdatedAt != "2026-01-01T12:00:00Z" {
+		t.Fatalf("unexpected updated_at: %s", res.UpdatedAt)
 	}
 }
 
