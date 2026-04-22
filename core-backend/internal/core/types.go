@@ -39,6 +39,7 @@ type AIConfig struct {
 	InferenceAuthToken    string        `mapstructure:"inference_auth_token"`
 	InferenceTimeout      time.Duration `mapstructure:"inference_timeout" validate:"gt=0"`
 	AskEnabled            bool          `mapstructure:"ask_enabled"`
+	ConversationCacheTTL  time.Duration `mapstructure:"conversation_cache_ttl"`
 }
 
 type IngestionConfig struct {

@@ -34,6 +34,25 @@ var Module = fx.Module("ai",
 	fx.Provide(
 		fx.Annotate(
 			aiinfraclient.NewInferenceGRPCClient,
+			fx.ResultTags(`name:"baseInferencePort"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			aiinfrarepo.NewConversationCache,
+			fx.As(new(port.ConversationCachePort)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			func(
+				cfg *core.Config,
+				cache port.ConversationCachePort,
+				base port.AIInferencePort,
+			) *service.CachingInferencePort {
+				return service.NewCachingInferencePort(base, cache, cfg.AI.ConversationCacheTTL)
+			},
+			fx.ParamTags(``, ``, `name:"baseInferencePort"`),
 			fx.As(new(port.AIInferencePort)),
 		),
 	),
