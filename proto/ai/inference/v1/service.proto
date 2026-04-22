@@ -8,6 +8,7 @@ option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb";
 
 service AIInferenceService {
   rpc Ask(AskRequest) returns (AskResponse);
+  rpc AskStream(AskRequest) returns (stream AskStreamChunk);
 }
 
 message AskRequest {
@@ -15,9 +16,10 @@ message AskRequest {
   string user_id = 2 [(buf.validate.field).string.uuid = true];
   string account_id = 3 [(buf.validate.field).string.uuid = true];
   string query = 4 [(buf.validate.field).string.min_len = 1];
-  string language = 5; // e.g. "en", "am"
+  string language = 5;
   optional string session_id = 6 [(buf.validate.field).string.uuid = true];
   int32 top_k = 7 [(buf.validate.field).int32 = {gte: 1, lte: 20}];
+  optional string title = 8;
 }
 
 message Citation {
@@ -42,4 +44,37 @@ message AskResponse {
   Usage usage = 5;
   string model = 6;
   int32 latency_ms = 7;
+  string session_created_at = 8;
+  string session_updated_at = 9;
+}
+
+message AskStreamChunk {
+  oneof chunk {
+    TextChunk text = 1;
+    CitationsChunk citations = 2;
+    DoneChunk done = 3;
+    ErrorChunk error = 4;
+  }
+}
+
+message TextChunk {
+  string text = 1;
+}
+
+message CitationsChunk {
+  repeated Citation citations = 1;
+}
+
+message DoneChunk {
+  int32 latency_ms = 1;
+  string model = 2;
+  Usage usage = 3;
+  string session_id = 4 [(buf.validate.field).string.uuid = true];
+  string session_created_at = 5;
+  string session_updated_at = 6;
+}
+
+message ErrorChunk {
+  string code = 1;
+  string message = 2;
 }

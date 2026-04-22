@@ -105,7 +105,11 @@ class AskAIUseCase:
 
         create_command = CreateSessionCommand(
             user_id=command.user_id,
-            title=command.prompt[:80],
+            title=(
+                command.title.strip()
+                if command.title and command.title.strip()
+                else command.prompt[:80]
+            ),
             language=command.language,
         )
         return await self._conversation.create_session(create_command, at=now)

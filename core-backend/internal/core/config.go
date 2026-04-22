@@ -61,12 +61,19 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("error binding env ai.inference_auth_token: %w", err)
 	}
 
+	err = v.BindEnv("ai.ask_enabled", "AI_ASK_ENABLED")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env ai.ask_enabled: %w", err)
+	}
+
 	// 4. Set defaults
 	v.SetDefault("app.environment", "development")
 	v.SetDefault("app.port", 4000)
 	v.SetDefault("app.grpc_port", 50051)
 	v.SetDefault("ai.inference_grpc_endpoint", "localhost:50051")
 	v.SetDefault("ai.inference_timeout", "10s")
+	v.SetDefault("ai.ask_enabled", true)
+	v.SetDefault("ai.conversation_cache_ttl", "5m")
 	v.SetDefault("logger.level", "info")
 	v.SetDefault("database.sslmode", "disable")
 
