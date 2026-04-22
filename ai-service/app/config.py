@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     COHERE_LLM_MODEL: str = "command-r"
     GEMINI_LLM_MODEL: str = "gemini-1.5-flash"
     OLLAMA_LLM_MODEL: str = "qwen2.5"
+    AI_ASK_ENABLED: bool = True
 
     OTEL_ENABLED: bool = False
     PROMETHEUS_PORT: int = 9090

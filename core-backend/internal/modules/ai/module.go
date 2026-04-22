@@ -11,6 +11,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/port"
 	airepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/repository"
 	aisvc "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/service"
+	aiinfra "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure"
 	aiinfraclient "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/client"
 	aiinfrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/repository"
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
@@ -33,6 +34,25 @@ var Module = fx.Module("ai",
 	fx.Provide(
 		fx.Annotate(
 			aiinfraclient.NewInferenceGRPCClient,
+			fx.ResultTags(`name:"baseInferencePort"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			aiinfrarepo.NewConversationCache,
+			fx.As(new(port.ConversationCachePort)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			func(
+				cfg *core.Config,
+				cache port.ConversationCachePort,
+				base port.AIInferencePort,
+			) *service.CachingInferencePort {
+				return service.NewCachingInferencePort(base, cache, cfg.AI.ConversationCacheTTL)
+			},
+			fx.ParamTags(``, ``, `name:"baseInferencePort"`),
 			fx.As(new(port.AIInferencePort)),
 		),
 	),
@@ -64,14 +84,39 @@ var Module = fx.Module("ai",
 		return service.NewIngestionService(cfg.Ingestion.Enabled, s, docRepo, outboxRepo, transactor)
 	}),
 	fx.Provide(service.NewOutboxDispatcher),
+	fx.Provide(service.NewSSEGateway),
 	fx.Provide(handler.NewIngestionHandler),
 	fx.Provide(handler.NewStatusHandler),
-	fx.Invoke(func(api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, tokenService token.TokenService, authService iamservice.AuthService) {
+	fx.Provide(service.NewAskService),
+	fx.Provide(handler.NewAskHandler),
+	fx.Provide(handler.NewSSEHandler),
+	fx.Provide(handler.NewToggleHandler),
+	fx.Provide(func(dlqController port.DLQController) *handler.DLQHandler {
+		return handler.NewDLQHandler(dlqController)
+	}),
+	fx.Provide(
+		fx.Annotate(
+			aiinfra.NewDLQController,
+			fx.As(new(port.DLQController)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			aiinfra.NewIngestToggle,
+			fx.As(new(port.IngestControl)),
+		),
+	),
+	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, tokenService token.TokenService, authService iamservice.AuthService) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			IngestionHandler:        ingestionHandler,
 			StatusHandler:           statusHandler,
+			AskHandler:              askHandler,
+			DLQHandler:              dlqHandler,
+			SSEHandler:              sseHandler,
+			ToggleHandler:           toggleHandler,
+			AskEnabled:              cfg.AI.AskEnabled,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 		})

@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package ai.conversation.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb/ai/conversation/v1";
+
+service AIConversationService {
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
+  rpc GetConversation(GetConversationRequest) returns (GetConversationResponse);
+  rpc ArchiveConversation(ArchiveConversationRequest) returns (ArchiveConversationResponse);
+}
+
+message ListConversationsRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+  string account_id = 2 [(buf.validate.field).string.uuid = true];
+  int32 limit = 3 [(buf.validate.field).int32 = {gte: 1, lte: 100}];
+  int32 offset = 4 [(buf.validate.field).int32 = {gte: 0}];
+}
+
+message ListConversationsResponse {
+  repeated SessionSummary sessions = 1;
+  int32 total = 2;
+}
+
+message SessionSummary {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string account_id = 2 [(buf.validate.field).string.uuid = true];
+  string title = 3;
+  string language = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message GetConversationRequest {
+  string session_id = 1 [(buf.validate.field).string.uuid = true];
+  string account_id = 2 [(buf.validate.field).string.uuid = true];
+  int32 message_limit = 3 [(buf.validate.field).int32 = {gte: 1, lte: 200}];
+  int32 message_offset = 4 [(buf.validate.field).int32 = {gte: 0}];
+  bool include_deleted = 5;
+}
+
+message GetConversationResponse {
+  SessionDetail session = 1;
+  repeated MessageDetail messages = 2;
+  int32 total_messages = 3;
+}
+
+message SessionDetail {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string account_id = 2 [(buf.validate.field).string.uuid = true];
+  string title = 3;
+  string language = 4;
+  string status = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message MessageDetail {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string role = 2;
+  string content = 3;
+  repeated Citation citations = 4;
+  Usage usage = 5;
+  string created_at = 6;
+}
+
+message Citation {
+  string chunk_id = 1 [(buf.validate.field).string.uuid = true];
+  string document_id = 2 [(buf.validate.field).string.uuid = true];
+  string source_type = 3;
+  string title = 4;
+  double score = 5;
+}
+
+message Usage {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
+}
+
+message ArchiveConversationRequest {
+  string session_id = 1 [(buf.validate.field).string.uuid = true];
+  string account_id = 2 [(buf.validate.field).string.uuid = true];
+}
+
+message ArchiveConversationResponse {
+  bool success = 1;
+  string updated_at = 2;
+}

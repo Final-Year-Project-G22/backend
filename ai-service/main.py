@@ -20,10 +20,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     container: Container = app.state.container
 
     ask_ai_usecase = container.ask_ai()
+    conversation_usecase = container.conversation()
     rpc_server = await serve_rpc(
         port=settings.GRPC_PORT,
         ask_ai_usecase=ask_ai_usecase,
+        conversation_usecase=conversation_usecase,
         auth_token=settings.INTERNAL_GRPC_AUTH_TOKEN or None,
+        ask_enabled=settings.AI_ASK_ENABLED,
     )
     app.state.rpc_server = rpc_server
 
