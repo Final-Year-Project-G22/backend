@@ -73,6 +73,7 @@ func NewConfig() (*Config, error) {
 	v.SetDefault("ai.inference_grpc_endpoint", "localhost:50051")
 	v.SetDefault("ai.inference_timeout", "10s")
 	v.SetDefault("ai.ask_enabled", true)
+	v.SetDefault("ai.conversation_cache_ttl", "5m")
 	v.SetDefault("logger.level", "info")
 	v.SetDefault("database.sslmode", "disable")
 
