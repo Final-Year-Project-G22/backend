@@ -28,6 +28,298 @@
         ],
         "type": "object"
       },
+      "AdminRegisterRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AdminRegisterRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "email": {
+            "description": "Email address",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "roleIds": {
+            "description": "Role IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "username": {
+            "description": "Username (lowercase letters, digits, underscore)",
+            "maxLength": 32,
+            "minLength": 3,
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "firstName",
+          "lastName",
+          "roleIds"
+        ],
+        "type": "object"
+      },
+      "AdminRegisterResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AdminRegisterResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "accountId": {
+            "description": "Created account ID",
+            "type": "string"
+          },
+          "message": {
+            "description": "Status message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accountId",
+          "message"
+        ],
+        "type": "object"
+      },
+      "AdminUpdateRolesOutputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AdminUpdateRolesOutputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Status message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "AdminUpdateRolesRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AdminUpdateRolesRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "roleIds": {
+            "description": "Role IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "roleIds"
+        ],
+        "type": "object"
+      },
+      "BlockReportedUserRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/BlockReportedUserRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reason": {
+            "description": "Reason for blocking user",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BlockReportedUserResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/BlockReportedUserResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Message",
+            "type": "string"
+          },
+          "success": {
+            "description": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ],
+        "type": "object"
+      },
+      "BlockUserRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/BlockUserRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "blockedId": {
+            "description": "Blocked account ID",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Block reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "blockedId"
+        ],
+        "type": "object"
+      },
+      "BlockUserResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/BlockUserResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "CategoryDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "description": "Created timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Category description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Category ID",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether category is active",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Category name",
+            "type": "string"
+          },
+          "parentCategoryId": {
+            "description": "Parent category ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Category slug",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "isActive"
+        ],
+        "type": "object"
+      },
+      "ContentDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "post": {
+            "$ref": "#/components/schemas/PostContentDTO",
+            "description": "Post content"
+          },
+          "thread": {
+            "$ref": "#/components/schemas/ThreadContentDTO",
+            "description": "Thread content"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserContentDTO",
+            "description": "User content"
+          }
+        },
+        "type": "object"
+      },
       "Cookie": {
         "additionalProperties": false,
         "properties": {
@@ -98,6 +390,278 @@
           "Partitioned",
           "Raw",
           "Unparsed"
+        ],
+        "type": "object"
+      },
+      "CreateCommunityCategoryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateCommunityCategoryRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Category description",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Active flag",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Category name",
+            "type": "string"
+          },
+          "parentCategoryId": {
+            "description": "Parent category ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Category slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "isActive"
+        ],
+        "type": "object"
+      },
+      "CreateCommunityCategoryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateCommunityCategoryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created category ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "CreatePostResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreatePostResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "postId": {
+            "description": "Created post ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "postId"
+        ],
+        "type": "object"
+      },
+      "CreateRoleRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateRoleRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "code": {
+            "description": "Role code",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "description": "Role description",
+            "type": "string"
+          },
+          "name": {
+            "description": "Role name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "permissionIds": {
+            "description": "Permissions for role",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "permissionIds"
+        ],
+        "type": "object"
+      },
+      "CreateRoleResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateRoleResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleDTO",
+            "description": "Created role"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "type": "object"
+      },
+      "CreateThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateThreadResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "postId": {
+            "description": "Initial post ID",
+            "type": "string"
+          },
+          "threadId": {
+            "description": "Created thread ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "threadId",
+          "postId"
+        ],
+        "type": "object"
+      },
+      "DeleteCommunityCategoryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteCommunityCategoryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeletePostResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeletePostResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeleteReportedContentResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteReportedContentResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Message",
+            "type": "string"
+          },
+          "success": {
+            "description": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeleteRoleOutputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteRoleOutputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Status message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       },
@@ -182,6 +746,28 @@
         },
         "type": "object"
       },
+      "FollowResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/FollowResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "FormFile": {
         "additionalProperties": false,
         "properties": {
@@ -207,6 +793,28 @@
         ],
         "type": "object"
       },
+      "GetCategoryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetCategoryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategoryDTO",
+            "description": "Category details"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "type": "object"
+      },
       "GetCurrentUserResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -223,6 +831,26 @@
             "$ref": "#/components/schemas/AccountDTO",
             "description": "Current user account"
           },
+          "permissions": {
+            "description": "Current user permissions",
+            "items": {
+              "$ref": "#/components/schemas/PermissionDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "roles": {
+            "description": "Current user roles",
+            "items": {
+              "$ref": "#/components/schemas/RoleDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "user": {
             "$ref": "#/components/schemas/UserDTO",
             "description": "Current user"
@@ -230,7 +858,9 @@
         },
         "required": [
           "user",
-          "account"
+          "account",
+          "roles",
+          "permissions"
         ],
         "type": "object"
       },
@@ -258,6 +888,595 @@
         },
         "required": [
           "providers"
+        ],
+        "type": "object"
+      },
+      "GetPostReportResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetPostReportResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentDTO",
+            "description": "Post content"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Report details"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "type": "object"
+      },
+      "GetRoleResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetRoleResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "permissions": {
+            "description": "Role permissions",
+            "items": {
+              "$ref": "#/components/schemas/PermissionDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleDTO",
+            "description": "Role details"
+          }
+        },
+        "required": [
+          "role",
+          "permissions"
+        ],
+        "type": "object"
+      },
+      "GetThreadReportResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetThreadReportResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentDTO",
+            "description": "Thread content"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Report details"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "type": "object"
+      },
+      "GetThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetThreadResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "thread": {
+            "$ref": "#/components/schemas/ThreadDTO",
+            "description": "Thread details"
+          }
+        },
+        "required": [
+          "thread"
+        ],
+        "type": "object"
+      },
+      "GetUserReportResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetUserReportResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentDTO",
+            "description": "User content"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Report details"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "type": "object"
+      },
+      "ListAllBlockedUsersResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListAllBlockedUsersResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "blockedUsers": {
+            "description": "Blocked users list",
+            "items": {
+              "$ref": "#/components/schemas/ThreadBlockedUserDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Page size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "blockedUsers",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
+      "ListBlockedUsersResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListBlockedUsersResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "blockedUsers": {
+            "description": "Blocked users list",
+            "items": {
+              "$ref": "#/components/schemas/ThreadBlockedUserDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Page size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "blockedUsers",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
+      "ListCategoriesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListCategoriesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "categories": {
+            "description": "Category list",
+            "items": {
+              "$ref": "#/components/schemas/CategoryDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "categories"
+        ],
+        "type": "object"
+      },
+      "ListFollowedCategoriesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListFollowedCategoriesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "categories": {
+            "description": "Followed categories",
+            "items": {
+              "$ref": "#/components/schemas/CategoryDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "categories"
+        ],
+        "type": "object"
+      },
+      "ListFollowedThreadsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListFollowedThreadsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "threads": {
+            "description": "Followed threads",
+            "items": {
+              "$ref": "#/components/schemas/ThreadDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "threads"
+        ],
+        "type": "object"
+      },
+      "ListPermissionsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListPermissionsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "permissions": {
+            "description": "List of permissions",
+            "items": {
+              "$ref": "#/components/schemas/PermissionDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "permissions"
+        ],
+        "type": "object"
+      },
+      "ListPostReportsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListPostReportsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Page size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "reports": {
+            "description": "Post report list",
+            "items": {
+              "$ref": "#/components/schemas/ReportWithContentDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reports",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
+      "ListPostsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListPostsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "posts": {
+            "description": "Post list",
+            "items": {
+              "$ref": "#/components/schemas/PostDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "posts"
+        ],
+        "type": "object"
+      },
+      "ListRolesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListRolesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "roles": {
+            "description": "List of roles",
+            "items": {
+              "$ref": "#/components/schemas/RoleDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "roles"
+        ],
+        "type": "object"
+      },
+      "ListThreadReportsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListThreadReportsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Page size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "reports": {
+            "description": "Thread report list",
+            "items": {
+              "$ref": "#/components/schemas/ReportWithContentDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reports",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
+      "ListThreadsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListThreadsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "threads": {
+            "description": "Thread list",
+            "items": {
+              "$ref": "#/components/schemas/ThreadDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "threads"
+        ],
+        "type": "object"
+      },
+      "ListUserReportsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListUserReportsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Page size",
+            "format": "int64",
+            "type": "integer"
+          },
+          "reports": {
+            "description": "User report list",
+            "items": {
+              "$ref": "#/components/schemas/ReportWithContentDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reports",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
         ],
         "type": "object"
       },
@@ -327,6 +1546,28 @@
           "expiresAt",
           "user",
           "account"
+        ],
+        "type": "object"
+      },
+      "MarkSolutionResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/MarkSolutionResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       },
@@ -545,6 +1786,187 @@
         ],
         "type": "object"
       },
+      "PermissionDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "Permission code",
+            "type": "string"
+          },
+          "description": {
+            "description": "Permission description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Permission identifier",
+            "type": "string"
+          },
+          "module": {
+            "description": "Permission module",
+            "type": "string"
+          },
+          "name": {
+            "description": "Permission name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "module"
+        ],
+        "type": "object"
+      },
+      "PostContentDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "attachmentType": {
+            "description": "Attachment type",
+            "type": "string"
+          },
+          "attachmentUrl": {
+            "description": "Attachment URL",
+            "type": "string"
+          },
+          "authorFirstName": {
+            "description": "Author first name",
+            "type": "string"
+          },
+          "authorId": {
+            "description": "Author account ID",
+            "type": "string"
+          },
+          "authorLastName": {
+            "description": "Author last name",
+            "type": "string"
+          },
+          "content": {
+            "description": "Post content",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "type": "string"
+          },
+          "id": {
+            "description": "Post ID",
+            "type": "string"
+          },
+          "isSolution": {
+            "description": "Is solution",
+            "type": "boolean"
+          },
+          "parentPostId": {
+            "description": "Parent post ID",
+            "type": "string"
+          },
+          "threadId": {
+            "description": "Thread ID",
+            "type": "string"
+          },
+          "threadSlug": {
+            "description": "Thread slug",
+            "type": "string"
+          },
+          "threadTitle": {
+            "description": "Thread title",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "authorId",
+          "authorFirstName",
+          "authorLastName",
+          "content",
+          "isSolution",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "PostDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "attachmentType": {
+            "description": "Attachment type",
+            "type": "string"
+          },
+          "attachmentUrl": {
+            "description": "Attachment URL",
+            "type": "string"
+          },
+          "authorId": {
+            "description": "Author account ID",
+            "type": "string"
+          },
+          "content": {
+            "description": "Post content",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "editCount": {
+            "description": "Edit count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "editedAt": {
+            "description": "Edited timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "Post ID",
+            "type": "string"
+          },
+          "isPinned": {
+            "description": "Pinned flag",
+            "type": "boolean"
+          },
+          "isSolution": {
+            "description": "Solution flag",
+            "type": "boolean"
+          },
+          "parentPostId": {
+            "description": "Parent post ID",
+            "type": "string"
+          },
+          "threadId": {
+            "description": "Thread ID",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "upvoteCount": {
+            "description": "Upvote count",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "threadId",
+          "authorId",
+          "content",
+          "isSolution",
+          "isPinned",
+          "upvoteCount",
+          "editCount"
+        ],
+        "type": "object"
+      },
       "RefreshResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -664,6 +2086,227 @@
         ],
         "type": "object"
       },
+      "ReportDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "adminNote": {
+            "description": "Admin note",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "type": "string"
+          },
+          "id": {
+            "description": "Report ID",
+            "type": "string"
+          },
+          "postId": {
+            "description": "Post ID",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Report reason",
+            "type": "string"
+          },
+          "reportedAccountId": {
+            "description": "Reported account ID",
+            "type": "string"
+          },
+          "reporterFirstName": {
+            "description": "Reporter first name",
+            "type": "string"
+          },
+          "reporterId": {
+            "description": "Reporter account ID",
+            "type": "string"
+          },
+          "reporterLastName": {
+            "description": "Reporter last name",
+            "type": "string"
+          },
+          "resolvedAt": {
+            "description": "Resolved timestamp",
+            "type": "string"
+          },
+          "resolvedBy": {
+            "description": "Resolved by account ID",
+            "type": "string"
+          },
+          "status": {
+            "description": "Report status",
+            "type": "string"
+          },
+          "threadId": {
+            "description": "Thread ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reporterId",
+          "reporterFirstName",
+          "reporterLastName",
+          "reason",
+          "status",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "ReportPostRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ReportPostRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reason": {
+            "description": "Report reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "ReportPostResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ReportPostResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reportId": {
+            "description": "Report ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reportId"
+        ],
+        "type": "object"
+      },
+      "ReportThreadRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ReportThreadRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reason": {
+            "description": "Report reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "ReportThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ReportThreadResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reportId": {
+            "description": "Report ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reportId"
+        ],
+        "type": "object"
+      },
+      "ReportUserRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ReportUserRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reason": {
+            "description": "Report reason",
+            "type": "string"
+          },
+          "reportedAccountId": {
+            "description": "Reported account ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reportedAccountId",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "ReportUserResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ReportUserResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "reportId": {
+            "description": "Report ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reportId"
+        ],
+        "type": "object"
+      },
+      "ReportWithContentDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "$ref": "#/components/schemas/ContentDTO",
+            "description": "Reported content details"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Report details"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "type": "object"
+      },
       "ResendEmailOTPResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -683,6 +2326,265 @@
         },
         "required": [
           "message"
+        ],
+        "type": "object"
+      },
+      "RoleDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "Role code",
+            "type": "string"
+          },
+          "description": {
+            "description": "Role description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Role identifier",
+            "type": "string"
+          },
+          "isMutable": {
+            "description": "Mutable role",
+            "type": "boolean"
+          },
+          "isSystem": {
+            "description": "System role",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Role name",
+            "type": "string"
+          },
+          "type": {
+            "description": "Role type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "type",
+          "isSystem",
+          "isMutable"
+        ],
+        "type": "object"
+      },
+      "ThreadBlockedUserDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "blockedBy": {
+            "description": "Blocked by account ID",
+            "type": "string"
+          },
+          "blockedByFirstName": {
+            "description": "Blocked by first name",
+            "type": "string"
+          },
+          "blockedByLastName": {
+            "description": "Blocked by last name",
+            "type": "string"
+          },
+          "blockedUserEmail": {
+            "description": "Blocked user email",
+            "type": "string"
+          },
+          "blockedUserFirstName": {
+            "description": "Blocked user first name",
+            "type": "string"
+          },
+          "blockedUserId": {
+            "description": "Blocked user account ID",
+            "type": "string"
+          },
+          "blockedUserLastName": {
+            "description": "Blocked user last name",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Reason for blocking",
+            "type": "string"
+          },
+          "threadId": {
+            "description": "Thread ID",
+            "type": "string"
+          },
+          "threadSlug": {
+            "description": "Thread slug",
+            "type": "string"
+          },
+          "threadTitle": {
+            "description": "Thread title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "threadId",
+          "blockedUserId",
+          "blockedBy",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "ThreadContentDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "authorFirstName": {
+            "description": "Author first name",
+            "type": "string"
+          },
+          "authorId": {
+            "description": "Author account ID",
+            "type": "string"
+          },
+          "authorLastName": {
+            "description": "Author last name",
+            "type": "string"
+          },
+          "categoryId": {
+            "description": "Category ID",
+            "type": "string"
+          },
+          "categoryName": {
+            "description": "Category name",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "type": "string"
+          },
+          "description": {
+            "description": "Thread description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Thread ID",
+            "type": "string"
+          },
+          "replyCount": {
+            "description": "Reply count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "slug": {
+            "description": "Thread slug",
+            "type": "string"
+          },
+          "status": {
+            "description": "Thread status",
+            "type": "string"
+          },
+          "title": {
+            "description": "Thread title",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "type": "string"
+          },
+          "viewCount": {
+            "description": "View count",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "categoryId",
+          "authorId",
+          "authorFirstName",
+          "authorLastName",
+          "status",
+          "replyCount",
+          "viewCount",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "ThreadDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "authorId": {
+            "description": "Author account ID",
+            "type": "string"
+          },
+          "categoryId": {
+            "description": "Category ID",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Thread description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Thread ID",
+            "type": "string"
+          },
+          "isPinned": {
+            "description": "Pinned flag",
+            "type": "boolean"
+          },
+          "lastActivityAt": {
+            "description": "Last activity timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "replyCount": {
+            "description": "Reply count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "shareCount": {
+            "description": "Share count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "slug": {
+            "description": "Thread slug",
+            "type": "string"
+          },
+          "status": {
+            "description": "Thread status",
+            "type": "string"
+          },
+          "title": {
+            "description": "Thread title",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "viewCount": {
+            "description": "View count",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "categoryId",
+          "authorId",
+          "isPinned",
+          "status",
+          "viewCount",
+          "shareCount",
+          "replyCount"
         ],
         "type": "object"
       },
@@ -743,6 +2645,241 @@
         },
         "required": [
           "message"
+        ],
+        "type": "object"
+      },
+      "UpdateCommunityCategoryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateCommunityCategoryRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Category description",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Active flag",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Category name",
+            "type": "string"
+          },
+          "parentCategoryId": {
+            "description": "Parent category ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Category slug",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateCommunityCategoryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateCommunityCategoryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "UpdatePostReportStatusRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdatePostReportStatusRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "adminNote": {
+            "description": "Admin note",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status: pending, under_review, resolved, dismissed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
+      "UpdatePostReportStatusResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdatePostReportStatusResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Updated report"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "type": "object"
+      },
+      "UpdatePostResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdatePostResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "UpdateRoleRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateRoleRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Role description",
+            "type": "string"
+          },
+          "name": {
+            "description": "Role name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "permissionIds": {
+            "description": "Permissions for role",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "permissionIds"
+        ],
+        "type": "object"
+      },
+      "UpdateRoleResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateRoleResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleDTO",
+            "description": "Updated role"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "type": "object"
+      },
+      "UpdateThreadReportStatusRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateThreadReportStatusRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "adminNote": {
+            "description": "Admin note",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status: pending, under_review, resolved, dismissed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
+      "UpdateThreadReportStatusResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateThreadReportStatusResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Updated report"
+          }
+        },
+        "required": [
+          "report"
         ],
         "type": "object"
       },
@@ -813,6 +2950,54 @@
         ],
         "type": "object"
       },
+      "UpdateUserReportStatusRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateUserReportStatusRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "adminNote": {
+            "description": "Admin note",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status: pending, under_review, resolved, dismissed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
+      "UpdateUserReportStatusResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateUserReportStatusResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ReportDTO",
+            "description": "Updated report"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "type": "object"
+      },
       "UploadAvatarResponse": {
         "additionalProperties": false,
         "properties": {
@@ -831,6 +3016,42 @@
         },
         "required": [
           "imageUrl"
+        ],
+        "type": "object"
+      },
+      "UserContentDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "description": "User email",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name",
+            "type": "string"
+          },
+          "id": {
+            "description": "User ID",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name",
+            "type": "string"
+          },
+          "threadId": {
+            "description": "Thread ID",
+            "type": "string"
+          },
+          "threadTitle": {
+            "description": "Thread title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "firstName",
+          "lastName"
         ],
         "type": "object"
       },
@@ -928,6 +3149,1302 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/community/blocks": {
+      "get": {
+        "description": "Lists all blocked users across all threads.",
+        "operationId": "adminListAllBlockedUsers",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAllBlockedUsersResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List all blocked users (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/categories": {
+      "get": {
+        "description": "Lists community categories including inactive ones.",
+        "operationId": "adminListCommunityCategories",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Include inactive categories",
+            "explode": false,
+            "in": "query",
+            "name": "includeInactive",
+            "schema": {
+              "description": "Include inactive categories",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCategoriesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List community categories (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      },
+      "post": {
+        "description": "Creates a community category.",
+        "operationId": "adminCreateCommunityCategory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommunityCategoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCommunityCategoryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create community category",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/categories/{id}": {
+      "delete": {
+        "description": "Deletes a community category.",
+        "operationId": "adminDeleteCommunityCategory",
+        "parameters": [
+          {
+            "description": "Category ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCommunityCategoryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete community category",
+        "tags": [
+          "Admin - Community"
+        ]
+      },
+      "put": {
+        "description": "Updates a community category.",
+        "operationId": "adminUpdateCommunityCategory",
+        "parameters": [
+          {
+            "description": "Category ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommunityCategoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCommunityCategoryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update community category",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/posts": {
+      "get": {
+        "description": "Lists post reports with optional status filter.",
+        "operationId": "adminListPostReports",
+        "parameters": [
+          {
+            "description": "Filter by status: pending, under_review, resolved, dismissed",
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "description": "Filter by status: pending, under_review, resolved, dismissed",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search in post content",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search in post content",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPostReportsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List post reports (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/posts/{id}": {
+      "delete": {
+        "description": "Deletes a reported post and resolves the report.",
+        "operationId": "adminDeleteReportedPost",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteReportedContentResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete reported post (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      },
+      "get": {
+        "description": "Gets a post report with reported content details.",
+        "operationId": "adminGetPostReport",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPostReportResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get post report (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/posts/{id}/status": {
+      "patch": {
+        "description": "Updates a post report status.",
+        "operationId": "adminUpdatePostReportStatus",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePostReportStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePostReportStatusResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update post report status (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/threads": {
+      "get": {
+        "description": "Lists thread reports with optional status filter.",
+        "operationId": "adminListThreadReports",
+        "parameters": [
+          {
+            "description": "Filter by status: pending, under_review, resolved, dismissed",
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "description": "Filter by status: pending, under_review, resolved, dismissed",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search in thread title, slug, description",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search in thread title, slug, description",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListThreadReportsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List thread reports (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/threads/{id}": {
+      "delete": {
+        "description": "Deletes a reported thread and resolves the report.",
+        "operationId": "adminDeleteReportedThread",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteReportedContentResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete reported thread (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      },
+      "get": {
+        "description": "Gets a thread report with reported content details.",
+        "operationId": "adminGetThreadReport",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetThreadReportResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get thread report (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/threads/{id}/status": {
+      "patch": {
+        "description": "Updates a thread report status.",
+        "operationId": "adminUpdateThreadReportStatus",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateThreadReportStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateThreadReportStatusResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update thread report status (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/users": {
+      "get": {
+        "description": "Lists user reports with optional status filter.",
+        "operationId": "adminListUserReports",
+        "parameters": [
+          {
+            "description": "Filter by status: pending, under_review, resolved, dismissed",
+            "explode": false,
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "description": "Filter by status: pending, under_review, resolved, dismissed",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search in reporter first name, last name, email",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search in reporter first name, last name, email",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListUserReportsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List user reports (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/users/{id}": {
+      "get": {
+        "description": "Gets a user report with reported user details.",
+        "operationId": "adminGetUserReport",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserReportResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get user report (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/users/{id}/block": {
+      "post": {
+        "description": "Blocks the reported user from the thread and resolves the report.",
+        "operationId": "adminBlockReportedUser",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockReportedUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockReportedUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Block reported user (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/reports/users/{id}/status": {
+      "patch": {
+        "description": "Updates a user report status.",
+        "operationId": "adminUpdateUserReportStatus",
+        "parameters": [
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Report ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserReportStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserReportStatusResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update user report status (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/threads/{id}/blocks": {
+      "get": {
+        "description": "Lists blocked users for a specific thread.",
+        "operationId": "adminListThreadBlockedUsers",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListBlockedUsersResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List blocked users in thread (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      },
+      "post": {
+        "description": "Blocks a user from a thread as admin.",
+        "operationId": "adminBlockCommunityUser",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Block user in thread (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/admin/community/threads/{id}/blocks/{accountId}": {
+      "delete": {
+        "description": "Unblocks a user from a thread as admin.",
+        "operationId": "adminUnblockCommunityUser",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Blocked account ID",
+            "in": "path",
+            "name": "accountId",
+            "required": true,
+            "schema": {
+              "description": "Blocked account ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Unblock user in thread (admin)",
+        "tags": [
+          "Admin - Community"
+        ]
+      }
+    },
+    "/api/v1/auth/admin/register": {
+      "post": {
+        "description": "Creates an admin account and emails the generated password.",
+        "operationId": "registerAdmin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRegisterResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Register a new admin",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/admin/{accountId}/roles": {
+      "put": {
+        "description": "Replaces roles assigned to an admin account.",
+        "operationId": "updateAdminRoles",
+        "parameters": [
+          {
+            "description": "Admin account ID",
+            "in": "path",
+            "name": "accountId",
+            "required": true,
+            "schema": {
+              "description": "Admin account ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateRolesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUpdateRolesOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update admin roles",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Authenticates a user with email or username and password, returns authentication tokens.",
@@ -1770,6 +5287,1824 @@
         "summary": "Verify account email with OTP",
         "tags": [
           "Authentication"
+        ]
+      }
+    },
+    "/api/v1/community/categories": {
+      "get": {
+        "description": "Lists active community categories.",
+        "operationId": "listCommunityCategories",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCategoriesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List community categories",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/categories/{id}": {
+      "get": {
+        "description": "Retrieves community category details.",
+        "operationId": "getCommunityCategory",
+        "parameters": [
+          {
+            "description": "Category ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCategoryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get community category",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/categories/{id}/follow": {
+      "delete": {
+        "description": "Unfollows a community category.",
+        "operationId": "unfollowCommunityCategory",
+        "parameters": [
+          {
+            "description": "Category ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Unfollow category",
+        "tags": [
+          "Community"
+        ]
+      },
+      "post": {
+        "description": "Follows a community category.",
+        "operationId": "followCommunityCategory",
+        "parameters": [
+          {
+            "description": "Category ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Follow category",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/categories/{id}/threads": {
+      "get": {
+        "description": "Lists discussion threads in a category.",
+        "operationId": "listCommunityThreads",
+        "parameters": [
+          {
+            "description": "Category ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListThreadsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List threads by category",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/follows/categories": {
+      "get": {
+        "description": "Lists categories followed by the current user.",
+        "operationId": "listFollowedCategories",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListFollowedCategoriesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List followed categories",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/follows/threads": {
+      "get": {
+        "description": "Lists threads followed by the current user.",
+        "operationId": "listFollowedThreads",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListFollowedThreadsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List followed threads",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/posts/{id}": {
+      "delete": {
+        "description": "Deletes a post.",
+        "operationId": "deleteCommunityPost",
+        "parameters": [
+          {
+            "description": "Post ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Post ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletePostResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete post",
+        "tags": [
+          "Community"
+        ]
+      },
+      "patch": {
+        "description": "Updates a post.",
+        "operationId": "updateCommunityPost",
+        "parameters": [
+          {
+            "description": "Post ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Post ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "content": {
+                  "contentType": "text/plain"
+                },
+                "file": {
+                  "contentType": "application/octet-stream"
+                },
+                "removeAttachment": {
+                  "contentType": "text/plain"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "content": {
+                    "description": "Post content",
+                    "type": "string"
+                  },
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "Optional replacement attachment file",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "removeAttachment": {
+                    "description": "Remove existing attachment",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "content",
+                  "removeAttachment"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePostResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update post",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads": {
+      "post": {
+        "description": "Creates a thread with an initial post.",
+        "operationId": "createCommunityThread",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "categoryId": {
+                  "contentType": "text/plain"
+                },
+                "description": {
+                  "contentType": "text/plain"
+                },
+                "file": {
+                  "contentType": "application/octet-stream"
+                },
+                "initialPostContent": {
+                  "contentType": "text/plain"
+                },
+                "parentThreadId": {
+                  "contentType": "text/plain"
+                },
+                "slug": {
+                  "contentType": "text/plain"
+                },
+                "title": {
+                  "contentType": "text/plain"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "categoryId": {
+                    "description": "Category ID",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "Thread description",
+                    "type": "string"
+                  },
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "Optional attachment file",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "initialPostContent": {
+                    "description": "Initial post content",
+                    "type": "string"
+                  },
+                  "parentThreadId": {
+                    "description": "Parent thread ID for sub-threads",
+                    "type": "string"
+                  },
+                  "slug": {
+                    "description": "Thread slug",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Thread title",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "categoryId",
+                  "title",
+                  "slug",
+                  "description",
+                  "initialPostContent"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create discussion thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/search": {
+      "get": {
+        "description": "Searches threads by keyword and category.",
+        "operationId": "searchCommunityThreads",
+        "parameters": [
+          {
+            "description": "Search keyword",
+            "explode": false,
+            "in": "query",
+            "name": "keyword",
+            "schema": {
+              "description": "Search keyword",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Category ID",
+            "explode": false,
+            "in": "query",
+            "name": "categoryId",
+            "schema": {
+              "description": "Category ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListThreadsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Search discussion threads",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}": {
+      "get": {
+        "description": "Retrieves thread details.",
+        "operationId": "getCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get discussion thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/blocks": {
+      "post": {
+        "description": "Blocks a user from a thread (thread author only).",
+        "operationId": "blockCommunityUser",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Block user in thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/blocks/{accountId}": {
+      "delete": {
+        "description": "Unblocks a user from a thread (thread author only).",
+        "operationId": "unblockCommunityUser",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Blocked account ID",
+            "in": "path",
+            "name": "accountId",
+            "required": true,
+            "schema": {
+              "description": "Blocked account ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Unblock user in thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/follow": {
+      "delete": {
+        "description": "Unfollows a discussion thread.",
+        "operationId": "unfollowCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Unfollow thread",
+        "tags": [
+          "Community"
+        ]
+      },
+      "post": {
+        "description": "Follows a discussion thread.",
+        "operationId": "followCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Follow thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/posts": {
+      "get": {
+        "description": "Lists posts in a thread.",
+        "operationId": "listCommunityPosts",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPostsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List thread posts",
+        "tags": [
+          "Community"
+        ]
+      },
+      "post": {
+        "description": "Creates a top-level post in a thread.",
+        "operationId": "createCommunityPost",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "content": {
+                  "contentType": "text/plain"
+                },
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "content": {
+                    "description": "Post content",
+                    "type": "string"
+                  },
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "Optional attachment file",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "content"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePostResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create thread post",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/posts/{postId}/reply": {
+      "post": {
+        "description": "Replies to a post in a thread.",
+        "operationId": "replyCommunityPost",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Parent post ID",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "description": "Parent post ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "content": {
+                  "contentType": "text/plain"
+                },
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "content": {
+                    "description": "Post content",
+                    "type": "string"
+                  },
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "Optional attachment file",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "content"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePostResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reply to post",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/posts/{postId}/reports": {
+      "post": {
+        "description": "Reports a discussion post.",
+        "operationId": "reportPost",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post ID",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "description": "Post ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportPostRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportPostResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Report post",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/reports": {
+      "post": {
+        "description": "Reports a discussion thread.",
+        "operationId": "reportThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportThreadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Report thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/reports/user": {
+      "post": {
+        "description": "Reports a user in a thread.",
+        "operationId": "reportUser",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportUserResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Report user",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/solution/{postId}": {
+      "post": {
+        "description": "Marks a post as the accepted solution.",
+        "operationId": "markCommunitySolution",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post ID",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "description": "Post ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkSolutionResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Mark accepted solution",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/permissions": {
+      "get": {
+        "description": "Returns permissions with optional filtering by module and code.",
+        "operationId": "listPermissions",
+        "parameters": [
+          {
+            "description": "Filter by module",
+            "explode": false,
+            "in": "query",
+            "name": "module",
+            "schema": {
+              "description": "Filter by module",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by permission code",
+            "explode": false,
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "description": "Filter by permission code",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPermissionsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List permissions",
+        "tags": [
+          "Permissions"
+        ]
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "description": "Returns all roles.",
+        "operationId": "listRoles",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRolesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List roles",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "post": {
+        "description": "Creates a custom role and assigns permissions.",
+        "operationId": "createRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRoleResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create role",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/api/v1/roles/{roleId}": {
+      "delete": {
+        "description": "Permanently deletes a role if it is mutable.",
+        "operationId": "deleteRole",
+        "parameters": [
+          {
+            "description": "Role identifier",
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "schema": {
+              "description": "Role identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteRoleOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete role",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "get": {
+        "description": "Returns role details and its permissions.",
+        "operationId": "getRole",
+        "parameters": [
+          {
+            "description": "Role identifier",
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "schema": {
+              "description": "Role identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRoleResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get role",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "put": {
+        "description": "Updates role details and replaces permissions.",
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "description": "Role identifier",
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "schema": {
+              "description": "Role identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateRoleResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update role",
+        "tags": [
+          "Roles"
         ]
       }
     },

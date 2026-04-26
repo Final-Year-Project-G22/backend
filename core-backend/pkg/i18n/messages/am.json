@@ -70,6 +70,8 @@
     "errors": {
       "permissionDenied": "ፈቃድ ተከልክሏል",
       "categoryInactive": "ምድቡ እስካሁን አልተንቀሳቀሰም",
+      "threadNotFound": "ውይይቱ አልተገኘም",
+      "threadClosed": "ውይይቱ ተዘግቷል",
       "threadInactive": "ውይይቱ እስካሁን አይሰራም",
       "threadBlocked": "ከዚህ ውይይት ተከልክለዋል",
       "postLocked": "ይህ ልጥፍ መቀየር አይቻልም",

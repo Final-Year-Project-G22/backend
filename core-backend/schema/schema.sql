@@ -119,10 +119,12 @@ CREATE TABLE "community_categories" ("id" uuid DEFAULT gen_random_uuid(),"create
 CREATE INDEX IF NOT EXISTS "idx_community_categories_parent" ON "community_categories" ("parent_category_id");
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_community_categories_slug_per_parent" ON "community_categories" ("parent_category_id","slug");
 CREATE INDEX IF NOT EXISTS "idx_community_categories_deleted_at" ON "community_categories" ("deleted_at");
-CREATE TABLE "discussion_threads" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"category_id" uuid NOT NULL,"author_account_id" uuid NOT NULL,"title" varchar(200) NOT NULL,"slug" varchar(200) NOT NULL,"description" text,"is_pinned" boolean NOT NULL DEFAULT false,"status" varchar(20) NOT NULL DEFAULT 'active',"view_count" bigint NOT NULL DEFAULT 0,"share_count" bigint NOT NULL DEFAULT 0,"reply_count" bigint NOT NULL DEFAULT 0,"last_activity_at" timestamptz,PRIMARY KEY ("id"));
+CREATE TABLE "discussion_threads" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"category_id" uuid NOT NULL,"parent_thread_id" uuid,"author_account_id" uuid NOT NULL,"title" varchar(200) NOT NULL,"slug" varchar(200) NOT NULL,"description" text,"is_pinned" boolean NOT NULL DEFAULT false,"status" varchar(20) NOT NULL DEFAULT 'active',"view_count" bigint NOT NULL DEFAULT 0,"share_count" bigint NOT NULL DEFAULT 0,"reply_count" bigint NOT NULL DEFAULT 0,"last_activity_at" timestamptz,PRIMARY KEY ("id"));
 CREATE INDEX IF NOT EXISTS "idx_discussion_threads_last_activity" ON "discussion_threads" ("last_activity_at");
 CREATE INDEX IF NOT EXISTS "idx_discussion_threads_status" ON "discussion_threads" ("status");
 CREATE INDEX IF NOT EXISTS "idx_discussion_threads_author" ON "discussion_threads" ("author_account_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_threads_slug_per_parent" ON "discussion_threads" ("parent_thread_id");
+CREATE INDEX IF NOT EXISTS "idx_threads_parent" ON "discussion_threads" ("parent_thread_id");
 CREATE INDEX IF NOT EXISTS "idx_discussion_threads_category" ON "discussion_threads" ("category_id");
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_discussion_threads_slug_per_category" ON "discussion_threads" ("category_id","slug");
 CREATE INDEX IF NOT EXISTS "idx_discussion_threads_deleted_at" ON "discussion_threads" ("deleted_at");
@@ -142,10 +144,12 @@ CREATE INDEX IF NOT EXISTS "idx_user_category_settings_category" ON "user_catego
 CREATE INDEX IF NOT EXISTS "idx_user_category_settings_account" ON "user_category_settings" ("account_id");
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_user_category_settings_account_category" ON "user_category_settings" ("account_id","category_id");
 CREATE INDEX IF NOT EXISTS "idx_user_category_settings_deleted_at" ON "user_category_settings" ("deleted_at");
-CREATE TABLE "content_reports" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"reporter_account_id" uuid NOT NULL,"target_type" varchar(20) NOT NULL,"target_id" uuid NOT NULL,"reason" text NOT NULL,"status" varchar(20) NOT NULL DEFAULT 'pending',"admin_note" text,"resolved_by_account_id" uuid,"resolved_at" timestamptz,PRIMARY KEY ("id"));
+CREATE TABLE "content_reports" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"reporter_account_id" uuid NOT NULL,"thread_id" uuid,"post_id" uuid,"reported_account_id" uuid,"reason" text NOT NULL,"status" varchar(20) NOT NULL DEFAULT 'pending',"admin_note" text,"resolved_by_account_id" uuid,"resolved_at" timestamptz,PRIMARY KEY ("id"));
 CREATE INDEX IF NOT EXISTS "idx_content_reports_resolved_by" ON "content_reports" ("resolved_by_account_id");
 CREATE INDEX IF NOT EXISTS "idx_content_reports_status" ON "content_reports" ("status");
-CREATE INDEX IF NOT EXISTS "idx_content_reports_target" ON "content_reports" ("target_type","target_id");
+CREATE INDEX IF NOT EXISTS "idx_content_reports_reported_account" ON "content_reports" ("reported_account_id");
+CREATE INDEX IF NOT EXISTS "idx_content_reports_post" ON "content_reports" ("post_id");
+CREATE INDEX IF NOT EXISTS "idx_content_reports_thread" ON "content_reports" ("thread_id");
 CREATE INDEX IF NOT EXISTS "idx_content_reports_reporter" ON "content_reports" ("reporter_account_id");
 CREATE INDEX IF NOT EXISTS "idx_content_reports_deleted_at" ON "content_reports" ("deleted_at");
 CREATE TABLE "thread_blocked_users" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"thread_id" uuid NOT NULL,"blocked_account_id" uuid NOT NULL,"blocked_by_account_id" uuid NOT NULL,"reason" text,PRIMARY KEY ("id"));
@@ -215,6 +219,7 @@ ALTER TABLE "guide_translations" ADD CONSTRAINT "fk_guides_translations" FOREIGN
 ALTER TABLE "guide_step_translations" ADD CONSTRAINT "fk_guide_steps_translations" FOREIGN KEY ("guide_step_id") REFERENCES "guide_steps"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "user_guide_recent_views" ADD CONSTRAINT "fk_user_guide_recent_views_guide" FOREIGN KEY ("guide_id") REFERENCES "guides"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "community_categories" ADD CONSTRAINT "fk_community_categories_child_categories" FOREIGN KEY ("parent_category_id") REFERENCES "community_categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "discussion_threads" ADD CONSTRAINT "fk_discussion_threads_sub_threads" FOREIGN KEY ("parent_thread_id") REFERENCES "discussion_threads"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "discussion_threads" ADD CONSTRAINT "fk_community_categories_threads" FOREIGN KEY ("category_id") REFERENCES "community_categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "discussion_posts" ADD CONSTRAINT "fk_discussion_posts_replies" FOREIGN KEY ("parent_post_id") REFERENCES "discussion_posts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "discussion_posts" ADD CONSTRAINT "fk_discussion_threads_posts" FOREIGN KEY ("thread_id") REFERENCES "discussion_threads"("id") ON DELETE CASCADE ON UPDATE CASCADE;
