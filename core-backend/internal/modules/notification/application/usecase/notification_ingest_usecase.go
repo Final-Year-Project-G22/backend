@@ -60,7 +60,10 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 		return nil
 	}
 
-	mutedAccountID := uc.extractMutedAccountID(input.Metadata)
+	isMuted, err := uc.resolveMuted(ctx, input.AccountID, input.Metadata)
+	if err != nil {
+		return err
+	}
 
 	for _, channel := range channels {
 		if !uc.hasChannelContent(tmpl, channel) {
@@ -75,25 +78,7 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 			continue
 		}
 
-		if mutedAccountID != nil {
-			muted, err := uc.mutedRepo.IsMuted(ctx, input.AccountID, *mutedAccountID)
-			if err != nil {
-				return err
-			}
-			if muted {
-				continue
-			}
-		}
-
-		muted, err := uc.isMutedByResolvers(ctx, input.AccountID, input.Metadata)
-		if err != nil {
-			return err
-		}
-		if muted {
-			continue
-		}
-
-		if err := uc.enqueue(ctx, tmpl, channel, input.AccountID, input.Variables, nil); err != nil {
+		if err := uc.enqueue(ctx, tmpl, channel, input.AccountID, input.Variables, nil, isMuted); err != nil {
 			return err
 		}
 	}
@@ -123,26 +108,12 @@ func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input
 		return nil
 	}
 
-	mutedAccountID := uc.extractMutedAccountID(input.Metadata)
-	if mutedAccountID != nil {
-		muted, err := uc.mutedRepo.IsMuted(ctx, input.AccountID, *mutedAccountID)
-		if err != nil {
-			return err
-		}
-		if muted {
-			return nil
-		}
-	}
-
-	muted, err := uc.isMutedByResolvers(ctx, input.AccountID, input.Metadata)
+	isMuted, err := uc.resolveMuted(ctx, input.AccountID, input.Metadata)
 	if err != nil {
 		return err
 	}
-	if muted {
-		return nil
-	}
 
-	return uc.enqueue(ctx, tmpl, input.Channel, input.AccountID, input.Variables, input.ScheduledFor)
+	return uc.enqueue(ctx, tmpl, input.Channel, input.AccountID, input.Variables, input.ScheduledFor, isMuted)
 }
 
 func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accountID uuid.UUID, notificationType entity.NotificationType, variables map[string]string, metadata map[string]interface{}, channels []entity.Channel, expiresAt *time.Time) error {
@@ -156,7 +127,10 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 			return err
 		}
 
-		mutedAccountID := uc.extractMutedAccountID(metadata)
+		isMuted, err := uc.resolveMuted(txCtx, accountID, metadata)
+		if err != nil {
+			return err
+		}
 
 		for _, channel := range channels {
 			if !uc.hasChannelContent(tmpl, channel) {
@@ -171,25 +145,7 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 				continue
 			}
 
-			if mutedAccountID != nil {
-				muted, err := uc.mutedRepo.IsMuted(txCtx, accountID, *mutedAccountID)
-				if err != nil {
-					return err
-				}
-				if muted {
-					continue
-				}
-			}
-
-			muted, err := uc.isMutedByResolvers(txCtx, accountID, metadata)
-			if err != nil {
-				return err
-			}
-			if muted {
-				continue
-			}
-
-			if err := uc.enqueue(txCtx, tmpl, channel, accountID, variables, nil); err != nil {
+			if err := uc.enqueue(txCtx, tmpl, channel, accountID, variables, nil, isMuted); err != nil {
 				return err
 			}
 		}
@@ -205,6 +161,7 @@ func (uc *notificationIngestUsecase) enqueue(
 	accountID uuid.UUID,
 	variables map[string]string,
 	scheduledFor *time.Time,
+	isMuted bool,
 ) error {
 	contentMap := map[string]interface{}(tmpl.DefaultContent)
 	rendered, err := uc.renderer.RenderMultiChannel(contentMap, variables, []entity.Channel{channel})
@@ -220,6 +177,10 @@ func (uc *notificationIngestUsecase) enqueue(
 	payloadMap, ok := payload.(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("unexpected payload type for channel %s", channel)
+	}
+
+	if isMuted {
+		payloadMap["_isMuted"] = true
 	}
 
 	item := &entity.NotificationQueue{
@@ -292,6 +253,20 @@ func (uc *notificationIngestUsecase) isMutedByResolvers(ctx context.Context, acc
 		}
 	}
 	return false, nil
+}
+
+func (uc *notificationIngestUsecase) resolveMuted(ctx context.Context, accountID uuid.UUID, metadata map[string]interface{}) (bool, error) {
+	mutedAccountID := uc.extractMutedAccountID(metadata)
+	if mutedAccountID != nil {
+		muted, err := uc.mutedRepo.IsMuted(ctx, accountID, *mutedAccountID)
+		if err != nil {
+			return false, err
+		}
+		if muted {
+			return true, nil
+		}
+	}
+	return uc.isMutedByResolvers(ctx, accountID, metadata)
 }
 
 func (uc *notificationIngestUsecase) extractMutedAccountID(metadata map[string]interface{}) *uuid.UUID {
