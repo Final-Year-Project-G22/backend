@@ -3,6 +3,7 @@ package dto
 import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
@@ -220,6 +221,17 @@ func ToUpdateTranslationInput(body UpdateTranslationRequest) usecase.UpdateTempl
 		Subject: body.Subject,
 		Content: body.Content,
 	}
+}
+
+func ToQueryOptions(page, pageSize int) query.QueryOptions {
+	q := query.DefaultQueryOptions()
+	if page > 0 {
+		q.Page = page
+	}
+	if pageSize > 0 {
+		q.PageSize = pageSize
+	}
+	return q
 }
 
 func ToTemplateDetailResponse(tmpl *entity.NotificationTemplate, translations []*entity.NotificationTemplateTranslation) TemplateDetailResponse {
