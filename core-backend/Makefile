@@ -48,6 +48,10 @@ migration-generate:
 migration-apply:
 	go run ./cmd/schema -action=apply
 
+# Migration-hash (recalculate checksums after manual migration edits)
+migration-hash:
+	atlas migrate hash --dir "file://migrations"
+
 # Generate OpenAPI spec
 spec:
 	@mkdir -p docs
