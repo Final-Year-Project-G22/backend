@@ -139,6 +139,7 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 		title, _ := item.Payload["title"].(string)
 		content, _ := item.Payload["content"].(string)
 		actionUrlStr, _ := item.Payload["actionUrl"].(string)
+		isMuted, _ := item.Payload["_isMuted"].(bool)
 
 		var actionUrl *string
 		if actionUrlStr != "" {
@@ -161,6 +162,10 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 
 		if err := uc.historyRepo.Create(txCtx, history); err != nil {
 			return fmt.Errorf("failed to create history entry: %w", err)
+		}
+
+		if isMuted {
+			return nil
 		}
 
 		inbox := &entity.UserNotificationInbox{
