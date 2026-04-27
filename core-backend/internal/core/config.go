@@ -66,6 +66,26 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("error binding env ai.ask_enabled: %w", err)
 	}
 
+	err = v.BindEnv("resend.api_key", "RESEND_API_KEY")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env resend.api_key: %w", err)
+	}
+
+	err = v.BindEnv("resend.webhook_secret", "RESEND_WEBHOOK_SECRET")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env resend.webhook_secret: %w", err)
+	}
+
+	err = v.BindEnv("resend.from_email", "RESEND_FROM_EMAIL")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env resend.from_email: %w", err)
+	}
+
+	err = v.BindEnv("resend.from_name", "RESEND_FROM_NAME")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env resend.from_name: %w", err)
+	}
+
 	// 4. Set defaults
 	v.SetDefault("app.environment", "development")
 	v.SetDefault("app.port", 4000)
