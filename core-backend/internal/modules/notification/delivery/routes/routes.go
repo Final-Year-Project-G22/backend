@@ -6,9 +6,11 @@ import (
 )
 
 type RouteDependencies struct {
-	AdminHandler *handler.NotificationAdminHandler
+	AdminHandler        *handler.NotificationAdminHandler
+	NotificationHandler *handler.NotificationHandler
 }
 
 func RegisterRoutes(api huma.API, deps RouteDependencies) {
 	RegisterAdminNotificationRoutes(api, deps)
+	RegisterNotificationRoutes(api, deps)
 }

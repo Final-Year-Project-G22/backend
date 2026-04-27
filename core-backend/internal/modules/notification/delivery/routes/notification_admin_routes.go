@@ -86,4 +86,25 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AdminHandler.HandleDeleteTranslation)
+
+	// --- Monitoring ---
+	huma.Register(api, huma.Operation{
+		OperationID: "getQueueStatus",
+		Method:      "GET",
+		Path:        adminNotifBase + "/queue/status",
+		Summary:     "Get queue status",
+		Description: "Returns notification queue counts by status.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleGetQueueStatus)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "retryFailed",
+		Method:      "POST",
+		Path:        adminNotifBase + "/queue/retry",
+		Summary:     "Retry failed",
+		Description: "Retries failed notification queue items.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleRetryFailed)
 }
