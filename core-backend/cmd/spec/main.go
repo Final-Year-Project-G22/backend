@@ -41,25 +41,6 @@ func main() {
 		DeletePermissionMiddleware: noOpMiddleware,
 	})
 
-	// airoutes.RegisterRoutes(api, airoutes.RouteDependencies{
-	// 	IngestionHandler:        &aihandler.IngestionHandler{},
-	// 	StatusHandler:           &aihandler.StatusHandler{},
-	// 	AskHandler:              &aihandler.AskHandler{},
-	// 	DLQHandler:              &aihandler.DLQHandler{},
-	// 	SSEHandler:              &aihandler.SSEHandler{},
-	// 	ToggleHandler:           &aihandler.ToggleHandler{},
-	// 	AskEnabled:              true,
-	// 	AuthMiddleware:          noOpMiddleware,
-	// 	AccountStatusMiddleware: noOpMiddleware,
-	// })
-
-	// guideroutes.RegisterRoutes(api, guideroutes.RouteDependencies{
-	// 	GuideViewHandler:        &guidehandler.GuideViewHandler{},
-	// 	GuideAdminHandler:       &guidehandler.GuideAdminHandler{},
-	// 	AuthMiddleware:          noOpMiddleware,
-	// 	AccountStatusMiddleware: noOpMiddleware,
-	// })
-
 	communityroutes.RegisterRoutes(api, communityroutes.RouteDependencies{
 		CommunityHandler:           &communityhandler.CommunityHandler{},
 		CommunityAdminHandler:      &communityhandler.CommunityAdminHandler{},
