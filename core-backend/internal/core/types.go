@@ -23,6 +23,15 @@ type Config struct {
 	OAuth     OAuthConfig     `mapstructure:"oauth"`
 	RabbitMQ  rabbitmq.Config `mapstructure:"rabbitmq"`
 	Email     email.Config    `mapstructure:"email"`
+	Resend    ResendConfig    `mapstructure:"resend"`
+}
+
+type ResendConfig struct {
+	Enabled       bool   `mapstructure:"enabled"`
+	APIKey        string `mapstructure:"api_key"`
+	WebhookSecret string `mapstructure:"webhook_secret"`
+	FromEmail     string `mapstructure:"from_email"`
+	FromName      string `mapstructure:"from_name"`
 }
 
 type AppConfig struct {
