@@ -136,11 +136,12 @@ type ListPostsResponseBody struct {
 
 type CreateThreadFormData struct {
 	CategoryID         string        `form:"categoryId" doc:"Category ID"`
+	ParentThreadID     string        `form:"parentThreadId" doc:"Parent thread ID for sub-threads" required:"false"`
 	Title              string        `form:"title" doc:"Thread title"`
 	Slug               string        `form:"slug" doc:"Thread slug"`
 	Description        string        `form:"description" doc:"Thread description"`
 	InitialPostContent string        `form:"initialPostContent" doc:"Initial post content"`
-	File               huma.FormFile `form:"file" doc:"Optional attachment file"`
+	File               huma.FormFile `form:"file" doc:"Optional attachment file" required:"false"`
 }
 
 type CreateThreadInput struct {
@@ -158,7 +159,7 @@ type CreateThreadResponseBody struct {
 
 type CreatePostFormData struct {
 	Content string        `form:"content" doc:"Post content"`
-	File    huma.FormFile `form:"file" doc:"Optional attachment file"`
+	File    huma.FormFile `form:"file" doc:"Optional attachment file" required:"false"`
 }
 
 type CreatePostInput struct {
@@ -187,7 +188,7 @@ type ReplyPostOutput struct {
 type UpdatePostFormData struct {
 	Content          string        `form:"content" doc:"Post content"`
 	RemoveAttachment bool          `form:"removeAttachment" doc:"Remove existing attachment"`
-	File             huma.FormFile `form:"file" doc:"Optional replacement attachment file"`
+	File             huma.FormFile `form:"file" doc:"Optional replacement attachment file" required:"false"`
 }
 
 type UpdatePostInput struct {
@@ -292,21 +293,56 @@ type ListFollowedCategoriesResponseBody struct {
 	Categories []*CategoryDTO `json:"categories" doc:"Followed categories"`
 }
 
-type ReportContentRequest struct {
-	TargetType entity.TargetType `json:"targetType" doc:"Target type"`
-	TargetID   uuid.UUID         `json:"targetId" doc:"Target ID"`
-	Reason     string            `json:"reason" doc:"Report reason"`
+type ReportThreadRequest struct {
+	Reason string `json:"reason" doc:"Report reason" validate:"required"`
 }
 
-type ReportContentInput struct {
-	Body ReportContentRequest
+type ReportThreadInput struct {
+	ID   uuid.UUID `path:"id" doc:"Thread ID"`
+	Body ReportThreadRequest
 }
 
-type ReportContentOutput struct {
-	Body ReportContentResponseBody
+type ReportThreadOutput struct {
+	Body ReportThreadResponseBody
 }
 
-type ReportContentResponseBody struct {
+type ReportThreadResponseBody struct {
+	ReportID uuid.UUID `json:"reportId" doc:"Report ID"`
+}
+
+type ReportPostRequest struct {
+	Reason string `json:"reason" doc:"Report reason" validate:"required"`
+}
+
+type ReportPostInput struct {
+	ID     uuid.UUID `path:"id" doc:"Thread ID"`
+	PostID uuid.UUID `path:"postId" doc:"Post ID"`
+	Body   ReportPostRequest
+}
+
+type ReportPostOutput struct {
+	Body ReportPostResponseBody
+}
+
+type ReportPostResponseBody struct {
+	ReportID uuid.UUID `json:"reportId" doc:"Report ID"`
+}
+
+type ReportUserRequest struct {
+	ReportedAccountID uuid.UUID `json:"reportedAccountId" doc:"Reported account ID" validate:"required"`
+	Reason            string    `json:"reason" doc:"Report reason" validate:"required"`
+}
+
+type ReportUserInput struct {
+	ID   uuid.UUID `path:"id" doc:"Thread ID"`
+	Body ReportUserRequest
+}
+
+type ReportUserOutput struct {
+	Body ReportUserResponseBody
+}
+
+type ReportUserResponseBody struct {
 	ReportID uuid.UUID `json:"reportId" doc:"Report ID"`
 }
 
@@ -408,7 +444,7 @@ func ToPostDTO(post *entity.DiscussionPost) *PostDTO {
 	}
 }
 
-func ToCreateThreadInput(categoryID uuid.UUID, title, slug, description, initialPostContent string, attachmentURL, attachmentType *string) usecase.CreateThreadInput {
+func ToCreateThreadInput(categoryID uuid.UUID, parentThreadID *uuid.UUID, title, slug, description, initialPostContent string, attachmentURL, attachmentType *string) usecase.CreateThreadInput {
 	var descriptionPtr *string
 	if strings.TrimSpace(description) != "" {
 		d := strings.TrimSpace(description)
@@ -417,6 +453,7 @@ func ToCreateThreadInput(categoryID uuid.UUID, title, slug, description, initial
 
 	return usecase.CreateThreadInput{
 		CategoryID:         categoryID,
+		ParentThreadID:     parentThreadID,
 		Title:              title,
 		Slug:               slug,
 		Description:        descriptionPtr,

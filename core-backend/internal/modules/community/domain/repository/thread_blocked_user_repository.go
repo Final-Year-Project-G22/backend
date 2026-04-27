@@ -12,5 +12,6 @@ type ThreadBlockedUserRepository interface {
 	IsBlocked(ctx context.Context, threadID, accountID uuid.UUID) (bool, error)
 	Block(ctx context.Context, threadID, blockedID, blockedByID uuid.UUID, reason *string) error
 	Unblock(ctx context.Context, threadID, blockedID uuid.UUID) error
-	ListBlocked(ctx context.Context, threadID uuid.UUID, q query.QueryOptions) ([]*entity.ThreadBlockedUser, error)
+	ListBlocked(ctx context.Context, threadID uuid.UUID, q query.QueryOptions) ([]*entity.ThreadBlockedUser, int64, error)
+	ListAllBlocked(ctx context.Context, q query.QueryOptions) ([]*entity.ThreadBlockedUser, int64, error)
 }
