@@ -182,6 +182,34 @@ type TranslationResponse struct {
 	Content  map[string]interface{} `json:"content" doc:"Multi-channel localized content"`
 }
 
+// --- Queue Status ---
+
+type GetQueueStatusOutput struct {
+	Body QueueStatusResponse
+}
+
+type QueueStatusResponse struct {
+	Pending    int64 `json:"pending" doc:"Number of pending notifications"`
+	Processing int64 `json:"processing" doc:"Number of processing notifications"`
+	Delivered  int64 `json:"delivered" doc:"Number of delivered notifications"`
+	Failed     int64 `json:"failed" doc:"Number of failed notifications"`
+	Cancelled  int64 `json:"cancelled" doc:"Number of cancelled notifications"`
+}
+
+// --- Retry Failed ---
+
+type RetryFailedInput struct {
+	BatchSize int `query:"batchSize" doc:"Number of failed items to retry" default:"50"`
+}
+
+type RetryFailedOutput struct {
+	Body RetryFailedResponseBody
+}
+
+type RetryFailedResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
 // --- Mappers ---
 
 func ToCreateTemplateInput(body CreateTemplateRequest) usecase.CreateTemplateInput {
