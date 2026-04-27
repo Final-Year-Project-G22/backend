@@ -11,6 +11,9 @@ type DiscussionThread struct {
 	model.BaseModel `gorm:"embedded"`
 	CategoryID      uuid.UUID            `gorm:"type:uuid;not null;uniqueIndex:idx_discussion_threads_slug_per_category,priority:1;index:idx_discussion_threads_category"`
 	Category        CommunityCategory    `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ParentThreadID  *uuid.UUID           `gorm:"type:uuid;index:idx_threads_parent;uniqueIndex:idx_threads_slug_per_parent,priority:1"`
+	ParentThread    *DiscussionThread    `gorm:"foreignKey:ParentThreadID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	SubThreads      []DiscussionThread   `gorm:"foreignKey:ParentThreadID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	AuthorAccountID uuid.UUID            `gorm:"type:uuid;not null;index:idx_discussion_threads_author"`
 	Title           string               `gorm:"type:varchar(200);not null"`
 	Slug            string               `gorm:"type:varchar(200);not null;uniqueIndex:idx_discussion_threads_slug_per_category,priority:2"`

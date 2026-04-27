@@ -10,8 +10,9 @@ import (
 type ContentReport struct {
 	model.BaseModel     `gorm:"embedded"`
 	ReporterAccountID   uuid.UUID    `gorm:"type:uuid;not null;index:idx_content_reports_reporter"`
-	TargetType          TargetType   `gorm:"type:varchar(20);not null;index:idx_content_reports_target"`
-	TargetID            uuid.UUID    `gorm:"type:uuid;not null;index:idx_content_reports_target"`
+	ThreadID            *uuid.UUID   `gorm:"type:uuid;index:idx_content_reports_thread"`
+	PostID              *uuid.UUID   `gorm:"type:uuid;index:idx_content_reports_post"`
+	ReportedAccountID   *uuid.UUID   `gorm:"type:uuid;index:idx_content_reports_reported_account"`
 	Reason              string       `gorm:"type:text;not null"`
 	Status              ReportStatus `gorm:"type:varchar(20);not null;default:'pending';index:idx_content_reports_status"`
 	AdminNote           *string      `gorm:"type:text"`

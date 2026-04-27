@@ -33,9 +33,15 @@ func (r *discussionThreadRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *discussionThreadRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string) (*entity.DiscussionThread, error) {
+func (r *discussionThreadRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, parentThreadID *uuid.UUID) (*entity.DiscussionThread, error) {
 	var thread entity.DiscussionThread
-	if err := r.getDB(ctx).Where("category_id = ? AND slug = ?", categoryID, slug).First(&thread).Error; err != nil {
+	db := r.getDB(ctx).Where("category_id = ? AND slug = ?", categoryID, slug)
+	if parentThreadID != nil {
+		db = db.Where("parent_thread_id = ?", parentThreadID)
+	} else {
+		db = db.Where("parent_thread_id IS NULL")
+	}
+	if err := db.First(&thread).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, communityerror.ErrThreadNotFound
 		}

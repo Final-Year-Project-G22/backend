@@ -31,7 +31,9 @@ type CommunityService interface {
 	UnfollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
 	ListFollowedThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserThreadSettings, error)
 	ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error)
-	ReportContent(ctx context.Context, reporterID uuid.UUID, input usecase.ReportInput) (*entity.ContentReport, error)
+	ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error)
+	ReportPost(ctx context.Context, reporterID uuid.UUID, input usecase.ReportPostInput) (*entity.ContentReport, error)
+	ReportUser(ctx context.Context, reporterID uuid.UUID, input usecase.ReportUserInput) (*entity.ContentReport, error)
 }
 
 type communityService struct {
@@ -184,8 +186,16 @@ func (s *communityService) ListFollowedCategories(ctx context.Context, accountID
 	return s.followUsecase.ListFollowedCategories(ctx, accountID, q)
 }
 
-func (s *communityService) ReportContent(ctx context.Context, reporterID uuid.UUID, input usecase.ReportInput) (*entity.ContentReport, error) {
-	return s.reportUsecase.ReportContent(ctx, reporterID, input)
+func (s *communityService) ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error) {
+	return s.reportUsecase.ReportThread(ctx, reporterID, input)
+}
+
+func (s *communityService) ReportPost(ctx context.Context, reporterID uuid.UUID, input usecase.ReportPostInput) (*entity.ContentReport, error) {
+	return s.reportUsecase.ReportPost(ctx, reporterID, input)
+}
+
+func (s *communityService) ReportUser(ctx context.Context, reporterID uuid.UUID, input usecase.ReportUserInput) (*entity.ContentReport, error) {
+	return s.reportUsecase.ReportUser(ctx, reporterID, input)
 }
 
 func (s *communityService) uploadAttachment(ctx context.Context, attachment *AttachmentUploadInput) (string, *string, *string, error) {

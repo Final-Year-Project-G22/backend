@@ -124,6 +124,15 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 		return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "community.errors.invalidInput"))
 	}
 
+	var parentThreadID *uuid.UUID
+	if formData.ParentThreadID != "" {
+		parsed, err := uuid.Parse(formData.ParentThreadID)
+		if err != nil {
+			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("parentThreadId", "community.errors.invalidInput"))
+		}
+		parentThreadID = &parsed
+	}
+
 	attachment, err := readOptionalAttachment(formData.File)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -131,6 +140,7 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 
 	thread, post, err := h.communityService.CreateThreadWithPost(ctx, accountID, dto.ToCreateThreadInput(
 		categoryID,
+		parentThreadID,
 		formData.Title,
 		formData.Slug,
 		formData.Description,
@@ -303,17 +313,42 @@ func (h *CommunityHandler) HandleListFollowedCategories(ctx context.Context, inp
 	return &dto.ListFollowedCategoriesOutput{Body: dto.ListFollowedCategoriesResponseBody{Categories: items}}, nil
 }
 
-func (h *CommunityHandler) HandleReportContent(ctx context.Context, input *dto.ReportContentInput) (*dto.ReportContentOutput, error) {
+func (h *CommunityHandler) HandleReportThread(ctx context.Context, input *dto.ReportThreadInput) (*dto.ReportThreadOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
-	report, err := h.communityService.ReportContent(ctx, accountID, usecase.ReportInput{
-		TargetType: input.Body.TargetType,
-		TargetID:   input.Body.TargetID,
-		Reason:     input.Body.Reason,
+	report, err := h.communityService.ReportThread(ctx, accountID, usecase.ReportThreadInput{
+		ThreadID: input.ID,
+		Reason:   input.Body.Reason,
 	})
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.ReportContentOutput{Body: dto.ReportContentResponseBody{ReportID: report.ID}}, nil
+	return &dto.ReportThreadOutput{Body: dto.ReportThreadResponseBody{ReportID: report.ID}}, nil
+}
+
+func (h *CommunityHandler) HandleReportPost(ctx context.Context, input *dto.ReportPostInput) (*dto.ReportPostOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	report, err := h.communityService.ReportPost(ctx, accountID, usecase.ReportPostInput{
+		ThreadID: input.ID,
+		PostID:   input.PostID,
+		Reason:   input.Body.Reason,
+	})
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.ReportPostOutput{Body: dto.ReportPostResponseBody{ReportID: report.ID}}, nil
+}
+
+func (h *CommunityHandler) HandleReportUser(ctx context.Context, input *dto.ReportUserInput) (*dto.ReportUserOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	report, err := h.communityService.ReportUser(ctx, accountID, usecase.ReportUserInput{
+		ThreadID:          input.ID,
+		ReportedAccountID: input.Body.ReportedAccountID,
+		Reason:            input.Body.Reason,
+	})
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.ReportUserOutput{Body: dto.ReportUserResponseBody{ReportID: report.ID}}, nil
 }
 
 func (h *CommunityHandler) HandleBlockUser(ctx context.Context, input *dto.BlockUserInput) (*dto.BlockUserOutput, error) {
