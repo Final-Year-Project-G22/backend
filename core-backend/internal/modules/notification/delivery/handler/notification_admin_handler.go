@@ -4,16 +4,28 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 )
 
 type NotificationAdminHandler struct {
 	templateUC usecase.NotificationTemplateUsecase
+	deliveryUC usecase.NotificationDeliveryUsecase
+	queueRepo  repository.NotificationQueueRepository
 }
 
-func NewNotificationAdminHandler(templateUC usecase.NotificationTemplateUsecase) *NotificationAdminHandler {
-	return &NotificationAdminHandler{templateUC: templateUC}
+func NewNotificationAdminHandler(
+	templateUC usecase.NotificationTemplateUsecase,
+	deliveryUC usecase.NotificationDeliveryUsecase,
+	queueRepo repository.NotificationQueueRepository,
+) *NotificationAdminHandler {
+	return &NotificationAdminHandler{
+		templateUC: templateUC,
+		deliveryUC: deliveryUC,
+		queueRepo:  queueRepo,
+	}
 }
 
 func (h *NotificationAdminHandler) HandleCreateTemplate(ctx context.Context, input *dto.CreateTemplateInput) (*dto.CreateTemplateOutput, error) {
@@ -101,4 +113,48 @@ func (h *NotificationAdminHandler) HandleDeleteTranslation(ctx context.Context, 
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.DeleteTranslationOutput{Body: dto.DeleteTranslationResponseBody{Message: "Translation deleted"}}, nil
+}
+
+// --- Monitoring ---
+
+func (h *NotificationAdminHandler) HandleGetQueueStatus(ctx context.Context, input *struct{}) (*dto.GetQueueStatusOutput, error) {
+	pending, err := h.queueRepo.CountByStatus(ctx, entity.NotificationStatusPending)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	processing, err := h.queueRepo.CountByStatus(ctx, entity.NotificationStatusProcessing)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	delivered, err := h.queueRepo.CountByStatus(ctx, entity.NotificationStatusDelivered)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	failed, err := h.queueRepo.CountByStatus(ctx, entity.NotificationStatusFailed)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	cancelled, err := h.queueRepo.CountByStatus(ctx, entity.NotificationStatusCancelled)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.GetQueueStatusOutput{Body: dto.QueueStatusResponse{
+		Pending:    pending,
+		Processing: processing,
+		Delivered:  delivered,
+		Failed:     failed,
+		Cancelled:  cancelled,
+	}}, nil
+}
+
+func (h *NotificationAdminHandler) HandleRetryFailed(ctx context.Context, input *dto.RetryFailedInput) (*dto.RetryFailedOutput, error) {
+	batchSize := input.BatchSize
+	if batchSize <= 0 {
+		batchSize = 50
+	}
+	if err := h.deliveryUC.RetryFailed(ctx, batchSize); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.RetryFailedOutput{Body: dto.RetryFailedResponseBody{Message: "Retry initiated"}}, nil
 }
