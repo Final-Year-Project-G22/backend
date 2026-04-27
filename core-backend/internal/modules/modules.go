@@ -6,6 +6,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/coregrpc"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification"
 	"go.uber.org/fx"
 )
 
@@ -15,4 +16,5 @@ var Modules = fx.Options(
 	guide.Module,
 	community.Module,
 	coregrpc.Module,
+	notification.Module,
 )
