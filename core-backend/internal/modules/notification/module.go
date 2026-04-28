@@ -13,6 +13,7 @@ import (
 	emailProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/email"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/repository"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/fx"
 )
@@ -41,9 +42,9 @@ var Module = fx.Module(
 	fx.Provide(appservice.NewDeliveryWorker),
 
 	// --- Email Provider ---
-	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) emailProvider.EmailProvider {
+	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.EmailProvider {
 		return emailProvider.NewResendProvider(cfg.Resend, logger)
-	}, fx.As(new(emailProvider.EmailProvider)))),
+	}, fx.As(new(repository.EmailProvider)))),
 
 	// --- IAM global preference reader (default: enabled) ---
 	fx.Provide(fx.Annotate(func() appusecase.IAMGlobalPreferenceReader {
@@ -64,16 +65,20 @@ var Module = fx.Module(
 	// --- Handlers ---
 	fx.Provide(handler.NewNotificationAdminHandler),
 	fx.Provide(handler.NewNotificationHandler),
+	fx.Provide(handler.NewWebhookHandler),
 
 	// --- Routes ---
 	fx.Invoke(func(
 		api huma.API,
+		engine *gin.Engine,
 		adminHandler *handler.NotificationAdminHandler,
 		notificationHandler *handler.NotificationHandler,
+		webhookHandler *handler.WebhookHandler,
 	) {
-		routes.RegisterRoutes(api, routes.RouteDependencies{
+		routes.RegisterRoutes(api, engine, routes.RouteDependencies{
 			AdminHandler:        adminHandler,
 			NotificationHandler: notificationHandler,
+			WebhookHandler:      webhookHandler,
 		})
 	}),
 

@@ -16,12 +16,10 @@ import (
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 )
 
-type EmailProvider interface {
-	Send(ctx context.Context, to, subject, body string, metadata map[string]string) (providerMessageID string, err error)
-	VerifyWebhookSignature(ctx context.Context, payload []byte, svixTimestamp, svixSignature string) (bool, error)
-}
+var _ repository.EmailProvider = (*ResendProvider)(nil)
 
 type ResendProvider struct {
 	config     core.ResendConfig
