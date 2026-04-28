@@ -52,17 +52,19 @@ func (r *emailDeliveryLogRepository) UpdateDeliveryEvent(ctx context.Context, id
 	switch eventType {
 	case "delivered":
 		updates["delivered_at"] = occurredAt
+		updates["delivery_status"] = entity.DeliveryStatusDelivered
 	case "opened":
 		updates["opened_at"] = occurredAt
 	case "clicked":
 		updates["clicked_at"] = occurredAt
 	case "bounced":
-		updates["delivered_at"] = occurredAt
+		updates["delivery_status"] = entity.DeliveryStatusBounced
 		if reason, ok := metadata["bounceReason"].(string); ok {
 			updates["bounce_reason"] = reason
 		}
 	case "complained":
 		updates["complaint"] = true
+		updates["delivery_status"] = entity.DeliveryStatusBounced
 	}
 
 	result := r.getDB(ctx).Model(&entity.EmailDeliveryLog{}).
