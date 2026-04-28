@@ -10,6 +10,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/routes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
+	emailProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/email"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
@@ -33,10 +34,16 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationQueueRepository, fx.As(new(repository.NotificationQueueRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationHistoryRepository, fx.As(new(repository.NotificationHistoryRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewUserNotificationInboxRepository, fx.As(new(repository.UserNotificationInboxRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewEmailDeliveryLogRepository, fx.As(new(repository.EmailDeliveryLogRepository)))),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
 	fx.Provide(appservice.NewDeliveryWorker),
+
+	// --- Email Provider ---
+	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) emailProvider.EmailProvider {
+		return emailProvider.NewResendProvider(cfg.Resend, logger)
+	}, fx.As(new(emailProvider.EmailProvider)))),
 
 	// --- IAM global preference reader (default: enabled) ---
 	fx.Provide(fx.Annotate(func() appusecase.IAMGlobalPreferenceReader {
@@ -52,6 +59,7 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(appusecase.NewNotificationPreferenceUsecase, fx.As(new(usecase.NotificationPreferenceUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationMuteUsecase, fx.As(new(usecase.NotificationMuteUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationDeviceUsecase, fx.As(new(usecase.NotificationDeviceUsecase)))),
+	fx.Provide(fx.Annotate(appusecase.NewEmailDeliveryUsecase, fx.As(new(usecase.EmailDeliveryUsecase)))),
 
 	// --- Handlers ---
 	fx.Provide(handler.NewNotificationAdminHandler),
