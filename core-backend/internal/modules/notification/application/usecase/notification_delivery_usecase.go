@@ -212,6 +212,7 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 			RecipientEmail:        to,
 			Subject:               subject,
 			SentAt:                now,
+			DeliveryStatus:        entity.DeliveryStatusSent,
 		}
 
 		if err := uc.deliveryLogRepo.Create(txCtx, deliveryLog); err != nil {
