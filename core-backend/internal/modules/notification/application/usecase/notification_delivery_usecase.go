@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
@@ -14,23 +15,32 @@ import (
 )
 
 type notificationDeliveryUsecase struct {
-	queueRepo   repository.NotificationQueueRepository
-	historyRepo repository.NotificationHistoryRepository
-	inboxRepo   repository.UserNotificationInboxRepository
-	transactor  sharedrepo.Transactor
+	queueRepo       repository.NotificationQueueRepository
+	historyRepo     repository.NotificationHistoryRepository
+	inboxRepo       repository.UserNotificationInboxRepository
+	deliveryLogRepo repository.EmailDeliveryLogRepository
+	emailProvider   repository.EmailProvider
+	transactor      sharedrepo.Transactor
+	logger          core.Logger
 }
 
 func NewNotificationDeliveryUsecase(
 	queueRepo repository.NotificationQueueRepository,
 	historyRepo repository.NotificationHistoryRepository,
 	inboxRepo repository.UserNotificationInboxRepository,
+	deliveryLogRepo repository.EmailDeliveryLogRepository,
+	emailProvider repository.EmailProvider,
 	transactor sharedrepo.Transactor,
+	logger core.Logger,
 ) usecase.NotificationDeliveryUsecase {
 	return &notificationDeliveryUsecase{
-		queueRepo:   queueRepo,
-		historyRepo: historyRepo,
-		inboxRepo:   inboxRepo,
-		transactor:  transactor,
+		queueRepo:       queueRepo,
+		historyRepo:     historyRepo,
+		inboxRepo:       inboxRepo,
+		deliveryLogRepo: deliveryLogRepo,
+		emailProvider:   emailProvider,
+		transactor:      transactor,
+		logger:          logger,
 	}
 }
 
@@ -62,6 +72,8 @@ func (uc *notificationDeliveryUsecase) DeliverItem(ctx context.Context, queueID 
 	switch item.Channel {
 	case entity.ChannelInApp:
 		return uc.deliverInApp(ctx, item)
+	case entity.ChannelEmail:
+		return uc.deliverEmail(ctx, item)
 	default:
 		return nil
 	}
@@ -130,8 +142,101 @@ func (uc *notificationDeliveryUsecase) CancelPendingForAccount(ctx context.Conte
 	return uc.queueRepo.CancelByAccount(ctx, accountID)
 }
 
+func (uc *notificationDeliveryUsecase) deliverEmail(ctx context.Context, item *entity.NotificationQueue) error {
+	to, _ := item.Payload["to"].(string)
+	subject, _ := item.Payload["subject"].(string)
+	body, _ := item.Payload["content"].(string)
+
+	if to == "" || subject == "" {
+		msg := "missing required email payload fields"
+		return uc.HandleDeliveryResult(ctx, item.ID, false, &msg)
+	}
+
+	metadata := map[string]string{
+		"X-Notification-ID":   item.ID.String(),
+		"X-Notification-Type": string(item.NotificationType),
+	}
+
+	providerMsgID, err := uc.emailProvider.Send(ctx, to, subject, body, metadata)
+	if err != nil {
+		msg := err.Error()
+		uc.logger.Error("Email send failed",
+			core.String("queueID", item.ID.String()),
+			core.String("to", to),
+			core.Error(err),
+		)
+		return uc.HandleDeliveryResult(ctx, item.ID, false, &msg)
+	}
+
+	return uc.createHistoryInboxAndDeliveryLog(ctx, item, providerMsgID, to, subject)
+}
+
 func (uc *notificationDeliveryUsecase) deliverInApp(ctx context.Context, item *entity.NotificationQueue) error {
 	return uc.HandleDeliveryResult(ctx, item.ID, true, nil)
+}
+
+func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx context.Context, item *entity.NotificationQueue, providerMsgID, to, subject string) error {
+	return uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		title, _ := item.Payload["title"].(string)
+		content, _ := item.Payload["content"].(string)
+		actionUrlStr, _ := item.Payload["actionUrl"].(string)
+		isMuted, _ := item.Payload["_isMuted"].(bool)
+
+		var actionUrl *string
+		if actionUrlStr != "" {
+			actionUrl = &actionUrlStr
+		}
+
+		now := time.Now().UTC()
+
+		history := &entity.NotificationHistory{
+			AccountID:        item.AccountID,
+			NotificationType: item.NotificationType,
+			Channel:          item.Channel,
+			Title:            title,
+			Content:          content,
+			ActionUrl:        actionUrl,
+			SentAt:           now,
+			DeliveredAt:      &now,
+			DeliveryStatus:   entity.DeliveryStatusDelivered,
+		}
+
+		if err := uc.historyRepo.Create(txCtx, history); err != nil {
+			return fmt.Errorf("failed to create history entry: %w", err)
+		}
+
+		deliveryLog := &entity.EmailDeliveryLog{
+			NotificationHistoryID: history.ID,
+			Provider:              "resend",
+			ProviderMessageID:     &providerMsgID,
+			RecipientEmail:        to,
+			Subject:               subject,
+			SentAt:                now,
+		}
+
+		if err := uc.deliveryLogRepo.Create(txCtx, deliveryLog); err != nil {
+			return fmt.Errorf("failed to create email delivery log: %w", err)
+		}
+
+		if isMuted {
+			return uc.queueRepo.MarkDelivered(txCtx, item.ID)
+		}
+
+		inbox := &entity.UserNotificationInbox{
+			AccountID:             item.AccountID,
+			NotificationHistoryID: history.ID,
+			Category:              uc.toCategory(item.NotificationType),
+			ActionUrl:             actionUrl,
+			IsRead:                false,
+			IsArchived:            false,
+		}
+
+		if err := uc.inboxRepo.Create(txCtx, inbox); err != nil {
+			return fmt.Errorf("failed to create inbox entry: %w", err)
+		}
+
+		return uc.queueRepo.MarkDelivered(txCtx, item.ID)
+	})
 }
 
 func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context, item *entity.NotificationQueue) error {
