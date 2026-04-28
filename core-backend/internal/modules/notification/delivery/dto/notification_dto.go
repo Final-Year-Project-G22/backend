@@ -11,9 +11,9 @@ import (
 // --- Inbox List ---
 
 type ListInboxInput struct {
-	Category *entity.NotificationCategory `query:"category" doc:"Filter by notification category"`
-	Page     int                          `query:"page" doc:"Page number"`
-	PageSize int                          `query:"pageSize" doc:"Items per page"`
+	Category string `query:"category" doc:"Filter by notification category"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Items per page"`
 }
 
 type ListInboxOutput struct {

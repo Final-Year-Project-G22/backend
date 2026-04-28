@@ -59,9 +59,9 @@ type TemplateDetailResponse struct {
 // --- List Templates ---
 
 type ListTemplatesInput struct {
-	Category *entity.NotificationCategory `query:"category" doc:"Filter by category"`
-	Page     int                          `query:"page" doc:"Page number"`
-	PageSize int                          `query:"pageSize" doc:"Items per page"`
+	Category string `query:"category" doc:"Filter by category"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Items per page"`
 }
 
 type ListTemplatesOutput struct {

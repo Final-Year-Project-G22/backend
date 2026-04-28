@@ -5,6 +5,7 @@ import (
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 )
@@ -38,7 +39,12 @@ func NewNotificationHandler(
 func (h *NotificationHandler) HandleListInbox(ctx context.Context, input *dto.ListInboxInput) (*dto.ListInboxOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	inboxes, err := h.inboxUC.ListInbox(ctx, accountID, input.Category, q)
+	var category *entity.NotificationCategory
+	if input.Category != "" {
+		cat := entity.NotificationCategory(input.Category)
+		category = &cat
+	}
+	inboxes, err := h.inboxUC.ListInbox(ctx, accountID, category, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
