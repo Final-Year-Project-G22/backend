@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	"github.com/google/uuid"
 )
 
@@ -167,7 +168,292 @@ type GetHistoryOutput struct {
 	Body HistoryEntryResponse
 }
 
+// --- Preferences ---
+
+type SetPreferenceRequest struct {
+	NotificationType entity.NotificationType `json:"notificationType" doc:"Notification type"`
+	Channel          entity.Channel          `json:"channel" doc:"Channel"`
+	IsEnabled        bool                    `json:"isEnabled" doc:"Whether the notification type is enabled for this channel"`
+	QuietHoursStart  *time.Time              `json:"quietHoursStart,omitempty" doc:"Quiet hours start time"`
+	QuietHoursEnd    *time.Time              `json:"quietHoursEnd,omitempty" doc:"Quiet hours end time"`
+}
+
+type SetPreferenceInput struct {
+	Body SetPreferenceRequest
+}
+
+type SetPreferenceOutput struct {
+	Body SetPreferenceResponseBody
+}
+
+type SetPreferenceResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type ListPreferencesOutput struct {
+	Body []PreferenceResponse
+}
+
+type PreferenceResponse struct {
+	NotificationType entity.NotificationType `json:"notificationType" doc:"Notification type"`
+	Channel          entity.Channel          `json:"channel" doc:"Channel"`
+	IsEnabled        bool                    `json:"isEnabled" doc:"Whether enabled"`
+	QuietHoursStart  *time.Time              `json:"quietHoursStart,omitempty" doc:"Quiet hours start time"`
+	QuietHoursEnd    *time.Time              `json:"quietHoursEnd,omitempty" doc:"Quiet hours end time"`
+}
+
+type DeletePreferenceInput struct {
+	NotificationType entity.NotificationType `path:"type" doc:"Notification type"`
+	Channel          entity.Channel          `path:"channel" doc:"Channel"`
+}
+
+type DeletePreferenceOutput struct {
+	Body DeletePreferenceResponseBody
+}
+
+type DeletePreferenceResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+// --- Mutes ---
+
+type MuteAccountRequest struct {
+	MutedAccountID uuid.UUID  `json:"mutedAccountId" doc:"Account ID to mute"`
+	MuteUntil      *time.Time `json:"muteUntil,omitempty" doc:"Optional expiration time"`
+	Reason         *string    `json:"reason,omitempty" doc:"Reason for muting"`
+}
+
+type MuteAccountInput struct {
+	Body MuteAccountRequest
+}
+
+type MuteAccountOutput struct {
+	Body MuteAccountResponseBody
+}
+
+type MuteAccountResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type ListMutesInput struct {
+	Page     int `query:"page" doc:"Page number"`
+	PageSize int `query:"pageSize" doc:"Items per page"`
+}
+
+type ListMutesOutput struct {
+	Body ListMutesResponseBody
+}
+
+type ListMutesResponseBody struct {
+	Data       []MuteEntryResponse `json:"data" doc:"Muted accounts"`
+	Total      int64               `json:"total" doc:"Total count"`
+	Page       int                 `json:"page" doc:"Current page"`
+	PageSize   int                 `json:"pageSize" doc:"Items per page"`
+	TotalPages int                 `json:"totalPages" doc:"Total pages"`
+}
+
+type MuteEntryResponse struct {
+	ID             uuid.UUID  `json:"id" doc:"Mute entry ID"`
+	MutedAccountID uuid.UUID  `json:"mutedAccountId" doc:"Muted account ID"`
+	MuteUntil      *time.Time `json:"muteUntil,omitempty" doc:"Expiration time"`
+	Reason         *string    `json:"reason,omitempty" doc:"Reason for muting"`
+	CreatedAt      *time.Time `json:"createdAt" doc:"When the mute was created"`
+}
+
+type UnmuteAccountInput struct {
+	MutedAccountID uuid.UUID `path:"accountId" doc:"Muted account ID"`
+}
+
+type UnmuteAccountOutput struct {
+	Body UnmuteAccountResponseBody
+}
+
+type UnmuteAccountResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+// --- Devices ---
+
+type RegisterDeviceRequest struct {
+	DeviceType  entity.DeviceType `json:"deviceType" doc:"Device type"`
+	DeviceToken string            `json:"deviceToken" doc:"Device token"`
+	PushToken   *string           `json:"pushToken,omitempty" doc:"Push notification token"`
+	DeviceName  *string           `json:"deviceName,omitempty" doc:"Device name"`
+	DeviceModel *string           `json:"deviceModel,omitempty" doc:"Device model"`
+	OSVersion   *string           `json:"osVersion,omitempty" doc:"OS version"`
+	AppVersion  *string           `json:"appVersion,omitempty" doc:"App version"`
+}
+
+type RegisterDeviceInput struct {
+	Body RegisterDeviceRequest
+}
+
+type RegisterDeviceOutput struct {
+	Body RegisterDeviceResponseBody
+}
+
+type RegisterDeviceResponseBody struct {
+	ID      uuid.UUID `json:"id" doc:"Device ID"`
+	Message string    `json:"message" doc:"Success message"`
+}
+
+type ListDevicesOutput struct {
+	Body []DeviceResponse
+}
+
+type DeviceResponse struct {
+	ID           uuid.UUID         `json:"id" doc:"Device ID"`
+	DeviceType   entity.DeviceType `json:"deviceType" doc:"Device type"`
+	DeviceToken  string            `json:"deviceToken" doc:"Device token"`
+	PushToken    *string           `json:"pushToken,omitempty" doc:"Push notification token"`
+	DeviceName   *string           `json:"deviceName,omitempty" doc:"Device name"`
+	DeviceModel  *string           `json:"deviceModel,omitempty" doc:"Device model"`
+	OSVersion    *string           `json:"osVersion,omitempty" doc:"OS version"`
+	AppVersion   *string           `json:"appVersion,omitempty" doc:"App version"`
+	IsActive     bool              `json:"isActive" doc:"Whether the device is active"`
+	LastActiveAt *time.Time        `json:"lastActiveAt,omitempty" doc:"Last active time"`
+}
+
+type UpdateDeviceRequest struct {
+	PushToken  *string `json:"pushToken,omitempty" doc:"Push notification token"`
+	DeviceName *string `json:"deviceName,omitempty" doc:"Device name"`
+	OSVersion  *string `json:"osVersion,omitempty" doc:"OS version"`
+	AppVersion *string `json:"appVersion,omitempty" doc:"App version"`
+	IsActive   *bool   `json:"isActive,omitempty" doc:"Whether the device is active"`
+}
+
+type UpdateDeviceInput struct {
+	ID   uuid.UUID `path:"id" doc:"Device ID"`
+	Body UpdateDeviceRequest
+}
+
+type UpdateDeviceOutput struct {
+	Body DeviceResponse
+}
+
+type DeactivateDeviceInput struct {
+	ID uuid.UUID `path:"id" doc:"Device ID"`
+}
+
+type DeactivateDeviceOutput struct {
+	Body DeactivateDeviceResponseBody
+}
+
+type DeactivateDeviceResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
 // --- Mappers ---
+
+func ToSetPreferenceInput(body SetPreferenceRequest) usecase.SetPreferenceInput {
+	return usecase.SetPreferenceInput{
+		NotificationType: body.NotificationType,
+		Channel:          body.Channel,
+		IsEnabled:        body.IsEnabled,
+		QuietHoursStart:  body.QuietHoursStart,
+		QuietHoursEnd:    body.QuietHoursEnd,
+	}
+}
+
+func ToMuteAccountInput(body MuteAccountRequest) usecase.MuteAccountInput {
+	return usecase.MuteAccountInput{
+		MutedAccountID: body.MutedAccountID,
+		MuteUntil:      body.MuteUntil,
+		Reason:         body.Reason,
+	}
+}
+
+func ToRegisterDeviceInput(body RegisterDeviceRequest) usecase.RegisterDeviceInput {
+	return usecase.RegisterDeviceInput{
+		DeviceType:  body.DeviceType,
+		DeviceToken: body.DeviceToken,
+		PushToken:   body.PushToken,
+		DeviceName:  body.DeviceName,
+		DeviceModel: body.DeviceModel,
+		OSVersion:   body.OSVersion,
+		AppVersion:  body.AppVersion,
+	}
+}
+
+func ToUpdateDeviceInput(body UpdateDeviceRequest) usecase.UpdateDeviceInput {
+	return usecase.UpdateDeviceInput{
+		PushToken:  body.PushToken,
+		DeviceName: body.DeviceName,
+		OSVersion:  body.OSVersion,
+		AppVersion: body.AppVersion,
+		IsActive:   body.IsActive,
+	}
+}
+
+func ToPreferenceResponse(pref *entity.UserNotificationPreference) PreferenceResponse {
+	return PreferenceResponse{
+		NotificationType: pref.NotificationType,
+		Channel:          pref.Channel,
+		IsEnabled:        pref.IsEnabled,
+		QuietHoursStart:  pref.QuietHoursStart,
+		QuietHoursEnd:    pref.QuietHoursEnd,
+	}
+}
+
+func ToPreferenceResponses(prefs []*entity.UserNotificationPreference) []PreferenceResponse {
+	if len(prefs) == 0 {
+		return nil
+	}
+	resp := make([]PreferenceResponse, 0, len(prefs))
+	for _, p := range prefs {
+		resp = append(resp, ToPreferenceResponse(p))
+	}
+	return resp
+}
+
+func ToMuteEntryResponse(mute *entity.MutedAccount) MuteEntryResponse {
+	return MuteEntryResponse{
+		ID:             mute.ID,
+		MutedAccountID: mute.MutedAccountID,
+		MuteUntil:      mute.MuteUntil,
+		Reason:         mute.Reason,
+		CreatedAt:      mute.CreatedAt,
+	}
+}
+
+func ToMuteEntryResponses(mutes []*entity.MutedAccount) []MuteEntryResponse {
+	if len(mutes) == 0 {
+		return nil
+	}
+	resp := make([]MuteEntryResponse, 0, len(mutes))
+	for _, m := range mutes {
+		resp = append(resp, ToMuteEntryResponse(m))
+	}
+	return resp
+}
+
+func ToDeviceResponse(device *entity.UserDevice) DeviceResponse {
+	return DeviceResponse{
+		ID:           device.ID,
+		DeviceType:   device.DeviceType,
+		DeviceToken:  device.DeviceToken,
+		PushToken:    device.PushToken,
+		DeviceName:   device.DeviceName,
+		DeviceModel:  device.DeviceModel,
+		OSVersion:    device.OSVersion,
+		AppVersion:   device.AppVersion,
+		IsActive:     device.IsActive,
+		LastActiveAt: device.LastActiveAt,
+	}
+}
+
+func ToDeviceResponses(devices []*entity.UserDevice) []DeviceResponse {
+	if len(devices) == 0 {
+		return nil
+	}
+	resp := make([]DeviceResponse, 0, len(devices))
+	for _, d := range devices {
+		resp = append(resp, ToDeviceResponse(d))
+	}
+	return resp
+}
+
+// --- Existing mappers below ---
 
 func ToInboxEntryResponse(inbox *entity.UserNotificationInbox) InboxEntryResponse {
 	resp := InboxEntryResponse{

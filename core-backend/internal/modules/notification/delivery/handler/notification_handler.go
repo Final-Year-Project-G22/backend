@@ -12,15 +12,24 @@ import (
 type NotificationHandler struct {
 	inboxUC   usecase.NotificationInboxUsecase
 	historyUC usecase.NotificationHistoryUsecase
+	prefUC    usecase.NotificationPreferenceUsecase
+	muteUC    usecase.NotificationMuteUsecase
+	deviceUC  usecase.NotificationDeviceUsecase
 }
 
 func NewNotificationHandler(
 	inboxUC usecase.NotificationInboxUsecase,
 	historyUC usecase.NotificationHistoryUsecase,
+	prefUC usecase.NotificationPreferenceUsecase,
+	muteUC usecase.NotificationMuteUsecase,
+	deviceUC usecase.NotificationDeviceUsecase,
 ) *NotificationHandler {
 	return &NotificationHandler{
 		inboxUC:   inboxUC,
 		historyUC: historyUC,
+		prefUC:    prefUC,
+		muteUC:    muteUC,
+		deviceUC:  deviceUC,
 	}
 }
 
@@ -117,6 +126,105 @@ func (h *NotificationHandler) HandleGetHistoryDetail(ctx context.Context, input 
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.GetHistoryOutput{Body: dto.ToHistoryEntryResponse(history)}, nil
+}
+
+// --- Preferences ---
+
+func (h *NotificationHandler) HandleListPreferences(ctx context.Context, input *struct{}) (*dto.ListPreferencesOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	prefs, err := h.prefUC.GetPreferences(ctx, accountID)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.ListPreferencesOutput{Body: dto.ToPreferenceResponses(prefs)}, nil
+}
+
+func (h *NotificationHandler) HandleSetPreference(ctx context.Context, input *dto.SetPreferenceInput) (*dto.SetPreferenceOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.prefUC.SetPreference(ctx, accountID, dto.ToSetPreferenceInput(input.Body)); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.SetPreferenceOutput{Body: dto.SetPreferenceResponseBody{Message: "Preference set"}}, nil
+}
+
+func (h *NotificationHandler) HandleDeletePreference(ctx context.Context, input *dto.DeletePreferenceInput) (*dto.DeletePreferenceOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.prefUC.DeletePreference(ctx, accountID, input.NotificationType, input.Channel); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.DeletePreferenceOutput{Body: dto.DeletePreferenceResponseBody{Message: "Preference deleted"}}, nil
+}
+
+// --- Mutes ---
+
+func (h *NotificationHandler) HandleListMutes(ctx context.Context, input *dto.ListMutesInput) (*dto.ListMutesOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	q := dto.ToQueryOptions(input.Page, input.PageSize)
+	mutes, err := h.muteUC.ListMutedAccounts(ctx, accountID, q)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	data := dto.ToMuteEntryResponses(mutes)
+	return &dto.ListMutesOutput{Body: dto.ListMutesResponseBody{
+		Data:       data,
+		Total:      int64(len(data)),
+		Page:       q.Page,
+		PageSize:   q.PageSize,
+		TotalPages: calcTotalPages(len(data), q.PageSize),
+	}}, nil
+}
+
+func (h *NotificationHandler) HandleMuteAccount(ctx context.Context, input *dto.MuteAccountInput) (*dto.MuteAccountOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.muteUC.MuteAccount(ctx, accountID, dto.ToMuteAccountInput(input.Body)); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.MuteAccountOutput{Body: dto.MuteAccountResponseBody{Message: "Account muted"}}, nil
+}
+
+func (h *NotificationHandler) HandleUnmuteAccount(ctx context.Context, input *dto.UnmuteAccountInput) (*dto.UnmuteAccountOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.muteUC.UnmuteAccount(ctx, accountID, input.MutedAccountID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.UnmuteAccountOutput{Body: dto.UnmuteAccountResponseBody{Message: "Account unmuted"}}, nil
+}
+
+// --- Devices ---
+
+func (h *NotificationHandler) HandleListDevices(ctx context.Context, input *struct{}) (*dto.ListDevicesOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	devices, err := h.deviceUC.ListDevices(ctx, accountID)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.ListDevicesOutput{Body: dto.ToDeviceResponses(devices)}, nil
+}
+
+func (h *NotificationHandler) HandleRegisterDevice(ctx context.Context, input *dto.RegisterDeviceInput) (*dto.RegisterDeviceOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	device, err := h.deviceUC.RegisterDevice(ctx, accountID, dto.ToRegisterDeviceInput(input.Body))
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.RegisterDeviceOutput{Body: dto.RegisterDeviceResponseBody{ID: device.ID, Message: "Device registered"}}, nil
+}
+
+func (h *NotificationHandler) HandleUpdateDevice(ctx context.Context, input *dto.UpdateDeviceInput) (*dto.UpdateDeviceOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	device, err := h.deviceUC.UpdateDevice(ctx, accountID, input.ID, dto.ToUpdateDeviceInput(input.Body))
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.UpdateDeviceOutput{Body: dto.ToDeviceResponse(device)}, nil
+}
+
+func (h *NotificationHandler) HandleDeactivateDevice(ctx context.Context, input *dto.DeactivateDeviceInput) (*dto.DeactivateDeviceOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.deviceUC.DeactivateDevice(ctx, accountID, input.ID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.DeactivateDeviceOutput{Body: dto.DeactivateDeviceResponseBody{Message: "Device deactivated"}}, nil
 }
 
 // --- Helpers ---
