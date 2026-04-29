@@ -189,7 +189,12 @@ func (h *NotificationAdminHandler) HandleGetCampaign(ctx context.Context, input 
 
 func (h *NotificationAdminHandler) HandleListCampaigns(ctx context.Context, input *dto.ListCampaignsInput) (*dto.ListCampaignsOutput, error) {
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	items, err := h.campaignUC.ListCampaigns(ctx, input.Status, q)
+	var statusFilter *entity.CampaignStatus
+	if input.Status != "" {
+		s := input.Status
+		statusFilter = &s
+	}
+	items, err := h.campaignUC.ListCampaigns(ctx, statusFilter, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

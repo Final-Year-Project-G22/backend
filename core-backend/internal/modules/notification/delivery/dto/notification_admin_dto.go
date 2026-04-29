@@ -343,9 +343,9 @@ type CampaignDetailResponse struct {
 }
 
 type ListCampaignsInput struct {
-	Status   *entity.CampaignStatus `query:"status" doc:"Filter by status"`
-	Page     int                    `query:"page" doc:"Page number"`
-	PageSize int                    `query:"pageSize" doc:"Items per page"`
+	Status   entity.CampaignStatus `query:"status" doc:"Filter by status"`
+	Page     int                   `query:"page" doc:"Page number"`
+	PageSize int                   `query:"pageSize" doc:"Items per page"`
 }
 
 type ListCampaignsOutput struct {
