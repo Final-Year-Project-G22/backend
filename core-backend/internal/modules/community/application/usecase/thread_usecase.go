@@ -58,7 +58,20 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 		return nil, nil, apperrors.InvalidInputError("categoryId", "community.errors.categoryInactive")
 	}
 
-	existing, err := u.threadRepo.GetBySlug(ctx, input.CategoryID, input.Slug)
+	if input.ParentThreadID != nil {
+		parentThread, err := u.threadRepo.GetByID(ctx, *input.ParentThreadID)
+		if err != nil {
+			if err == communityerror.ErrThreadNotFound {
+				return nil, nil, apperrors.InvalidInputError("parentThreadId", "community.errors.threadNotFound")
+			}
+			return nil, nil, err
+		}
+		if parentThread.Status != entity.ThreadStatusActive {
+			return nil, nil, apperrors.InvalidInputError("parentThreadId", "community.errors.threadClosed")
+		}
+	}
+
+	existing, err := u.threadRepo.GetBySlug(ctx, input.CategoryID, input.Slug, input.ParentThreadID)
 	if err != nil && err != communityerror.ErrThreadNotFound {
 		return nil, nil, err
 	}
@@ -72,6 +85,7 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 	if err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		thread = &entity.DiscussionThread{
 			CategoryID:      input.CategoryID,
+			ParentThreadID:  input.ParentThreadID,
 			AuthorAccountID: accountID,
 			Title:           strings.TrimSpace(input.Title),
 			Slug:            strings.TrimSpace(input.Slug),

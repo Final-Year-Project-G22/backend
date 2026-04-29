@@ -23,6 +23,7 @@ type UpdateCategoryInput struct {
 
 type CreateThreadInput struct {
 	CategoryID         uuid.UUID
+	ParentThreadID     *uuid.UUID
 	Title              string
 	Slug               string
 	Description        *string
@@ -51,10 +52,31 @@ type UpdatePostInput struct {
 	RemoveAttachment *bool
 }
 
-type ReportInput struct {
-	TargetType entity.TargetType
-	TargetID   uuid.UUID
-	Reason     string
+type ReportThreadInput struct {
+	ThreadID uuid.UUID
+	Reason   string
+}
+
+type ReportPostInput struct {
+	ThreadID uuid.UUID
+	PostID   uuid.UUID
+	Reason   string
+}
+
+type ReportUserInput struct {
+	ThreadID          uuid.UUID
+	ReportedAccountID uuid.UUID
+	Reason            string
+}
+
+type UpdateReportStatusInput struct {
+	Status    entity.ReportStatus
+	AdminNote *string
+}
+
+type DeleteReportedContentInput struct {
+	ReportID uuid.UUID
+	AdminID  uuid.UUID
 }
 
 type BlockUserInput struct {

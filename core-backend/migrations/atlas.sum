@@ -1,4 +1,4 @@
-h1:3/xtBS5YkGsJdOd3/E5usdvwqAbR9l9BgRGT7BXVb9o=
+h1:BAXZ928VgLh99yAspBZh8FZbR//1iwQzgVN775Hjb4w=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -10,3 +10,8 @@ h1:3/xtBS5YkGsJdOd3/E5usdvwqAbR9l9BgRGT7BXVb9o=
 20260407194758_community-module.sql h1:StBnsRfel9g/VXIqjoHbJ6xhKIB9vC/tjST4sFiIHeg=
 20260413220308_documentIngestionEntities.sql h1:t9oy4O6eyfAWCXzMZKzdYrtUqRLZe4Cgxrem0uoR/k0=
 20260416195730_ingestionStatus.sql h1:baqesxIqnp2rPOO8ZOsLec5LTayfPXE+9ob0rUyWx6k=
+20260426103804_sub_thread_support_and_community_report_redesign.sql h1:DW8MebMw0EMDX6skudFeD2Am3PoxgMjefMPln3Bgahc=
+20260427163454_notificationInitialEntities.sql h1:VLvRORfYwdAFJOJjFoKjTEmzTIhUQll30Ix7FeZ0EWY=
+20260427170000_seed_notification_templates.sql h1:SPdD73lsGgtsnqvC+C8Y0pjzZvcCUy8IBz/shXbjiDs=
+20260429121036_libraryModulesInitialEntities.sql h1:KvC3lARESCSvAN38XyqJFDt0WUwlqZXhdIGthTS/l4A=
+20260429121353_addDeliveryStatusToEmailDeliveryLogs.sql h1:HwxSov/jgNY6B/IHA3ULlS26hlEcR7SplpPwlIWg9ys=

@@ -4,9 +4,18 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/application/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/delivery/handler"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/delivery/routes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/infrastructure/repository"
+	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
+	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
+	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
 
@@ -103,5 +112,33 @@ var Module = fx.Module(
 			fx.As(new(service.CommunityService)),
 		),
 	),
+	fx.Provide(handler.NewCommunityHandler),
+	fx.Provide(handler.NewCommunityAdminHandler),
 	fx.Provide(service.NewCommunityAttachmentValidator),
+	fx.Invoke(func(
+		api huma.API,
+		communityHandler *handler.CommunityHandler,
+		communityAdminHandler *handler.CommunityAdminHandler,
+		tokenService token.TokenService,
+		authService iamservice.AuthService,
+		roleAssignmentUsecase iamusecase.RoleAssignmentUsecase,
+	) {
+		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
+		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
+		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.ReadAccess, nil)
+		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.WriteAccess, nil)
+		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.UpdateAccess, nil)
+		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.DeleteAccess, nil)
+
+		routes.RegisterRoutes(api, routes.RouteDependencies{
+			CommunityHandler:           communityHandler,
+			CommunityAdminHandler:      communityAdminHandler,
+			AuthMiddleware:             authMiddleware,
+			AccountStatusMiddleware:    accountStatusMiddleware,
+			ReadPermissionMiddleware:   readPermissionMiddleware,
+			WritePermissionMiddleware:  writePermissionMiddleware,
+			UpdatePermissionMiddleware: updatePermissionMiddleware,
+			DeletePermissionMiddleware: deletePermissionMiddleware,
+		})
+	}),
 )

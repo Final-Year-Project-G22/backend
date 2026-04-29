@@ -63,7 +63,7 @@ func (r *threadBlockedUserRepository) Block(ctx context.Context, threadID, block
 }
 
 func (r *threadBlockedUserRepository) Unblock(ctx context.Context, threadID, blockedID uuid.UUID) error {
-	result := r.getDB(ctx).Where("thread_id = ? AND blocked_account_id = ?", threadID, blockedID).Delete(&entity.ThreadBlockedUser{})
+	result := r.getDB(ctx).Where("thread_id = ? AND blocked_account_id = ?", threadID, blockedID).Unscoped().Delete(&entity.ThreadBlockedUser{})
 	if result.Error != nil {
 		r.logger.Error("Failed to unblock user in thread", core.Error(result.Error))
 		return errors.InternalError("errors.databaseError", result.Error)
@@ -74,16 +74,44 @@ func (r *threadBlockedUserRepository) Unblock(ctx context.Context, threadID, blo
 	return nil
 }
 
-func (r *threadBlockedUserRepository) ListBlocked(ctx context.Context, threadID uuid.UUID, q query.QueryOptions) ([]*entity.ThreadBlockedUser, error) {
+func (r *threadBlockedUserRepository) ListBlocked(ctx context.Context, threadID uuid.UUID, q query.QueryOptions) ([]*entity.ThreadBlockedUser, int64, error) {
 	var blocks []*entity.ThreadBlockedUser
-	db := r.getDB(ctx).Where("thread_id = ?", threadID)
+	db := r.getDB(ctx).Model(&entity.ThreadBlockedUser{}).Where("thread_id = ?", threadID)
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		r.logger.Error("Failed to count blocked users", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+
 	for _, preload := range q.Preload {
 		db = db.Preload(preload)
 	}
 	db = applyPaginationAndSorting(db, q, "created_at desc")
 	if err := db.Find(&blocks).Error; err != nil {
 		r.logger.Error("Failed to list blocked users", core.Error(err))
-		return nil, errors.InternalError("errors.databaseError", err)
+		return nil, 0, errors.InternalError("errors.databaseError", err)
 	}
-	return blocks, nil
+	return blocks, total, nil
+}
+
+func (r *threadBlockedUserRepository) ListAllBlocked(ctx context.Context, q query.QueryOptions) ([]*entity.ThreadBlockedUser, int64, error) {
+	var blocks []*entity.ThreadBlockedUser
+	db := r.getDB(ctx).Model(&entity.ThreadBlockedUser{})
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		r.logger.Error("Failed to count all blocked users", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+
+	for _, preload := range q.Preload {
+		db = db.Preload(preload)
+	}
+	db = applyPaginationAndSorting(db, q, "created_at desc")
+	if err := db.Find(&blocks).Error; err != nil {
+		r.logger.Error("Failed to list all blocked users", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+	return blocks, total, nil
 }
