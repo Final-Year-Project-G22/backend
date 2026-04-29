@@ -107,4 +107,65 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AdminHandler.HandleRetryFailed)
+
+	// --- Campaigns ---
+	huma.Register(api, huma.Operation{
+		OperationID: "createCampaign",
+		Method:      "POST",
+		Path:        adminNotifBase + "/campaigns",
+		Summary:     "Create campaign",
+		Description: "Creates a new notification campaign in draft status.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleCreateCampaign)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "listCampaigns",
+		Method:      "GET",
+		Path:        adminNotifBase + "/campaigns",
+		Summary:     "List campaigns",
+		Description: "Lists notification campaigns with optional status filter.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleListCampaigns)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "getCampaign",
+		Method:      "GET",
+		Path:        adminNotifBase + "/campaigns/{id}",
+		Summary:     "Get campaign",
+		Description: "Gets a notification campaign by ID.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleGetCampaign)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "updateCampaign",
+		Method:      "PATCH",
+		Path:        adminNotifBase + "/campaigns/{id}",
+		Summary:     "Update campaign",
+		Description: "Updates a draft notification campaign.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleUpdateCampaign)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleCampaign",
+		Method:      "POST",
+		Path:        adminNotifBase + "/campaigns/{id}/schedule",
+		Summary:     "Schedule campaign",
+		Description: "Schedules a draft campaign, resolving segment filters to a static recipient list.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleScheduleCampaign)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "cancelCampaign",
+		Method:      "POST",
+		Path:        adminNotifBase + "/campaigns/{id}/cancel",
+		Summary:     "Cancel campaign",
+		Description: "Cancels a scheduled or sending campaign.",
+		Tags:        []string{"Admin - Notifications"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.AdminHandler.HandleCancelCampaign)
 }

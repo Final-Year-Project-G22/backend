@@ -12,7 +12,7 @@ import (
 )
 
 type IAMGlobalPreferenceReader interface {
-	IsNotificationEnabled(ctx context.Context, accountID uuid.UUID) (bool, error)
+	IsNotificationEnabled(ctx context.Context, accountID uuid.UUID, channel string) (bool, error)
 }
 
 type notificationPreferenceUsecase struct {
@@ -48,7 +48,7 @@ func (uc *notificationPreferenceUsecase) GetPreferences(ctx context.Context, acc
 
 func (uc *notificationPreferenceUsecase) GetEffectivePreference(ctx context.Context, accountID uuid.UUID, notificationType entity.NotificationType, channel entity.Channel) (bool, error) {
 	if uc.iamReader != nil {
-		enabled, err := uc.iamReader.IsNotificationEnabled(ctx, accountID)
+		enabled, err := uc.iamReader.IsNotificationEnabled(ctx, accountID, string(channel))
 		if err != nil {
 			return false, err
 		}
