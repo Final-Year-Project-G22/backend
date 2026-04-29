@@ -59,3 +59,16 @@ func (v *TemplateFileValidator) Validate(content []byte, filename string) (*File
 		Extension:   info.extension,
 	}, nil
 }
+
+func (v *TemplateFileValidator) ValidateThumbnail(content []byte, filename string) error {
+	if int64(len(content)) > 2*1024*1024 {
+		return apperrors.PayloadTooLargeError("library.errors.fileTooLarge")
+	}
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".jpg", ".jpeg", ".png", ".webp":
+		return nil
+	default:
+		return apperrors.InvalidInputError("thumbnail", "library.errors.invalidFileType")
+	}
+}

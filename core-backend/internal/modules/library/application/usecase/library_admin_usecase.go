@@ -257,6 +257,9 @@ func (u *libraryAdminUsecase) UpdateTemplateGroup(ctx context.Context, id uuid.U
 	if input.IsActive != nil {
 		group.IsActive = *input.IsActive
 	}
+	if input.ThumbnailURL != nil {
+		group.ThumbnailURL = input.ThumbnailURL
+	}
 	if err := u.groupRepo.Update(ctx, group); err != nil {
 		return nil, err
 	}
@@ -275,7 +278,7 @@ func (u *libraryAdminUsecase) ListAllTemplateGroups(ctx context.Context, categor
 }
 
 func (u *libraryAdminUsecase) CreateTemplate(ctx context.Context, input usecase.CreateTemplateInput) (*entity.LibraryTemplate, error) {
-	group, err := u.groupRepo.GetByID(ctx, input.GroupID)
+	_, err := u.groupRepo.GetByID(ctx, input.GroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -293,14 +296,13 @@ func (u *libraryAdminUsecase) CreateTemplate(ctx context.Context, input usecase.
 		Language:    input.Language,
 		Title:       input.Title,
 		Description: input.Description,
-		FileKey:     "",
-		FileURL:     nil,
-		FileSize:    0,
-		ContentType: "",
+		FileKey:     input.FileKey,
+		FileURL:     input.FileURL,
+		FileSize:    input.FileSize,
+		ContentType: input.ContentType,
 		Version:     1,
 		IsActive:    true,
 	}
-	_ = group
 	if err := u.tmplRepo.Create(ctx, tmpl); err != nil {
 		return nil, err
 	}
@@ -327,6 +329,18 @@ func (u *libraryAdminUsecase) UpdateTemplate(ctx context.Context, id uuid.UUID, 
 	}
 	if input.FileBytes != nil {
 		tmpl.Version++
+	}
+	if input.FileKey != nil {
+		tmpl.FileKey = *input.FileKey
+	}
+	if input.FileURL != nil {
+		tmpl.FileURL = input.FileURL
+	}
+	if input.FileSize != nil {
+		tmpl.FileSize = *input.FileSize
+	}
+	if input.ContentType != nil {
+		tmpl.ContentType = *input.ContentType
 	}
 	if err := u.tmplRepo.Update(ctx, tmpl); err != nil {
 		return nil, err
