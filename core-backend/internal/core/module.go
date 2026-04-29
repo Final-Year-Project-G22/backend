@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Final-Year-Project-G22/backend/core/internal/handlers"
+	"github.com/Final-Year-Project-G22/backend/core/internal/events"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/email"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
@@ -32,7 +32,7 @@ func provideEmailer(cfg *Config) (email.Emailer, error) {
 func registerEventHandlers(lc fx.Lifecycle, bus rabbitmq.Bus, emailer email.Emailer, logger Logger) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			return handlers.RegisterEventHandlers(bus, emailer, logger)
+			return events.RegisterSubscribers(bus, emailer, logger)
 		},
 		OnStop: func(ctx context.Context) error {
 			return nil

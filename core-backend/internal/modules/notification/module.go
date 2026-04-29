@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	appservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/handler"
@@ -36,6 +39,7 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationHistoryRepository, fx.As(new(repository.NotificationHistoryRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewUserNotificationInboxRepository, fx.As(new(repository.UserNotificationInboxRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewEmailDeliveryLogRepository, fx.As(new(repository.EmailDeliveryLogRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewNotificationCampaignRepository, fx.As(new(repository.NotificationCampaignRepository)))),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
@@ -82,11 +86,17 @@ var Module = fx.Module(
 		adminHandler *handler.NotificationAdminHandler,
 		notificationHandler *handler.NotificationHandler,
 		webhookHandler *handler.WebhookHandler,
+		tokenService token.TokenService,
+		authService service.AuthService,
 	) {
+		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
+		accountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, engine, routes.RouteDependencies{
-			AdminHandler:        adminHandler,
-			NotificationHandler: notificationHandler,
-			WebhookHandler:      webhookHandler,
+			AdminHandler:            adminHandler,
+			NotificationHandler:     notificationHandler,
+			WebhookHandler:          webhookHandler,
+			AuthMiddleware:          authMiddleware,
+			AccountStatusMiddleware: accountStatusMiddleware,
 		})
 	}),
 
@@ -119,6 +129,9 @@ var Module = fx.Module(
 			},
 		})
 	}),
+
+	// --- Event Subscriptions ---
+	fx.Invoke(registerEventSubscriptions),
 )
 
 type defaultIAMReader struct{}
