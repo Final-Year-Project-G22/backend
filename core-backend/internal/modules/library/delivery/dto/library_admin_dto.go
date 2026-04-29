@@ -11,7 +11,7 @@ import (
 
 // --- Category ---
 
-type CreateCategoryRequest struct {
+type CreateLibraryCategoryRequest struct {
 	Name             string     `json:"name" doc:"Category name" minLength:"1" maxLength:"200"`
 	Slug             string     `json:"slug" doc:"URL-friendly identifier" minLength:"1" maxLength:"200"`
 	Icon             *string    `json:"icon,omitempty" doc:"Icon name"`
@@ -19,17 +19,17 @@ type CreateCategoryRequest struct {
 	ParentCategoryID *uuid.UUID `json:"parentCategoryId,omitempty" doc:"Parent category ID"`
 }
 
-type CreateCategoryInput struct {
-	Body CreateCategoryRequest
+type CreateLibraryCategoryInput struct {
+	Body CreateLibraryCategoryRequest
 }
 
-type CreateCategoryOutput struct {
+type CreateLibraryCategoryOutput struct {
 	Body struct {
 		ID uuid.UUID `json:"id" doc:"Created category ID"`
 	}
 }
 
-type GetCategoryInput struct {
+type LibraryGetCategoryInput struct {
 	ID uuid.UUID `path:"id" doc:"Category ID"`
 }
 
@@ -50,11 +50,11 @@ type CategoryTranslationItem struct {
 	Description *string `json:"description,omitempty" doc:"Translated description"`
 }
 
-type GetCategoryOutput struct {
+type LibraryGetCategoryOutput struct {
 	Body CategoryDetailResponse
 }
 
-type UpdateCategoryRequest struct {
+type UpdateLibraryCategoryRequest struct {
 	Name      *string `json:"name,omitempty" doc:"Category name"`
 	Slug      *string `json:"slug,omitempty" doc:"URL-friendly identifier"`
 	Icon      *string `json:"icon,omitempty" doc:"Icon name"`
@@ -62,20 +62,20 @@ type UpdateCategoryRequest struct {
 	IsActive  *bool   `json:"isActive,omitempty" doc:"Active flag"`
 }
 
-type UpdateCategoryInput struct {
+type UpdateLibraryCategoryInput struct {
 	ID   uuid.UUID `path:"id" doc:"Category ID"`
-	Body UpdateCategoryRequest
+	Body UpdateLibraryCategoryRequest
 }
 
-type UpdateCategoryOutput struct {
+type UpdateLibraryCategoryOutput struct {
 	Body CategoryDetailResponse
 }
 
-type DeleteCategoryInput struct {
+type LibraryDeleteCategoryInput struct {
 	ID uuid.UUID `path:"id" doc:"Category ID"`
 }
 
-type DeleteCategoryOutput struct {
+type LibraryDeleteCategoryOutput struct {
 	Body struct {
 		Message string `json:"message" doc:"Success message"`
 	}
@@ -170,7 +170,7 @@ type CreateTemplateGroupOutput struct {
 }
 
 type GetTemplateGroupInput struct {
-	ID uuid.UUID `path:"id" doc:"Group ID"`
+	GroupID uuid.UUID `path:"groupId" doc:"Group ID"`
 }
 
 type TemplateGroupDetailResponse struct {
@@ -221,8 +221,8 @@ type UpdateTemplateGroupRequest struct {
 }
 
 type UpdateTemplateGroupInput struct {
-	ID   uuid.UUID `path:"id" doc:"Group ID"`
-	Body UpdateTemplateGroupRequest
+	GroupID uuid.UUID `path:"groupId" doc:"Group ID"`
+	Body    UpdateTemplateGroupRequest
 }
 
 type UpdateTemplateGroupOutput struct {
@@ -230,7 +230,7 @@ type UpdateTemplateGroupOutput struct {
 }
 
 type DeleteTemplateGroupInput struct {
-	ID uuid.UUID `path:"id" doc:"Group ID"`
+	GroupID uuid.UUID `path:"groupId" doc:"Group ID"`
 }
 
 type DeleteTemplateGroupOutput struct {
@@ -240,9 +240,9 @@ type DeleteTemplateGroupOutput struct {
 }
 
 type ListAllTemplateGroupsInput struct {
-	CategoryID *uuid.UUID `query:"categoryId,omitempty" doc:"Filter by category"`
-	Page       int        `query:"page" doc:"Page number" default:"1"`
-	PageSize   int        `query:"pageSize" doc:"Items per page" default:"20" maximum:"100"`
+	CategoryID string `query:"categoryId,omitempty" doc:"Filter by category ID"`
+	Page       int    `query:"page" doc:"Page number" default:"1"`
+	PageSize   int    `query:"pageSize" doc:"Items per page" default:"20" maximum:"100"`
 }
 
 type TemplateGroupSummaryResponse struct {
@@ -268,25 +268,25 @@ type CreateTemplateFormData struct {
 	File        huma.FormFile `form:"file" doc:"Template file"`
 	Language    string        `form:"language" doc:"Language code"`
 	Title       string        `form:"title" doc:"Template title"`
-	Description *string       `form:"description,omitempty" doc:"Template description"`
+	Description string        `form:"description,omitempty" doc:"Template description"`
 }
 
-type CreateTemplateInput struct {
+type LibraryCreateTemplateInput struct {
 	GroupID uuid.UUID `path:"groupId" doc:"Group ID"`
 	RawBody huma.MultipartFormFiles[CreateTemplateFormData]
 }
 
-type CreateTemplateOutput struct {
+type LibraryCreateTemplateOutput struct {
 	Body struct {
 		ID uuid.UUID `json:"id" doc:"Created template ID"`
 	}
 }
 
-type GetTemplateInput struct {
-	ID uuid.UUID `path:"id" doc:"Template ID"`
+type LibraryGetTemplateInput struct {
+	TemplateID uuid.UUID `path:"templateId" doc:"Template ID"`
 }
 
-type TemplateDetailResponse struct {
+type LibraryTemplateDetailResponse struct {
 	ID          uuid.UUID `json:"id" doc:"Template ID"`
 	GroupID     uuid.UUID `json:"groupId" doc:"Group ID"`
 	Language    string    `json:"language" doc:"Language code"`
@@ -299,31 +299,31 @@ type TemplateDetailResponse struct {
 	IsActive    bool      `json:"isActive" doc:"Active flag"`
 }
 
-type GetTemplateOutput struct {
-	Body TemplateDetailResponse
+type LibraryGetTemplateOutput struct {
+	Body LibraryTemplateDetailResponse
 }
 
 type UpdateTemplateFormData struct {
 	File        huma.FormFile `form:"file" doc:"Template file (optional)"`
-	Title       *string       `form:"title,omitempty" doc:"Template title"`
-	Description *string       `form:"description,omitempty" doc:"Template description"`
-	IsActive    *bool         `form:"isActive,omitempty" doc:"Active flag"`
+	Title       string        `form:"title,omitempty" doc:"Template title"`
+	Description string        `form:"description,omitempty" doc:"Template description"`
+	IsActive    string        `form:"isActive,omitempty" doc:"Active flag (true/false)"`
 }
 
-type UpdateTemplateInput struct {
-	ID      uuid.UUID `path:"id" doc:"Template ID"`
-	RawBody huma.MultipartFormFiles[UpdateTemplateFormData]
+type LibraryUpdateTemplateInput struct {
+	TemplateID uuid.UUID `path:"templateId" doc:"Template ID"`
+	RawBody    huma.MultipartFormFiles[UpdateTemplateFormData]
 }
 
-type UpdateTemplateOutput struct {
-	Body TemplateDetailResponse
+type LibraryUpdateTemplateOutput struct {
+	Body LibraryTemplateDetailResponse
 }
 
-type DeleteTemplateInput struct {
-	ID uuid.UUID `path:"id" doc:"Template ID"`
+type LibraryDeleteTemplateInput struct {
+	TemplateID uuid.UUID `path:"templateId" doc:"Template ID"`
 }
 
-type DeleteTemplateOutput struct {
+type LibraryDeleteTemplateOutput struct {
 	Body struct {
 		Message string `json:"message" doc:"Success message"`
 	}
@@ -402,9 +402,9 @@ type DeleteInteractiveFormOutput struct {
 // --- Download Logs ---
 
 type ListDownloadLogsInput struct {
-	GroupID  *uuid.UUID `query:"groupId,omitempty" doc:"Filter by template group"`
-	Page     int        `query:"page" doc:"Page number" default:"1"`
-	PageSize int        `query:"pageSize" doc:"Items per page" default:"20" maximum:"100"`
+	GroupID  string `query:"groupId,omitempty" doc:"Filter by template group ID"`
+	Page     int    `query:"page" doc:"Page number" default:"1"`
+	PageSize int    `query:"pageSize" doc:"Items per page" default:"20" maximum:"100"`
 }
 
 type DownloadLogResponse struct {
@@ -542,8 +542,8 @@ func ToTemplateGroupSummaryResponse(group *entity.LibraryTemplateGroup) Template
 	}
 }
 
-func ToTemplateDetailResponse(tmpl *entity.LibraryTemplate) TemplateDetailResponse {
-	return TemplateDetailResponse{
+func ToLibraryTemplateDetailResponse(tmpl *entity.LibraryTemplate) LibraryTemplateDetailResponse {
+	return LibraryTemplateDetailResponse{
 		ID:          tmpl.ID,
 		GroupID:     tmpl.GroupID,
 		Language:    tmpl.Language,
