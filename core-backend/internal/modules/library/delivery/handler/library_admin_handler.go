@@ -25,7 +25,7 @@ func NewLibraryAdminHandler(adminUC usecase.LibraryAdminUsecase, svc service.Lib
 
 // --- Categories ---
 
-func (h *LibraryAdminHandler) HandleCreateCategory(ctx context.Context, input *dto.CreateCategoryInput) (*dto.CreateCategoryOutput, error) {
+func (h *LibraryAdminHandler) HandleCreateCategory(ctx context.Context, input *dto.CreateLibraryCategoryInput) (*dto.CreateLibraryCategoryOutput, error) {
 	cat, err := h.adminUC.CreateCategory(ctx, usecase.CreateCategoryInput{
 		Name:             input.Body.Name,
 		Slug:             input.Body.Slug,
@@ -36,20 +36,20 @@ func (h *LibraryAdminHandler) HandleCreateCategory(ctx context.Context, input *d
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.CreateCategoryOutput{Body: struct {
+	return &dto.CreateLibraryCategoryOutput{Body: struct {
 		ID uuid.UUID `json:"id" doc:"Created category ID"`
 	}{ID: cat.ID}}, nil
 }
 
-func (h *LibraryAdminHandler) HandleGetCategory(ctx context.Context, input *dto.GetCategoryInput) (*dto.GetCategoryOutput, error) {
+func (h *LibraryAdminHandler) HandleGetCategory(ctx context.Context, input *dto.LibraryGetCategoryInput) (*dto.LibraryGetCategoryOutput, error) {
 	cat, err := h.adminUC.GetCategory(ctx, input.ID)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.GetCategoryOutput{Body: dto.ToCategoryDetailResponse(cat)}, nil
+	return &dto.LibraryGetCategoryOutput{Body: dto.ToCategoryDetailResponse(cat)}, nil
 }
 
-func (h *LibraryAdminHandler) HandleUpdateCategory(ctx context.Context, input *dto.UpdateCategoryInput) (*dto.UpdateCategoryOutput, error) {
+func (h *LibraryAdminHandler) HandleUpdateCategory(ctx context.Context, input *dto.UpdateLibraryCategoryInput) (*dto.UpdateLibraryCategoryOutput, error) {
 	ucInput := usecase.UpdateCategoryInput{
 		Name:      input.Body.Name,
 		Slug:      input.Body.Slug,
@@ -61,14 +61,14 @@ func (h *LibraryAdminHandler) HandleUpdateCategory(ctx context.Context, input *d
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateCategoryOutput{Body: dto.ToCategoryDetailResponse(cat)}, nil
+	return &dto.UpdateLibraryCategoryOutput{Body: dto.ToCategoryDetailResponse(cat)}, nil
 }
 
-func (h *LibraryAdminHandler) HandleDeleteCategory(ctx context.Context, input *dto.DeleteCategoryInput) (*dto.DeleteCategoryOutput, error) {
+func (h *LibraryAdminHandler) HandleDeleteCategory(ctx context.Context, input *dto.LibraryDeleteCategoryInput) (*dto.LibraryDeleteCategoryOutput, error) {
 	if err := h.adminUC.DeleteCategory(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteCategoryOutput{Body: struct {
+	return &dto.LibraryDeleteCategoryOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
 	}{Message: "Category deleted"}}, nil
 }
@@ -152,7 +152,7 @@ func (h *LibraryAdminHandler) HandleCreateTemplateGroup(ctx context.Context, inp
 }
 
 func (h *LibraryAdminHandler) HandleGetTemplateGroup(ctx context.Context, input *dto.GetTemplateGroupInput) (*dto.GetTemplateGroupOutput, error) {
-	group, err := h.adminUC.GetTemplateGroup(ctx, input.ID)
+	group, err := h.adminUC.GetTemplateGroup(ctx, input.GroupID)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -172,7 +172,7 @@ func (h *LibraryAdminHandler) HandleUpdateTemplateGroup(ctx context.Context, inp
 		DefaultLanguage: input.Body.DefaultLanguage,
 		IsActive:        input.Body.IsActive,
 	}
-	group, err := h.svc.UpdateTemplateGroup(ctx, input.ID, ucInput)
+	group, err := h.svc.UpdateTemplateGroup(ctx, input.GroupID, ucInput)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -180,7 +180,7 @@ func (h *LibraryAdminHandler) HandleUpdateTemplateGroup(ctx context.Context, inp
 }
 
 func (h *LibraryAdminHandler) HandleDeleteTemplateGroup(ctx context.Context, input *dto.DeleteTemplateGroupInput) (*dto.DeleteTemplateGroupOutput, error) {
-	if err := h.adminUC.DeleteTemplateGroup(ctx, input.ID); err != nil {
+	if err := h.adminUC.DeleteTemplateGroup(ctx, input.GroupID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.DeleteTemplateGroupOutput{Body: struct {
@@ -190,7 +190,15 @@ func (h *LibraryAdminHandler) HandleDeleteTemplateGroup(ctx context.Context, inp
 
 func (h *LibraryAdminHandler) HandleListAllTemplateGroups(ctx context.Context, input *dto.ListAllTemplateGroupsInput) (*dto.ListAllTemplateGroupsOutput, error) {
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	groups, err := h.adminUC.ListAllTemplateGroups(ctx, input.CategoryID, q)
+	var categoryID *uuid.UUID
+	if input.CategoryID != "" {
+		id, err := uuid.Parse(input.CategoryID)
+		if err != nil {
+			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "library.errors.invalidFileType"))
+		}
+		categoryID = &id
+	}
+	groups, err := h.adminUC.ListAllTemplateGroups(ctx, categoryID, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -203,7 +211,7 @@ func (h *LibraryAdminHandler) HandleListAllTemplateGroups(ctx context.Context, i
 
 // --- Templates ---
 
-func (h *LibraryAdminHandler) HandleCreateTemplate(ctx context.Context, input *dto.CreateTemplateInput) (*dto.CreateTemplateOutput, error) {
+func (h *LibraryAdminHandler) HandleCreateTemplate(ctx context.Context, input *dto.LibraryCreateTemplateInput) (*dto.LibraryCreateTemplateOutput, error) {
 	formData := input.RawBody.Data()
 	if formData == nil || !formData.File.IsSet {
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("library.errors.invalidFile"))
@@ -224,7 +232,10 @@ func (h *LibraryAdminHandler) HandleCreateTemplate(ctx context.Context, input *d
 		return nil, apperrors.ToHumaError(ctx, apperrors.PayloadTooLargeError("library.errors.fileTooLarge"))
 	}
 
-	desc := formData.Description
+	var desc *string
+	if formData.Description != "" {
+		desc = &formData.Description
+	}
 	tmpl, err := h.svc.CreateTemplate(ctx, usecase.CreateTemplateInput{
 		GroupID:     input.GroupID,
 		Language:    formData.Language,
@@ -236,28 +247,46 @@ func (h *LibraryAdminHandler) HandleCreateTemplate(ctx context.Context, input *d
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.CreateTemplateOutput{Body: struct {
+	return &dto.LibraryCreateTemplateOutput{Body: struct {
 		ID uuid.UUID `json:"id" doc:"Created template ID"`
 	}{ID: tmpl.ID}}, nil
 }
 
-func (h *LibraryAdminHandler) HandleGetTemplate(ctx context.Context, input *dto.GetTemplateInput) (*dto.GetTemplateOutput, error) {
-	tmpl, err := h.adminUC.GetTemplate(ctx, input.ID)
+func (h *LibraryAdminHandler) HandleGetTemplate(ctx context.Context, input *dto.LibraryGetTemplateInput) (*dto.LibraryGetTemplateOutput, error) {
+	tmpl, err := h.adminUC.GetTemplate(ctx, input.TemplateID)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.GetTemplateOutput{Body: dto.ToTemplateDetailResponse(tmpl)}, nil
+	return &dto.LibraryGetTemplateOutput{Body: dto.ToLibraryTemplateDetailResponse(tmpl)}, nil
 }
 
-func (h *LibraryAdminHandler) HandleUpdateTemplate(ctx context.Context, input *dto.UpdateTemplateInput) (*dto.UpdateTemplateOutput, error) {
+func (h *LibraryAdminHandler) HandleUpdateTemplate(ctx context.Context, input *dto.LibraryUpdateTemplateInput) (*dto.LibraryUpdateTemplateOutput, error) {
+	data := input.RawBody.Data()
+	var title *string
+	if data.Title != "" {
+		title = &data.Title
+	}
+	var desc *string
+	if data.Description != "" {
+		desc = &data.Description
+	}
+	var isActive *bool
+	switch data.IsActive {
+	case "true":
+		t := true
+		isActive = &t
+	case "false":
+		f := false
+		isActive = &f
+	}
 	ucInput := usecase.UpdateTemplateInput{
-		Title:       input.RawBody.Data().Title,
-		Description: input.RawBody.Data().Description,
-		IsActive:    input.RawBody.Data().IsActive,
+		Title:       title,
+		Description: desc,
+		IsActive:    isActive,
 	}
 
-	if input.RawBody.Data().File.IsSet {
-		file := input.RawBody.Data().File.File
+	if data.File.IsSet {
+		file := data.File.File
 		if file != nil {
 			defer func() { _ = file.Close() }()
 			limitedReader := io.LimitReader(file, maxUploadSize+1)
@@ -273,18 +302,18 @@ func (h *LibraryAdminHandler) HandleUpdateTemplate(ctx context.Context, input *d
 		}
 	}
 
-	tmpl, err := h.svc.UpdateTemplate(ctx, input.ID, ucInput)
+	tmpl, err := h.svc.UpdateTemplate(ctx, input.TemplateID, ucInput)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateTemplateOutput{Body: dto.ToTemplateDetailResponse(tmpl)}, nil
+	return &dto.LibraryUpdateTemplateOutput{Body: dto.ToLibraryTemplateDetailResponse(tmpl)}, nil
 }
 
-func (h *LibraryAdminHandler) HandleDeleteTemplate(ctx context.Context, input *dto.DeleteTemplateInput) (*dto.DeleteTemplateOutput, error) {
-	if err := h.adminUC.DeleteTemplate(ctx, input.ID); err != nil {
+func (h *LibraryAdminHandler) HandleDeleteTemplate(ctx context.Context, input *dto.LibraryDeleteTemplateInput) (*dto.LibraryDeleteTemplateOutput, error) {
+	if err := h.adminUC.DeleteTemplate(ctx, input.TemplateID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteTemplateOutput{Body: struct {
+	return &dto.LibraryDeleteTemplateOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
 	}{Message: "Template deleted"}}, nil
 }
@@ -351,7 +380,15 @@ func (h *LibraryAdminHandler) HandleDeleteInteractiveForm(ctx context.Context, i
 
 func (h *LibraryAdminHandler) HandleGetDownloadLogs(ctx context.Context, input *dto.ListDownloadLogsInput) (*dto.ListDownloadLogsOutput, error) {
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	logs, err := h.adminUC.GetDownloadLogs(ctx, input.GroupID, q)
+	var groupID *uuid.UUID
+	if input.GroupID != "" {
+		id, err := uuid.Parse(input.GroupID)
+		if err != nil {
+			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("groupId", "library.errors.invalidFileType"))
+		}
+		groupID = &id
+	}
+	logs, err := h.adminUC.GetDownloadLogs(ctx, groupID, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

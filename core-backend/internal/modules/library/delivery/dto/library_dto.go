@@ -7,8 +7,8 @@ import (
 
 // --- List Categories ---
 
-type ListCategoriesInput struct {
-	Locale *string `query:"locale,omitempty" doc:"Language code for localized names"`
+type LibraryListCategoriesInput struct {
+	Locale string `query:"locale,omitempty" doc:"Language code for localized names"`
 }
 
 type CategoryNodeResponse struct {
@@ -20,18 +20,18 @@ type CategoryNodeResponse struct {
 	Children  []CategoryNodeResponse `json:"children,omitempty" doc:"Child categories"`
 }
 
-type ListCategoriesOutput struct {
+type LibraryListCategoriesOutput struct {
 	Body []CategoryNodeResponse
 }
 
 // --- List Template Groups ---
 
 type ListTemplateGroupsInput struct {
-	CategoryID *uuid.UUID             `query:"categoryId,omitempty" doc:"Filter by category"`
-	Format     *entity.TemplateFormat `query:"format,omitempty" doc:"Filter by format"`
-	Search     string                 `query:"search,omitempty" doc:"Search by name or description"`
-	Page       int                    `query:"page" doc:"Page number" default:"1"`
-	PageSize   int                    `query:"pageSize" doc:"Items per page" default:"20" maximum:"100"`
+	CategoryID string `query:"categoryId,omitempty" doc:"Filter by category ID"`
+	Format     string `query:"format,omitempty" doc:"Filter by format (pdf, docx, xlsx, interactive_form)"`
+	Search     string `query:"search,omitempty" doc:"Search by name or description"`
+	Page       int    `query:"page" doc:"Page number" default:"1"`
+	PageSize   int    `query:"pageSize" doc:"Items per page" default:"20" maximum:"100"`
 }
 
 type TemplateGroupCardResponse struct {
@@ -62,8 +62,8 @@ type ListTemplateGroupsOutput struct {
 // --- Get Template Group ---
 
 type GetTemplateGroupBySlugInput struct {
-	Slug   string  `path:"slug" doc:"Template group slug"`
-	Locale *string `query:"locale,omitempty" doc:"Language code"`
+	Slug   string `path:"slug" doc:"Template group slug"`
+	Locale string `query:"locale,omitempty" doc:"Language code"`
 }
 
 type LanguageVariantResponse struct {
@@ -97,8 +97,8 @@ type GetTemplateGroupDetailOutput struct {
 // --- Download Template ---
 
 type DownloadTemplateInput struct {
-	Slug     string  `path:"slug" doc:"Template group slug"`
-	Language *string `query:"language,omitempty" doc:"Language code"`
+	Slug     string `path:"slug" doc:"Template group slug"`
+	Language string `query:"language,omitempty" doc:"Language code"`
 }
 
 type DownloadTemplateOutput struct {
