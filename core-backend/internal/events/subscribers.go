@@ -1,4 +1,4 @@
-package handlers
+package events
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type Logger interface {
 
 type EventHandler func(ctx context.Context, data []byte) error
 
-func RegisterEventHandlers(bus interface {
+func RegisterSubscribers(bus interface {
 	Subscribe(event string, handler func(context.Context, []byte) error) error
 }, emailer email.Emailer, logger Logger) error {
 	if bus == nil || emailer == nil {

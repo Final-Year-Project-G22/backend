@@ -96,6 +96,12 @@ var Module = fx.Module("iam",
 			fx.As(new(repository.RoleAssignmentRepository)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewNotificationPreferenceRepository,
+			fx.As(new(repository.NotificationPreferenceRepository)),
+		),
+	),
 
 	// OAuth Infrastructure
 	fx.Provide(fx.Annotate(

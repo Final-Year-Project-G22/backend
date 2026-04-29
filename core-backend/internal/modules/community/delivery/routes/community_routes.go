@@ -182,15 +182,37 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.CommunityHandler.HandleUnfollowCategory)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "reportCommunityContent",
+		OperationID: "reportThread",
 		Method:      "POST",
-		Path:        communityBase + "/reports",
-		Summary:     "Report content",
-		Description: "Reports a thread, post, or user.",
+		Path:        communityBase + "/threads/{id}/reports",
+		Summary:     "Report thread",
+		Description: "Reports a discussion thread.",
 		Tags:        []string{"Community"},
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.CommunityHandler.HandleReportContent)
+	}, deps.CommunityHandler.HandleReportThread)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "reportPost",
+		Method:      "POST",
+		Path:        communityBase + "/threads/{id}/posts/{postId}/reports",
+		Summary:     "Report post",
+		Description: "Reports a discussion post.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleReportPost)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "reportUser",
+		Method:      "POST",
+		Path:        communityBase + "/threads/{id}/reports/user",
+		Summary:     "Report user",
+		Description: "Reports a user in a thread.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleReportUser)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "listFollowedThreads",

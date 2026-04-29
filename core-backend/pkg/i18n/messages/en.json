@@ -74,6 +74,8 @@
     "errors": {
       "permissionDenied": "Permission denied",
       "categoryInactive": "Category is inactive",
+      "threadNotFound": "Thread not found",
+      "threadClosed": "Thread is closed",
       "threadInactive": "Thread is not active",
       "threadBlocked": "You are blocked from this thread",
       "postLocked": "This post cannot be modified",

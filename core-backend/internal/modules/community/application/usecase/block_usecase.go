@@ -3,10 +3,12 @@ package usecase
 import (
 	"context"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	communityerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
@@ -74,4 +76,12 @@ func (u *threadBlockUsecase) UnblockUser(ctx context.Context, input usecase.Bloc
 
 func (u *threadBlockUsecase) IsBlocked(ctx context.Context, threadID, accountID uuid.UUID) (bool, error) {
 	return u.blockRepo.IsBlocked(ctx, threadID, accountID)
+}
+
+func (u *threadBlockUsecase) ListBlockedUsers(ctx context.Context, threadID uuid.UUID, q query.QueryOptions) ([]*entity.ThreadBlockedUser, int64, error) {
+	return u.blockRepo.ListBlocked(ctx, threadID, q)
+}
+
+func (u *threadBlockUsecase) ListAllBlockedUsers(ctx context.Context, q query.QueryOptions) ([]*entity.ThreadBlockedUser, int64, error) {
+	return u.blockRepo.ListAllBlocked(ctx, q)
 }
