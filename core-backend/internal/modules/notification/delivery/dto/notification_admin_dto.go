@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"time"
+
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -289,4 +291,186 @@ func ToTemplateDetailResponse(tmpl *entity.NotificationTemplate, translations []
 		}
 	}
 	return resp
+}
+
+// --- Campaigns ---
+
+type CreateCampaignRequest struct {
+	Name          string                  `json:"name" doc:"Campaign name" minLength:"1" maxLength:"200"`
+	Description   *string                 `json:"description,omitempty" doc:"Campaign description"`
+	CampaignType  entity.CampaignType     `json:"campaignType" doc:"Campaign type (broadcast or segmented)"`
+	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
+	TemplateID    uuid.UUID               `json:"templateId" doc:"Notification template ID"`
+	CustomSubject *string                 `json:"customSubject,omitempty" doc:"Override email subject"`
+	CustomContent *map[string]interface{} `json:"customContent,omitempty" doc:"Override multi-channel content"`
+	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+}
+
+type CreateCampaignInput struct {
+	Body CreateCampaignRequest
+}
+
+type CreateCampaignOutput struct {
+	Body CreateCampaignResponseBody
+}
+
+type CreateCampaignResponseBody struct {
+	ID uuid.UUID `json:"id" doc:"Created campaign ID"`
+}
+
+type GetCampaignInput struct {
+	ID uuid.UUID `path:"id" doc:"Campaign ID"`
+}
+
+type GetCampaignOutput struct {
+	Body CampaignDetailResponse
+}
+
+type CampaignDetailResponse struct {
+	ID            uuid.UUID              `json:"id" doc:"Campaign ID"`
+	Name          string                 `json:"name" doc:"Campaign name"`
+	Description   *string                `json:"description,omitempty" doc:"Campaign description"`
+	CampaignType  entity.CampaignType    `json:"campaignType" doc:"Campaign type"`
+	TargetSegment map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters or resolved recipients"`
+	TemplateID    uuid.UUID              `json:"templateId" doc:"Notification template ID"`
+	CustomSubject *string                `json:"customSubject,omitempty" doc:"Override email subject"`
+	CustomContent map[string]interface{} `json:"customContent,omitempty" doc:"Override multi-channel content"`
+	ScheduledFor  *time.Time             `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SentAt        *time.Time             `json:"sentAt,omitempty" doc:"Actual sending time"`
+	Status        entity.CampaignStatus  `json:"status" doc:"Campaign status"`
+	CreatedBy     uuid.UUID              `json:"createdBy" doc:"Creator account ID"`
+	CreatedAt     time.Time              `json:"createdAt" doc:"Creation time"`
+}
+
+type ListCampaignsInput struct {
+	Status   *entity.CampaignStatus `query:"status" doc:"Filter by status"`
+	Page     int                    `query:"page" doc:"Page number"`
+	PageSize int                    `query:"pageSize" doc:"Items per page"`
+}
+
+type ListCampaignsOutput struct {
+	Body ListCampaignsResponseBody
+}
+
+type ListCampaignsResponseBody struct {
+	Data       []CampaignSummaryResponse `json:"data" doc:"Campaign list"`
+	Total      int64                     `json:"total" doc:"Total count"`
+	Page       int                       `json:"page" doc:"Current page"`
+	PageSize   int                       `json:"pageSize" doc:"Items per page"`
+	TotalPages int                       `json:"totalPages" doc:"Total pages"`
+}
+
+type CampaignSummaryResponse struct {
+	ID           uuid.UUID             `json:"id" doc:"Campaign ID"`
+	Name         string                `json:"name" doc:"Campaign name"`
+	CampaignType entity.CampaignType   `json:"campaignType" doc:"Campaign type"`
+	Status       entity.CampaignStatus `json:"status" doc:"Campaign status"`
+	ScheduledFor *time.Time            `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SentAt       *time.Time            `json:"sentAt,omitempty" doc:"Actual sending time"`
+	CreatedBy    uuid.UUID             `json:"createdBy" doc:"Creator account ID"`
+	CreatedAt    time.Time             `json:"createdAt" doc:"Creation time"`
+}
+
+type UpdateCampaignRequest struct {
+	Name          *string                 `json:"name,omitempty" doc:"Campaign name" maxLength:"200"`
+	Description   *string                 `json:"description,omitempty" doc:"Campaign description"`
+	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
+	CustomSubject *string                 `json:"customSubject,omitempty" doc:"Override email subject"`
+	CustomContent *map[string]interface{} `json:"customContent,omitempty" doc:"Override multi-channel content"`
+	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+}
+
+type UpdateCampaignInput struct {
+	ID   uuid.UUID `path:"id" doc:"Campaign ID"`
+	Body UpdateCampaignRequest
+}
+
+type UpdateCampaignOutput struct {
+	Body UpdateCampaignResponseBody
+}
+
+type UpdateCampaignResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type ScheduleCampaignInput struct {
+	ID uuid.UUID `path:"id" doc:"Campaign ID"`
+}
+
+type ScheduleCampaignOutput struct {
+	Body ScheduleCampaignResponseBody
+}
+
+type ScheduleCampaignResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type CancelCampaignInput struct {
+	ID uuid.UUID `path:"id" doc:"Campaign ID"`
+}
+
+type CancelCampaignOutput struct {
+	Body CancelCampaignResponseBody
+}
+
+type CancelCampaignResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+func ToCreateCampaignInput(createdBy uuid.UUID, body CreateCampaignRequest) usecase.CreateCampaignInput {
+	return usecase.CreateCampaignInput{
+		Name:          body.Name,
+		Description:   body.Description,
+		CampaignType:  body.CampaignType,
+		TargetSegment: body.TargetSegment,
+		TemplateID:    body.TemplateID,
+		CustomSubject: body.CustomSubject,
+		CustomContent: body.CustomContent,
+		ScheduledFor:  body.ScheduledFor,
+	}
+}
+
+func ToUpdateCampaignInput(body UpdateCampaignRequest) usecase.UpdateCampaignInput {
+	return usecase.UpdateCampaignInput{
+		Name:          body.Name,
+		Description:   body.Description,
+		TargetSegment: body.TargetSegment,
+		CustomSubject: body.CustomSubject,
+		CustomContent: body.CustomContent,
+		ScheduledFor:  body.ScheduledFor,
+	}
+}
+
+func ToCampaignDetailResponse(c *entity.NotificationCampaign) CampaignDetailResponse {
+	resp := CampaignDetailResponse{
+		ID:            c.ID,
+		Name:          c.Name,
+		Description:   c.Description,
+		CampaignType:  c.CampaignType,
+		TemplateID:    c.TemplateID,
+		CustomSubject: c.CustomSubject,
+		ScheduledFor:  c.ScheduledFor,
+		SentAt:        c.SentAt,
+		Status:        c.Status,
+		CreatedBy:     c.CreatedBy,
+	}
+	if c.TargetSegment != nil {
+		resp.TargetSegment = *c.TargetSegment
+	}
+	if c.CustomContent != nil {
+		resp.CustomContent = *c.CustomContent
+	}
+	return resp
+}
+
+func ToCampaignSummaryResponse(c *entity.NotificationCampaign) CampaignSummaryResponse {
+	return CampaignSummaryResponse{
+		ID:           c.ID,
+		Name:         c.Name,
+		CampaignType: c.CampaignType,
+		Status:       c.Status,
+		ScheduledFor: c.ScheduledFor,
+		SentAt:       c.SentAt,
+		CreatedBy:    c.CreatedBy,
+	}
 }

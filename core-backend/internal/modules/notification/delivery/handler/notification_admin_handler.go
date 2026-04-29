@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
@@ -13,17 +14,20 @@ import (
 type NotificationAdminHandler struct {
 	templateUC usecase.NotificationTemplateUsecase
 	deliveryUC usecase.NotificationDeliveryUsecase
+	campaignUC usecase.NotificationCampaignUsecase
 	queueRepo  repository.NotificationQueueRepository
 }
 
 func NewNotificationAdminHandler(
 	templateUC usecase.NotificationTemplateUsecase,
 	deliveryUC usecase.NotificationDeliveryUsecase,
+	campaignUC usecase.NotificationCampaignUsecase,
 	queueRepo repository.NotificationQueueRepository,
 ) *NotificationAdminHandler {
 	return &NotificationAdminHandler{
 		templateUC: templateUC,
 		deliveryUC: deliveryUC,
+		campaignUC: campaignUC,
 		queueRepo:  queueRepo,
 	}
 }
@@ -162,4 +166,68 @@ func (h *NotificationAdminHandler) HandleRetryFailed(ctx context.Context, input 
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.RetryFailedOutput{Body: dto.RetryFailedResponseBody{Message: "Retry initiated"}}, nil
+}
+
+// --- Campaigns ---
+
+func (h *NotificationAdminHandler) HandleCreateCampaign(ctx context.Context, input *dto.CreateCampaignInput) (*dto.CreateCampaignOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	result, err := h.campaignUC.CreateCampaign(ctx, accountID, dto.ToCreateCampaignInput(accountID, input.Body))
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.CreateCampaignOutput{Body: dto.CreateCampaignResponseBody{ID: result.ID}}, nil
+}
+
+func (h *NotificationAdminHandler) HandleGetCampaign(ctx context.Context, input *dto.GetCampaignInput) (*dto.GetCampaignOutput, error) {
+	campaign, err := h.campaignUC.GetCampaign(ctx, input.ID)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.GetCampaignOutput{Body: dto.ToCampaignDetailResponse(campaign)}, nil
+}
+
+func (h *NotificationAdminHandler) HandleListCampaigns(ctx context.Context, input *dto.ListCampaignsInput) (*dto.ListCampaignsOutput, error) {
+	q := dto.ToQueryOptions(input.Page, input.PageSize)
+	items, err := h.campaignUC.ListCampaigns(ctx, input.Status, q)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	data := make([]dto.CampaignSummaryResponse, len(items))
+	for i, c := range items {
+		data[i] = dto.ToCampaignSummaryResponse(c)
+	}
+	pageSize := q.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	totalPages := int((int64(len(data)) + int64(pageSize) - 1) / int64(pageSize))
+	return &dto.ListCampaignsOutput{Body: dto.ListCampaignsResponseBody{
+		Data:       data,
+		Total:      int64(len(data)),
+		Page:       q.Page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}}, nil
+}
+
+func (h *NotificationAdminHandler) HandleUpdateCampaign(ctx context.Context, input *dto.UpdateCampaignInput) (*dto.UpdateCampaignOutput, error) {
+	if _, err := h.campaignUC.UpdateCampaign(ctx, input.ID, dto.ToUpdateCampaignInput(input.Body)); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.UpdateCampaignOutput{Body: dto.UpdateCampaignResponseBody{Message: "Campaign updated"}}, nil
+}
+
+func (h *NotificationAdminHandler) HandleScheduleCampaign(ctx context.Context, input *dto.ScheduleCampaignInput) (*dto.ScheduleCampaignOutput, error) {
+	if err := h.campaignUC.ScheduleCampaign(ctx, usecase.ScheduleCampaignInput{CampaignID: input.ID}); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.ScheduleCampaignOutput{Body: dto.ScheduleCampaignResponseBody{Message: "Campaign scheduled"}}, nil
+}
+
+func (h *NotificationAdminHandler) HandleCancelCampaign(ctx context.Context, input *dto.CancelCampaignInput) (*dto.CancelCampaignOutput, error) {
+	if err := h.campaignUC.CancelCampaign(ctx, input.ID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.CancelCampaignOutput{Body: dto.CancelCampaignResponseBody{Message: "Campaign cancelled"}}, nil
 }
