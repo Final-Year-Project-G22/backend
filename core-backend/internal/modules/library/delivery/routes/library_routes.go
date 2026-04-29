@@ -8,7 +8,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	base := "/api/v1/library"
 
 	huma.Register(api, huma.Operation{
-		OperationID: "listCategories",
+		OperationID: "LibraryListCategories",
 		Method:      "GET",
 		Path:        base + "/categories",
 		Summary:     "List categories",
@@ -17,7 +17,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.ViewHandler.HandleListCategories)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "listTemplateGroups",
+		OperationID: "LibraryListTemplateGroups",
 		Method:      "GET",
 		Path:        base + "/templates",
 		Summary:     "List template groups",
@@ -26,7 +26,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.ViewHandler.HandleListTemplateGroups)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "getTemplateGroup",
+		OperationID: "LibraryGetTemplateGroup",
 		Method:      "GET",
 		Path:        base + "/templates/{slug}",
 		Summary:     "Get template group",
@@ -35,7 +35,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.ViewHandler.HandleGetTemplateGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "downloadTemplate",
+		OperationID: "LibraryDownloadTemplate",
 		Method:      "GET",
 		Path:        base + "/templates/{slug}/download",
 		Summary:     "Download template",
@@ -44,7 +44,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.ViewHandler.HandleDownloadTemplate)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "listMyDownloads",
+		OperationID: "LibraryListMyDownloads",
 		Method:      "GET",
 		Path:        base + "/downloads",
 		Summary:     "My downloads",

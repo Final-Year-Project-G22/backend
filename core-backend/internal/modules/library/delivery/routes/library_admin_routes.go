@@ -9,7 +9,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 
 	// --- Categories ---
 	huma.Register(api, huma.Operation{
-		OperationID: "listAllCategories",
+		OperationID: "LibraryListAllCategories",
 		Method:      "GET",
 		Path:        adminBase + "/categories",
 		Summary:     "List all categories",
@@ -20,7 +20,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleListAllCategories)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "createCategory",
+		OperationID: "LibraryCreateCategory",
 		Method:      "POST",
 		Path:        adminBase + "/categories",
 		Summary:     "Create category",
@@ -31,7 +31,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleCreateCategory)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "getCategory",
+		OperationID: "LibraryGetCategory",
 		Method:      "GET",
 		Path:        adminBase + "/categories/{id}",
 		Summary:     "Get category",
@@ -42,7 +42,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleGetCategory)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "updateCategory",
+		OperationID: "LibraryUpdateCategory",
 		Method:      "PATCH",
 		Path:        adminBase + "/categories/{id}",
 		Summary:     "Update category",
@@ -53,7 +53,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleUpdateCategory)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "deleteCategory",
+		OperationID: "LibraryDeleteCategory",
 		Method:      "DELETE",
 		Path:        adminBase + "/categories/{id}",
 		Summary:     "Delete category",
@@ -65,7 +65,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 
 	// --- Category Translations ---
 	huma.Register(api, huma.Operation{
-		OperationID: "addCategoryTranslation",
+		OperationID: "LibraryAddCategoryTranslation",
 		Method:      "POST",
 		Path:        adminBase + "/categories/{id}/translations",
 		Summary:     "Add category translation",
@@ -76,7 +76,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleAddCategoryTranslation)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "updateCategoryTranslation",
+		OperationID: "LibraryUpdateCategoryTranslation",
 		Method:      "PATCH",
 		Path:        adminBase + "/categories/{id}/translations/{lang}",
 		Summary:     "Update category translation",
@@ -87,7 +87,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleUpdateCategoryTranslation)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "deleteCategoryTranslation",
+		OperationID: "LibraryDeleteCategoryTranslation",
 		Method:      "DELETE",
 		Path:        adminBase + "/categories/{id}/translations/{lang}",
 		Summary:     "Delete category translation",
@@ -99,7 +99,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 
 	// --- Template Groups ---
 	huma.Register(api, huma.Operation{
-		OperationID: "listAllTemplateGroups",
+		OperationID: "LibraryListAllTemplateGroups",
 		Method:      "GET",
 		Path:        adminBase + "/template-groups",
 		Summary:     "List template groups",
@@ -110,7 +110,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleListAllTemplateGroups)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "createTemplateGroup",
+		OperationID: "LibraryCreateTemplateGroup",
 		Method:      "POST",
 		Path:        adminBase + "/template-groups",
 		Summary:     "Create template group",
@@ -121,9 +121,9 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleCreateTemplateGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "getTemplateGroup",
+		OperationID: "LibraryAdminGetTemplateGroup",
 		Method:      "GET",
-		Path:        adminBase + "/template-groups/{id}",
+		Path:        adminBase + "/template-groups/{groupId}",
 		Summary:     "Get template group",
 		Description: "Gets a template group with all templates.",
 		Tags:        []string{"Admin - Library"},
@@ -132,9 +132,9 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleGetTemplateGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "updateTemplateGroup",
+		OperationID: "LibraryUpdateTemplateGroup",
 		Method:      "PATCH",
-		Path:        adminBase + "/template-groups/{id}",
+		Path:        adminBase + "/template-groups/{groupId}",
 		Summary:     "Update template group",
 		Description: "Updates a template group's metadata.",
 		Tags:        []string{"Admin - Library"},
@@ -143,9 +143,9 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleUpdateTemplateGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "deleteTemplateGroup",
+		OperationID: "LibraryDeleteTemplateGroup",
 		Method:      "DELETE",
-		Path:        adminBase + "/template-groups/{id}",
+		Path:        adminBase + "/template-groups/{groupId}",
 		Summary:     "Delete template group",
 		Description: "Soft-deletes a template group.",
 		Tags:        []string{"Admin - Library"},
@@ -155,7 +155,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 
 	// --- Templates ---
 	huma.Register(api, huma.Operation{
-		OperationID: "listTemplatesByGroup",
+		OperationID: "LibraryListTemplatesByGroup",
 		Method:      "GET",
 		Path:        adminBase + "/template-groups/{groupId}/templates",
 		Summary:     "List templates by group",
@@ -166,7 +166,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleListTemplatesByGroup)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "createTemplate",
+		OperationID: "LibraryCreateTemplate",
 		Method:      "POST",
 		Path:        adminBase + "/template-groups/{groupId}/templates",
 		Summary:     "Create template",
@@ -177,9 +177,9 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleCreateTemplate)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "getTemplate",
+		OperationID: "LibraryGetTemplate",
 		Method:      "GET",
-		Path:        adminBase + "/templates/{id}",
+		Path:        adminBase + "/templates/{templateId}",
 		Summary:     "Get template",
 		Description: "Gets a template by ID.",
 		Tags:        []string{"Admin - Library"},
@@ -188,9 +188,9 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleGetTemplate)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "updateTemplate",
+		OperationID: "LibraryUpdateTemplate",
 		Method:      "PATCH",
-		Path:        adminBase + "/templates/{id}",
+		Path:        adminBase + "/templates/{templateId}",
 		Summary:     "Update template",
 		Description: "Updates template metadata or replaces the file.",
 		Tags:        []string{"Admin - Library"},
@@ -199,9 +199,9 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleUpdateTemplate)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "deleteTemplate",
+		OperationID: "LibraryDeleteTemplate",
 		Method:      "DELETE",
-		Path:        adminBase + "/templates/{id}",
+		Path:        adminBase + "/templates/{templateId}",
 		Summary:     "Delete template",
 		Description: "Soft-deletes a template.",
 		Tags:        []string{"Admin - Library"},
@@ -211,7 +211,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 
 	// --- Interactive Forms ---
 	huma.Register(api, huma.Operation{
-		OperationID: "getInteractiveForm",
+		OperationID: "LibraryGetInteractiveForm",
 		Method:      "GET",
 		Path:        adminBase + "/templates/{templateId}/interactive-form",
 		Summary:     "Get interactive form",
@@ -222,7 +222,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleGetInteractiveForm)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "createInteractiveForm",
+		OperationID: "LibraryCreateInteractiveForm",
 		Method:      "POST",
 		Path:        adminBase + "/templates/{templateId}/interactive-form",
 		Summary:     "Create interactive form",
@@ -233,7 +233,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleCreateInteractiveForm)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "updateInteractiveForm",
+		OperationID: "LibraryUpdateInteractiveForm",
 		Method:      "PATCH",
 		Path:        adminBase + "/interactive-forms/{id}",
 		Summary:     "Update interactive form",
@@ -244,7 +244,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleUpdateInteractiveForm)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "deleteInteractiveForm",
+		OperationID: "LibraryDeleteInteractiveForm",
 		Method:      "DELETE",
 		Path:        adminBase + "/interactive-forms/{id}",
 		Summary:     "Delete interactive form",
@@ -256,7 +256,7 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 
 	// --- Download Logs ---
 	huma.Register(api, huma.Operation{
-		OperationID: "getDownloadLogs",
+		OperationID: "LibraryGetDownloadLogs",
 		Method:      "GET",
 		Path:        adminBase + "/downloads",
 		Summary:     "Get download logs",
