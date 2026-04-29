@@ -177,3 +177,29 @@ func (r *accountRepository) MarkEmailVerifiedAndActivate(ctx context.Context, id
 
 	return nil
 }
+
+func (r *accountRepository) FindBySegment(ctx context.Context, segment map[string]interface{}) ([]*entity.Account, error) {
+	var accounts []*entity.Account
+	db := r.getDB(ctx).Select("id")
+
+	for key, value := range segment {
+		switch key {
+		case "status":
+			db = db.Where("status = ?", value)
+		case "created_after":
+			if t, ok := value.(string); ok {
+				db = db.Where("created_at >= ?", t)
+			}
+		case "created_before":
+			if t, ok := value.(string); ok {
+				db = db.Where("created_at <= ?", t)
+			}
+		}
+	}
+
+	if err := db.Find(&accounts).Error; err != nil {
+		r.logger.Error("Failed to find accounts by segment", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return accounts, nil
+}
