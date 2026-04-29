@@ -40,6 +40,8 @@ var Module = fx.Module(
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
 	fx.Provide(appservice.NewDeliveryWorker),
+	fx.Provide(appservice.NewCampaignProcessor),
+	fx.Provide(appservice.NewCampaignScheduler),
 
 	// --- Email Provider ---
 	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.EmailProvider {
@@ -51,6 +53,11 @@ var Module = fx.Module(
 		return &defaultIAMReader{}
 	}, fx.As(new(appusecase.IAMGlobalPreferenceReader)))),
 
+	// --- Account reader (default: empty — replace with IAM provider) ---
+	fx.Provide(fx.Annotate(func() repository.AccountReader {
+		return &defaultAccountReader{}
+	}, fx.As(new(repository.AccountReader)))),
+
 	// --- Use Cases ---
 	fx.Provide(fx.Annotate(appusecase.NewNotificationTemplateUsecase, fx.As(new(usecase.NotificationTemplateUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationIngestUsecase, fx.As(new(usecase.NotificationIngestUsecase)))),
@@ -61,6 +68,7 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(appusecase.NewNotificationMuteUsecase, fx.As(new(usecase.NotificationMuteUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationDeviceUsecase, fx.As(new(usecase.NotificationDeviceUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewEmailDeliveryUsecase, fx.As(new(usecase.EmailDeliveryUsecase)))),
+	fx.Provide(fx.Annotate(appusecase.NewNotificationCampaignUsecase, fx.As(new(usecase.NotificationCampaignUsecase)))),
 
 	// --- Handlers ---
 	fx.Provide(handler.NewNotificationAdminHandler),
@@ -96,10 +104,35 @@ var Module = fx.Module(
 			},
 		})
 	}),
+
+	// --- Campaign Scheduler ---
+	fx.Invoke(func(lc fx.Lifecycle, scheduler *appservice.CampaignScheduler) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				scheduler.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
 )
 
 type defaultIAMReader struct{}
 
 func (r *defaultIAMReader) IsNotificationEnabled(_ context.Context, _ uuid.UUID) (bool, error) {
 	return true, nil
+}
+
+type defaultAccountReader struct{}
+
+func (r *defaultAccountReader) FindAll(_ context.Context) ([]uuid.UUID, error) {
+	return nil, nil
+}
+
+func (r *defaultAccountReader) FindBySegment(_ context.Context, _ map[string]interface{}) ([]uuid.UUID, error) {
+	return nil, nil
 }
