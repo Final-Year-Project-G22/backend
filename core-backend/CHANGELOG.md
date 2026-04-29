@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.8.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.7.0...core-backend-v0.8.0) (2026-04-29)
+
+
+### Features
+
+* **core:** add domain foundation, infrastructure layer, and migration generation ([993edce](https://github.com/Final-Year-Project-G22/backend/commit/993edce6baf752f81a23767961f55145adce183c))
+* **core:** add notification module data layer implementation ([#99](https://github.com/Final-Year-Project-G22/backend/issues/99)) ([5ae9969](https://github.com/Final-Year-Project-G22/backend/commit/5ae99693ed8f367933ad0c1319a06fae355ab0bb))
+* **core:** added event wiring in notification module ([b7c8d0e](https://github.com/Final-Year-Project-G22/backend/commit/b7c8d0e1f14e88782071bbbbc0506c5efc86c282))
+* **core:** completed notification module ([acdd9a2](https://github.com/Final-Year-Project-G22/backend/commit/acdd9a2d9bba11bf863c6cb7429c9d0b2b637b98))
+* **core:** email delivery pipeline, resend webhook handler, and webhook dto ([b121b97](https://github.com/Final-Year-Project-G22/backend/commit/b121b973710bf2708344e7f4cbd6767568d17fde))
+* **core:** email provider infra with resend and email delivery usecase ([65c1b84](https://github.com/Final-Year-Project-G22/backend/commit/65c1b84283743e3a3eef585976109e3778205b62))
+* **core:** Notification campaign system ([#106](https://github.com/Final-Year-Project-G22/backend/issues/106)) ([b9631dd](https://github.com/Final-Year-Project-G22/backend/commit/b9631dd2a39b7e8a1050e2cda93d636e43c7478a))
+* **core:** Notification delivery pipeline ([#101](https://github.com/Final-Year-Project-G22/backend/issues/101)) ([3c7dfe5](https://github.com/Final-Year-Project-G22/backend/commit/3c7dfe559196888bb152914a67e32af4cd9f665c))
+* **core:** Notification module domain layer ([#98](https://github.com/Final-Year-Project-G22/backend/issues/98)) ([4c7cd19](https://github.com/Final-Year-Project-G22/backend/commit/4c7cd19ff4ef80efacbaf0ed1a111211a0ff8ec0))
+* **core:** Notification template management ([#100](https://github.com/Final-Year-Project-G22/backend/issues/100)) ([0e372a0](https://github.com/Final-Year-Project-G22/backend/commit/0e372a047d90f53b8fae4c55d5af56232748f70b))
+* **core:** Notification user settings ([#103](https://github.com/Final-Year-Project-G22/backend/issues/103)) ([4282d14](https://github.com/Final-Year-Project-G22/backend/commit/4282d142fe39d63a513c882ad8c9114c28768954))
+
+
+### Bug Fixes
+
+* **core:** add delivery status to email delivery log entity ([9a67b18](https://github.com/Final-Year-Project-G22/backend/commit/9a67b1889cc39ffaf0355dd57e2a4ac5cf53113e))
+* **core:** added muted fix ([cf7e15e](https://github.com/Final-Year-Project-G22/backend/commit/cf7e15ef9c1480e8f4a2e98388b6f6a3bdd3c29b))
+* **core:** wire community routes into fx/huma ([#94](https://github.com/Final-Year-Project-G22/backend/issues/94)) ([5a15a3c](https://github.com/Final-Year-Project-G22/backend/commit/5a15a3c3563f36425ed7a43a1ec15bff8e7101cd))
+
 ## [0.7.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.6.0...core-backend-v0.7.0) (2026-04-22)
 
 
