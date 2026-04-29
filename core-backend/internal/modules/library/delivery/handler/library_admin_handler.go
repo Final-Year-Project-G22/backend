@@ -319,7 +319,7 @@ func (h *LibraryAdminHandler) HandleCreateInteractiveForm(ctx context.Context, i
 }
 
 func (h *LibraryAdminHandler) HandleGetInteractiveForm(ctx context.Context, input *dto.GetInteractiveFormInput) (*dto.GetInteractiveFormOutput, error) {
-	form, err := h.adminUC.GetInteractiveForm(ctx, input.TemplateID)
+	form, err := h.adminUC.GetInteractiveFormByTemplate(ctx, input.TemplateID)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

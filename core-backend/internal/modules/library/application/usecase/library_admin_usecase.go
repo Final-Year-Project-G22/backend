@@ -357,6 +357,15 @@ func (u *libraryAdminUsecase) CreateInteractiveForm(ctx context.Context, input u
 	if err != nil {
 		return nil, err
 	}
+
+	group, err := u.groupRepo.GetByID(ctx, tmpl.GroupID)
+	if err != nil {
+		return nil, err
+	}
+	if group.Format != entity.TemplateFormatInteractiveForm {
+		return nil, apperrors.InvalidInputError("templateId", "library.errors.invalidFileType")
+	}
+
 	if tmpl.InteractiveForm != nil {
 		return nil, apperrors.AlreadyExistsError("interactiveForm", "templateID", input.TemplateID)
 	}
@@ -377,6 +386,17 @@ func (u *libraryAdminUsecase) CreateInteractiveForm(ctx context.Context, input u
 
 func (u *libraryAdminUsecase) GetInteractiveForm(ctx context.Context, id uuid.UUID) (*entity.LibraryInteractiveForm, error) {
 	return u.formRepo.GetByID(ctx, id)
+}
+
+func (u *libraryAdminUsecase) GetInteractiveFormByTemplate(ctx context.Context, templateID uuid.UUID) (*entity.LibraryInteractiveForm, error) {
+	form, err := u.formRepo.GetByTemplateID(ctx, templateID)
+	if err != nil {
+		return nil, err
+	}
+	if form == nil {
+		return nil, apperrors.NotFoundError("interactiveForm", templateID)
+	}
+	return form, nil
 }
 
 func (u *libraryAdminUsecase) UpdateInteractiveForm(ctx context.Context, id uuid.UUID, input usecase.UpdateInteractiveFormInput) (*entity.LibraryInteractiveForm, error) {
