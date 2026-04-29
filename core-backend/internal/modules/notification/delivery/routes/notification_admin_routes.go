@@ -15,6 +15,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Creates a new notification template.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleCreateTemplate)
 
 	huma.Register(api, huma.Operation{
@@ -25,6 +26,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists notification templates with optional category filter.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleListTemplates)
 
 	huma.Register(api, huma.Operation{
@@ -35,6 +37,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Gets a notification template with its translations.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleGetTemplate)
 
 	huma.Register(api, huma.Operation{
@@ -45,6 +48,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Updates a notification template. System-managed templates have restricted fields.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleUpdateTemplate)
 
 	huma.Register(api, huma.Operation{
@@ -55,6 +59,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Soft-deletes a notification template. System-managed templates cannot be deleted.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleDeleteTemplate)
 
 	huma.Register(api, huma.Operation{
@@ -65,6 +70,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Adds a translation to a notification template.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleAddTranslation)
 
 	huma.Register(api, huma.Operation{
@@ -75,6 +81,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Updates an existing translation for a notification template.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleUpdateTranslation)
 
 	huma.Register(api, huma.Operation{
@@ -85,6 +92,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Deletes a translation from a notification template.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleDeleteTranslation)
 
 	// --- Monitoring ---
@@ -96,6 +104,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Returns notification queue counts by status.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleGetQueueStatus)
 
 	huma.Register(api, huma.Operation{
@@ -106,6 +115,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Retries failed notification queue items.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleRetryFailed)
 
 	// --- Campaigns ---
@@ -117,6 +127,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Creates a new notification campaign in draft status.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleCreateCampaign)
 
 	huma.Register(api, huma.Operation{
@@ -127,6 +138,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists notification campaigns with optional status filter.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleListCampaigns)
 
 	huma.Register(api, huma.Operation{
@@ -137,6 +149,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Gets a notification campaign by ID.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleGetCampaign)
 
 	huma.Register(api, huma.Operation{
@@ -147,6 +160,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Updates a draft notification campaign.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleUpdateCampaign)
 
 	huma.Register(api, huma.Operation{
@@ -157,6 +171,7 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Schedules a draft campaign, resolving segment filters to a static recipient list.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleScheduleCampaign)
 
 	huma.Register(api, huma.Operation{
@@ -167,5 +182,6 @@ func RegisterAdminNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Cancels a scheduled or sending campaign.",
 		Tags:        []string{"Admin - Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.AdminHandler.HandleCancelCampaign)
 }
