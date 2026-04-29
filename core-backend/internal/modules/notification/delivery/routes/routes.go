@@ -7,9 +7,11 @@ import (
 )
 
 type RouteDependencies struct {
-	AdminHandler        *handler.NotificationAdminHandler
-	NotificationHandler *handler.NotificationHandler
-	WebhookHandler      *handler.WebhookHandler
+	AdminHandler            *handler.NotificationAdminHandler
+	NotificationHandler     *handler.NotificationHandler
+	WebhookHandler          *handler.WebhookHandler
+	AuthMiddleware          func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 }
 
 func RegisterRoutes(api huma.API, engine *gin.Engine, deps RouteDependencies) {

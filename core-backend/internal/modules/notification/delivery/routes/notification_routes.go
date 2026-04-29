@@ -16,6 +16,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists the authenticated user's inbox with optional category filter.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleListInbox)
 
 	huma.Register(api, huma.Operation{
@@ -26,6 +27,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Returns the number of unread notifications for the authenticated user.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleGetUnreadCount)
 
 	huma.Register(api, huma.Operation{
@@ -36,6 +38,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Marks a single inbox notification as read.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleMarkAsRead)
 
 	huma.Register(api, huma.Operation{
@@ -46,6 +49,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Marks all inbox notifications as read for the authenticated user.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleMarkAllAsRead)
 
 	huma.Register(api, huma.Operation{
@@ -56,6 +60,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Marks all inbox notifications in a category as read.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleMarkCategoryAsRead)
 
 	huma.Register(api, huma.Operation{
@@ -66,6 +71,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Archives a single inbox notification.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleArchiveNotification)
 
 	huma.Register(api, huma.Operation{
@@ -76,6 +82,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Soft-deletes a single inbox notification.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleDeleteNotification)
 
 	// --- History ---
@@ -87,6 +94,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists the authenticated user's notification history.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleListHistory)
 
 	huma.Register(api, huma.Operation{
@@ -97,6 +105,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Gets a single notification history entry.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleGetHistoryDetail)
 
 	// --- Preferences ---
@@ -108,6 +117,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists all notification preference overrides for the authenticated user.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleListPreferences)
 
 	huma.Register(api, huma.Operation{
@@ -118,6 +128,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Sets a notification preference override for a type+channel combination.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleSetPreference)
 
 	huma.Register(api, huma.Operation{
@@ -128,6 +139,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Deletes a notification preference override, reverting to defaults.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleDeletePreference)
 
 	// --- Mutes ---
@@ -139,6 +151,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists all muted accounts for the authenticated user.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleListMutes)
 
 	huma.Register(api, huma.Operation{
@@ -149,6 +162,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Mutes an account so their notifications are not shown in the inbox.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleMuteAccount)
 
 	huma.Register(api, huma.Operation{
@@ -159,6 +173,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Unmutes a previously muted account.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleUnmuteAccount)
 
 	// --- Devices ---
@@ -170,6 +185,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists all registered devices for the authenticated user.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleListDevices)
 
 	huma.Register(api, huma.Operation{
@@ -180,6 +196,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Registers a new device or updates an existing one by device token.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleRegisterDevice)
 
 	huma.Register(api, huma.Operation{
@@ -190,6 +207,7 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Updates device metadata such as push token or device name.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleUpdateDevice)
 
 	huma.Register(api, huma.Operation{
@@ -200,5 +218,6 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Deactivates a registered device.",
 		Tags:        []string{"Notifications"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.NotificationHandler.HandleDeactivateDevice)
 }
