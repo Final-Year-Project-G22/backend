@@ -13,4 +13,5 @@ type LibraryViewUsecase interface {
 	ListTemplateGroups(ctx context.Context, categoryID *uuid.UUID, format *entity.TemplateFormat, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, error)
 	GetTemplateGroup(ctx context.Context, slug string, locale *string) (*entity.LibraryTemplateGroup, []*entity.LibraryTemplate, error)
 	DownloadTemplate(ctx context.Context, input DownloadInput) (*DownloadOutput, error)
+	ListMyDownloads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.LibraryTemplateDownload, error)
 }

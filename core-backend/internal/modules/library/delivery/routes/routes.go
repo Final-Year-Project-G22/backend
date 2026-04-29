@@ -6,6 +6,7 @@ import (
 )
 
 type RouteDependencies struct {
+	ViewHandler                *handler.LibraryHandler
 	AdminHandler               *handler.LibraryAdminHandler
 	AuthMiddleware             func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware    func(huma.Context, func(huma.Context))
@@ -16,5 +17,6 @@ type RouteDependencies struct {
 }
 
 func RegisterRoutes(api huma.API, deps RouteDependencies) {
+	RegisterLibraryRoutes(api, deps)
 	RegisterLibraryAdminRoutes(api, deps)
 }
