@@ -1,4 +1,4 @@
-h1:BAXZ928VgLh99yAspBZh8FZbR//1iwQzgVN775Hjb4w=
+h1:q64tsTUqmkEcWePAyzcd5nCVWrWhtWg0yuswlZRM4f4=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -15,3 +15,4 @@ h1:BAXZ928VgLh99yAspBZh8FZbR//1iwQzgVN775Hjb4w=
 20260427170000_seed_notification_templates.sql h1:SPdD73lsGgtsnqvC+C8Y0pjzZvcCUy8IBz/shXbjiDs=
 20260429121036_libraryModulesInitialEntities.sql h1:KvC3lARESCSvAN38XyqJFDt0WUwlqZXhdIGthTS/l4A=
 20260429121353_addDeliveryStatusToEmailDeliveryLogs.sql h1:HwxSov/jgNY6B/IHA3ULlS26hlEcR7SplpPwlIWg9ys=
+20260429170000_seed_library_categories.sql h1:/dB5K24QcOT4uO8WbaPmXlnz3Q0/87M6RH4y8bWCcMc=

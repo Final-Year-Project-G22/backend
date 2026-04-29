@@ -19,21 +19,39 @@ func NewLibraryHandler(viewUC usecase.LibraryViewUsecase) *LibraryHandler {
 	return &LibraryHandler{viewUC: viewUC}
 }
 
-func (h *LibraryHandler) HandleListCategories(ctx context.Context, input *dto.ListCategoriesInput) (*dto.ListCategoriesOutput, error) {
-	categories, err := h.viewUC.ListCategories(ctx, input.Locale)
+func (h *LibraryHandler) HandleListCategories(ctx context.Context, input *dto.LibraryListCategoriesInput) (*dto.LibraryListCategoriesOutput, error) {
+	var locale *string
+	if input.Locale != "" {
+		locale = &input.Locale
+	}
+	categories, err := h.viewUC.ListCategories(ctx, locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
 	roots := buildCategoryTree(categories, nil)
-	return &dto.ListCategoriesOutput{Body: roots}, nil
+	return &dto.LibraryListCategoriesOutput{Body: roots}, nil
 }
 
 func (h *LibraryHandler) HandleListTemplateGroups(ctx context.Context, input *dto.ListTemplateGroupsInput) (*dto.ListTemplateGroupsOutput, error) {
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
 	q.Search = input.Search
 
-	groups, err := h.viewUC.ListTemplateGroups(ctx, input.CategoryID, input.Format, q)
+	var categoryID *uuid.UUID
+	if input.CategoryID != "" {
+		id, err := uuid.Parse(input.CategoryID)
+		if err != nil {
+			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "library.errors.invalidFileType"))
+		}
+		categoryID = &id
+	}
+	var format *entity.TemplateFormat
+	if input.Format != "" {
+		f := entity.TemplateFormat(input.Format)
+		format = &f
+	}
+
+	groups, err := h.viewUC.ListTemplateGroups(ctx, categoryID, format, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -60,7 +78,11 @@ func (h *LibraryHandler) HandleListTemplateGroups(ctx context.Context, input *dt
 }
 
 func (h *LibraryHandler) HandleGetTemplateGroup(ctx context.Context, input *dto.GetTemplateGroupBySlugInput) (*dto.GetTemplateGroupDetailOutput, error) {
-	group, templates, err := h.viewUC.GetTemplateGroup(ctx, input.Slug, input.Locale)
+	var locale *string
+	if input.Locale != "" {
+		locale = &input.Locale
+	}
+	group, templates, err := h.viewUC.GetTemplateGroup(ctx, input.Slug, locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -72,10 +94,14 @@ func (h *LibraryHandler) HandleDownloadTemplate(ctx context.Context, input *dto.
 	if id := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID)); id != uuid.Nil {
 		accountID = &id
 	}
+	var language *string
+	if input.Language != "" {
+		language = &input.Language
+	}
 
 	result, err := h.viewUC.DownloadTemplate(ctx, usecase.DownloadInput{
 		Slug:      input.Slug,
-		Language:  input.Language,
+		Language:  language,
 		AccountID: accountID,
 	})
 	if err != nil {
