@@ -123,7 +123,7 @@ var Module = fx.Module(
 
 type defaultIAMReader struct{}
 
-func (r *defaultIAMReader) IsNotificationEnabled(_ context.Context, _ uuid.UUID) (bool, error) {
+func (r *defaultIAMReader) IsNotificationEnabled(_ context.Context, _ uuid.UUID, _ string) (bool, error) {
 	return true, nil
 }
 
