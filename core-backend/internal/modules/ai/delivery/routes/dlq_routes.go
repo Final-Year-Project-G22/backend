@@ -5,9 +5,7 @@ import (
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/delivery/dto"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/google/uuid"
 )
 
 const (
@@ -121,28 +119,13 @@ func registerIngestionStatusDocumentStreamRoute(api huma.API, deps RouteDependen
 		Tags:        []string{"AI Ingestion Status"},
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, func(ctx context.Context, input *dto.StreamStatusInput) (*huma.StreamResponse, error) {
+	}, func(ctx context.Context, input *dto.StreamStatusByDocumentInput) (*huma.StreamResponse, error) {
 		return &huma.StreamResponse{
 			Body: func(hctx huma.Context) {
 				writer := service.NewSSEWriter(hctx)
 				writer.WriteHeaders()
-				documentIDVal := ctx.Value(contextkeys.DocumentID)
-				if documentIDVal == nil {
-					_ = writer.WriteEvent("error", map[string]string{"message": "document ID not found"})
-					return
-				}
-				documentIDStr, ok := documentIDVal.(string)
-				if !ok {
-					_ = writer.WriteEvent("error", map[string]string{"message": "invalid document ID type"})
-					return
-				}
-				documentID, err := uuid.Parse(documentIDStr)
-				if err != nil {
-					_ = writer.WriteEvent("error", map[string]string{"message": "invalid document ID"})
-					return
-				}
 				lastEventID := hctx.Header("Last-Event-ID")
-				err = deps.SSEHandler.StreamStatusByDocument(ctx, documentID, lastEventID, func(event string, payload any) error {
+				err := deps.SSEHandler.StreamStatusByDocument(ctx, input.DocumentID, lastEventID, func(event string, payload any) error {
 					return writer.WriteEvent(event, payload)
 				})
 				if err != nil && ctx.Err() == nil {

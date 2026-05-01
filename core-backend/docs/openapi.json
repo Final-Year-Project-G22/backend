@@ -4251,15 +4251,10 @@
           "guideId": {
             "description": "Guide ID",
             "type": "string"
-          },
-          "userId": {
-            "description": "User ID",
-            "type": "string"
           }
         },
         "required": [
-          "guideId",
-          "userId"
+          "guideId"
         ],
         "type": "object"
       },
@@ -7539,6 +7534,21 @@
           "effectiveDate",
           "createdAt"
         ],
+        "type": "object"
+      },
+      "StreamStatusByDocumentInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/StreamStatusByDocumentInputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "StreamStatusInputBody": {
@@ -11491,6 +11501,18 @@
       "delete": {
         "description": "Invalidates a specific user's journey for a guide.",
         "operationId": "invalidateUserJourney",
+        "parameters": [
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "description": "User ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -14712,6 +14734,18 @@
       "delete": {
         "description": "Archive (soft-delete) a conversation session.",
         "operationId": "archiveConversation",
+        "parameters": [
+          {
+            "description": "Session ID",
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "description": "Session ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -14757,6 +14791,18 @@
       "get": {
         "description": "Get a conversation with its messages.",
         "operationId": "getConversation",
+        "parameters": [
+          {
+            "description": "Session ID",
+            "in": "path",
+            "name": "sessionId",
+            "required": true,
+            "schema": {
+              "description": "Session ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -14898,6 +14944,18 @@
       "get": {
         "description": "Get a specific dead letter queue event by ID.",
         "operationId": "getDeadEvent",
+        "parameters": [
+          {
+            "description": "Event ID",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "description": "Event ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -14945,6 +15003,18 @@
       "post": {
         "description": "Redrive a dead event back to the processing queue.",
         "operationId": "redriveEvent",
+        "parameters": [
+          {
+            "description": "Event ID",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "description": "Event ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -14992,6 +15062,18 @@
       "get": {
         "description": "Returns a paginated list of ingestion statuses for an account.",
         "operationId": "listIngestionStatusByAccountID",
+        "parameters": [
+          {
+            "description": "Account ID",
+            "in": "path",
+            "name": "accountId",
+            "required": true,
+            "schema": {
+              "description": "Account ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -15039,11 +15121,23 @@
       "get": {
         "description": "Subscribe to real-time ingestion status updates for a specific document via SSE.",
         "operationId": "streamIngestionStatusByDocument",
+        "parameters": [
+          {
+            "description": "Document ID",
+            "in": "path",
+            "name": "documentId",
+            "required": true,
+            "schema": {
+              "description": "Document ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/StreamStatusInputBody"
+                "$ref": "#/components/schemas/StreamStatusByDocumentInputBody"
               }
             }
           },
@@ -15079,6 +15173,18 @@
       "get": {
         "description": "Returns the current ingestion status for a document.",
         "operationId": "getIngestionStatusByDocumentID",
+        "parameters": [
+          {
+            "description": "Document ID",
+            "in": "path",
+            "name": "documentId",
+            "required": true,
+            "schema": {
+              "description": "Document ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -15166,6 +15272,18 @@
       "get": {
         "description": "Returns a paginated list of ingestion statuses for a user.",
         "operationId": "listIngestionStatusByUserID",
+        "parameters": [
+          {
+            "description": "User ID",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "description": "User ID",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

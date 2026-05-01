@@ -515,11 +515,11 @@ type RevertStepToVersionResponseBody struct {
 
 type InvalidateUserJourneyRequest struct {
 	GuideID uuid.UUID `json:"guideId" doc:"Guide ID"`
-	UserID  uuid.UUID `json:"userId" doc:"User ID"`
 }
 
 type InvalidateUserJourneyInput struct {
-	Body InvalidateUserJourneyRequest
+	UserID uuid.UUID `path:"userId" doc:"User ID"`
+	Body   InvalidateUserJourneyRequest
 }
 
 type InvalidateUserJourneyOutput struct {

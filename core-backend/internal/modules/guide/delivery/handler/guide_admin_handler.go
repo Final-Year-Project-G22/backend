@@ -239,7 +239,7 @@ func (h *GuideAdminHandler) HandleRevertStepToVersion(ctx context.Context, input
 // --- Journey ---
 
 func (h *GuideAdminHandler) HandleInvalidateUserJourney(ctx context.Context, input *dto.InvalidateUserJourneyInput) (*dto.InvalidateUserJourneyOutput, error) {
-	if err := h.journeyAdminUC.InvalidateUserJourney(ctx, input.Body.GuideID, input.Body.UserID, input.Body.GuideID); err != nil {
+	if err := h.journeyAdminUC.InvalidateUserJourney(ctx, input.Body.GuideID, input.UserID, input.Body.GuideID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.InvalidateUserJourneyOutput{Body: dto.InvalidateUserJourneyResponseBody{Message: "User journey invalidated"}}, nil
