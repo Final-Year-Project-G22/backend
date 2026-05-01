@@ -25,7 +25,6 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
-	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/datatypes"
@@ -108,7 +107,6 @@ type authService struct {
 	sessionRepo           repository.SessionRepository
 	tokenService          token.TokenService
 	logger                core.Logger
-	messageBus            rabbitmq.Bus
 	cfg                   *core.Config
 	notifOutboxRepo       notifrepo.NotificationOutboxRepository
 }
@@ -130,7 +128,6 @@ func NewAuthService(
 	sessionRepo repository.SessionRepository,
 	tokenService token.TokenService,
 	logger core.Logger,
-	messageBus rabbitmq.Bus,
 	cfg *core.Config,
 	notifOutboxRepo notifrepo.NotificationOutboxRepository,
 ) AuthService {
@@ -144,7 +141,6 @@ func NewAuthService(
 		sessionRepo:           sessionRepo,
 		tokenService:          tokenService,
 		logger:                logger,
-		messageBus:            messageBus,
 		cfg:                   cfg,
 		notifOutboxRepo:       notifOutboxRepo,
 	}
