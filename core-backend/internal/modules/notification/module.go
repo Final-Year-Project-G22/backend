@@ -40,12 +40,14 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewUserNotificationInboxRepository, fx.As(new(repository.UserNotificationInboxRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewEmailDeliveryLogRepository, fx.As(new(repository.EmailDeliveryLogRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationCampaignRepository, fx.As(new(repository.NotificationCampaignRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewNotificationOutboxRepository, fx.As(new(repository.NotificationOutboxRepository)))),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
 	fx.Provide(appservice.NewDeliveryWorker),
 	fx.Provide(appservice.NewCampaignProcessor),
 	fx.Provide(appservice.NewCampaignScheduler),
+	fx.Provide(appservice.NewNotificationOutboxDispatcher),
 
 	// --- Email Provider ---
 	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.EmailProvider {
@@ -121,6 +123,21 @@ var Module = fx.Module(
 		lc.Append(fx.Hook{
 			OnStart: func(context.Context) error {
 				scheduler.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
+
+	// --- Notification Outbox Dispatcher ---
+	fx.Invoke(func(lc fx.Lifecycle, dispatcher *appservice.NotificationOutboxDispatcher) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				go dispatcher.Start(ctx)
 				return nil
 			},
 			OnStop: func(context.Context) error {
