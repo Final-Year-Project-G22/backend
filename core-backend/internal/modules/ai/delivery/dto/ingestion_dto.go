@@ -72,7 +72,8 @@ type IngestionStatusProjectionResponse struct {
 }
 
 type GetStatusByDocumentInput struct {
-	Body struct{} `path:"documentId"`
+	DocumentID uuid.UUID `path:"documentId" doc:"Document ID"`
+	Body       struct{}
 }
 
 type GetStatusByDocumentOutput struct {
@@ -85,8 +86,9 @@ type PaginationQuery struct {
 }
 
 type ListStatusByAccountInput struct {
-	Body  struct{}
-	Query PaginationQuery
+	AccountID uuid.UUID `path:"accountId" doc:"Account ID"`
+	Body      struct{}
+	Query     PaginationQuery
 }
 
 type ListStatusByAccountOutput struct {
@@ -97,8 +99,9 @@ type ListStatusByAccountOutput struct {
 }
 
 type ListStatusByUserInput struct {
-	Body  struct{}
-	Query PaginationQuery
+	UserID uuid.UUID `path:"userId" doc:"User ID"`
+	Body   struct{}
+	Query  PaginationQuery
 }
 
 type ListStatusByUserOutput struct {
@@ -110,6 +113,11 @@ type ListStatusByUserOutput struct {
 
 type StreamStatusInput struct {
 	Body struct{}
+}
+
+type StreamStatusByDocumentInput struct {
+	DocumentID uuid.UUID `path:"documentId" doc:"Document ID"`
+	Body       struct{}
 }
 
 type StreamStatusOutput struct {

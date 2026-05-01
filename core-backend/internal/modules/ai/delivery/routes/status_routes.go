@@ -49,14 +49,6 @@ func registerStatusRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, func(ctx context.Context, input *dto.ListStatusByAccountInput) (*dto.ListStatusByAccountOutput, error) {
-		acctIDStr, ok := ctx.Value("accountId").(string)
-		if !ok {
-			return nil, nil
-		}
-		acctID, err := uuid.Parse(acctIDStr)
-		if err != nil {
-			return nil, err
-		}
 		limit := 20
 		offset := 0
 		if input.Query.Limit != nil {
@@ -65,7 +57,7 @@ func registerStatusRoutes(api huma.API, deps RouteDependencies) {
 		if input.Query.Offset != nil {
 			offset = *input.Query.Offset
 		}
-		return deps.StatusHandler.HandleListStatusByAccountID(ctx, acctID, limit, offset)
+		return deps.StatusHandler.HandleListStatusByAccountID(ctx, input.AccountID, limit, offset)
 	})
 
 	huma.Register(api, huma.Operation{
@@ -78,14 +70,6 @@ func registerStatusRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, func(ctx context.Context, input *dto.ListStatusByUserInput) (*dto.ListStatusByUserOutput, error) {
-		usrIDStr, ok := ctx.Value("userId").(string)
-		if !ok {
-			return nil, nil
-		}
-		usrID, err := uuid.Parse(usrIDStr)
-		if err != nil {
-			return nil, err
-		}
 		limit := 20
 		offset := 0
 		if input.Query.Limit != nil {
@@ -94,6 +78,6 @@ func registerStatusRoutes(api huma.API, deps RouteDependencies) {
 		if input.Query.Offset != nil {
 			offset = *input.Query.Offset
 		}
-		return deps.StatusHandler.HandleListStatusByUserID(ctx, usrID, limit, offset)
+		return deps.StatusHandler.HandleListStatusByUserID(ctx, input.UserID, limit, offset)
 	})
 }

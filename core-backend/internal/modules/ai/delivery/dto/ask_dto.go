@@ -108,16 +108,13 @@ type MessageDTO struct {
 }
 
 type GetConversationInput struct {
-	Body  struct{}
-	Query struct {
+	SessionID uuid.UUID `path:"sessionId" doc:"Session ID"`
+	Body      struct{}
+	Query     struct {
 		MessageLimit   *int32 `json:"messageLimit,omitempty" query:"messageLimit" default:"50" minimum:"1" maximum:"100"`
 		MessageOffset  *int32 `json:"messageOffset,omitempty" query:"messageOffset" default:"0" minimum:"0"`
 		IncludeDeleted *bool  `json:"includeDeleted,omitempty" query:"includeDeleted" default:"false"`
 	}
-}
-
-type GetConversationPathInput struct {
-	Body struct{} `path:"sessionId"`
 }
 
 type GetConversationOutput struct {
@@ -129,7 +126,8 @@ type GetConversationOutput struct {
 }
 
 type ArchiveConversationInput struct {
-	Body struct{} `path:"sessionId"`
+	SessionID uuid.UUID `path:"sessionId" doc:"Session ID"`
+	Body      struct{}
 }
 
 type ArchiveConversationOutput struct {
