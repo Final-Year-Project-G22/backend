@@ -75,6 +75,8 @@ type ProcessEventInput struct {
 	SourceModule     string                  `json:"sourceModule"`
 	SourceEvent      string                  `json:"sourceEvent"`
 	NotificationType entity.NotificationType `json:"notificationType"`
+	ChannelPolicy    string                  `json:"channelPolicy"`
+	Channel          *entity.Channel         `json:"channel,omitempty"`
 	AccountID        uuid.UUID               `json:"accountId"`
 	Variables        map[string]string       `json:"variables"`
 	Metadata         map[string]interface{}  `json:"metadata"`

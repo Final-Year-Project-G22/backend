@@ -55,7 +55,7 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 		return err
 	}
 
-	channels := uc.channelsFromTemplate(tmpl)
+	channels := uc.resolveChannels(tmpl, input.ChannelPolicy, input.Channel)
 	if len(channels) == 0 {
 		return nil
 	}
@@ -84,6 +84,16 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	}
 
 	return nil
+}
+
+func (uc *notificationIngestUsecase) resolveChannels(tmpl *entity.NotificationTemplate, channelPolicy string, singleChannel *entity.Channel) []entity.Channel {
+	if channelPolicy == "single" && singleChannel != nil {
+		if _, ok := tmpl.DefaultContent[string(*singleChannel)]; ok {
+			return []entity.Channel{*singleChannel}
+		}
+		return nil
+	}
+	return uc.channelsFromTemplate(tmpl)
 }
 
 func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input usecase.SendNotificationInput) error {
