@@ -205,7 +205,7 @@ func notificationTypeToCategory(nt entity.NotificationType) entity.NotificationC
 		return entity.NotificationCategoryGuide
 	case entity.NotificationTypeAIQuotaLimit, entity.NotificationTypeAIResponseReady:
 		return entity.NotificationCategoryAI
-	case entity.NotificationTypeAccountAlert, entity.NotificationTypeAccountVerification, entity.NotificationTypePasswordReset:
+	case entity.NotificationTypeAccountAlert, entity.NotificationTypeAccountAlertCritical, entity.NotificationTypeAccountAlertInfo, entity.NotificationTypeAccountVerification, entity.NotificationTypePasswordReset:
 		return entity.NotificationCategorySecurity
 	case entity.NotificationTypePaymentConfirmation:
 		return entity.NotificationCategoryPayment
