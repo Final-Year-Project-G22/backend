@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"strings"
@@ -19,11 +20,14 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	notifentity "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
-	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 )
 
 type AuthService interface {
@@ -103,7 +107,8 @@ type authService struct {
 	sessionRepo           repository.SessionRepository
 	tokenService          token.TokenService
 	logger                core.Logger
-	messageBus            rabbitmq.Bus
+	cfg                   *core.Config
+	notifOutboxRepo       notifrepo.NotificationOutboxRepository
 }
 
 const (
@@ -123,7 +128,8 @@ func NewAuthService(
 	sessionRepo repository.SessionRepository,
 	tokenService token.TokenService,
 	logger core.Logger,
-	messageBus rabbitmq.Bus,
+	cfg *core.Config,
+	notifOutboxRepo notifrepo.NotificationOutboxRepository,
 ) AuthService {
 	return &authService{
 		transactor:            transactor,
@@ -135,7 +141,8 @@ func NewAuthService(
 		sessionRepo:           sessionRepo,
 		tokenService:          tokenService,
 		logger:                logger,
-		messageBus:            messageBus,
+		cfg:                   cfg,
+		notifOutboxRepo:       notifOutboxRepo,
 	}
 }
 
@@ -222,9 +229,13 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		}
 
 		now := time.Now()
-		_, txErr = s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now)
+		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now)
 		if txErr != nil {
 			return txErr
+		}
+
+		if txErr := s.writeOTPNotificationOutbox(txCtx, account.ID, account.Email, user, otpCode, otpRecord.ID); txErr != nil {
+			s.logger.Error("Failed to write OTP notification outbox row", core.Error(txErr))
 		}
 
 		return nil
@@ -247,8 +258,6 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		core.String("userID", user.ID.String()),
 		core.String("accountID", account.ID.String()),
 	)
-
-	go s.publishEmailOTPRequestedEvent(ctx, account, user, otpCode)
 
 	return &AuthResult{
 		AccessToken:  accessToken,
@@ -380,8 +389,23 @@ func (s *authService) UpdateAccountPassword(ctx context.Context, accountID uuid.
 		return errors.InternalError("iam.errors.passwordHashFailed", err)
 	}
 
-	err = s.accountUsecase.UpdateAccountPassword(ctx, account.ID, usecase.UpdateAccountPasswordInput{
-		NewHashedPassword: string(hashedPassword),
+	user, err := s.userUsecase.GetUser(ctx, account.UserID)
+	if err != nil {
+		return err
+	}
+
+	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if txErr := s.accountUsecase.UpdateAccountPassword(txCtx, account.ID, usecase.UpdateAccountPasswordInput{
+			NewHashedPassword: string(hashedPassword),
+		}); txErr != nil {
+			return txErr
+		}
+
+		if txErr := s.writeAccountAlertOutbox(txCtx, account, user, "password_changed", "Password Changed", "Your account password has been changed successfully.", "/account/security"); txErr != nil {
+			s.logger.Error("Failed to write account alert notification outbox row", core.Error(txErr))
+		}
+
+		return nil
 	})
 
 	if err != nil {
@@ -545,13 +569,19 @@ func (s *authService) VerifyEmailOTP(ctx context.Context, accountID uuid.UUID, u
 			return txErr
 		}
 
-		return s.accountUsecase.MarkEmailVerifiedAndActivate(txCtx, accountID)
+		if txErr := s.accountUsecase.MarkEmailVerifiedAndActivate(txCtx, accountID); txErr != nil {
+			return txErr
+		}
+
+		if txErr := s.writeWelcomeNotificationOutbox(txCtx, account, user); txErr != nil {
+			s.logger.Error("Failed to write welcome notification outbox row", core.Error(txErr))
+		}
+
+		return nil
 	})
 	if err != nil {
 		return err
 	}
-
-	go s.publishAccountRegisteredEvent(ctx, account, user)
 
 	return nil
 }
@@ -601,9 +631,13 @@ func (s *authService) ResendEmailOTP(ctx context.Context, accountID uuid.UUID) e
 			return txErr
 		}
 
-		_, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now)
+		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now)
 		if txErr != nil {
 			return txErr
+		}
+
+		if txErr := s.writeOTPNotificationOutbox(txCtx, accountID, account.Email, user, otpCode, otpRecord.ID); txErr != nil {
+			s.logger.Error("Failed to write OTP notification outbox row", core.Error(txErr))
 		}
 
 		return nil
@@ -611,8 +645,6 @@ func (s *authService) ResendEmailOTP(ctx context.Context, accountID uuid.UUID) e
 	if err != nil {
 		return err
 	}
-
-	go s.publishEmailOTPRequestedEvent(ctx, account, user, otpCode)
 
 	return nil
 }
@@ -694,29 +726,103 @@ func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID, acco
 	}, nil
 }
 
-func (s *authService) publishAccountRegisteredEvent(ctx context.Context, account *entity.Account, user *entity.User) {
-	err := s.messageBus.Publish(ctx, event.AccountRegistered, event.AccountRegisteredEvent{
-		ID:        user.ID.String(),
-		Email:     account.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-	})
-	if err != nil {
-		s.logger.Error("Failed to publish user registered event", core.Error(err))
+func (s *authService) writeWelcomeNotificationOutbox(ctx context.Context, account *entity.Account, user *entity.User) error {
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        event.AccountRegistered,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "iam",
+		AccountID:        account.ID,
+		NotificationType: string(notifentity.NotificationTypeWelcomeMessage),
+		ChannelPolicy:    notificationevent.ChannelPolicyAllEnabled,
+		Variables: map[string]string{
+			"platformName":      s.cfg.App.Name,
+			"accountName":       user.FirstName,
+			"gettingStartedUrl": "/guides",
+		},
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: "welcome:" + account.ID.String(),
+			Locale:         nil,
+		},
 	}
+	return s.writeEnvelopeToOutbox(ctx, &env)
 }
 
-func (s *authService) publishEmailOTPRequestedEvent(ctx context.Context, account *entity.Account, user *entity.User, otpCode string) {
-	err := s.messageBus.Publish(ctx, event.UserEmailOTPRequested, event.UserEmailOTPRequestedEvent{
-		AccountID:      account.ID.String(),
-		Email:          account.Email,
-		FirstName:      user.FirstName,
-		OTPCode:        otpCode,
-		ExpiresMinutes: int(otpTTL / time.Minute),
-	})
-	if err != nil {
-		s.logger.Error("Failed to publish user email otp requested event", core.Error(err))
+func (s *authService) writeOTPNotificationOutbox(ctx context.Context, accountID uuid.UUID, email string, user *entity.User, otpCode string, otpRecordID uuid.UUID) error {
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        event.UserEmailOTPRequested,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "iam",
+		AccountID:        accountID,
+		NotificationType: string(notifentity.NotificationTypeAccountVerification),
+		ChannelPolicy:    notificationevent.ChannelPolicySingle,
+		Channel:          strPtr(string(notifentity.ChannelEmail)),
+		Variables: map[string]string{
+			"platformName":        s.cfg.App.Name,
+			"verificationMessage": fmt.Sprintf("Your verification code is %s. Please enter this code to verify your email.", otpCode),
+			"verificationUrl":     "https://app.wegotcha.com/verify-email?code=" + otpCode,
+			"expiryMinutes":       fmt.Sprintf("%d", int(otpTTL/time.Minute)),
+		},
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: "verify-email:" + accountID.String() + ":" + otpRecordID.String(),
+			Locale:         nil,
+		},
 	}
+	return s.writeEnvelopeToOutbox(ctx, &env)
+}
+
+func (s *authService) writeAccountAlertOutbox(ctx context.Context, account *entity.Account, user *entity.User, alertCode, alertTitle, alertMessage, securityUrl string) error {
+	notificationType := string(notifentity.NotificationTypeAccountAlertCritical)
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        event.AccountAlert,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "iam",
+		AccountID:        account.ID,
+		NotificationType: notificationType,
+		ChannelPolicy:    notificationevent.ChannelPolicyAllEnabled,
+		Variables: map[string]string{
+			"alertTitle":   alertTitle,
+			"alertMessage": alertMessage,
+			"alertCode":    alertCode,
+			"securityUrl":  securityUrl,
+		},
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: "account-alert:" + account.ID.String() + ":" + alertCode + ":" + uuid.New().String(),
+			Locale:         nil,
+		},
+	}
+	return s.writeEnvelopeToOutbox(ctx, &env)
+}
+
+func (s *authService) writeEnvelopeToOutbox(ctx context.Context, envelope *notificationevent.Envelope) error {
+	data, err := json.Marshal(envelope)
+	if err != nil {
+		return fmt.Errorf("failed to marshal envelope: %w", err)
+	}
+
+	var payload datatypes.JSONMap
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return fmt.Errorf("failed to convert envelope to JSONMap: %w", err)
+	}
+
+	outbox := &notifentity.NotificationOutbox{
+		EventType:      envelope.EventType,
+		SchemaVersion:  envelope.SchemaVersion,
+		SourceModule:   envelope.SourceModule,
+		AccountID:      envelope.AccountID,
+		IdempotencyKey: envelope.Metadata.IdempotencyKey,
+		Payload:        payload,
+		Status:         notifentity.NotificationOutboxStatusPending,
+		AttemptCount:   0,
+	}
+
+	return s.notifOutboxRepo.Create(ctx, outbox)
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 func generateOTPCode() (string, error) {
