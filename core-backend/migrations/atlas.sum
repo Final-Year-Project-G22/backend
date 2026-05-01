@@ -1,4 +1,4 @@
-h1:q64tsTUqmkEcWePAyzcd5nCVWrWhtWg0yuswlZRM4f4=
+h1:EakIHt8X2cikAdekpbHLvQ9ix2UtKS0jw2X6PYizlIw=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -16,3 +16,5 @@ h1:q64tsTUqmkEcWePAyzcd5nCVWrWhtWg0yuswlZRM4f4=
 20260429121036_libraryModulesInitialEntities.sql h1:KvC3lARESCSvAN38XyqJFDt0WUwlqZXhdIGthTS/l4A=
 20260429121353_addDeliveryStatusToEmailDeliveryLogs.sql h1:HwxSov/jgNY6B/IHA3ULlS26hlEcR7SplpPwlIWg9ys=
 20260429170000_seed_library_categories.sql h1:/dB5K24QcOT4uO8WbaPmXlnz3Q0/87M6RH4y8bWCcMc=
+20260501000000_seed_account_alert_templates.sql h1:CAtq+SyqGCOkyrXw8pFr3uicKdOkRcUb3SwKAllDsBQ=
+20260501192402_notificationOutbox.sql h1:cFrR4uX+H1SnNceLBoCUx/Eh2esvNai9KhYchdV0bBQ=

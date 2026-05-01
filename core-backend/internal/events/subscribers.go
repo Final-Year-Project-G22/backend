@@ -27,12 +27,6 @@ func RegisterSubscribers(bus interface {
 	}
 
 	handlers := map[string]EventHandler{
-		event.AccountRegistered: func(ctx context.Context, data []byte) error {
-			return handleUserRegistered(ctx, data, emailer)
-		},
-		event.UserEmailOTPRequested: func(ctx context.Context, data []byte) error {
-			return handleUserEmailOTPRequested(ctx, data, emailer)
-		},
 		event.AdminCreated: func(ctx context.Context, data []byte) error {
 			return handleAdminCreated(ctx, data, emailer)
 		},
@@ -44,74 +38,6 @@ func RegisterSubscribers(bus interface {
 			return fmt.Errorf("failed to subscribe to %s: %w", eventName, err)
 		}
 		logger.Info("Subscribed to event", zap.String("event", eventName))
-	}
-
-	return nil
-}
-
-func handleUserRegistered(ctx context.Context, data []byte, emailer email.Emailer) error {
-	var evt event.AccountRegisteredEvent
-
-	if err := json.Unmarshal(data, &evt); err != nil {
-		return fmt.Errorf("failed to unmarshal user registered event: %w", err)
-	}
-
-	fmt.Println("EVENT RECEIVED: user.registered for", evt.Email)
-
-	locale := evt.Locale
-	if locale == "" || !i18n.HasLocale(locale) {
-		locale = "en"
-	}
-
-	subject := i18n.Resolve("email.welcome.subject", locale)
-	templateBody := i18n.Resolve("email.welcome.template", locale)
-
-	err := emailer.SendTemplate(ctx, email.SendTemplateInput{
-		To:       []string{evt.Email},
-		Subject:  subject,
-		Template: templateBody,
-		Data: map[string]string{
-			"firstName": evt.FirstName,
-		},
-	})
-
-	if err != nil {
-		fmt.Println("EMAIL FAILED:", err)
-		return err
-	}
-
-	fmt.Println("EMAIL SENT to", evt.Email)
-
-	return nil
-}
-
-func handleUserEmailOTPRequested(ctx context.Context, data []byte, emailer email.Emailer) error {
-	var evt event.UserEmailOTPRequestedEvent
-
-	if err := json.Unmarshal(data, &evt); err != nil {
-		return fmt.Errorf("failed to unmarshal user email otp requested event: %w", err)
-	}
-
-	locale := evt.Locale
-	if locale == "" || !i18n.HasLocale(locale) {
-		locale = "en"
-	}
-
-	subject := i18n.Resolve("email.verification.subject", locale)
-	templateBody := i18n.Resolve("email.verification.template", locale)
-
-	err := emailer.SendTemplate(ctx, email.SendTemplateInput{
-		To:       []string{evt.Email},
-		Subject:  subject,
-		Template: templateBody,
-		Data: map[string]string{
-			"firstName":      evt.FirstName,
-			"otpCode":        evt.OTPCode,
-			"expiresMinutes": fmt.Sprintf("%d", evt.ExpiresMinutes),
-		},
-	})
-	if err != nil {
-		return err
 	}
 
 	return nil
