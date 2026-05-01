@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/google/uuid"
 )
 
@@ -71,16 +70,16 @@ func (m Metadata) MarshalJSON() ([]byte, error) {
 }
 
 type Envelope struct {
-	SchemaVersion    string                  `json:"schemaVersion"`
-	EventType        string                  `json:"eventType"`
-	OccurredAt       time.Time               `json:"occurredAt"`
-	SourceModule     string                  `json:"sourceModule"`
-	AccountID        uuid.UUID               `json:"accountId"`
-	NotificationType entity.NotificationType `json:"notificationType"`
-	ChannelPolicy    ChannelPolicy           `json:"channelPolicy"`
-	Channel          *entity.Channel         `json:"channel,omitempty"`
-	Variables        map[string]string       `json:"variables"`
-	Metadata         Metadata                `json:"metadata"`
+	SchemaVersion    string            `json:"schemaVersion"`
+	EventType        string            `json:"eventType"`
+	OccurredAt       time.Time         `json:"occurredAt"`
+	SourceModule     string            `json:"sourceModule"`
+	AccountID        uuid.UUID         `json:"accountId"`
+	NotificationType string            `json:"notificationType"`
+	ChannelPolicy    ChannelPolicy     `json:"channelPolicy"`
+	Channel          *string           `json:"channel,omitempty"`
+	Variables        map[string]string `json:"variables"`
+	Metadata         Metadata          `json:"metadata"`
 }
 
 func Parse(data []byte) (*Envelope, error) {

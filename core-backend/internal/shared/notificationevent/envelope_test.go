@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/google/uuid"
 )
 
@@ -69,10 +68,10 @@ func TestParse_SingleChannel(t *testing.T) {
 	if env.ChannelPolicy != ChannelPolicySingle {
 		t.Fatalf("expected channelPolicy single, got %s", env.ChannelPolicy)
 	}
-	if env.Channel == nil || *env.Channel != entity.ChannelEmail {
+	if env.Channel == nil || *env.Channel != "email" {
 		t.Fatalf("expected channel email, got %v", env.Channel)
 	}
-	if env.NotificationType != entity.NotificationTypeAccountVerification {
+	if env.NotificationType != "account_verification" {
 		t.Fatalf("expected account_verification, got %s", env.NotificationType)
 	}
 	if env.AccountID != validAccountID() {
@@ -100,7 +99,7 @@ func TestParse_AllEnabled(t *testing.T) {
 	if env.Channel != nil {
 		t.Fatalf("expected nil channel for all_enabled, got %v", *env.Channel)
 	}
-	if env.NotificationType != entity.NotificationTypeWelcomeMessage {
+	if env.NotificationType != "welcome_message" {
 		t.Fatalf("expected welcome_message, got %s", env.NotificationType)
 	}
 	if env.SourceModule != "iam" {
@@ -384,7 +383,7 @@ func TestEnvelope_MarshalJSON_PreservesExtraMetadata(t *testing.T) {
 		OccurredAt:       time.Date(2026, 4, 30, 12, 34, 56, 0, time.UTC),
 		SourceModule:     "iam",
 		AccountID:        validAccountID(),
-		NotificationType: entity.NotificationTypeAccountAlert,
+		NotificationType: "account_alert",
 		ChannelPolicy:    ChannelPolicyAllEnabled,
 		Variables:        map[string]string{"key": "val"},
 		Metadata: Metadata{
@@ -409,14 +408,14 @@ func TestEnvelope_MarshalJSON_PreservesExtraMetadata(t *testing.T) {
 }
 
 func TestEnvelope_MetadataMap_NoNilPanic(t *testing.T) {
-	emailCh := entity.ChannelEmail
+	emailCh := "email"
 	env := Envelope{
 		SchemaVersion:    SchemaVersionV1,
 		EventType:        "test.event",
 		OccurredAt:       time.Now(),
 		SourceModule:     "iam",
 		AccountID:        validAccountID(),
-		NotificationType: entity.NotificationTypeWelcomeMessage,
+		NotificationType: "welcome_message",
 		ChannelPolicy:    ChannelPolicySingle,
 		Channel:          &emailCh,
 		Variables:        map[string]string{},
