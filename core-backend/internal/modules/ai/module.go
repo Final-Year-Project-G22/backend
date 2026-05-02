@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -13,6 +14,7 @@ import (
 	aisvc "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/service"
 	aiinfra "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure"
 	aiinfraclient "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/client"
+	aiinframsg "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/messaging"
 	aiinfrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/repository"
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
@@ -85,6 +87,8 @@ var Module = fx.Module("ai",
 	}),
 	fx.Provide(service.NewOutboxDispatcher),
 	fx.Provide(service.NewSSEGateway),
+	fx.Provide(service.NewStatusProjectionService),
+	fx.Provide(aiinframsg.NewStatusEventSubscriber),
 	fx.Provide(handler.NewIngestionHandler),
 	fx.Provide(handler.NewStatusHandler),
 	fx.Provide(service.NewAskService),
@@ -144,6 +148,19 @@ var Module = fx.Module("ai",
 			},
 			OnStop: func(context.Context) error {
 				cancel()
+				return nil
+			},
+		})
+	}),
+	fx.Invoke(func(lc fx.Lifecycle, subscriber *aiinframsg.StatusEventSubscriber) {
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				if err := subscriber.Subscribe(); err != nil {
+					return fmt.Errorf("failed to subscribe to status events: %w", err)
+				}
+				return nil
+			},
+			OnStop: func(context.Context) error {
 				return nil
 			},
 		})
