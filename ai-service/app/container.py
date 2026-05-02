@@ -18,6 +18,7 @@ from core.usecases import (
     IngestionOrchestratorUseCase,
     QuotaGuardUseCase,
 )
+from infrastructure.chunking.registry import ChunkingRegistry
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
@@ -27,6 +28,7 @@ from infrastructure.database.repositories import (
 )
 from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
+from infrastructure.parsers.registry import ParserRegistry
 from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
 from workers.tasks import IngestionRequestedTaskHandler
 
@@ -112,9 +114,17 @@ class Container(containers.DeclarativeContainer):
         build_ingestion_envelope_verifier,
         settings=config,
     )
+    parser_registry = providers.Singleton(ParserRegistry)
+    chunking_registry = providers.Singleton(ChunkingRegistry)
+
     ingestion_orchestrator = providers.Factory(
         IngestionOrchestratorUseCase,
         event_bus=event_bus_port,
+        parser_registry=parser_registry,
+        chunking_registry=chunking_registry,
+        embedding_port=embedding_port,
+        knowledge_repository=knowledge_repository,
+        core_service_port=core_service_port,
     )
     ingestion_requested_task_handler = providers.Factory(
         IngestionRequestedTaskHandler,
