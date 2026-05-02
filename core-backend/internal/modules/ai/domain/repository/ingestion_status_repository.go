@@ -12,4 +12,5 @@ type IngestionStatusProjectionRepository interface {
 	GetByDocumentID(ctx context.Context, documentID uuid.UUID) (*entity.IngestionStatusProjection, error)
 	GetByAccountID(ctx context.Context, accountID uuid.UUID, limit, offset int) ([]*entity.IngestionStatusProjection, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]*entity.IngestionStatusProjection, error)
+	DeleteByDocumentID(ctx context.Context, documentID uuid.UUID) error
 }

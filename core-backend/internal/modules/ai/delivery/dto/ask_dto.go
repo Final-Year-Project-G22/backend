@@ -84,7 +84,6 @@ type ConversationDTO struct {
 }
 
 type ListConversationsInput struct {
-	Body  struct{}
 	Query struct {
 		Limit  *int32 `json:"limit,omitempty" query:"limit" default:"20" minimum:"1" maximum:"100"`
 		Offset *int32 `json:"offset,omitempty" query:"offset" default:"0" minimum:"0"`
@@ -109,7 +108,6 @@ type MessageDTO struct {
 
 type GetConversationInput struct {
 	SessionID uuid.UUID `path:"sessionId" doc:"Session ID"`
-	Body      struct{}
 	Query     struct {
 		MessageLimit   *int32 `json:"messageLimit,omitempty" query:"messageLimit" default:"50" minimum:"1" maximum:"100"`
 		MessageOffset  *int32 `json:"messageOffset,omitempty" query:"messageOffset" default:"0" minimum:"0"`
@@ -127,7 +125,6 @@ type GetConversationOutput struct {
 
 type ArchiveConversationInput struct {
 	SessionID uuid.UUID `path:"sessionId" doc:"Session ID"`
-	Body      struct{}
 }
 
 type ArchiveConversationOutput struct {

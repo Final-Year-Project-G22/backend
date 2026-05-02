@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
 
     INGESTION_WORKER_QUEUE: str = "ai.ingestion.requested.v1"
-    INGESTION_WORKER_EXCHANGE: str = "ai.ingestion.events"
+    INGESTION_WORKER_EXCHANGE: str = "core.events"
     INGESTION_WORKER_ROUTING_KEY: str = "document.ingestion.requested.v1"
     INGESTION_WORKER_PREFETCH_COUNT: int = 16
     INGESTION_WORKER_REQUEUE_ON_FAILURE: bool = True

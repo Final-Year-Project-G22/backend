@@ -76,6 +76,9 @@ func (f *fakeDocRepo) GetByIdempotencyKey(context.Context, uuid.UUID, string) (*
 func (f *fakeDocRepo) UpdateStatus(context.Context, uuid.UUID, entity.IngestionDocumentStatus, *string) error {
 	return nil
 }
+func (f *fakeDocRepo) SoftDelete(context.Context, uuid.UUID, uuid.UUID) error {
+	return nil
+}
 
 type fakeOutboxRepo2 struct {
 	created *entity.IngestionOutbox
@@ -101,6 +104,27 @@ func (f *fakeOutboxRepo2) MarkDeadLetter(context.Context, uuid.UUID, int, int32,
 	return nil
 }
 
+type fakeProjectionRepo struct {
+	projection *entity.IngestionStatusProjection
+}
+
+func (f *fakeProjectionRepo) UpsertProjection(_ context.Context, projection *entity.IngestionStatusProjection) error {
+	f.projection = projection
+	return nil
+}
+func (f *fakeProjectionRepo) GetByDocumentID(context.Context, uuid.UUID) (*entity.IngestionStatusProjection, error) {
+	return nil, nil
+}
+func (f *fakeProjectionRepo) GetByAccountID(context.Context, uuid.UUID, int, int) ([]*entity.IngestionStatusProjection, error) {
+	return nil, nil
+}
+func (f *fakeProjectionRepo) GetByUserID(context.Context, uuid.UUID, int, int) ([]*entity.IngestionStatusProjection, error) {
+	return nil, nil
+}
+func (f *fakeProjectionRepo) DeleteByDocumentID(context.Context, uuid.UUID) error {
+	return nil
+}
+
 type fakeTransactor struct{}
 
 func (f *fakeTransactor) WithinTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
@@ -108,11 +132,11 @@ func (f *fakeTransactor) WithinTransaction(ctx context.Context, fn func(ctx cont
 }
 
 func newEnabledService(fs *fakeStorage, docRepo *fakeDocRepo, outboxRepo *fakeOutboxRepo2) *IngestionService {
-	return NewIngestionService(true, fs, docRepo, outboxRepo, &fakeTransactor{})
+	return NewIngestionService(true, fs, docRepo, outboxRepo, &fakeProjectionRepo{}, &fakeTransactor{})
 }
 
 func newDisabledService(fs *fakeStorage, docRepo *fakeDocRepo, outboxRepo *fakeOutboxRepo2) *IngestionService {
-	return NewIngestionService(false, fs, docRepo, outboxRepo, &fakeTransactor{})
+	return NewIngestionService(false, fs, docRepo, outboxRepo, &fakeProjectionRepo{}, &fakeTransactor{})
 }
 
 func TestCreateUploadIntent_ValidatesContentType(t *testing.T) {

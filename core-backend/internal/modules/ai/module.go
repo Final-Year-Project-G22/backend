@@ -80,8 +80,8 @@ var Module = fx.Module("ai",
 			fx.As(new(aisvc.EnvelopeSigner)),
 		),
 	),
-	fx.Provide(func(cfg *core.Config, s stg.Storage, docRepo airepository.IngestionDocumentRepository, outboxRepo airepository.IngestionOutboxRepository, transactor sharedrepo.Transactor) *service.IngestionService {
-		return service.NewIngestionService(cfg.Ingestion.Enabled, s, docRepo, outboxRepo, transactor)
+	fx.Provide(func(cfg *core.Config, s stg.Storage, docRepo airepository.IngestionDocumentRepository, outboxRepo airepository.IngestionOutboxRepository, projectionRepo airepository.IngestionStatusProjectionRepository, transactor sharedrepo.Transactor) *service.IngestionService {
+		return service.NewIngestionService(cfg.Ingestion.Enabled, s, docRepo, outboxRepo, projectionRepo, transactor)
 	}),
 	fx.Provide(service.NewOutboxDispatcher),
 	fx.Provide(service.NewSSEGateway),

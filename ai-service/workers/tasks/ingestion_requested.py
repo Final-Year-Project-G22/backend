@@ -34,6 +34,13 @@ class IngestionRequestedTaskHandler:
         try:
             self._envelope_verifier.verify(payload)
         except EnvelopeVerificationError as exc:
+            logger.warning(
+                "envelope verification failed: %s (key_id=%s schema_version=%s has_signature=%s)",
+                exc,
+                payload.get("key_id"),
+                payload.get("schema_version"),
+                "signature" in payload,
+            )
             raise MessageHandlingRejectError("invalid ingestion envelope") from exc
 
         event_type = str(payload.get("event_type", ""))
