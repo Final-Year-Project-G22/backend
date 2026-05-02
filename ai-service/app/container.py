@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from dependency_injector import containers, providers
 
+import grpc as grpc_lib
 from app.config import Settings
 from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
@@ -28,6 +29,16 @@ from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
 from workers.tasks import IngestionRequestedTaskHandler
+
+
+def _create_document_fetch_channel(endpoint: str) -> Any:
+    """Factory for the document-fetch gRPC channel.
+
+    Returns ``Any`` because Pylance cannot resolve ``grpc.aio.Channel``
+    from the grpc stubs, which would otherwise make the provider type
+    ``Singleton[Unknown]`` and cascade "partially unknown" errors.
+    """
+    return cast(Any, grpc_lib.aio.insecure_channel(endpoint))  # type: ignore[reportUnknownMemberType]
 
 
 class Container(containers.DeclarativeContainer):
@@ -80,12 +91,20 @@ class Container(containers.DeclarativeContainer):
             exchange_name=config.provided.INGESTION_WORKER_EXCHANGE,
         ),
     )
+    document_fetch_channel: providers.Provider[Any] = cast(
+        providers.Provider[Any],
+        providers.Singleton(
+            _create_document_fetch_channel,
+            config.provided.CORE_GRPC_ENDPOINT,
+        ),
+    )
     core_service_port: providers.Provider[CoreServicePort | None] = cast(
         providers.Provider[CoreServicePort | None],
         providers.Singleton(
             CoreServiceGrpcAdapter,
             endpoint=config.provided.CORE_GRPC_ENDPOINT,
             client=core_grpc_client,
+            document_fetch_channel=document_fetch_channel,
         ),
     )
 
