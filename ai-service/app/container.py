@@ -25,6 +25,7 @@ from infrastructure.database.repositories import (
     SqlAlchemyQuotaRepository,
 )
 from infrastructure.messagebus import IngestionRequestedConsumer
+from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
 from workers.tasks import IngestionRequestedTaskHandler
 
@@ -73,7 +74,11 @@ class Container(containers.DeclarativeContainer):
     )
     event_bus_port: providers.Provider[EventBusPort | None] = cast(
         providers.Provider[EventBusPort | None],
-        providers.Object(None),
+        providers.Singleton(
+            RabbitMQEventBusAdapter,
+            amqp_url=config.provided.RABBITMQ_URL,
+            exchange_name=config.provided.INGESTION_WORKER_EXCHANGE,
+        ),
     )
     core_service_port: providers.Provider[CoreServicePort | None] = cast(
         providers.Provider[CoreServicePort | None],
@@ -88,7 +93,10 @@ class Container(containers.DeclarativeContainer):
         build_ingestion_envelope_verifier,
         settings=config,
     )
-    ingestion_orchestrator = providers.Factory(IngestionOrchestratorUseCase)
+    ingestion_orchestrator = providers.Factory(
+        IngestionOrchestratorUseCase,
+        event_bus=event_bus_port,
+    )
     ingestion_requested_task_handler = providers.Factory(
         IngestionRequestedTaskHandler,
         envelope_verifier=ingestion_envelope_verifier,

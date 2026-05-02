@@ -84,6 +84,7 @@ class IngestionOrchestratorUseCase:
             await self._publish_status_event(
                 event_id=event_id,
                 document_id=document_id,
+                account_id=account_id,
                 from_stage=from_stage,
                 to_stage=to_stage,
                 is_terminal=is_terminal,
@@ -101,6 +102,7 @@ class IngestionOrchestratorUseCase:
         *,
         event_id: str,
         document_id: uuid.UUID,
+        account_id: uuid.UUID,
         from_stage: IngestionStage | None,
         to_stage: IngestionStage,
         is_terminal: bool,
@@ -112,6 +114,7 @@ class IngestionOrchestratorUseCase:
 
         status_payload = build_status_updated_payload(
             document_id=str(document_id),
+            account_id=str(account_id),
             from_stage=from_stage,
             to_stage=to_stage,
             is_terminal=is_terminal,
