@@ -74,3 +74,15 @@ func (r *ingestionDocumentRepository) UpdateStatus(ctx context.Context, id uuid.
 	}
 	return nil
 }
+
+func (r *ingestionDocumentRepository) SoftDelete(ctx context.Context, id uuid.UUID, accountID uuid.UUID) error {
+	result := r.getDB(ctx).Where("id = ? AND account_id = ?", id, accountID).Delete(&entity.IngestionDocument{})
+	if result.Error != nil {
+		r.logger.Error("Failed to soft delete ingestion document", core.Error(result.Error))
+		return apperrors.InternalError("errors.databaseError", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return apperrors.NotFoundError("ingestion document", id)
+	}
+	return nil
+}

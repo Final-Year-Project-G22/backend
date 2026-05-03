@@ -12,7 +12,6 @@ type ListDeadEventsRequest struct {
 }
 
 type ListDeadEventsInput struct {
-	Body  struct{}
 	Query ListDeadEventsRequest
 }
 
@@ -35,7 +34,6 @@ type ListDeadEventsOutput struct {
 
 type GetDeadEventInput struct {
 	EventID uuid.UUID `path:"eventId" doc:"Event ID"`
-	Body    struct{}
 }
 
 type GetDeadEventOutput struct {
@@ -69,9 +67,7 @@ type IngestToggleStateResponse struct {
 	Enabled bool `json:"enabled"`
 }
 
-type GetIngestToggleInput struct {
-	Body struct{}
-}
+type GetIngestToggleInput struct{}
 
 type GetIngestToggleOutput struct {
 	Body IngestToggleStateResponse

@@ -9,6 +9,7 @@ import pytest
 import grpc
 from core.domain.exceptions import AIServiceError, QuotaExceededError, RepositoryError
 from core.usecases.contracts import AskAICommand
+from core.usecases.defaults import MAX_PROMPT_LENGTH
 from infrastructure.rpc.services.inference_service import AIInferenceService
 
 TOP_K_INPUT = 7
@@ -86,6 +87,22 @@ async def test_ask_maps_successful_response() -> None:
     assert response.citations[0].chunk_id == str(hit_chunk_id)
     assert response.usage.prompt_tokens == PROMPT_TOKENS
     assert response.usage.total_tokens == TOTAL_TOKENS
+
+
+@pytest.mark.asyncio
+async def test_ask_aborts_for_prompt_validation() -> None:
+    usecase = AsyncMock()
+    service = AIInferenceService(ask_ai_usecase=usecase)
+
+    request = _make_request(query="x" * (MAX_PROMPT_LENGTH + 1))
+    context = AsyncMock()
+
+    await service.Ask(request, context)
+
+    context.abort.assert_awaited_once()
+    assert context.abort.await_args.args[0] is grpc.StatusCode.INVALID_ARGUMENT
+    assert "prompt" in context.abort.await_args.args[1].lower()
+    usecase.execute.assert_not_awaited()
 
 
 @pytest.mark.asyncio

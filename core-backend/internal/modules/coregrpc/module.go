@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	coredocumentv1 "github.com/Final-Year-Project-G22/backend/core/pb/core/document/v1"
 	coreuserv1 "github.com/Final-Year-Project-G22/backend/core/pb/core/user/v1"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
@@ -14,6 +15,7 @@ import (
 
 var Module = fx.Module("core-grpc",
 	fx.Provide(NewUserProfileService),
+	fx.Provide(NewDocumentFetchService),
 	fx.Invoke(registerGrpcServer),
 )
 
@@ -21,7 +23,8 @@ func registerGrpcServer(
 	lc fx.Lifecycle,
 	cfg *core.Config,
 	log core.Logger,
-	service *UserProfileService,
+	userService *UserProfileService,
+	docService *DocumentFetchService,
 ) {
 	var (
 		server   *grpc.Server
@@ -39,7 +42,8 @@ func registerGrpcServer(
 			listener = l
 
 			server = grpc.NewServer()
-			coreuserv1.RegisterCoreUserServiceServer(server, service)
+			coreuserv1.RegisterCoreUserServiceServer(server, userService)
+			coredocumentv1.RegisterDocumentFetchServiceServer(server, docService)
 
 			go func() {
 				if serveErr := server.Serve(listener); serveErr != nil && !errors.Is(serveErr, grpc.ErrServerStopped) {

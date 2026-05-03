@@ -43,7 +43,10 @@ func (s *envelopeSigner) SignEnvelope(_ context.Context, envelope map[string]any
 		return nil, "", fmt.Errorf("failed to hash envelope: %w", err)
 	}
 
-	return []byte(hex.EncodeToString(mac.Sum(nil))), keyID, nil
+	sig := []byte(hex.EncodeToString(mac.Sum(nil)))
+	// TODO: remove after debugging HMAC mismatch
+	fmt.Printf("[SIGNER] canonical=%s\n[SIGNER] signature=%s\n", string(canonical), string(sig))
+	return sig, keyID, nil
 }
 
 func canonicalizeEnvelope(envelope map[string]any) ([]byte, error) {
@@ -53,6 +56,7 @@ func canonicalizeEnvelope(envelope map[string]any) ([]byte, error) {
 	}
 
 	delete(clone, "signature")
+	delete(clone, "key_id")
 	if _, ok := clone["schema_version"]; !ok {
 		clone["schema_version"] = aievent.EnvelopeSchemaVersion
 	}
