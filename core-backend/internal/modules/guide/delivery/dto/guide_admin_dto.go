@@ -569,7 +569,7 @@ type GuideCategoryTreeAdminResponseBody struct {
 
 type ListGuidesAdminInput struct {
 	AdminPaginationQuery
-	CategoryID *uuid.UUID       `query:"categoryId" doc:"Category ID filter"`
+	CategoryID string           `query:"categoryId" doc:"Category ID filter (UUID)"`
 	Locale     constants.Locale `query:"locale" doc:"Language locale (en, am)"`
 }
 

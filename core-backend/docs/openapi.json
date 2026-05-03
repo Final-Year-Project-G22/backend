@@ -395,6 +395,222 @@
         ],
         "type": "object"
       },
+      "AdminCategoryDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/AdminCategoryDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "sortOrder"
+        ],
+        "type": "object"
+      },
+      "AdminConditionDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "conditionType": {
+            "type": "string"
+          },
+          "conditionValue": {},
+          "id": {
+            "type": "string"
+          },
+          "isInverse": {
+            "type": "boolean"
+          },
+          "operator": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "conditionType",
+          "operator",
+          "conditionValue",
+          "isInverse"
+        ],
+        "type": "object"
+      },
+      "AdminGuideCardDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "categoryId",
+          "sortOrder"
+        ],
+        "type": "object"
+      },
+      "AdminGuideDetailDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/AdminConditionDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "icon": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "translations": {
+            "items": {
+              "$ref": "#/components/schemas/AdminTranslationDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "categoryId",
+          "slug",
+          "sortOrder",
+          "translations",
+          "conditions"
+        ],
+        "type": "object"
+      },
+      "AdminGuideStepDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "difficultyLevel": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "effectiveDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "estimatedTime": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiryDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "feeEstimate": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "guideId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "isOptional": {
+            "type": "boolean"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "stepType": {
+            "type": "string"
+          },
+          "translations": {
+            "items": {
+              "$ref": "#/components/schemas/AdminStepTranslationDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "guideId",
+          "slug",
+          "stepType",
+          "sortOrder",
+          "isOptional",
+          "effectiveDate",
+          "translations"
+        ],
+        "type": "object"
+      },
       "AdminRegisterRequest": {
         "additionalProperties": false,
         "properties": {
@@ -476,6 +692,45 @@
         "required": [
           "accountId",
           "message"
+        ],
+        "type": "object"
+      },
+      "AdminStepTranslationDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "detailedContent": {},
+          "language": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "title"
+        ],
+        "type": "object"
+      },
+      "AdminTranslationDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "name"
         ],
         "type": "object"
       },
@@ -3555,6 +3810,27 @@
         ],
         "type": "object"
       },
+      "GetGuideAdminResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetGuideAdminResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "guide": {
+            "$ref": "#/components/schemas/AdminGuideDetailDTO"
+          }
+        },
+        "required": [
+          "guide"
+        ],
+        "type": "object"
+      },
       "GetOAuthProvidersResponse": {
         "additionalProperties": false,
         "properties": {
@@ -3853,6 +4129,33 @@
           "slug",
           "name",
           "categoryId"
+        ],
+        "type": "object"
+      },
+      "GuideCategoryTreeAdminResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GuideCategoryTreeAdminResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/AdminCategoryDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "categories"
         ],
         "type": "object"
       },
@@ -4727,6 +5030,100 @@
         },
         "required": [
           "threads"
+        ],
+        "type": "object"
+      },
+      "ListGuideStepsAdminResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListGuideStepsAdminResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "page": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/AdminGuideStepDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "totalItems": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "steps",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ],
+        "type": "object"
+      },
+      "ListGuidesAdminResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListGuidesAdminResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "guides": {
+            "items": {
+              "$ref": "#/components/schemas/AdminGuideCardDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalItems": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "guides",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
         ],
         "type": "object"
       },
@@ -10890,6 +11287,127 @@
       }
     },
     "/api/v1/admin/guides": {
+      "get": {
+        "description": "Lists guides for admin management with pagination and filters.",
+        "operationId": "listGuidesAdmin",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search keyword",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search keyword",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort columns",
+            "explode": false,
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "description": "Sort columns",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "Sort order (asc, desc)",
+            "explode": false,
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "description": "Sort order (asc, desc)",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "Category ID filter (UUID)",
+            "explode": false,
+            "in": "query",
+            "name": "categoryId",
+            "schema": {
+              "description": "Category ID filter (UUID)",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language locale (en, am)",
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "description": "Language locale (en, am)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListGuidesAdminResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List guides",
+        "tags": [
+          "Admin - Guides"
+        ]
+      },
       "post": {
         "description": "Creates a new guide with optional translations and conditions.",
         "operationId": "createGuide",
@@ -11027,6 +11545,65 @@
           }
         ],
         "summary": "Remove category condition",
+        "tags": [
+          "Admin - Categories"
+        ]
+      }
+    },
+    "/api/v1/admin/guides/categories/tree": {
+      "get": {
+        "description": "Retrieves guide categories tree for admin management.",
+        "operationId": "getCategoryTreeAdmin",
+        "parameters": [
+          {
+            "description": "Include inactive categories",
+            "explode": false,
+            "in": "query",
+            "name": "includeInactive",
+            "schema": {
+              "description": "Include inactive categories",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Language locale (en, am)",
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "description": "Language locale (en, am)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideCategoryTreeAdminResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get admin guide category tree",
         "tags": [
           "Admin - Categories"
         ]
@@ -12067,6 +12644,63 @@
           "Admin - Guides"
         ]
       },
+      "get": {
+        "description": "Retrieves guide detail for admin editor.",
+        "operationId": "getGuideAdmin",
+        "parameters": [
+          {
+            "description": "Guide ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Guide ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language locale (en, am)",
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "description": "Language locale (en, am)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetGuideAdminResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get guide detail",
+        "tags": [
+          "Admin - Guides"
+        ]
+      },
       "put": {
         "description": "Updates an existing guide.",
         "operationId": "updateGuide",
@@ -12181,6 +12815,129 @@
         "summary": "Add guide condition",
         "tags": [
           "Admin - Guides"
+        ]
+      }
+    },
+    "/api/v1/admin/guides/{id}/steps": {
+      "get": {
+        "description": "Lists steps of a guide for admin editor.",
+        "operationId": "listGuideStepsAdmin",
+        "parameters": [
+          {
+            "description": "Guide ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Guide ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search keyword",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search keyword",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort columns",
+            "explode": false,
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "description": "Sort columns",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "Sort order (asc, desc)",
+            "explode": false,
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "description": "Sort order (asc, desc)",
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "Language locale (en, am)",
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "description": "Language locale (en, am)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListGuideStepsAdminResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List guide steps",
+        "tags": [
+          "Admin - Steps"
         ]
       }
     },
