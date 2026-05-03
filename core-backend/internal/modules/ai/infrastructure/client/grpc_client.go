@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -24,9 +25,10 @@ type InferenceGRPCClient struct {
 	conversationClient pb.AIConversationServiceClient
 	timeout            time.Duration
 	authToken          string
+	logger             core.Logger
 }
 
-func NewInferenceGRPCClient(cfg *core.Config) (port.AIInferencePort, error) {
+func NewInferenceGRPCClient(cfg *core.Config, logger core.Logger) (port.AIInferencePort, error) {
 	endpoint := cfg.AI.InferenceGRPCEndpoint
 	if endpoint == "" {
 		return nil, errors.New("ai inference grpc endpoint is required")
@@ -45,6 +47,7 @@ func NewInferenceGRPCClient(cfg *core.Config) (port.AIInferencePort, error) {
 		conversationClient: pb.NewAIConversationServiceClient(conn),
 		timeout:            cfg.AI.InferenceTimeout,
 		authToken:          cfg.AI.InferenceAuthToken,
+		logger:             logger,
 	}, nil
 }
 
@@ -161,13 +164,36 @@ func mapAskError(err error) error {
 	}
 }
 
-func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest) (<-chan port.AskStreamChunk, error) {
-	callCtx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
+func mapAskStreamError(err error) *port.ErrorInfo {
+	if err == nil {
+		return nil
+	}
 
+	st, ok := status.FromError(err)
+	if !ok {
+		return &port.ErrorInfo{Code: "INTERNAL", Message: err.Error()}
+	}
+
+	switch st.Code() {
+	case codes.InvalidArgument:
+		return &port.ErrorInfo{Code: "INVALID_ARGUMENT", Message: st.Message()}
+	case codes.Unauthenticated:
+		return &port.ErrorInfo{Code: "UNAUTHENTICATED", Message: st.Message()}
+	case codes.ResourceExhausted:
+		return &port.ErrorInfo{Code: "RESOURCE_EXHAUSTED", Message: st.Message()}
+	case codes.DeadlineExceeded:
+		return &port.ErrorInfo{Code: "DEADLINE_EXCEEDED", Message: st.Message()}
+	default:
+		return &port.ErrorInfo{Code: st.Code().String(), Message: st.Message()}
+	}
+}
+
+func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest) (<-chan port.AskStreamChunk, error) {
 	if req.TopK < 1 || req.TopK > 20 {
 		return nil, fmt.Errorf("top_k must be between 1 and 20, got %d", req.TopK)
 	}
+
+	callCtx, cancel := context.WithTimeout(ctx, c.timeout)
 
 	if c.authToken != "" {
 		callCtx = metadata.AppendToOutgoingContext(callCtx, "authorization", "Bearer "+c.authToken)
@@ -191,15 +217,27 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 
 	stream, err := c.client.AskStream(callCtx, protoReq)
 	if err != nil {
+		cancel()
 		return nil, mapAskError(err)
 	}
 
 	ch := make(chan port.AskStreamChunk, 10)
 	go func() {
 		defer close(ch)
+		defer cancel()
 		for {
 			chunk, err := stream.Recv()
 			if err != nil {
+				if errors.Is(err, io.EOF) || ctx.Err() != nil {
+					return
+				}
+				if c.logger != nil {
+					c.logger.Warn("ask stream recv failed", core.Error(err))
+				}
+				info := mapAskStreamError(err)
+				if info != nil {
+					ch <- port.AskStreamChunk{Error: info}
+				}
 				return
 			}
 

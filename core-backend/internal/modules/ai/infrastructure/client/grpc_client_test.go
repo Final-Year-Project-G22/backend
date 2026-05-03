@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -406,7 +407,7 @@ type fakeServerStream struct {
 
 func (f *fakeServerStream) Recv() (*pb_inference.AskStreamChunk, error) {
 	if f.index >= len(f.chunks) {
-		return nil, errors.New("EOF")
+		return nil, io.EOF
 	}
 	chunk := f.chunks[f.index]
 	f.index++
