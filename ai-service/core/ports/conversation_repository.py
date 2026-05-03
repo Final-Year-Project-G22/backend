@@ -34,6 +34,9 @@ class ConversationRepositoryPort(ABC):
     async def add_message(self, message: AIChatMessage) -> AIChatMessage: ...
 
     @abstractmethod
+    async def update_message(self, message: AIChatMessage) -> AIChatMessage: ...
+
+    @abstractmethod
     async def get_message(self, message_id: uuid.UUID) -> AIChatMessage | None: ...
 
     @abstractmethod

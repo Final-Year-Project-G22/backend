@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from ai.inference.v1 import service_pb2, service_pb2_grpc  # type: ignore
+from pydantic import ValidationError
 
 import grpc
 from core.domain.enums import Language
@@ -15,6 +16,19 @@ from core.usecases.ask_ai import AskAIUseCase
 from core.usecases.contracts import AskAICommand
 
 logger = logging.getLogger(__name__)
+
+_MAX_VALIDATION_MSG = 512
+
+
+def _validation_error_detail(exc: ValidationError) -> str:
+    parts: list[str] = []
+    for err in exc.errors():
+        loc = ".".join(str(x) for x in err["loc"])
+        parts.append(f"{loc}: {err['msg']}")
+    msg = "; ".join(parts) if parts else str(exc)
+    if len(msg) > _MAX_VALIDATION_MSG:
+        return msg[: _MAX_VALIDATION_MSG - 3] + "..."
+    return msg
 
 
 class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: ignore
@@ -98,6 +112,10 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
         except QuotaExceededError as e:
             logger.warning("Quota exceeded: %s", e)
             await context.abort(grpc.StatusCode.RESOURCE_EXHAUSTED, str(e))  # type: ignore
+        except ValidationError as e:
+            detail = _validation_error_detail(e)
+            logger.info("Ask validation failed: %s", detail)
+            await context.abort(grpc.StatusCode.INVALID_ARGUMENT, detail)  # type: ignore
         except RepositoryError:
             logger.exception("Repository error in Ask endpoint")
             await context.abort(grpc.StatusCode.INTERNAL, "Internal data error")  # type: ignore
@@ -217,6 +235,15 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 error=service_pb2.ErrorChunk(
                     code="RESOURCE_EXHAUSTED",
                     message=str(e),
+                )
+            )
+        except ValidationError as e:
+            detail = _validation_error_detail(e)
+            logger.info("AskStream validation failed: %s", detail)
+            yield service_pb2.AskStreamChunk(
+                error=service_pb2.ErrorChunk(
+                    code="INVALID_ARGUMENT",
+                    message=detail,
                 )
             )
         except Exception:

@@ -5,7 +5,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any, cast
 
-from sqlalchemy import delete, func, select
+import numpy as np  # type: ignore[import-untyped]
+from sqlalchemy import delete, func, literal, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +22,30 @@ from infrastructure.database.repositories.mappers import (
     to_orm_chunk,
     to_orm_document,
 )
+
+
+def _normalize_query_embedding_for_pgvector(query_embedding: list[float]) -> list[float]:
+    """pgvector bind processor requires a 1-D vector; batch-shaped inputs must be flattened."""
+    if not query_embedding:
+        return []
+    arr = np.asarray(query_embedding, dtype=np.float64)
+    if arr.ndim == 0:
+        raise RepositoryError(
+            "failed to run vector search",
+            details={"reason": "query embedding must be a vector"},
+        )
+    if arr.ndim == 1:
+        return [float(x) for x in arr.tolist()]
+    expected_2d = 2
+    if arr.ndim == expected_2d and arr.shape[0] == 1:
+        return [float(x) for x in arr[0].tolist()]
+    raise RepositoryError(
+        "failed to run vector search",
+        details={
+            "reason": "query embedding must be 1-D",
+            "shape": [int(arr.shape[i]) for i in range(arr.ndim)],
+        },
+    )
 
 
 class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
@@ -201,9 +226,18 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
         try:
             document_model.status = status.value
             document_model.updated_at = func.now()
+            if status is DocumentStatus.ACTIVE:
+                document_model.processed_at = func.now()
+
+            existing_chunk_ids_result = await self._session.execute(
+                select(sa_models.DocumentChunk.id).where(
+                    sa_models.DocumentChunk.document_id == document_id
+                )
+            )
+            existing_chunk_ids = {row[0] for row in existing_chunk_ids_result.all()}
 
             for chunk in chunks:
-                if chunk.id in (c.id for c in document_model.chunks):
+                if chunk.id in existing_chunk_ids:
                     continue
                 orm_chunk = to_orm_chunk(chunk)
                 orm_chunk.document_id = document_id
@@ -213,6 +247,11 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
         except SQLAlchemyError as exc:
             raise RepositoryError("failed to complete ingestion atomically") from exc
 
+        # Reload document to avoid expired-attribute lazy-loading in async session
+        refreshed_result = await self._session.execute(
+            select(sa_models.KnowledgeDocument).where(sa_models.KnowledgeDocument.id == document_id)
+        )
+        document_model = refreshed_result.scalar_one()
         document = to_domain_document(document_model)
         return document, len(chunks)
 
@@ -249,8 +288,9 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
         if top_k <= 0 or not query_embedding:
             return []
 
-        distance_expr = sa_models.DocumentChunk.embedding.op("<=>")(query_embedding)
-        score_expr = func.greatest(0.0, 1.0 - distance_expr)
+        vec = _normalize_query_embedding_for_pgvector(query_embedding)
+        distance_expr = sa_models.DocumentChunk.embedding.op("<=>")(vec)
+        score_expr = func.greatest(literal(0.0), literal(1.0) - distance_expr)
 
         statement = (
             select(

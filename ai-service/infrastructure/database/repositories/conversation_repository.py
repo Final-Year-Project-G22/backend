@@ -13,6 +13,9 @@ from core.domain.models import AIChatMessage, AIConversationSession
 from core.ports.conversation_repository import ConversationRepositoryPort
 from infrastructure.database import models_sqlalchemy as sa_models
 from infrastructure.database.repositories.mappers import (
+    serialize_response_sources,
+    serialize_search_hits,
+    serialize_token_usage,
     to_domain_message,
     to_domain_session,
     to_orm_message,
@@ -139,6 +142,28 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
 
         return to_domain_message(model)
 
+    async def update_message(self, message: AIChatMessage) -> AIChatMessage:
+        try:
+            model = await self._get_message_model(message.id)
+            if model is None:
+                raise RepositoryError(
+                    "chat message not found",
+                    details={"message_id": str(message.id)},
+                )
+            self._apply_message_domain_values(model, message)
+            await self._session.flush()
+        except SQLAlchemyError as exc:
+            raise RepositoryError(
+                "failed to update chat message",
+                details={
+                    "message_id": str(message.id),
+                    "conversation_id": str(message.conversation_id),
+                },
+            ) from exc
+
+        await self._session.refresh(model)
+        return to_domain_message(model)
+
     async def get_message(self, message_id: uuid.UUID) -> AIChatMessage | None:
         try:
             model = await self._get_message_model(message_id)
@@ -219,6 +244,34 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         model.created_at = session.created_at
         model.updated_at = session.updated_at
         model.deleted_at = session.deleted_at
+
+    def _apply_message_domain_values(
+        self,
+        model: sa_models.AIChatMessage,
+        message: AIChatMessage,
+    ) -> None:
+        model.user_id = message.user_id
+        model.conversation_id = message.conversation_id
+        model.message_type = message.message_type.value
+        model.user_query = message.user_query
+        model.query_language = message.query_language.value
+        model.query_embedding = message.query_embedding
+        model.retrieved_chunk_ids = message.retrieved_chunk_ids
+        model.context_chunks = serialize_search_hits(message.context_chunks)
+        model.llm_response = message.llm_response
+        model.response_sources = serialize_response_sources(message.response_sources)
+        model.processing_time_ms = message.processing_time_ms
+        model.token_usage = serialize_token_usage(message.token_usage)
+        model.model_used = message.model_used
+        model.prompt_version = message.prompt_version
+        model.trace_id = message.trace_id
+        model.cache_hit = message.cache_hit
+        model.user_feedback = message.user_feedback
+        model.feedback_at = message.feedback_at
+        model.is_context_cleared = message.is_context_cleared
+        model.message_order = message.message_order
+        model.created_at = message.created_at
+        model.updated_at = message.updated_at
 
 
 __all__ = ["SqlAlchemyConversationRepository"]

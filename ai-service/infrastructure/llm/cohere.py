@@ -9,6 +9,8 @@ import httpx
 from core.domain.exceptions import LLMError
 from core.ports.llm import LLMPort
 
+_CHAT_URL = "https://api.cohere.com/v2/chat"
+
 
 class CohereLLMAdapter(LLMPort):
     def __init__(
@@ -39,13 +41,13 @@ class CohereLLMAdapter(LLMPort):
     ) -> str:
         payload: dict[str, Any] = {
             "model": self._model,
-            "message": prompt,
+            "messages": [{"role": "user", "content": prompt}],
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
         try:
             response = await self._http.post(
-                "https://api.cohere.com/v2/chat",
+                _CHAT_URL,
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
                     "Content-Type": "application/json",
@@ -61,8 +63,8 @@ class CohereLLMAdapter(LLMPort):
             ) from exc
 
         data = response.json()
-        text = data.get("message", {}).get("content")
-        if not isinstance(text, str):
+        text = _extract_text(data)
+        if text is None:
             raise LLMError(
                 "cohere generation response missing content",
                 details={"provider": self.provider},
@@ -79,7 +81,7 @@ class CohereLLMAdapter(LLMPort):
         async def _stream() -> AsyncIterator[str]:
             payload: dict[str, Any] = {
                 "model": self._model,
-                "message": prompt,
+                "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": max_tokens,
                 "temperature": temperature,
                 "stream": True,
@@ -87,10 +89,11 @@ class CohereLLMAdapter(LLMPort):
             try:
                 async with self._http.stream(
                     "POST",
-                    "https://api.cohere.com/v2/chat",
+                    _CHAT_URL,
                     headers={
                         "Authorization": f"Bearer {self._api_key}",
                         "Content-Type": "application/json",
+                        "Accept": "text/event-stream",
                     },
                     json=payload,
                     timeout=60,
@@ -108,8 +111,8 @@ class CohereLLMAdapter(LLMPort):
                             data = json.loads(chunk)
                         except json.JSONDecodeError:
                             continue
-                        text = data.get("message", {}).get("content")
-                        if isinstance(text, str) and text:
+                        text = _extract_stream_text(data)
+                        if text:
                             yield text
             except httpx.HTTPError as exc:
                 raise LLMError(
@@ -118,6 +121,36 @@ class CohereLLMAdapter(LLMPort):
                 ) from exc
 
         return _stream()
+
+
+def _extract_text(data: dict[str, Any]) -> str | None:
+    message: object = data.get("message")
+    if not isinstance(message, dict):
+        return None
+    content: object = message.get("content")  # type: ignore[reportUnknownMemberType]
+    if not isinstance(content, list) or not content:
+        return None
+    first: object = content[0]  # type: ignore[reportUnknownVariableType]
+    if not isinstance(first, dict):
+        return None
+    result: object = first.get("text")  # type: ignore[reportUnknownMemberType]
+    return result if isinstance(result, str) else None  # type: ignore[reportUnknownVariableType]
+
+
+def _extract_stream_text(data: dict[str, Any]) -> str | None:
+    if data.get("type") != "content-delta":
+        return None
+    delta: object = data.get("delta")
+    if not isinstance(delta, dict):
+        return None
+    msg: object = delta.get("message")  # type: ignore[reportUnknownMemberType]
+    if not isinstance(msg, dict):
+        return None
+    content: object = msg.get("content")  # type: ignore[reportUnknownMemberType]
+    if not isinstance(content, dict):
+        return None
+    text: object = content.get("text")  # type: ignore[reportUnknownMemberType]
+    return text if isinstance(text, str) else None  # type: ignore[reportUnknownVariableType]
 
 
 __all__ = ["CohereLLMAdapter"]

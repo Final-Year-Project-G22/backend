@@ -9,7 +9,7 @@ app:
 ai:
   inference_grpc_endpoint: ${AI_INFERENCE_GRPC_ENDPOINT:-localhost:50051}
   inference_auth_token: ${AI_INFERENCE_AUTH_TOKEN:-}
-  inference_timeout: 10s
+  inference_timeout: 60s
   ask_enabled: ${AI_ASK_ENABLED:-true}
   conversation_cache_ttl: ${AI_CONVERSATION_CACHE_TTL:-5m}
 
@@ -36,8 +36,8 @@ database:
   conn_max_lifetime: 30m
 
 server:
-  read_timeout: 10s
-  write_timeout: 10s
+  read_timeout: 60s
+  write_timeout: 60s
   idle_timeout: 60s
   shutdown_timeout: 5s
 

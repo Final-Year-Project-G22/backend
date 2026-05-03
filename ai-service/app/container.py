@@ -125,6 +125,7 @@ class Container(containers.DeclarativeContainer):
         embedding_port=embedding_port,
         knowledge_repository=knowledge_repository,
         core_service_port=core_service_port,
+        seaweedfs_filer_url=config.provided.SEAWEEDFS_FILER_URL,
     )
     ingestion_requested_task_handler = providers.Factory(
         IngestionRequestedTaskHandler,

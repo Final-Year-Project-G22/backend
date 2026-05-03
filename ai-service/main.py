@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator
+import sys
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any, cast
 
 import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# Ensure grpc stubs are importable at runtime
+sys.path.insert(0, str(Path(__file__).parent / "grpc_stubs"))
 
 from app.config import Settings
 from app.container import Container
@@ -18,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     settings: Settings = app.state.settings
     container: Container = app.state.container
 
@@ -46,13 +52,13 @@ def create_app() -> FastAPI:
     settings = container.config()
 
     # Create dependencies
-    http_client = httpx.AsyncClient()
+    http_client = httpx.AsyncClient(trust_env=settings.HTTPX_TRUST_ENV)
     embedding_adapter = create_embedding_adapter(settings, http_client=http_client)
     llm_adapter = create_llm_adapter(settings, http_client=http_client)
 
     # Provide dependencies
-    container.embedding_port.override(embedding_adapter)
-    container.llm_port.override(llm_adapter)
+    cast(Any, container.embedding_port).override(embedding_adapter)
+    cast(Any, container.llm_port).override(llm_adapter)
 
     app = FastAPI(
         title=settings.APP_NAME,

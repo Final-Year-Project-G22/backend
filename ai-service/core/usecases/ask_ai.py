@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import uuid
 from datetime import UTC, datetime
@@ -144,7 +143,7 @@ class AskAIUseCase:
         now: datetime,
     ) -> AIChatMessage:
         updated = message.model_copy(update={"query_embedding": embedding, "updated_at": now})
-        return await self._conversation_repository.add_message(updated)
+        return await self._conversation_repository.update_message(updated)
 
     async def _retrieve_context(
         self,
@@ -163,18 +162,17 @@ class AskAIUseCase:
             only_active=True,
         )
 
-        vector_task = self._knowledge_repository.search_vector(
+        vector_hits = await self._knowledge_repository.search_vector(
             query_embedding,
             top_k=command.vector_top_k,
             filters=filters,
         )
-        bm25_task = self._knowledge_repository.search_bm25(
+        bm25_hits = await self._knowledge_repository.search_bm25(
             command.prompt,
             top_k=command.bm25_top_k,
             filters=filters,
         )
 
-        vector_hits, bm25_hits = await asyncio.gather(vector_task, bm25_task)
         return vector_hits, bm25_hits
 
     def _merge_and_dedupe_hits(
