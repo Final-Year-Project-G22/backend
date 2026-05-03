@@ -18,10 +18,14 @@ class Settings(BaseSettings):
 
     HTTP_PORT: int = 8000
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    # When True, httpx honors HTTP(S)_PROXY from the environment (default httpx behavior).
+    HTTPX_TRUST_ENV: bool = True
 
     GRPC_PORT: int = 50051
     CORE_GRPC_ENDPOINT: str = "localhost:50052"
     INTERNAL_GRPC_AUTH_TOKEN: str = ""
+
+    SEAWEEDFS_FILER_URL: str = "http://localhost:8888"
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/adisu_ai"
 
@@ -30,7 +34,7 @@ class Settings(BaseSettings):
     RABBITMQ_URL: str = "amqp://guest:guest@localhost:5672/"
 
     INGESTION_WORKER_QUEUE: str = "ai.ingestion.requested.v1"
-    INGESTION_WORKER_EXCHANGE: str = "ai.ingestion.events"
+    INGESTION_WORKER_EXCHANGE: str = "core.events"
     INGESTION_WORKER_ROUTING_KEY: str = "document.ingestion.requested.v1"
     INGESTION_WORKER_PREFETCH_COUNT: int = 16
     INGESTION_WORKER_REQUEUE_ON_FAILURE: bool = True
@@ -58,8 +62,8 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     EMBEDDING_DIMENSIONS: int | None = None
 
-    LLM_PROVIDER: str = "gemini"
-    COHERE_LLM_MODEL: str = "command-r"
+    LLM_PROVIDER: str = "cohere"
+    COHERE_LLM_MODEL: str = "command-a-03-2025"
     GEMINI_LLM_MODEL: str = "gemini-1.5-flash"
     OLLAMA_LLM_MODEL: str = "qwen2.5"
     AI_ASK_ENABLED: bool = True

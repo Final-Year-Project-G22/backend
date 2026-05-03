@@ -7,6 +7,7 @@ from core.domain.enums import IngestionStage
 
 def build_status_updated_payload(
     document_id: str,
+    account_id: str,
     from_stage: IngestionStage | None,
     to_stage: IngestionStage,
     *,
@@ -17,8 +18,9 @@ def build_status_updated_payload(
     chunks_failed_count: int | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    status_updated: dict[str, Any] = {
+    payload: dict[str, Any] = {
         "document_id": document_id,
+        "account_id": account_id,
         "from_stage": from_stage.value if from_stage else None,
         "to_stage": to_stage.value,
         "is_terminal": is_terminal,
@@ -26,20 +28,18 @@ def build_status_updated_payload(
     }
 
     if error_message is not None:
-        status_updated["error_message"] = error_message
+        payload["error_message"] = error_message
 
     if chunks_processed_count is not None:
-        status_updated["chunks_processed_count"] = chunks_processed_count
+        payload["chunks_processed_count"] = chunks_processed_count
 
     if chunks_failed_count is not None:
-        status_updated["chunks_failed_count"] = chunks_failed_count
+        payload["chunks_failed_count"] = chunks_failed_count
 
     if metadata is not None:
-        status_updated["metadata"] = metadata
+        payload["metadata"] = metadata
 
-    return {
-        "status_updated": status_updated,
-    }
+    return payload
 
 
 __all__ = ["build_status_updated_payload"]

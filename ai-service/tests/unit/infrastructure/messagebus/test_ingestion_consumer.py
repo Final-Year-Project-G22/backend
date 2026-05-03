@@ -12,7 +12,7 @@ def _build_consumer(*, requeue_on_failure: bool = True) -> IngestionRequestedCon
     return IngestionRequestedConsumer(
         rabbitmq_url="amqp://guest:guest@localhost:5672/",
         queue_name="ai.ingestion.requested.v1",
-        exchange_name="ai.ingestion.events",
+        exchange_name="core.events",
         routing_key="document.ingestion.requested.v1",
         prefetch_count=8,
         requeue_on_failure=requeue_on_failure,

@@ -529,21 +529,6 @@
         ],
         "type": "object"
       },
-      "ArchiveConversationInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/ArchiveConversationInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "ArchiveConversationOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -2702,6 +2687,28 @@
         ],
         "type": "object"
       },
+      "DeleteDocumentResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteDocumentResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "success": {
+            "description": "Whether deletion succeeded",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "type": "object"
+      },
       "DeleteGuideResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -3406,21 +3413,6 @@
         ],
         "type": "object"
       },
-      "GetConversationInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/GetConversationInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "GetConversationOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -3561,36 +3553,6 @@
           "roles",
           "permissions"
         ],
-        "type": "object"
-      },
-      "GetDeadEventInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/GetDeadEventInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "GetIngestToggleInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/GetIngestToggleInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "GetOAuthProvidersResponse": {
@@ -3755,21 +3717,6 @@
           "role",
           "permissions"
         ],
-        "type": "object"
-      },
-      "GetStatusByDocumentInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/GetStatusByDocumentInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "GetStepVersionsResponseBody": {
@@ -4663,21 +4610,6 @@
         ],
         "type": "object"
       },
-      "ListConversationsInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/ListConversationsInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "ListConversationsOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -4708,21 +4640,6 @@
           "sessions",
           "total"
         ],
-        "type": "object"
-      },
-      "ListDeadEventsInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/ListDeadEventsInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "ListDeadEventsOutputBody": {
@@ -5157,21 +5074,6 @@
         ],
         "type": "object"
       },
-      "ListStatusByAccountInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/ListStatusByAccountInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "ListStatusByAccountOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -5204,21 +5106,6 @@
           "projections",
           "total"
         ],
-        "type": "object"
-      },
-      "ListStatusByUserInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/ListStatusByUserInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "ListStatusByUserOutputBody": {
@@ -7534,36 +7421,6 @@
           "effectiveDate",
           "createdAt"
         ],
-        "type": "object"
-      },
-      "StreamStatusByDocumentInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/StreamStatusByDocumentInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "StreamStatusInputBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/StreamStatusInputBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
         "type": "object"
       },
       "TemplateDetailResponse": {
@@ -14687,16 +14544,6 @@
       "get": {
         "description": "Get a paginated list of user's conversation sessions.",
         "operationId": "listConversations",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ListConversationsInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -14746,16 +14593,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ArchiveConversationInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -14803,16 +14640,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetConversationInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -14850,16 +14677,6 @@
       "get": {
         "description": "Get a paginated list of dead letter queue events for the account.",
         "operationId": "listDeadEvents",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ListDeadEventsInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -14956,16 +14773,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetDeadEventInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -15058,6 +14865,55 @@
         ]
       }
     },
+    "/api/v1/ai/ingestion/documents/{documentId}": {
+      "delete": {
+        "description": "Soft-deletes an ingestion document and its status projection.",
+        "operationId": "deleteIngestionDocument",
+        "parameters": [
+          {
+            "description": "Document ID",
+            "in": "path",
+            "name": "documentId",
+            "required": true,
+            "schema": {
+              "description": "Document ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteDocumentResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete ingestion document",
+        "tags": [
+          "AI Ingestion"
+        ]
+      }
+    },
     "/api/v1/ai/ingestion/status/accounts/{accountId}": {
       "get": {
         "description": "Returns a paginated list of ingestion statuses for an account.",
@@ -15074,16 +14930,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ListStatusByAccountInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -15133,16 +14979,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StreamStatusByDocumentInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK"
@@ -15185,16 +15021,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetStatusByDocumentInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -15232,16 +15058,6 @@
       "get": {
         "description": "Subscribe to real-time ingestion status updates via SSE.",
         "operationId": "streamIngestionStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StreamStatusInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK"
@@ -15284,16 +15100,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ListStatusByUserInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -15331,16 +15137,6 @@
       "get": {
         "description": "Get the current ingestion toggle state.",
         "operationId": "getIngestionToggle",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetIngestToggleInputBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {

@@ -73,7 +73,6 @@ type IngestionStatusProjectionResponse struct {
 
 type GetStatusByDocumentInput struct {
 	DocumentID uuid.UUID `path:"documentId" doc:"Document ID"`
-	Body       struct{}
 }
 
 type GetStatusByDocumentOutput struct {
@@ -87,7 +86,6 @@ type PaginationQuery struct {
 
 type ListStatusByAccountInput struct {
 	AccountID uuid.UUID `path:"accountId" doc:"Account ID"`
-	Body      struct{}
 	Query     PaginationQuery
 }
 
@@ -100,7 +98,6 @@ type ListStatusByAccountOutput struct {
 
 type ListStatusByUserInput struct {
 	UserID uuid.UUID `path:"userId" doc:"User ID"`
-	Body   struct{}
 	Query  PaginationQuery
 }
 
@@ -111,17 +108,26 @@ type ListStatusByUserOutput struct {
 	}
 }
 
-type StreamStatusInput struct {
-	Body struct{}
-}
+type StreamStatusInput struct{}
 
 type StreamStatusByDocumentInput struct {
 	DocumentID uuid.UUID `path:"documentId" doc:"Document ID"`
-	Body       struct{}
 }
 
 type StreamStatusOutput struct {
 	Body struct{}
+}
+
+type DeleteDocumentInput struct {
+	DocumentID uuid.UUID `path:"documentId" doc:"Document ID"`
+}
+
+type DeleteDocumentResponseBody struct {
+	Success bool `json:"success" doc:"Whether deletion succeeded"`
+}
+
+type DeleteDocumentOutput struct {
+	Body DeleteDocumentResponseBody
 }
 
 type StatusEventDTO struct {

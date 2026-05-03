@@ -42,12 +42,6 @@ func (w *SSEWriter) WriteHeaders() {
 }
 
 // WriteEvent writes a single SSE event using the provided event type and payload.
-// Payload is serialized as JSON and emitted as:
-//
-//	event: <eventType>
-//	data: <json>
-//
-//	<blank line>
 func (w *SSEWriter) WriteEvent(eventType string, payload any) error {
 	data, err := json.Marshal(payload)
 	if err != nil {

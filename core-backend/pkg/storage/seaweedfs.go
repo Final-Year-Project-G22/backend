@@ -65,11 +65,18 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 	}
 
 	if s.volumeURL == "" {
-		s.volumeURL = "http://" + strings.ReplaceAll(s.filerURL, "8888", "8080")
+		s.volumeURL = strings.ReplaceAll(s.filerURL, "8888", "8080")
 	}
 
 	if s.masterURL == "" {
 		s.masterURL = strings.ReplaceAll(s.filerURL, "8888", "9333")
+	}
+
+	if !strings.HasPrefix(s.filerURL, "http://") && !strings.HasPrefix(s.filerURL, "https://") {
+		s.filerURL = "http://" + s.filerURL
+	}
+	if !strings.HasPrefix(s.volumeURL, "http://") && !strings.HasPrefix(s.volumeURL, "https://") {
+		s.volumeURL = "http://" + s.volumeURL
 	}
 
 	return s, nil
@@ -91,15 +98,6 @@ func (s *SeaweedFS) CreateUploadIntent(ctx context.Context, opts UploadIntentOpt
 		key = generateKey(opts.ContentType)
 	}
 
-	assignURL, err := s.getAssignURL(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get assign URL: %w", err)
-	}
-
-	if assignURL.Fid == "" {
-		return nil, fmt.Errorf("missing file id from assign response")
-	}
-
 	contentType := opts.ContentType
 	if contentType == "" {
 		contentType = "application/octet-stream"
@@ -118,7 +116,7 @@ func (s *SeaweedFS) CreateUploadIntent(ctx context.Context, opts UploadIntentOpt
 
 	return &UploadIntent{
 		Key:       key,
-		UploadURL: s.volumeURL + "/" + assignURL.Fid,
+		UploadURL: s.filerURL + "/" + key,
 		Method:    http.MethodPut,
 		Headers:   metadata,
 		ExpiresAt: expiresAt,
@@ -131,16 +129,7 @@ func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, re
 		opts.Key = generateKey(opts.ContentType)
 	}
 
-	assignURL, err := s.getAssignURL(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get assign URL: %w", err)
-	}
-
-	if assignURL.Fid == "" {
-		return nil, fmt.Errorf("missing file id from assign response")
-	}
-
-	uploadURL := s.volumeURL + "/" + assignURL.Fid
+	uploadURL := s.filerURL + "/" + opts.Key
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, uploadURL, reader)
 	if err != nil {
@@ -174,7 +163,7 @@ func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, re
 		ContentType: opts.ContentType,
 		Metadata:    opts.Metadata,
 		CreatedAt:   time.Now(),
-		URL:         s.volumeURL + "/" + assignURL.Fid,
+		URL:         s.filerURL + "/" + opts.Key,
 	}
 
 	if fileInfo.ContentType == "" {
@@ -234,9 +223,9 @@ func (s *SeaweedFS) Delete(ctx context.Context, key string) error {
 
 // GetInfo returns metadata about a file.
 func (s *SeaweedFS) GetInfo(ctx context.Context, key string) (*FileInfo, error) {
-	statURL := s.filerURL + "/stat" + key
+	statURL := s.filerURL + "/" + key
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, statURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, statURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -255,28 +244,16 @@ func (s *SeaweedFS) GetInfo(ctx context.Context, key string) (*FileInfo, error) 
 		return nil, fmt.Errorf("stat failed with status %d", resp.StatusCode)
 	}
 
-	var statResp SeaweedStatResponse
-	if err := json.NewDecoder(resp.Body).Decode(&statResp); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
-	}
-
-	createdAt := time.Now()
-	if statResp.Mtime > 0 {
-		createdAt = time.Unix(statResp.Mtime, 0)
-	}
-
-	metadata := make(map[string]string)
-	for k, v := range statResp.Meta {
-		metadata[k] = v
-	}
+	size := resp.ContentLength
+	contentType := resp.Header.Get("Content-Type")
 
 	return &FileInfo{
 		Key:         key,
-		Size:        int64(statResp.Size),
-		ContentType: statResp.Mime,
-		Metadata:    metadata,
-		CreatedAt:   createdAt,
-		URL:         s.volumeURL + "/" + key,
+		Size:        size,
+		ContentType: contentType,
+		Metadata:    nil, // Extracted headers could go here if needed
+		CreatedAt:   time.Now(),
+		URL:         s.filerURL + "/" + key,
 	}, nil
 }
 
@@ -370,42 +347,6 @@ func (s *SeaweedFS) Exists(ctx context.Context, key string) (bool, error) {
 		return false, err
 	}
 	return true, nil
-}
-
-// getAssignURL requests a file ID and upload URL from the master.
-func (s *SeaweedFS) getAssignURL(ctx context.Context) (*SeaweedAssignResponse, error) {
-	assignURL := "http://" + s.masterURL + "/dir/assign"
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, assignURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	q := req.URL.Query()
-	if s.replication != "" {
-		q.Add("replication", s.replication)
-	}
-	if s.collection != "" {
-		q.Add("collection", s.collection)
-	}
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer closeResponseBody(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("assign failed with status %d", resp.StatusCode)
-	}
-
-	var assignResp SeaweedAssignResponse
-	if err := json.NewDecoder(resp.Body).Decode(&assignResp); err != nil {
-		return nil, err
-	}
-
-	return &assignResp, nil
 }
 
 // generateKey generates a unique key for a file.

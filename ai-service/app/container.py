@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from dependency_injector import containers, providers
 
+import grpc as grpc_lib
 from app.config import Settings
 from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
@@ -17,6 +18,7 @@ from core.usecases import (
     IngestionOrchestratorUseCase,
     QuotaGuardUseCase,
 )
+from infrastructure.chunking.registry import ChunkingRegistry
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
     SqlAlchemyConversationRepository,
@@ -25,8 +27,20 @@ from infrastructure.database.repositories import (
     SqlAlchemyQuotaRepository,
 )
 from infrastructure.messagebus import IngestionRequestedConsumer
+from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
+from infrastructure.parsers.registry import ParserRegistry
 from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
 from workers.tasks import IngestionRequestedTaskHandler
+
+
+def _create_document_fetch_channel(endpoint: str) -> Any:
+    """Factory for the document-fetch gRPC channel.
+
+    Returns ``Any`` because Pylance cannot resolve ``grpc.aio.Channel``
+    from the grpc stubs, which would otherwise make the provider type
+    ``Singleton[Unknown]`` and cascade "partially unknown" errors.
+    """
+    return cast(Any, grpc_lib.aio.insecure_channel(endpoint))  # type: ignore[reportUnknownMemberType]
 
 
 class Container(containers.DeclarativeContainer):
@@ -73,7 +87,18 @@ class Container(containers.DeclarativeContainer):
     )
     event_bus_port: providers.Provider[EventBusPort | None] = cast(
         providers.Provider[EventBusPort | None],
-        providers.Object(None),
+        providers.Singleton(
+            RabbitMQEventBusAdapter,
+            amqp_url=config.provided.RABBITMQ_URL,
+            exchange_name=config.provided.INGESTION_WORKER_EXCHANGE,
+        ),
+    )
+    document_fetch_channel: providers.Provider[Any] = cast(
+        providers.Provider[Any],
+        providers.Singleton(
+            _create_document_fetch_channel,
+            config.provided.CORE_GRPC_ENDPOINT,
+        ),
     )
     core_service_port: providers.Provider[CoreServicePort | None] = cast(
         providers.Provider[CoreServicePort | None],
@@ -81,6 +106,7 @@ class Container(containers.DeclarativeContainer):
             CoreServiceGrpcAdapter,
             endpoint=config.provided.CORE_GRPC_ENDPOINT,
             client=core_grpc_client,
+            document_fetch_channel=document_fetch_channel,
         ),
     )
 
@@ -88,7 +114,19 @@ class Container(containers.DeclarativeContainer):
         build_ingestion_envelope_verifier,
         settings=config,
     )
-    ingestion_orchestrator = providers.Factory(IngestionOrchestratorUseCase)
+    parser_registry = providers.Singleton(ParserRegistry)
+    chunking_registry = providers.Singleton(ChunkingRegistry)
+
+    ingestion_orchestrator = providers.Factory(
+        IngestionOrchestratorUseCase,
+        event_bus=event_bus_port,
+        parser_registry=parser_registry,
+        chunking_registry=chunking_registry,
+        embedding_port=embedding_port,
+        knowledge_repository=knowledge_repository,
+        core_service_port=core_service_port,
+        seaweedfs_filer_url=config.provided.SEAWEEDFS_FILER_URL,
+    )
     ingestion_requested_task_handler = providers.Factory(
         IngestionRequestedTaskHandler,
         envelope_verifier=ingestion_envelope_verifier,

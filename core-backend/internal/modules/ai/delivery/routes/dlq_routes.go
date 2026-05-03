@@ -73,11 +73,13 @@ func registerIngestionStatusStreamRoute(api huma.API, deps RouteDependencies) {
 			Body: func(hctx huma.Context) {
 				writer := service.NewSSEWriter(hctx)
 				writer.WriteHeaders()
+				_ = writer.WriteComment("connected")
 				lastEventID := hctx.Header("Last-Event-ID")
-				err := deps.SSEHandler.StreamAccountStatus(ctx, lastEventID, func(event string, payload any) error {
+				goCtx := hctx.Context()
+				err := deps.SSEHandler.StreamAccountStatus(goCtx, lastEventID, func(event string, payload any) error {
 					return writer.WriteEvent(event, payload)
 				})
-				if err != nil && ctx.Err() == nil {
+				if err != nil && goCtx.Err() == nil {
 					_ = writer.WriteEvent("error", map[string]string{"message": err.Error()})
 				}
 			},
@@ -125,10 +127,11 @@ func registerIngestionStatusDocumentStreamRoute(api huma.API, deps RouteDependen
 				writer := service.NewSSEWriter(hctx)
 				writer.WriteHeaders()
 				lastEventID := hctx.Header("Last-Event-ID")
-				err := deps.SSEHandler.StreamStatusByDocument(ctx, input.DocumentID, lastEventID, func(event string, payload any) error {
+				goCtx := hctx.Context()
+				err := deps.SSEHandler.StreamStatusByDocument(goCtx, input.DocumentID, lastEventID, func(event string, payload any) error {
 					return writer.WriteEvent(event, payload)
 				})
-				if err != nil && ctx.Err() == nil {
+				if err != nil && goCtx.Err() == nil {
 					_ = writer.WriteEvent("error", map[string]string{"message": err.Error()})
 				}
 			},
