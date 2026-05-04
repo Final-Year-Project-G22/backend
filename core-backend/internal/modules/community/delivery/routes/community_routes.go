@@ -50,6 +50,17 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.CommunityHandler.HandleSearchThreads)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "listAllCommunityThreads",
+		Method:      "GET",
+		Path:        communityBase + "/threads",
+		Summary:     "List discussion threads",
+		Description: "Lists discussion threads across categories, including sub-threads.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleListThreads)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "getCommunityThread",
 		Method:      "GET",
 		Path:        communityBase + "/threads/{id}",
@@ -246,6 +257,28 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.CommunityHandler.HandleBlockUser)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "uploadAttachments",
+		Method:      "POST",
+		Path:        communityBase + "/attachments",
+		Summary:     "Upload attachments",
+		Description: "Uploads one or more attachments for later use when creating/updating posts.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleUploadAttachments)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "deleteOrphanAttachment",
+		Method:      "DELETE",
+		Path:        communityBase + "/attachments/{id}",
+		Summary:     "Delete orphan attachment",
+		Description: "Deletes a pending attachment that was uploaded but not yet linked to a post.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleDeleteOrphanAttachment)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "unblockCommunityUser",
