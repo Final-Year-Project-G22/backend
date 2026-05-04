@@ -28,8 +28,7 @@ type CreateThreadInput struct {
 	Slug               string
 	Description        *string
 	InitialPostContent string
-	AttachmentURL      *string
-	AttachmentType     *string
+	AttachmentIds      []uuid.UUID
 }
 
 type UpdateThreadInput struct {
@@ -40,16 +39,15 @@ type UpdateThreadInput struct {
 }
 
 type CreatePostInput struct {
-	Content        string
-	AttachmentURL  *string
-	AttachmentType *string
+	Content       string
+	AttachmentIds []uuid.UUID
 }
 
 type UpdatePostInput struct {
-	Content          *string
-	AttachmentURL    *string
-	AttachmentType   *string
-	RemoveAttachment *bool
+	Content              *string
+	AttachmentIds        []uuid.UUID
+	RemoveAttachmentIds  []uuid.UUID
+	RemoveAllAttachments bool
 }
 
 type ReportThreadInput struct {
