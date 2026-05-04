@@ -6,6 +6,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/google/uuid"
 )
 
 type GuideAdminHandler struct {
@@ -18,6 +19,102 @@ func NewGuideAdminHandler(guideAdminUC usecase.GuideManagementUseCase, journeyAd
 		guideAdminUC:   guideAdminUC,
 		journeyAdminUC: journeyAdminUC,
 	}
+}
+
+func (h *GuideAdminHandler) HandleGetCategoryTreeAdmin(ctx context.Context, input *dto.GuideCategoryTreeAdminInput) (*dto.GuideCategoryTreeAdminOutput, error) {
+	categories, err := h.guideAdminUC.ListCategoriesTree(ctx, input.IncludeInactive, input.Locale)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	byParent := map[string][]dto.AdminCategoryDTO{}
+	roots := make([]dto.AdminCategoryDTO, 0)
+	for _, cat := range categories {
+		mapped := dto.ToAdminCategoryDTO(cat)
+		if mapped.ParentID == nil {
+			roots = append(roots, mapped)
+			continue
+		}
+		byParent[mapped.ParentID.String()] = append(byParent[mapped.ParentID.String()], mapped)
+	}
+
+	var attachChildren func(node dto.AdminCategoryDTO) dto.AdminCategoryDTO
+	attachChildren = func(node dto.AdminCategoryDTO) dto.AdminCategoryDTO {
+		children := byParent[node.ID.String()]
+		if len(children) == 0 {
+			return node
+		}
+		node.Children = make([]dto.AdminCategoryDTO, 0, len(children))
+		for _, child := range children {
+			node.Children = append(node.Children, attachChildren(child))
+		}
+		return node
+	}
+
+	result := make([]dto.AdminCategoryDTO, 0, len(roots))
+	for _, root := range roots {
+		result = append(result, attachChildren(root))
+	}
+
+	return &dto.GuideCategoryTreeAdminOutput{Body: dto.GuideCategoryTreeAdminResponseBody{Categories: result}}, nil
+}
+
+func (h *GuideAdminHandler) HandleListGuides(ctx context.Context, input *dto.ListGuidesAdminInput) (*dto.ListGuidesAdminOutput, error) {
+	var categoryID *uuid.UUID
+	if input.CategoryID != "" {
+		parsed, err := uuid.Parse(input.CategoryID)
+		if err != nil {
+			return nil, apperrors.BadRequestError("guides.errors.invalidCategoryId")
+		}
+		categoryID = &parsed
+	}
+	q := dto.ToAdminQueryOptions(input.AdminPaginationQuery)
+	result, err := h.guideAdminUC.ListGuides(ctx, categoryID, q)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	items := make([]dto.AdminGuideCardDTO, 0, len(result.Data))
+	for _, guide := range result.Data {
+		items = append(items, dto.ToAdminGuideCardDTO(guide))
+	}
+
+	return &dto.ListGuidesAdminOutput{Body: dto.ListGuidesAdminResponseBody{
+		Guides:     items,
+		Page:       result.Page,
+		PageSize:   result.PageSize,
+		TotalItems: result.Total,
+		TotalPages: result.TotalPages,
+	}}, nil
+}
+
+func (h *GuideAdminHandler) HandleGetGuideAdmin(ctx context.Context, input *dto.GetGuideAdminInput) (*dto.GetGuideAdminOutput, error) {
+	guide, err := h.guideAdminUC.GetGuideDetail(ctx, input.ID, input.Locale)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.GetGuideAdminOutput{Body: dto.GetGuideAdminResponseBody{Guide: dto.ToAdminGuideDetailDTO(guide)}}, nil
+}
+
+func (h *GuideAdminHandler) HandleListGuideStepsAdmin(ctx context.Context, input *dto.ListGuideStepsAdminInput) (*dto.ListGuideStepsAdminOutput, error) {
+	q := dto.ToAdminQueryOptions(input.AdminPaginationQuery)
+	result, err := h.guideAdminUC.ListGuideSteps(ctx, input.ID, q)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	items := make([]dto.AdminGuideStepDTO, 0, len(result.Data))
+	for _, step := range result.Data {
+		items = append(items, dto.ToAdminGuideStepDTO(step))
+	}
+
+	return &dto.ListGuideStepsAdminOutput{Body: dto.ListGuideStepsAdminResponseBody{
+		Steps:      items,
+		Page:       result.Page,
+		PageSize:   result.PageSize,
+		TotalItems: result.Total,
+		TotalPages: result.TotalPages,
+	}}, nil
 }
 
 // --- Category ---

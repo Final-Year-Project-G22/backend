@@ -10,6 +10,46 @@ const (
 
 func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
+		OperationID: "getCategoryTreeAdmin",
+		Method:      "GET",
+		Path:        adminGuideBase + "/categories/tree",
+		Summary:     "Get admin guide category tree",
+		Description: "Retrieves guide categories tree for admin management.",
+		Tags:        []string{"Admin - Categories"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideAdminHandler.HandleGetCategoryTreeAdmin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "listGuidesAdmin",
+		Method:      "GET",
+		Path:        adminGuideBase,
+		Summary:     "List guides",
+		Description: "Lists guides for admin management with pagination and filters.",
+		Tags:        []string{"Admin - Guides"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideAdminHandler.HandleListGuides)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "getGuideAdmin",
+		Method:      "GET",
+		Path:        adminGuideBase + "/{id}",
+		Summary:     "Get guide detail",
+		Description: "Retrieves guide detail for admin editor.",
+		Tags:        []string{"Admin - Guides"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideAdminHandler.HandleGetGuideAdmin)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "listGuideStepsAdmin",
+		Method:      "GET",
+		Path:        adminGuideBase + "/{id}/steps",
+		Summary:     "List guide steps",
+		Description: "Lists steps of a guide for admin editor.",
+		Tags:        []string{"Admin - Steps"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideAdminHandler.HandleListGuideStepsAdmin)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "createCategory",
 		Method:      "POST",
 		Path:        adminGuideBase + "/categories",

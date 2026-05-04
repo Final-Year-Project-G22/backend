@@ -9,6 +9,7 @@ import (
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedRepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -41,6 +42,71 @@ func NewGuideAdminUsecase(
 		transactor:   transactor,
 		logger:       logger,
 	}
+}
+
+func (u *guideAdminUsecase) ListCategoriesTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error) {
+	return u.catRepo.ListTree(ctx, includeInactive, locale)
+}
+
+func (u *guideAdminUsecase) ListGuides(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.Guide], error) {
+	if categoryID != nil {
+		if q.Filters == nil {
+			q.Filters = make(map[string]interface{})
+		}
+		q.Filters["category_id"] = *categoryID
+	}
+	if q.Preload == nil {
+		q.Preload = []string{"Translations"}
+	}
+	return u.guideRepo.FindAll(ctx, q), nil
+}
+
+func (u *guideAdminUsecase) ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.GuideStep], error) {
+	if q.Filters == nil {
+		q.Filters = make(map[string]interface{})
+	}
+	q.Filters["guide_id"] = guideID
+	if q.Preload == nil {
+		q.Preload = []string{"Translations"}
+	}
+	return u.stepRepo.FindAll(ctx, q), nil
+}
+
+func (u *guideAdminUsecase) GetGuideDetail(ctx context.Context, guideID uuid.UUID, locale constants.Locale) (*entity.Guide, error) {
+	guide, err := u.guideRepo.GetByID(ctx, guideID)
+	if err != nil {
+		return nil, err
+	}
+
+	if locale != "" {
+		translations, err := u.guideRepo.GetTranslations(ctx, guideID)
+		if err != nil {
+			return nil, err
+		}
+		guide.Translations = []entity.GuideTranslation{}
+		for _, t := range translations {
+			if t.Language == string(locale) {
+				guide.Translations = append(guide.Translations, *t)
+			}
+		}
+		if len(guide.Translations) == 0 {
+			for _, t := range translations {
+				if t.Language == string(constants.LocaleEnglish) {
+					guide.Translations = append(guide.Translations, *t)
+				}
+			}
+		}
+	}
+
+	conditions, err := u.guideRepo.GetConditions(ctx, guideID)
+	if err != nil {
+		return nil, err
+	}
+	guide.Conditions = []entity.GuideCondition{}
+	for _, c := range conditions {
+		guide.Conditions = append(guide.Conditions, *c)
+	}
+	return guide, nil
 }
 
 func (u *guideAdminUsecase) CreateCategory(ctx context.Context, input usecase.CreateCategoryInput) (*entity.GuideCategory, error) {
