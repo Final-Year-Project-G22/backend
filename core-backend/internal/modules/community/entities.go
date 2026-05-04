@@ -17,6 +17,7 @@ func (e *EntityProvider) Entities() []any {
 		&entity.UserCategorySettings{},
 		&entity.ContentReport{},
 		&entity.ThreadBlockedUser{},
+		&entity.Attachment{},
 	}
 }
 

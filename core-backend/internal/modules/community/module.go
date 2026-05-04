@@ -1,6 +1,8 @@
 package community
 
 import (
+	"context"
+
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/application/usecase"
@@ -60,6 +62,12 @@ var Module = fx.Module(
 	),
 	fx.Provide(
 		fx.Annotate(
+			infrarepo.NewAttachmentRepository,
+			fx.As(new(repository.AttachmentRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
 			infrarepo.NewContentReportRepository,
 			fx.As(new(repository.ContentReportRepository)),
 		),
@@ -108,17 +116,31 @@ var Module = fx.Module(
 	),
 	fx.Provide(
 		fx.Annotate(
+			service.NewAttachmentService,
+			fx.As(new(usecase.AttachmentUsecase)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
 			service.NewCommunityService,
 			fx.As(new(service.CommunityService)),
 		),
 	),
-	fx.Provide(handler.NewCommunityHandler),
+	fx.Provide(
+		fx.Annotate(
+			service.NewCommunityAttachmentValidator,
+			fx.As(new(service.AttachmentValidator)),
+		),
+	),
+	fx.Provide(service.NewAttachmentCleanupWorker),
 	fx.Provide(handler.NewCommunityAdminHandler),
 	fx.Provide(service.NewCommunityAttachmentValidator),
+	fx.Provide(handler.NewCommunityHandler),
 	fx.Invoke(func(
 		api huma.API,
 		communityHandler *handler.CommunityHandler,
 		communityAdminHandler *handler.CommunityAdminHandler,
+		attachmentCleanupWorker *service.AttachmentCleanupWorker,
 		tokenService token.TokenService,
 		authService iamservice.AuthService,
 		roleAssignmentUsecase iamusecase.RoleAssignmentUsecase,
@@ -140,5 +162,7 @@ var Module = fx.Module(
 			UpdatePermissionMiddleware: updatePermissionMiddleware,
 			DeletePermissionMiddleware: deletePermissionMiddleware,
 		})
+
+		attachmentCleanupWorker.Start(context.Background())
 	}),
 )

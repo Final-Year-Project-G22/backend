@@ -42,7 +42,8 @@
       "invalidOtp": "Invalid or expired verification code",
       "otpAttemptsExceeded": "Too many invalid verification attempts. Please request a new code",
       "emailAlreadyVerified": "Email is already verified",
-      "otpResendTooSoon": "Please wait before requesting another verification code",
+      "emailAlreadyExists": "Email already exists",
+      "usernameAlreadyExists": "Username already exists",
       "otpResendLimitExceeded": "Verification resend limit reached. Please try again later"
     },
     "successes": {
@@ -91,7 +92,11 @@
       "fileTooLarge": "File size exceeds maximum allowed (10MB)",
       "readFileFailed": "Failed to read file",
       "uploadFailed": "Failed to upload file",
-      "noChanges": "No changes provided"
+      "noChanges": "No changes provided",
+      "invalidAttachment": "Invalid attachment",
+      "attachmentNotPending": "Attachment is not in pending status",
+      "attachmentNotOwned": "You do not own this attachment",
+      "attachmentNotLinked": "Attachment is not linked to this post"
     }
   },
   "email": {

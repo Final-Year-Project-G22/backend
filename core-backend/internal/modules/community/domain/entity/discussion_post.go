@@ -19,10 +19,9 @@ type DiscussionPost struct {
 	IsSolution      bool             `gorm:"not null;default:false;index:idx_discussion_posts_solution"`
 	IsPinned        bool             `gorm:"not null;default:false"`
 	UpvoteCount     int              `gorm:"not null;default:0"`
-	AttachmentURL   *string          `gorm:"type:text"`
-	AttachmentType  *string          `gorm:"type:varchar(50)"`
 	EditCount       int              `gorm:"not null;default:0"`
 	EditedAt        *time.Time       `gorm:"type:timestamptz"`
+	Attachments     []Attachment     `gorm:"foreignKey:PostID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (DiscussionPost) TableName() string {

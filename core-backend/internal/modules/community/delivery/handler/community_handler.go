@@ -3,34 +3,45 @@ package handler
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
+	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
 
 type CommunityHandler struct {
-	communityService service.CommunityService
-	categoryUsecase  usecase.CommunityCategoryUsecase
-	threadUsecase    usecase.DiscussionThreadUsecase
-	postUsecase      usecase.DiscussionPostUsecase
+	communityService  service.CommunityService
+	attachmentUsecase usecase.AttachmentUsecase
+	categoryUsecase   usecase.CommunityCategoryUsecase
+	threadUsecase     usecase.DiscussionThreadUsecase
+	postUsecase       usecase.DiscussionPostUsecase
+	accountUsecase    iamusecase.AccountUsecase
+	userUsecase       iamusecase.UserUsecase
 }
 
 func NewCommunityHandler(
 	communityService service.CommunityService,
+	attachmentUsecase usecase.AttachmentUsecase,
 	categoryUsecase usecase.CommunityCategoryUsecase,
 	threadUsecase usecase.DiscussionThreadUsecase,
 	postUsecase usecase.DiscussionPostUsecase,
+	accountUsecase iamusecase.AccountUsecase,
+	userUsecase iamusecase.UserUsecase,
 ) *CommunityHandler {
 	return &CommunityHandler{
-		communityService: communityService,
-		categoryUsecase:  categoryUsecase,
-		threadUsecase:    threadUsecase,
-		postUsecase:      postUsecase,
+		communityService:  communityService,
+		attachmentUsecase: attachmentUsecase,
+		categoryUsecase:   categoryUsecase,
+		threadUsecase:     threadUsecase,
+		postUsecase:       postUsecase,
+		accountUsecase:    accountUsecase,
+		userUsecase:       userUsecase,
 	}
 }
 
@@ -63,9 +74,11 @@ func (h *CommunityHandler) HandleListThreadsByCategory(ctx context.Context, inpu
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
-		items = append(items, dto.ToThreadDTO(thread))
+		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
+		items = append(items, dto.ToThreadDTO(thread, authorMeta))
 	}
 	return &dto.ListThreadsByCategoryOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
 }
@@ -84,11 +97,41 @@ func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.S
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
-		items = append(items, dto.ToThreadDTO(thread))
+		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
+		items = append(items, dto.ToThreadDTO(thread, authorMeta))
 	}
 	return &dto.SearchThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
+}
+
+func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.ListThreadsInput) (*dto.ListThreadsOutput, error) {
+	opts := dto.ToQueryOptions(input.Page, input.PageSize)
+	opts.Search = input.Search
+
+	var categoryID *uuid.UUID
+	if input.CategoryID != "" {
+		parsed, err := uuid.Parse(input.CategoryID)
+		if err != nil {
+			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "community.errors.invalidInput"))
+		}
+		categoryID = &parsed
+	}
+
+	threads, err := h.threadUsecase.SearchThreads(ctx, input.Search, categoryID, opts)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
+	items := make([]*dto.ThreadDTO, 0, len(threads))
+	for _, thread := range threads {
+		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
+		items = append(items, dto.ToThreadDTO(thread, authorMeta))
+	}
+
+	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
 }
 
 func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetThreadInput) (*dto.GetThreadOutput, error) {
@@ -96,18 +139,22 @@ func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetTh
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.GetThreadOutput{Body: dto.GetThreadResponseBody{Thread: dto.ToThreadDTO(thread)}}, nil
+	authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, make(map[uuid.UUID]*dto.AuthorMeta))
+	return &dto.GetThreadOutput{Body: dto.GetThreadResponseBody{Thread: dto.ToThreadDTO(thread, authorMeta)}}, nil
 }
 
 func (h *CommunityHandler) HandleListPosts(ctx context.Context, input *dto.ListPostsInput) (*dto.ListPostsOutput, error) {
 	opts := dto.ToQueryOptions(input.Page, input.PageSize)
+	opts.Preload = []string{"Attachments"}
 	posts, err := h.postUsecase.ListPostsByThread(ctx, input.ThreadID, opts)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	items := make([]*dto.PostDTO, 0, len(posts))
 	for _, post := range posts {
-		items = append(items, dto.ToPostDTO(post))
+		authorMeta := h.resolveAuthorMeta(ctx, post.AuthorAccountID, authorCache)
+		items = append(items, dto.ToPostDTO(post, authorMeta))
 	}
 	return &dto.ListPostsOutput{Body: dto.ListPostsResponseBody{Posts: items}}, nil
 }
@@ -133,11 +180,6 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 		parentThreadID = &parsed
 	}
 
-	attachment, err := readOptionalAttachment(formData.File)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-
 	thread, post, err := h.communityService.CreateThreadWithPost(ctx, accountID, dto.ToCreateThreadInput(
 		categoryID,
 		parentThreadID,
@@ -145,9 +187,8 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 		formData.Slug,
 		formData.Description,
 		formData.InitialPostContent,
-		nil,
-		nil,
-	), attachment)
+		formData.AttachmentIds,
+	))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -161,12 +202,10 @@ func (h *CommunityHandler) HandleCreatePost(ctx context.Context, input *dto.Crea
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
 	}
 
-	attachment, err := readOptionalAttachment(formData.File)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-
-	post, err := h.communityService.ReplyToThread(ctx, accountID, input.ThreadID, nil, dto.ToCreatePostInput(formData.Content, nil, nil), attachment)
+	post, err := h.communityService.ReplyToThread(ctx, accountID, input.ThreadID, nil, dto.ToCreatePostInput(
+		formData.Content,
+		formData.AttachmentIds,
+	))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -180,40 +219,14 @@ func (h *CommunityHandler) HandleReplyPost(ctx context.Context, input *dto.Reply
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
 	}
 
-	attachment, err := readOptionalAttachment(formData.File)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-
-	post, err := h.communityService.ReplyToThread(ctx, accountID, input.ThreadID, &input.PostID, dto.ToCreatePostInput(formData.Content, nil, nil), attachment)
+	post, err := h.communityService.ReplyToThread(ctx, accountID, input.ThreadID, &input.PostID, dto.ToCreatePostInput(
+		formData.Content,
+		formData.AttachmentIds,
+	))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.ReplyPostOutput{Body: dto.CreatePostResponseBody{PostID: post.ID}}, nil
-}
-
-func readOptionalAttachment(file huma.FormFile) (*service.AttachmentUploadInput, error) {
-	if !file.IsSet {
-		return nil, nil
-	}
-
-	f := file.File
-	if f == nil {
-		return nil, apperrors.BadRequestError("community.errors.invalidFile")
-	}
-	defer func() { _ = f.Close() }()
-
-	limitedReader := io.LimitReader(f, int64(service.MaxCommunityAttachmentSize)+1)
-	fileBytes, err := io.ReadAll(limitedReader)
-	if err != nil {
-		return nil, apperrors.InternalError("community.errors.readFileFailed", err)
-	}
-
-	if len(fileBytes) > service.MaxCommunityAttachmentSize {
-		return nil, apperrors.PayloadTooLargeError("community.errors.fileTooLarge")
-	}
-
-	return &service.AttachmentUploadInput{FileBytes: fileBytes, Filename: file.Filename}, nil
 }
 
 func (h *CommunityHandler) HandleUpdatePost(ctx context.Context, input *dto.UpdatePostInput) (*dto.UpdatePostOutput, error) {
@@ -223,12 +236,12 @@ func (h *CommunityHandler) HandleUpdatePost(ctx context.Context, input *dto.Upda
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
 	}
 
-	attachment, err := readOptionalAttachment(formData.File)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-
-	_, err = h.communityService.UpdatePost(ctx, accountID, input.PostID, dto.ToUpdatePostInput(formData.Content, formData.RemoveAttachment), attachment)
+	_, err := h.communityService.UpdatePost(ctx, accountID, input.PostID, dto.ToUpdatePostInput(
+		formData.Content,
+		formData.AttachmentIds,
+		formData.RemoveAttachmentIds,
+		formData.RemoveAllAttachments,
+	))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -292,10 +305,55 @@ func (h *CommunityHandler) HandleListFollowedThreads(ctx context.Context, input 
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	items := make([]*dto.ThreadDTO, 0, len(settings))
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	for _, setting := range settings {
-		items = append(items, dto.ToThreadDTO(&setting.Thread))
+		authorMeta := h.resolveAuthorMeta(ctx, setting.Thread.AuthorAccountID, authorCache)
+		items = append(items, dto.ToThreadDTO(&setting.Thread, authorMeta))
 	}
 	return &dto.ListFollowedThreadsOutput{Body: dto.ListFollowedThreadsResponseBody{Threads: items}}, nil
+}
+
+func (h *CommunityHandler) resolveAuthorMeta(ctx context.Context, accountID uuid.UUID, cache map[uuid.UUID]*dto.AuthorMeta) *dto.AuthorMeta {
+	if cached, ok := cache[accountID]; ok {
+		return cached
+	}
+
+	fallback := &dto.AuthorMeta{
+		DisplayName: "User " + accountID.String()[:6],
+	}
+
+	account, err := h.accountUsecase.GetAccount(ctx, accountID)
+	if err != nil || account == nil {
+		cache[accountID] = fallback
+		return fallback
+	}
+
+	username := ""
+	if account.Username != nil {
+		username = strings.TrimSpace(*account.Username)
+	}
+
+	displayName := fallback.DisplayName
+	if username != "" {
+		displayName = username
+	}
+
+	meta := &dto.AuthorMeta{
+		Username:    username,
+		DisplayName: displayName,
+	}
+
+	user, userErr := h.userUsecase.GetUser(ctx, account.UserID)
+	if userErr == nil && user != nil {
+		fullName := strings.TrimSpace(strings.TrimSpace(user.FirstName) + " " + strings.TrimSpace(user.LastName))
+		if meta.DisplayName == fallback.DisplayName && fullName != "" {
+			meta.DisplayName = fullName
+		}
+		meta.AvatarURL = user.ImageURL
+	}
+
+	cache[accountID] = meta
+	return meta
 }
 
 func (h *CommunityHandler) HandleListFollowedCategories(ctx context.Context, input *dto.ListFollowedCategoriesInput) (*dto.ListFollowedCategoriesOutput, error) {
@@ -376,4 +434,85 @@ func (h *CommunityHandler) HandleUnblockUser(ctx context.Context, input *dto.Unb
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.UnblockUserOutput{Body: dto.BlockUserResponseBody{Message: "User unblocked"}}, nil
+}
+
+type UploadAttachmentsFormData struct {
+	Files []huma.FormFile `form:"files" doc:"Attachment files" validate:"required,min=1,max=10"`
+}
+
+type UploadAttachmentsInput struct {
+	RawBody huma.MultipartFormFiles[UploadAttachmentsFormData]
+}
+
+type UploadAttachmentsOutput struct {
+	Body UploadAttachmentsResponseBody
+}
+
+type UploadAttachmentsResponseBody struct {
+	Attachments []*dto.AttachmentDTO `json:"attachments"`
+}
+
+func (h *CommunityHandler) HandleUploadAttachments(ctx context.Context, input *UploadAttachmentsInput) (*UploadAttachmentsOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	formData := input.RawBody.Data()
+	if formData == nil || len(formData.Files) == 0 {
+		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
+	}
+
+	if len(formData.Files) > 10 {
+		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.tooManyAttachments"))
+	}
+
+	inputs := make([]usecase.AttachmentUploadInput, 0, len(formData.Files))
+	for _, f := range formData.Files {
+		if !f.IsSet || f.File == nil {
+			continue
+		}
+		defer func(f huma.FormFile) { _ = f.File.Close() }(f)
+
+		limitedReader := io.LimitReader(f.File, int64(service.MaxCommunityAttachmentSize)+1)
+		fileBytes, err := io.ReadAll(limitedReader)
+		if err != nil {
+			return nil, apperrors.ToHumaError(ctx, apperrors.InternalError("community.errors.readFileFailed", err))
+		}
+
+		if len(fileBytes) > service.MaxCommunityAttachmentSize {
+			return nil, apperrors.ToHumaError(ctx, apperrors.PayloadTooLargeError("community.errors.fileTooLarge"))
+		}
+
+		inputs = append(inputs, usecase.AttachmentUploadInput{
+			FileBytes: fileBytes,
+			Filename:  f.Filename,
+		})
+	}
+
+	attachments, err := h.attachmentUsecase.Upload(ctx, accountID, inputs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	items := make([]*dto.AttachmentDTO, 0, len(attachments))
+	for _, att := range attachments {
+		items = append(items, &dto.AttachmentDTO{
+			ID:       att.ID,
+			FileURL:  att.FileURL,
+			FileType: att.FileType,
+			FileName: att.FileName,
+			FileSize: att.FileSize,
+		})
+	}
+
+	return &UploadAttachmentsOutput{Body: UploadAttachmentsResponseBody{Attachments: items}}, nil
+}
+
+type DeleteOrphanAttachmentInput struct {
+	ID uuid.UUID `path:"id" doc:"Attachment ID"`
+}
+
+func (h *CommunityHandler) HandleDeleteOrphanAttachment(ctx context.Context, input *DeleteOrphanAttachmentInput) (*dto.DeletePostOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.attachmentUsecase.DeleteOrphan(ctx, input.ID, accountID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.DeletePostOutput{Body: dto.DeletePostResponseBody{Message: "Attachment deleted"}}, nil
 }
