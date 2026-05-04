@@ -55,7 +55,21 @@ func (u *guideAdminUsecase) ListGuides(ctx context.Context, categoryID *uuid.UUI
 		}
 		q.Filters["category_id"] = *categoryID
 	}
+	if q.Preload == nil {
+		q.Preload = []string{"Translations"}
+	}
 	return u.guideRepo.FindAll(ctx, q), nil
+}
+
+func (u *guideAdminUsecase) ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.GuideStep], error) {
+	if q.Filters == nil {
+		q.Filters = make(map[string]interface{})
+	}
+	q.Filters["guide_id"] = guideID
+	if q.Preload == nil {
+		q.Preload = []string{"Translations"}
+	}
+	return u.stepRepo.FindAll(ctx, q), nil
 }
 
 func (u *guideAdminUsecase) GetGuideDetail(ctx context.Context, guideID uuid.UUID, locale constants.Locale) (*entity.Guide, error) {
@@ -93,14 +107,6 @@ func (u *guideAdminUsecase) GetGuideDetail(ctx context.Context, guideID uuid.UUI
 		guide.Conditions = append(guide.Conditions, *c)
 	}
 	return guide, nil
-}
-
-func (u *guideAdminUsecase) ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.GuideStep], error) {
-	if q.Filters == nil {
-		q.Filters = make(map[string]interface{})
-	}
-	q.Filters["guide_id"] = guideID
-	return u.stepRepo.FindAll(ctx, q), nil
 }
 
 func (u *guideAdminUsecase) CreateCategory(ctx context.Context, input usecase.CreateCategoryInput) (*entity.GuideCategory, error) {
