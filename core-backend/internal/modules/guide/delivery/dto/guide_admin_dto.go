@@ -5,6 +5,8 @@ import (
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
@@ -542,6 +544,145 @@ type InvalidateAllJourneysResponseBody struct {
 	Message string `json:"message" doc:"Success message"`
 }
 
+// --- Admin Read Models ---
+
+type AdminPaginationQuery struct {
+	Page      int      `query:"page" doc:"Page number"`
+	PageSize  int      `query:"pageSize" doc:"Items per page"`
+	Search    string   `query:"search" doc:"Search keyword"`
+	SortBy    []string `query:"sortBy" doc:"Sort columns"`
+	SortOrder []string `query:"sortOrder" doc:"Sort order (asc, desc)"`
+}
+
+type GuideCategoryTreeAdminInput struct {
+	IncludeInactive bool             `query:"includeInactive" doc:"Include inactive categories"`
+	Locale          constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+}
+
+type GuideCategoryTreeAdminOutput struct {
+	Body GuideCategoryTreeAdminResponseBody
+}
+
+type GuideCategoryTreeAdminResponseBody struct {
+	Categories []AdminCategoryDTO `json:"categories"`
+}
+
+type ListGuidesAdminInput struct {
+	AdminPaginationQuery
+	CategoryID string           `query:"categoryId" doc:"Category ID filter (UUID)"`
+	Locale     constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+}
+
+type ListGuidesAdminOutput struct {
+	Body ListGuidesAdminResponseBody
+}
+
+type ListGuidesAdminResponseBody struct {
+	Guides     []AdminGuideCardDTO `json:"guides"`
+	Page       int                 `json:"page"`
+	PageSize   int                 `json:"pageSize"`
+	TotalItems int64               `json:"totalItems"`
+	TotalPages int                 `json:"totalPages"`
+}
+
+type GetGuideAdminInput struct {
+	ID     uuid.UUID        `path:"id" doc:"Guide ID"`
+	Locale constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+}
+
+type GetGuideAdminOutput struct {
+	Body GetGuideAdminResponseBody
+}
+
+type GetGuideAdminResponseBody struct {
+	Guide AdminGuideDetailDTO `json:"guide"`
+}
+
+type ListGuideStepsAdminInput struct {
+	ID uuid.UUID `path:"id" doc:"Guide ID"`
+	AdminPaginationQuery
+	Locale constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+}
+
+type ListGuideStepsAdminOutput struct {
+	Body ListGuideStepsAdminResponseBody
+}
+
+type ListGuideStepsAdminResponseBody struct {
+	Steps      []AdminGuideStepDTO `json:"steps"`
+	Page       int                 `json:"page"`
+	PageSize   int                 `json:"pageSize"`
+	TotalItems int64               `json:"totalItems"`
+	TotalPages int                 `json:"totalPages"`
+}
+
+type AdminCategoryDTO struct {
+	ID          uuid.UUID          `json:"id"`
+	ParentID    *uuid.UUID         `json:"parentId,omitempty"`
+	Slug        string             `json:"slug"`
+	Name        string             `json:"name"`
+	Description *string            `json:"description,omitempty"`
+	Icon        *string            `json:"icon,omitempty"`
+	SortOrder   int                `json:"sortOrder"`
+	Children    []AdminCategoryDTO `json:"children,omitempty"`
+}
+
+type AdminGuideCardDTO struct {
+	ID          uuid.UUID `json:"id"`
+	Slug        string    `json:"slug"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description,omitempty"`
+	Icon        *string   `json:"icon,omitempty"`
+	CategoryID  uuid.UUID `json:"categoryId"`
+	SortOrder   int       `json:"sortOrder"`
+}
+
+type AdminTranslationDTO struct {
+	Language    string  `json:"language"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+}
+
+type AdminConditionDTO struct {
+	ID             uuid.UUID   `json:"id"`
+	ConditionType  string      `json:"conditionType"`
+	Operator       string      `json:"operator"`
+	ConditionValue interface{} `json:"conditionValue"`
+	IsInverse      bool        `json:"isInverse"`
+}
+
+type AdminGuideDetailDTO struct {
+	ID           uuid.UUID             `json:"id"`
+	CategoryID   uuid.UUID             `json:"categoryId"`
+	Slug         string                `json:"slug"`
+	Icon         *string               `json:"icon,omitempty"`
+	SortOrder    int                   `json:"sortOrder"`
+	Translations []AdminTranslationDTO `json:"translations"`
+	Conditions   []AdminConditionDTO   `json:"conditions"`
+}
+
+type AdminStepTranslationDTO struct {
+	Language        string      `json:"language"`
+	Title           string      `json:"title"`
+	Description     *string     `json:"description,omitempty"`
+	DetailedContent interface{} `json:"detailedContent,omitempty"`
+}
+
+type AdminGuideStepDTO struct {
+	ID              uuid.UUID                 `json:"id"`
+	GuideID         uuid.UUID                 `json:"guideId"`
+	Slug            string                    `json:"slug"`
+	StepType        entity.StepType           `json:"stepType"`
+	SortOrder       int                       `json:"sortOrder"`
+	IsOptional      bool                      `json:"isOptional"`
+	EstimatedTime   *int                      `json:"estimatedTime,omitempty"`
+	DifficultyLevel *int                      `json:"difficultyLevel,omitempty"`
+	FeeEstimate     *int                      `json:"feeEstimate,omitempty"`
+	EffectiveDate   time.Time                 `json:"effectiveDate"`
+	ExpiryDate      *time.Time                `json:"expiryDate,omitempty"`
+	Translations    []AdminStepTranslationDTO `json:"translations"`
+}
+
 // --- Mappers ---
 
 func ToCreateCategoryInput(body CreateCategoryRequest) usecase.CreateCategoryInput {
@@ -748,5 +889,113 @@ func ToStepVersionDTO(v *entity.GuideStepVersion) StepVersionDTO {
 		StepID:        v.StepID,
 		EffectiveDate: v.EffectiveDate,
 		CreatedAt:     v.CreatedAt,
+	}
+}
+
+func ToAdminQueryOptions(q AdminPaginationQuery) query.QueryOptions {
+	opts := query.QueryOptions{}
+	if q.Page > 0 {
+		opts.Page = q.Page
+	}
+	if q.PageSize > 0 {
+		opts.PageSize = q.PageSize
+	}
+	opts.Search = q.Search
+	opts.SortBy = q.SortBy
+	opts.SortOrder = q.SortOrder
+	return opts
+}
+
+func ToAdminCategoryDTO(cat *entity.GuideCategory) AdminCategoryDTO {
+	name := ""
+	var description *string
+	if len(cat.Translations) > 0 {
+		name = cat.Translations[0].Name
+		description = cat.Translations[0].Description
+	}
+	return AdminCategoryDTO{
+		ID:          cat.ID,
+		ParentID:    cat.ParentCategoryID,
+		Slug:        cat.Slug,
+		Name:        name,
+		Description: description,
+		Icon:        cat.Icon,
+		SortOrder:   cat.SortOrder,
+	}
+}
+
+func ToAdminGuideCardDTO(guide *entity.Guide) AdminGuideCardDTO {
+	name := ""
+	var description *string
+	if len(guide.Translations) > 0 {
+		name = guide.Translations[0].Name
+		description = guide.Translations[0].Description
+	}
+	return AdminGuideCardDTO{
+		ID:          guide.ID,
+		Slug:        guide.Slug,
+		Name:        name,
+		Description: description,
+		Icon:        guide.Icon,
+		CategoryID:  guide.CategoryID,
+		SortOrder:   guide.SortOrder,
+	}
+}
+
+func ToAdminGuideDetailDTO(guide *entity.Guide) AdminGuideDetailDTO {
+	translations := make([]AdminTranslationDTO, 0, len(guide.Translations))
+	for _, tr := range guide.Translations {
+		translations = append(translations, AdminTranslationDTO{
+			Language:    tr.Language,
+			Name:        tr.Name,
+			Description: tr.Description,
+		})
+	}
+
+	conditions := make([]AdminConditionDTO, 0, len(guide.Conditions))
+	for _, c := range guide.Conditions {
+		conditions = append(conditions, AdminConditionDTO{
+			ID:             c.ID,
+			ConditionType:  c.ConditionType,
+			Operator:       c.Operator,
+			ConditionValue: c.ConditionValue,
+			IsInverse:      c.IsInverse,
+		})
+	}
+
+	return AdminGuideDetailDTO{
+		ID:           guide.ID,
+		CategoryID:   guide.CategoryID,
+		Slug:         guide.Slug,
+		Icon:         guide.Icon,
+		SortOrder:    guide.SortOrder,
+		Translations: translations,
+		Conditions:   conditions,
+	}
+}
+
+func ToAdminGuideStepDTO(step *entity.GuideStep) AdminGuideStepDTO {
+	translations := make([]AdminStepTranslationDTO, 0, len(step.Translations))
+	for _, tr := range step.Translations {
+		translations = append(translations, AdminStepTranslationDTO{
+			Language:        tr.Language,
+			Title:           tr.Title,
+			Description:     tr.Description,
+			DetailedContent: tr.DetailedContent,
+		})
+	}
+	return AdminGuideStepDTO{
+		ID:              step.ID,
+		GuideID:         step.GuideID,
+		Slug:            step.Slug,
+		StepType:        step.StepType,
+		SortOrder:       step.SortOrder,
+		IsOptional:      step.IsOptional,
+		EstimatedTime:   step.EstimatedTime,
+		DifficultyLevel: step.DifficultyLevel,
+		FeeEstimate:     step.FeeEstimate,
+		EffectiveDate:   step.EffectiveDate,
+		ExpiryDate:      step.ExpiryDate,
+		Translations:    translations,
 	}
 }

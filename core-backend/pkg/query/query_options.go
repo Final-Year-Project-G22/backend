@@ -224,7 +224,7 @@ func (q *QueryBuilder) applyPreload(db *gorm.DB, opts QueryOptions) *gorm.DB {
 // Uses a separate query session to avoid affecting the main query.
 func (q *QueryBuilder) Count(db *gorm.DB, opts QueryOptions, archived bool) int64 {
 	var count int64
-	query := q.applyQuery(db.Session(&gorm.Session{}), opts, archived)
+	query := q.applyQuery(db, opts, archived)
 	query.Count(&count)
 	return count
 }
