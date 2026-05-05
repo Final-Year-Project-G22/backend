@@ -285,11 +285,15 @@ func (u *guideAdminUsecase) SetGuideTranslations(ctx context.Context, guideID uu
 func (u *guideAdminUsecase) CreateStep(ctx context.Context, input usecase.CreateStepInput) (*entity.GuideStep, error) {
 	var step *entity.GuideStep
 	err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		maxOrder, err := u.stepRepo.GetMaxSortOrder(txCtx, input.GuideID)
+		if err != nil {
+			return err
+		}
 		step = &entity.GuideStep{
 			GuideID:         input.GuideID,
 			Slug:            input.Slug,
 			StepType:        input.StepType,
-			SortOrder:       input.SortOrder,
+			SortOrder:       maxOrder + 1,
 			IsOptional:      input.IsOptional,
 			EstimatedTime:   input.EstimatedTime,
 			DifficultyLevel: input.DifficultyLevel,
@@ -382,7 +386,7 @@ func (u *guideAdminUsecase) DeleteStep(ctx context.Context, id uuid.UUID) error 
 		if err != nil {
 			return err
 		}
-		if err := u.stepRepo.Delete(txCtx, id); err != nil {
+		if err := u.stepRepo.HardDelete(txCtx, id); err != nil {
 			return err
 		}
 		return u.progressRepo.InvalidateJourneysForGuide(txCtx, step.GuideID)

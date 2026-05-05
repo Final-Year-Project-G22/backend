@@ -2,8 +2,10 @@ package handler
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/dto"
+	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
@@ -259,6 +261,9 @@ func (h *GuideAdminHandler) HandleDeleteStep(ctx context.Context, input *dto.Del
 
 func (h *GuideAdminHandler) HandleReorderSteps(ctx context.Context, input *dto.ReorderStepsInput) (*dto.ReorderStepsOutput, error) {
 	if err := h.guideAdminUC.ReorderSteps(ctx, input.Body.GuideID, input.Body.StepIDs); err != nil {
+		if errors.Is(err, guideerror.ErrIncompleteStepList) {
+			return nil, apperrors.BadRequestError("guide.errors.incompleteStepList")
+		}
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.ReorderStepsOutput{Body: dto.ReorderStepsResponseBody{Message: "Steps reordered"}}, nil

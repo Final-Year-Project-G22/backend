@@ -16,6 +16,7 @@ type StepRepository interface {
 	GetBySlug(ctx context.Context, guideID uuid.UUID, slug string, locale constants.Locale) (*entity.GuideStep, error)
 	ListByGuide(ctx context.Context, guideID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.GuideStep, error)
 	Reorder(ctx context.Context, guideID uuid.UUID, stepIDsInOrder []uuid.UUID) error
+	GetMaxSortOrder(ctx context.Context, guideID uuid.UUID) (int, error)
 
 	GetConditions(ctx context.Context, stepID uuid.UUID) ([]*entity.StepCondition, error)
 	GetCondition(ctx context.Context, condID uuid.UUID) (*entity.StepCondition, error)
