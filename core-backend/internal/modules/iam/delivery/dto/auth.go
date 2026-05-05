@@ -331,3 +331,88 @@ type OAuthUnlinkOutput struct {
 		Unlinked string `json:"unlinked"`
 	}
 }
+
+// AdminAccountDTO represents an admin account in list/detail responses.
+type AdminAccountDTO struct {
+	ID          uuid.UUID `json:"id" doc:"Account identifier"`
+	Email       string    `json:"email" doc:"Account email"`
+	Username    *string   `json:"username,omitempty" doc:"Account username"`
+	Status      string    `json:"status" doc:"Account status"`
+	FirstName   string    `json:"firstName" doc:"User first name"`
+	LastName    string    `json:"lastName" doc:"User last name"`
+	Roles       []RoleDTO `json:"roles" doc:"Assigned roles"`
+	CreatedAt   string    `json:"createdAt" doc:"Creation timestamp"`
+	LastLoginAt *string   `json:"lastLoginAt,omitempty" doc:"Last login timestamp"`
+}
+
+// AdminListResponseBody is the response body for listing admin accounts.
+type AdminListResponseBody struct {
+	Admins     []AdminAccountDTO `json:"admins" doc:"List of admin accounts"`
+	Total      int64             `json:"total" doc:"Total count"`
+	Page       int               `json:"page" doc:"Current page"`
+	PageSize   int               `json:"pageSize" doc:"Items per page"`
+	TotalPages int               `json:"totalPages" doc:"Total pages"`
+}
+
+// ListAdminsInput is the input for listing admin accounts.
+type ListAdminsInput struct {
+	Search   string `query:"search" doc:"Search by email, username, or name"`
+	Status   string `query:"status" doc:"Filter by account status"`
+	RoleID   string `query:"roleId" doc:"Filter by role ID"`
+	Page     int    `query:"page" doc:"Page number" default:"1"`
+	PageSize int    `query:"pageSize" doc:"Items per page" default:"20"`
+}
+
+// ListAdminsOutput is the output for listing admin accounts.
+type ListAdminsOutput struct {
+	Body AdminListResponseBody
+}
+
+// UpdateAdminStatusRequest is the input for updating admin account status.
+type UpdateAdminStatusRequest struct {
+	Status string `json:"status" doc:"New status (active, locked, suspended)"`
+}
+
+// UpdateAdminStatusInput wraps the request.
+type UpdateAdminStatusInput struct {
+	AccountID uuid.UUID `path:"accountId" doc:"Account identifier"`
+	Body      UpdateAdminStatusRequest
+}
+
+// UpdateAdminStatusOutput is the output for updating admin status.
+type UpdateAdminStatusOutput struct {
+	Body struct {
+		Message string `json:"message" doc:"Status message"`
+	}
+}
+
+// ResetAdminPasswordInput wraps the request for triggering password reset.
+type ResetAdminPasswordInput struct {
+	AccountID uuid.UUID `path:"accountId" doc:"Account identifier"`
+}
+
+// ResetAdminPasswordOutput is the output for triggering password reset.
+type ResetAdminPasswordOutput struct {
+	Body struct {
+		Message string `json:"message" doc:"Status message"`
+	}
+}
+
+// CompleteAdminPasswordResetRequest is the input for completing password reset.
+type CompleteAdminPasswordResetRequest struct {
+	Token           string `json:"token" doc:"Reset token" minLength:"1"`
+	NewPassword     string `json:"newPassword" doc:"New password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit)" minLength:"8" maxLength:"128"`
+	ConfirmPassword string `json:"confirmPassword" doc:"Confirm new password" minLength:"8" maxLength:"128"`
+}
+
+// CompleteAdminPasswordResetInput wraps the request.
+type CompleteAdminPasswordResetInput struct {
+	Body CompleteAdminPasswordResetRequest
+}
+
+// CompleteAdminPasswordResetOutput is the output for completing password reset.
+type CompleteAdminPasswordResetOutput struct {
+	Body struct {
+		Message string `json:"message" doc:"Status message"`
+	}
+}

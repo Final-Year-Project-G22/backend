@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -18,16 +21,18 @@ type RoleHandler interface {
 }
 
 type RoleRouteDependencies struct {
-	RoleHandler                RoleHandler
-	AuthMiddleware             func(huma.Context, func(huma.Context))
-	AccountStatusMiddleware    func(huma.Context, func(huma.Context))
-	ReadPermissionMiddleware   func(huma.Context, func(huma.Context))
-	WritePermissionMiddleware  func(huma.Context, func(huma.Context))
-	UpdatePermissionMiddleware func(huma.Context, func(huma.Context))
-	DeletePermissionMiddleware func(huma.Context, func(huma.Context))
+	RoleHandler             RoleHandler
+	AuthMiddleware          func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware func(huma.Context, func(huma.Context))
+	RoleAssignmentUsecase   usecase.RoleAssignmentUsecase
 }
 
 func RegisterRoleRoutes(api huma.API, deps RoleRouteDependencies) {
+	readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.IAMRead, nil)
+	writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.IAMWrite, nil)
+	updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.IAMUpdate, nil)
+	deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.IAMDelete, nil)
+
 	huma.Register(api, huma.Operation{
 		OperationID: "getRole",
 		Method:      "GET",
@@ -35,7 +40,7 @@ func RegisterRoleRoutes(api huma.API, deps RoleRouteDependencies) {
 		Summary:     "Get role",
 		Description: "Returns role details and its permissions.",
 		Tags:        []string{"Roles"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.ReadPermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, readPermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.RoleHandler.HandleGetRole)
 
@@ -46,7 +51,7 @@ func RegisterRoleRoutes(api huma.API, deps RoleRouteDependencies) {
 		Summary:     "List roles",
 		Description: "Returns all roles.",
 		Tags:        []string{"Roles"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.ReadPermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, readPermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.RoleHandler.HandleListRoles)
 
@@ -57,7 +62,7 @@ func RegisterRoleRoutes(api huma.API, deps RoleRouteDependencies) {
 		Summary:     "Create role",
 		Description: "Creates a custom role and assigns permissions.",
 		Tags:        []string{"Roles"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, writePermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.RoleHandler.HandleCreateRole)
 
@@ -68,7 +73,7 @@ func RegisterRoleRoutes(api huma.API, deps RoleRouteDependencies) {
 		Summary:     "Update role",
 		Description: "Updates role details and replaces permissions.",
 		Tags:        []string{"Roles"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, updatePermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.RoleHandler.HandleUpdateRole)
 
@@ -79,7 +84,7 @@ func RegisterRoleRoutes(api huma.API, deps RoleRouteDependencies) {
 		Summary:     "Delete role",
 		Description: "Permanently deletes a role if it is mutable.",
 		Tags:        []string{"Roles"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deletePermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.RoleHandler.HandleDeleteRole)
 }

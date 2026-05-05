@@ -57,17 +57,26 @@ func (s *RolePermissionSeeder) Seed(ctx context.Context) error {
 	}
 
 	for _, role := range roles {
-		if role.Code != "super_admin" {
-			continue
-		}
-
 		seededRole, err := s.roleRepo.GetByCode(ctx, role.Code)
 		if err != nil {
 			return err
 		}
 
-		if err := s.assignPermissions(ctx, seededRole.ID, permissionsByCode); err != nil {
-			return err
+		if role.Code == "super_admin" {
+			if err := s.assignPermissions(ctx, seededRole.ID, permissionsByCode); err != nil {
+				return err
+			}
+		} else if role.Code == "iam_admin" {
+			iamAdminPerms := make(map[string]*entity.Permission)
+			for code, perm := range permissionsByCode {
+				if code == "iam.admin.reset_password" || code == "iam.admin.status.update" || code == "iam.role.delete" {
+					continue
+				}
+				iamAdminPerms[code] = perm
+			}
+			if err := s.assignPermissions(ctx, seededRole.ID, iamAdminPerms); err != nil {
+				return err
+			}
 		}
 	}
 

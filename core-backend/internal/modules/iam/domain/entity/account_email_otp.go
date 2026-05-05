@@ -18,7 +18,15 @@ type AccountEmailOTP struct {
 	AttemptCount int        `gorm:"not null;default:0"`
 	ResendCount  int        `gorm:"not null;default:0"`
 	LastSentAt   time.Time  `gorm:"type:timestamptz;not null;default:CURRENT_TIMESTAMP"`
+	Purpose      string     `gorm:"type:varchar(32);not null;default:'email_verification'"`
 }
+
+type EmailOTPPurpose string
+
+const (
+	EmailOTPPurposeVerification  EmailOTPPurpose = "email_verification"
+	EmailOTPPurposePasswordReset EmailOTPPurpose = "password_reset"
+)
 
 func (AccountEmailOTP) TableName() string {
 	return "account_email_otps"

@@ -72,6 +72,26 @@ func (r *accountEmailOTPRepository) GetActiveByAccountID(ctx context.Context, ac
 	return &otp, nil
 }
 
+func (r *accountEmailOTPRepository) GetActiveByAccountIDAndPurpose(ctx context.Context, accountID uuid.UUID, purpose string, now time.Time) (*entity.AccountEmailOTP, error) {
+	var otp entity.AccountEmailOTP
+	err := r.getDB(ctx).
+		Where("account_id = ?", accountID).
+		Where("purpose = ?", purpose).
+		Where("consumed_at IS NULL").
+		Where("expires_at > ?", now).
+		Order("created_at DESC").
+		First(&otp).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, iamerror.ErrEmailOTPNotFound
+		}
+		r.logger.Error("Failed to get active email OTP by purpose", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	return &otp, nil
+}
+
 func (r *accountEmailOTPRepository) IncrementAttemptCount(ctx context.Context, otpID uuid.UUID) error {
 	result := r.getDB(ctx).
 		Model(&entity.AccountEmailOTP{}).
@@ -120,6 +140,22 @@ func (r *accountEmailOTPRepository) InvalidateActiveByAccountID(ctx context.Cont
 	return nil
 }
 
+func (r *accountEmailOTPRepository) InvalidateActiveByAccountIDAndPurpose(ctx context.Context, accountID uuid.UUID, purpose string, now time.Time) error {
+	result := r.getDB(ctx).
+		Model(&entity.AccountEmailOTP{}).
+		Where("account_id = ?", accountID).
+		Where("purpose = ?", purpose).
+		Where("consumed_at IS NULL").
+		Where("expires_at > ?", now).
+		Update("consumed_at", now)
+	if result.Error != nil {
+		r.logger.Error("Failed to invalidate active email OTP by purpose", core.Error(result.Error))
+		return errors.InternalError("errors.databaseError", result.Error)
+	}
+
+	return nil
+}
+
 func (r *accountEmailOTPRepository) IncrementResendCountAndUpdateLastSentAt(ctx context.Context, otpID uuid.UUID, now time.Time) error {
 	result := r.getDB(ctx).
 		Model(&entity.AccountEmailOTP{}).
@@ -137,4 +173,23 @@ func (r *accountEmailOTPRepository) IncrementResendCountAndUpdateLastSentAt(ctx 
 	}
 
 	return nil
+}
+
+func (r *accountEmailOTPRepository) FindActiveByCodeHashAndPurpose(ctx context.Context, codeHash string, purpose string, now time.Time) (*entity.AccountEmailOTP, error) {
+	var otp entity.AccountEmailOTP
+	err := r.getDB(ctx).
+		Where("code_hash = ?", codeHash).
+		Where("purpose = ?", purpose).
+		Where("consumed_at IS NULL").
+		Where("expires_at > ?", now).
+		Order("created_at DESC").
+		First(&otp).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, iamerror.ErrEmailOTPNotFound
+		}
+		r.logger.Error("Failed to find active OTP by code hash and purpose", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return &otp, nil
 }

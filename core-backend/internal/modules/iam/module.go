@@ -15,8 +15,6 @@ import (
 	iamoauth "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/oauth"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/repository"
 	infratoken "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/token"
-	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
-	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
@@ -217,7 +215,12 @@ var Module = fx.Module("iam",
 			fx.As(new(service.AuthService)),
 		),
 	),
-	fx.Provide(service.NewAdminService),
+	fx.Provide(
+		fx.Annotate(
+			service.NewAdminService,
+			fx.As(new(service.AdminService)),
+		),
+	),
 
 	// Application Layer - Avatar Service
 	fx.Provide(service.NewAvatarValidator),
@@ -245,28 +248,25 @@ var Module = fx.Module("iam",
 
 	// Invocations
 
-	// Register routes
-	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, adminHandler *handler.AdminHandler, permissionHandler *handler.PermissionHandler, roleHandler *handler.RoleHandler, userHandler *handler.UserHandler, imageHandler *handler.ImageHandler, oauthHandler *handler.OAuthHandler, tokenService token.TokenService, authService service.AuthService, roleAssignmentUsecase usecase.RoleAssignmentUsecase) {
+	// Register all routes
+	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, adminHandler *handler.AdminHandler,
+		permissionHandler *handler.PermissionHandler, roleHandler *handler.RoleHandler,
+		userHandler *handler.UserHandler, imageHandler *handler.ImageHandler,
+		oauthHandler *handler.OAuthHandler, tokenService token.TokenService,
+		authService service.AuthService, roleAssignmentUsecase usecase.RoleAssignmentUsecase) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
-		AccountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
-		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.ReadAccess, nil)
-		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.WriteAccess, nil)
-		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.UpdateAccess, nil)
-		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.DeleteAccess, nil)
+		accountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
-			AuthHandler:                authHandler,
-			AdminHandler:               adminHandler,
-			PermissionHandler:          permissionHandler,
-			RoleHandler:                roleHandler,
-			UserHandler:                userHandler,
-			ImageHandler:               imageHandler,
-			OAuthHandler:               oauthHandler,
-			AuthMiddleware:             authMiddleware,
-			AccountStatusMiddleware:    AccountStatusMiddleware,
-			ReadPermissionMiddleware:   readPermissionMiddleware,
-			WritePermissionMiddleware:  writePermissionMiddleware,
-			UpdatePermissionMiddleware: updatePermissionMiddleware,
-			DeletePermissionMiddleware: deletePermissionMiddleware,
+			AuthHandler:             authHandler,
+			AdminHandler:            adminHandler,
+			PermissionHandler:       permissionHandler,
+			RoleHandler:             roleHandler,
+			UserHandler:             userHandler,
+			ImageHandler:            imageHandler,
+			OAuthHandler:            oauthHandler,
+			AuthMiddleware:          authMiddleware,
+			AccountStatusMiddleware: accountStatusMiddleware,
+			RoleAssignmentUsecase:   roleAssignmentUsecase,
 		})
 	}),
 

@@ -17,6 +17,7 @@ type AccountUsecase interface {
 	ChangeAccountStatus(ctx context.Context, accountID uuid.UUID, status entity.AccountStatus) error
 	MarkEmailVerifiedAndActivate(ctx context.Context, accountID uuid.UUID) error
 	UpdateAccountPassword(ctx context.Context, accountID uuid.UUID, input UpdateAccountPasswordInput) error
+	ListAdmins(ctx context.Context, permissionCodes []string, queryOpts map[string]interface{}) ([]*entity.Account, int64, error)
 }
 
 type CreateAccountInput struct {

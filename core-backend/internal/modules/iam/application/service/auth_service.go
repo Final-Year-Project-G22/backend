@@ -229,7 +229,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		}
 
 		now := time.Now()
-		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now)
+		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now, string(entity.EmailOTPPurposeVerification))
 		if txErr != nil {
 			return txErr
 		}
@@ -631,7 +631,7 @@ func (s *authService) ResendEmailOTP(ctx context.Context, accountID uuid.UUID) e
 			return txErr
 		}
 
-		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now)
+		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now, string(entity.EmailOTPPurposeVerification))
 		if txErr != nil {
 			return txErr
 		}

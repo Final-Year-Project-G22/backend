@@ -105,10 +105,10 @@ var Module = fx.Module(
 	) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
-		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.ReadAccess, nil)
-		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.WriteAccess, nil)
-		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.UpdateAccess, nil)
-		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.DeleteAccess, nil)
+		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMRead, nil)
+		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMWrite, nil)
+		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMUpdate, nil)
+		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMDelete, nil)
 
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			ViewHandler:                libraryHandler,
