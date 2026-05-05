@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	"github.com/google/uuid"
@@ -33,6 +34,7 @@ type CreateAccountInput struct {
 type UpdateAccountInput struct {
 	Email       *string
 	PhoneNumber *string
+	LastLoginAt *time.Time
 }
 
 type UpdateAccountPasswordInput struct {

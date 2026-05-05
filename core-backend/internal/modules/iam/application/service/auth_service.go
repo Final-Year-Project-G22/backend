@@ -329,6 +329,14 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 		return nil, err
 	}
 
+	// Update last login timestamp
+	now := time.Now()
+	if _, err := s.accountUsecase.UpdateAccount(ctx, account.ID, usecase.UpdateAccountInput{
+		LastLoginAt: &now,
+	}); err != nil {
+		s.logger.Error("Failed to update last login timestamp", core.Error(err))
+	}
+
 	s.logger.Info("User logged in successfully",
 		core.String("accountID", account.ID.String()),
 	)

@@ -115,6 +115,9 @@ func (u *accountUsecase) UpdateAccount(ctx context.Context, accountID uuid.UUID,
 	if input.PhoneNumber != nil {
 		account.PhoneNumber = input.PhoneNumber
 	}
+	if input.LastLoginAt != nil {
+		account.LastLoginAt = input.LastLoginAt
+	}
 
 	if err := u.accountRepo.Update(ctx, account); err != nil {
 		return nil, err
