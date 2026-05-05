@@ -468,10 +468,10 @@ func (h *CommunityHandler) HandleUploadAttachments(ctx context.Context, input *U
 		if !f.IsSet || f.File == nil {
 			continue
 		}
-		defer func(f huma.FormFile) { _ = f.File.Close() }(f)
 
 		limitedReader := io.LimitReader(f.File, int64(service.MaxCommunityAttachmentSize)+1)
 		fileBytes, err := io.ReadAll(limitedReader)
+		_ = f.Close()
 		if err != nil {
 			return nil, apperrors.ToHumaError(ctx, apperrors.InternalError("community.errors.readFileFailed", err))
 		}
