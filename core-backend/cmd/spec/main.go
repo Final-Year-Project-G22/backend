@@ -34,19 +34,16 @@ func main() {
 	}
 
 	iamroutes.RegisterRoutes(api, iamroutes.RouteDependencies{
-		AuthHandler:                &iamhandler.AuthHandler{},
-		AdminHandler:               &iamhandler.AdminHandler{},
-		PermissionHandler:          &iamhandler.PermissionHandler{},
-		RoleHandler:                &iamhandler.RoleHandler{},
-		UserHandler:                &iamhandler.UserHandler{},
-		ImageHandler:               &iamhandler.ImageHandler{},
-		OAuthHandler:               &iamhandler.OAuthHandler{},
-		AuthMiddleware:             noOpMiddleware,
-		AccountStatusMiddleware:    noOpMiddleware,
-		ReadPermissionMiddleware:   noOpMiddleware,
-		WritePermissionMiddleware:  noOpMiddleware,
-		UpdatePermissionMiddleware: noOpMiddleware,
-		DeletePermissionMiddleware: noOpMiddleware,
+		AuthHandler:             &iamhandler.AuthHandler{},
+		AdminHandler:            &iamhandler.AdminHandler{},
+		PermissionHandler:       &iamhandler.PermissionHandler{},
+		RoleHandler:             &iamhandler.RoleHandler{},
+		UserHandler:             &iamhandler.UserHandler{},
+		ImageHandler:            &iamhandler.ImageHandler{},
+		OAuthHandler:            &iamhandler.OAuthHandler{},
+		AuthMiddleware:          noOpMiddleware,
+		AccountStatusMiddleware: noOpMiddleware,
+		RoleAssignmentUsecase:   nil,
 	})
 
 	communityroutes.RegisterRoutes(api, communityroutes.RouteDependencies{

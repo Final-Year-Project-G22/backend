@@ -27,7 +27,7 @@ func NewAccountEmailOTPUsecase(
 	}
 }
 
-func (u *accountEmailOTPUsecase) CreateOTP(ctx context.Context, accountID uuid.UUID, codeHash string, expiresAt time.Time, resendCount int, lastSentAt time.Time) (*entity.AccountEmailOTP, error) {
+func (u *accountEmailOTPUsecase) CreateOTP(ctx context.Context, accountID uuid.UUID, codeHash string, expiresAt time.Time, resendCount int, lastSentAt time.Time, purpose string) (*entity.AccountEmailOTP, error) {
 	otp := &entity.AccountEmailOTP{
 		AccountID:    accountID,
 		CodeHash:     strings.TrimSpace(codeHash),
@@ -35,6 +35,7 @@ func (u *accountEmailOTPUsecase) CreateOTP(ctx context.Context, accountID uuid.U
 		ResendCount:  resendCount,
 		LastSentAt:   lastSentAt,
 		AttemptCount: 0,
+		Purpose:      purpose,
 	}
 
 	if err := u.otpRepo.Create(ctx, otp); err != nil {
@@ -57,6 +58,10 @@ func (u *accountEmailOTPUsecase) GetActiveOTP(ctx context.Context, accountID uui
 	return u.otpRepo.GetActiveByAccountID(ctx, accountID, now)
 }
 
+func (u *accountEmailOTPUsecase) GetActiveOTPByPurpose(ctx context.Context, accountID uuid.UUID, purpose string, now time.Time) (*entity.AccountEmailOTP, error) {
+	return u.otpRepo.GetActiveByAccountIDAndPurpose(ctx, accountID, purpose, now)
+}
+
 func (u *accountEmailOTPUsecase) IncrementAttemptCount(ctx context.Context, otpID uuid.UUID) error {
 	return u.otpRepo.IncrementAttemptCount(ctx, otpID)
 }
@@ -69,6 +74,14 @@ func (u *accountEmailOTPUsecase) InvalidateActiveOTP(ctx context.Context, accoun
 	return u.otpRepo.InvalidateActiveByAccountID(ctx, accountID, now)
 }
 
+func (u *accountEmailOTPUsecase) InvalidateActiveOTPByPurpose(ctx context.Context, accountID uuid.UUID, purpose string, now time.Time) error {
+	return u.otpRepo.InvalidateActiveByAccountIDAndPurpose(ctx, accountID, purpose, now)
+}
+
 func (u *accountEmailOTPUsecase) IncrementResendCountAndUpdateLastSentAt(ctx context.Context, otpID uuid.UUID, now time.Time) error {
 	return u.otpRepo.IncrementResendCountAndUpdateLastSentAt(ctx, otpID, now)
+}
+
+func (u *accountEmailOTPUsecase) FindActiveByCodeHashAndPurpose(ctx context.Context, codeHash string, purpose string, now time.Time) (*entity.AccountEmailOTP, error) {
+	return u.otpRepo.FindActiveByCodeHashAndPurpose(ctx, codeHash, purpose, now)
 }

@@ -229,7 +229,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		}
 
 		now := time.Now()
-		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now)
+		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, account.ID, hashOTPCode(otpCode), now.Add(otpTTL), 0, now, string(entity.EmailOTPPurposeVerification))
 		if txErr != nil {
 			return txErr
 		}
@@ -327,6 +327,14 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Update last login timestamp
+	now := time.Now()
+	if _, err := s.accountUsecase.UpdateAccount(ctx, account.ID, usecase.UpdateAccountInput{
+		LastLoginAt: &now,
+	}); err != nil {
+		s.logger.Error("Failed to update last login timestamp", core.Error(err))
 	}
 
 	s.logger.Info("User logged in successfully",
@@ -631,7 +639,7 @@ func (s *authService) ResendEmailOTP(ctx context.Context, accountID uuid.UUID) e
 			return txErr
 		}
 
-		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now)
+		otpRecord, txErr := s.otpUsecase.CreateOTP(txCtx, accountID, hashOTPCode(otpCode), now.Add(otpTTL), resendCount, now, string(entity.EmailOTPPurposeVerification))
 		if txErr != nil {
 			return txErr
 		}
