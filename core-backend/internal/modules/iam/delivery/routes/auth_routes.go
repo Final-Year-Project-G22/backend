@@ -3,6 +3,10 @@ package routes
 import (
 	"net/http"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/handler"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	"github.com/danielgtaylor/huma/v2"
 )
 
@@ -11,7 +15,19 @@ const (
 	authBase  = apiV1Base + "/auth"
 )
 
-func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
+type AuthRouteDependencies struct {
+	AuthHandler             *handler.AuthHandler
+	AdminHandler            *handler.AdminHandler
+	OAuthHandler            *handler.OAuthHandler
+	AuthMiddleware          func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware func(huma.Context, func(huma.Context))
+	RoleAssignmentUsecase   usecase.RoleAssignmentUsecase
+}
+
+func RegisterAuthRoutes(api huma.API, deps AuthRouteDependencies) {
+	writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.IAMWrite, nil)
+	updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.IAMUpdate, nil)
+
 	huma.Register(api, huma.Operation{
 		OperationID: "register",
 		Method:      "POST",
@@ -28,7 +44,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "Register a new admin",
 		Description: "Creates an admin account and emails the generated password.",
 		Tags:        []string{"Authentication"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, writePermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AdminHandler.HandleRegisterAdmin)
 
@@ -39,7 +55,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 		Summary:     "Update admin roles",
 		Description: "Replaces roles assigned to an admin account.",
 		Tags:        []string{"Authentication"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, updatePermissionMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.AdminHandler.HandleUpdateAdminRoles)
 
@@ -134,7 +150,7 @@ func RegisterAuthRoutes(api huma.API, deps RouteDependencies) {
 	registerSecurityScheme(api)
 }
 
-func registerOAuthRoutes(api huma.API, deps RouteDependencies) {
+func registerOAuthRoutes(api huma.API, deps AuthRouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "getOAuthProviders",
 		Method:      "GET",
