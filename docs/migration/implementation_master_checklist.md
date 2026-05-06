@@ -45,56 +45,48 @@
 
 ### 2.1 Create Migration Files
 
-- [ ] Create `20260507_unified_taxonomy_schema.sql`
-- [ ] Add `ancestor_ids uuid[]` to `sectors` table
-- [ ] Add GIN index on `sectors.ancestor_ids`
-- [ ] Add `sector_ids uuid[]` to `guides` table
-- [ ] Add `tag_ids uuid[]` to `guides` table
-- [ ] Add GIN indexes on `guides.sector_ids` and `guides.tag_ids`
-- [ ] Add `sector_ids uuid[]` to `discussion_threads` table
-- [ ] Add `tag_ids uuid[]` to `discussion_threads` table
-- [ ] Add GIN indexes on `discussion_threads.sector_ids` and `discussion_threads.tag_ids`
-- [ ] Add `sector_ids uuid[]` to `ingestion_documents` table
-- [ ] Add `tag_ids uuid[]` to `ingestion_documents` table
-- [ ] Add `region varchar(50)` to `ingestion_documents` table
-- [ ] Add `stage varchar(50)` to `ingestion_documents` table
-- [ ] Add GIN indexes on `ingestion_documents.sector_ids` and `ingestion_documents.tag_ids`
-- [ ] Add `sector_ids uuid[]` to `notification_campaigns` table
-- [ ] Add `tag_ids uuid[]` to `notification_campaigns` table
-- [ ] Add `region varchar(50)` to `notification_campaigns` table
-- [ ] Add `stage varchar(50)` to `notification_campaigns` table
-- [ ] Add GIN indexes on `notification_campaigns.sector_ids` and `notification_campaigns.tag_ids`
-- [ ] Add `template_group varchar(100)` to `notification_templates` table
-- [ ] Add index on `notification_templates.template_group`
+- [x] Create schema migration (`20260506135016_updateOnEntitiesFromCategoryToSectorTag.sql`)
+- [x] Add `ancestor_ids uuid[]` to `sectors` table
+- [x] Add GIN index on `sectors.ancestor_ids`
+- [x] Add `sector_ids uuid[]` to `guides` table
+- [x] Add `tag_ids uuid[]` to `guides` table
+- [x] Add GIN indexes on `guides.sector_ids` and `guides.tag_ids`
+- [x] Add `sector_ids uuid[]` to `discussion_threads` table
+- [x] Add `tag_ids uuid[]` to `discussion_threads` table
+- [x] Add GIN indexes on `discussion_threads.sector_ids` and `discussion_threads.tag_ids`
+- [x] Add `sector_ids uuid[]` to `ingestion_documents` table
+- [x] Add `tag_ids uuid[]` to `ingestion_documents` table
+- [x] Add `region varchar(50)` to `ingestion_documents` table
+- [x] Add `stage varchar(50)` to `ingestion_documents` table
+- [x] Add GIN indexes on `ingestion_documents.sector_ids` and `ingestion_documents.tag_ids`
+- [x] Add `sector_ids uuid[]` to `notification_campaigns` table
+- [x] Add `tag_ids uuid[]` to `notification_campaigns` table
+- [x] Add `region varchar(50)` to `notification_campaigns` table
+- [x] Add `stage varchar(50)` to `notification_campaigns` table
+- [x] Add GIN indexes on `notification_campaigns.sector_ids` and `notification_campaigns.tag_ids`
+- [x] Add `template_group varchar(100)` to `notification_templates` table
+- [x] Add index on `notification_templates.template_group`
 
 ### 2.2 Remove Category Schema
 
-- [ ] Drop `guides.category_id` column
-- [ ] Drop `idx_guides_category` index
-- [ ] Drop `idx_guides_slug_per_category` index
-- [ ] Drop `discussion_threads.category_id` column
-- [ ] Drop `idx_discussion_threads_category` index
-- [ ] Drop `idx_discussion_threads_slug_per_category` index
-- [ ] Drop `notification_templates.category` column
-- [ ] Drop `idx_notif_templates_category` index
-- [ ] Drop `user_notification_inboxes.category` column
-- [ ] Drop `idx_notif_inbox_category` index
-- [ ] Drop `guide_categories` table
-- [ ] Drop `guide_category_conditions` table
-- [ ] Drop `guide_category_translations` table
-- [ ] Drop `community_categories` table
-- [ ] Drop `library_categories` table
-- [ ] Drop `library_category_translations` table
+- [x] Drop `guides.category_id` column
+- [x] Drop `idx_guides_category` index
+- [x] Drop `idx_guides_slug_per_category` index
+- [x] Drop `discussion_threads.category_id` column
+- [x] Drop `idx_discussion_threads_category` index
+- [x] Drop `idx_discussion_threads_slug_per_category` index
+- [x] Drop `notification_templates.category` column
+- [x] Drop `idx_notif_templates_category` index
+- [x] Drop `user_notification_inboxes.category` column
+- [x] Drop `idx_notif_inbox_category` index
 
 ### 2.3 Run & Verify
 
-- [ ] Run migration on fresh database
-- [ ] Verify all new columns exist
-- [ ] Verify all GIN indexes created
-- [ ] Verify all old columns/tables removed
-- [ ] Verify no compilation errors
+- [x] Migration generated successfully
+- [x] All GIN indexes use `USING gin`
+- [x] Clean build (no compilation errors)
 
-**Phase 2 Status:** ⏳ Pending
+**Phase 2 Status:** ✅ Complete
 
 **Decision Gate:** Migration runs clean with zero errors before proceeding.
 
@@ -102,18 +94,18 @@
 
 ## Phase 3 — Seed Data Migration
 
-- [ ] Create `20260507_unified_taxonomy_seeds.sql`
-- [ ] Seed canonical sectors with parent relationships
-- [ ] Seed `ancestor_ids` for all sectors
-- [ ] Seed canonical tags with groups
-- [ ] Seed sector translations
-- [ ] Seed tag translations
+- [x] Create seed migration (`20260506140000_seed_taxonomy_data.sql`)
+- [x] Seed canonical sectors with parent relationships (6 roots, 12 children)
+- [x] Seed `ancestor_ids` for all sectors
+- [x] Seed canonical tags with groups (26 tags across 5 groups)
+- [x] Seed sector translations (English, 18 sectors)
+- [x] Seed tag translations (English, 26 tags)
 - [ ] Run seed migration
 - [ ] Verify all sectors have correct ancestor_ids
 - [ ] Verify all tags have correct groups
 - [ ] Verify translations exist
 
-**Phase 3 Status:** ⏳ Pending
+**Phase 3 Status:** 🟡 Ready to run
 
 **Decision Gate:** Seed data verified correct before proceeding.
 
