@@ -72,9 +72,9 @@ func (uc *notificationTemplateUsecase) GetTemplateByType(ctx context.Context, no
 	return uc.repo.GetByType(ctx, notificationType)
 }
 
-func (uc *notificationTemplateUsecase) ListTemplates(ctx context.Context, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.NotificationTemplate, error) {
-	if category != nil {
-		return uc.repo.GetByCategory(ctx, *category, q)
+func (uc *notificationTemplateUsecase) ListTemplates(ctx context.Context, templateGroup string, q query.QueryOptions) ([]*entity.NotificationTemplate, error) {
+	if templateGroup != "" {
+		return uc.repo.ListByTemplateGroup(ctx, templateGroup, q)
 	}
 	result := uc.repo.FindAll(ctx, q)
 	return result.Data, nil

@@ -45,12 +45,12 @@ func (r *notificationTemplateRepository) GetByType(ctx context.Context, notifica
 	return &tmpl, nil
 }
 
-func (r *notificationTemplateRepository) GetByCategory(ctx context.Context, category entity.NotificationCategory, q query.QueryOptions) ([]*entity.NotificationTemplate, error) {
+func (r *notificationTemplateRepository) ListByTemplateGroup(ctx context.Context, group string, q query.QueryOptions) ([]*entity.NotificationTemplate, error) {
 	var templates []*entity.NotificationTemplate
-	db := r.getDB(ctx).Where("category = ?", category)
+	db := r.getDB(ctx).Where("template_group = ?", group)
 	db = applyPaginationAndSorting(db, q, "created_at desc")
 	if err := db.Find(&templates).Error; err != nil {
-		r.logger.Error("Failed to get templates by category", core.Error(err))
+		r.logger.Error("Failed to list templates by group", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
 	return templates, nil

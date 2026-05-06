@@ -61,9 +61,9 @@ type TemplateDetailResponse struct {
 // --- List Templates ---
 
 type ListTemplatesInput struct {
-	Category string `query:"category" doc:"Filter by category"`
-	Page     int    `query:"page" doc:"Page number"`
-	PageSize int    `query:"pageSize" doc:"Items per page"`
+	TemplateGroup string `query:"templateGroup" doc:"Filter by template group"`
+	Page          int    `query:"page" doc:"Page number"`
+	PageSize      int    `query:"pageSize" doc:"Items per page"`
 }
 
 type ListTemplatesOutput struct {
