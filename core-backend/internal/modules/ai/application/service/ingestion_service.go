@@ -57,6 +57,10 @@ type FinalizeUploadInput struct {
 	SourceFilename   *string
 	DeclaredLanguage *string
 	BatchID          *uuid.UUID
+	SectorIDs        []uuid.UUID
+	TagIDs           []uuid.UUID
+	Region           *string
+	Stage            *string
 }
 
 type FinalizeUploadOutput struct {
@@ -201,6 +205,10 @@ func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUpload
 			SchemaVersion:    aievent.EnvelopeSchemaVersion,
 			Status:           entity.IngestionDocumentStatusQueued,
 			EventID:          eventID,
+			SectorIDs:        in.SectorIDs,
+			TagIDs:           in.TagIDs,
+			Region:           sanitizeNullableString(in.Region),
+			Stage:            sanitizeNullableString(in.Stage),
 		}
 		if doc.ChecksumSHA256 == "" {
 			doc.ChecksumSHA256 = "unverified"

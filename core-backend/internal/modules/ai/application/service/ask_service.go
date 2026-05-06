@@ -6,16 +6,18 @@ import (
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/port"
+	iamrepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	"github.com/google/uuid"
 )
 
 type AskService struct {
 	inferencePort port.AIInferencePort
+	profileRepo   iamrepository.BusinessProfileRepository
 }
 
-func NewAskService(inferencePort port.AIInferencePort) *AskService {
-	return &AskService{inferencePort: inferencePort}
+func NewAskService(inferencePort port.AIInferencePort, profileRepo iamrepository.BusinessProfileRepository) *AskService {
+	return &AskService{inferencePort: inferencePort, profileRepo: profileRepo}
 }
 
 type AskStreamChunk = port.AskStreamChunk
@@ -42,6 +44,28 @@ type AskOutput struct {
 	LatencyMS int
 }
 
+func (s *AskService) buildTaxonomyFilter(ctx context.Context, accountID uuid.UUID) (sectorIDs []uuid.UUID, tagIDs []uuid.UUID, region, stage *string) {
+	profile, err := s.profileRepo.GetByAccountID(ctx, accountID)
+	if err != nil || profile == nil {
+		return nil, nil, nil, nil
+	}
+	if profile.SectorID != nil {
+		sectorIDs = append(sectorIDs, *profile.SectorID)
+	}
+	for _, tag := range profile.Tags {
+		tagIDs = append(tagIDs, tag.ID)
+	}
+	if profile.Region != nil {
+		r := string(*profile.Region)
+		region = &r
+	}
+	if profile.Stage != nil {
+		st := string(*profile.Stage)
+		stage = &st
+	}
+	return sectorIDs, tagIDs, region, stage
+}
+
 func (s *AskService) Ask(ctx context.Context, in AskInput) (AskOutput, error) {
 	if in.TopK < 1 {
 		in.TopK = 5
@@ -55,6 +79,8 @@ func (s *AskService) Ask(ctx context.Context, in AskInput) (AskOutput, error) {
 		language = constants.Locale(in.Language)
 	}
 
+	sectorIDs, tagIDs, region, stage := s.buildTaxonomyFilter(ctx, in.AccountID)
+
 	req := port.AskRequest{
 		RequestID: uuid.New(),
 		UserID:    in.UserID,
@@ -64,6 +90,10 @@ func (s *AskService) Ask(ctx context.Context, in AskInput) (AskOutput, error) {
 		SessionID: in.SessionID,
 		Title:     in.Title,
 		TopK:      in.TopK,
+		SectorIDs: sectorIDs,
+		TagIDs:    tagIDs,
+		Region:    region,
+		Stage:     stage,
 	}
 
 	start := time.Now()
@@ -110,6 +140,8 @@ func (s *AskService) AskStream(ctx context.Context, in AskStreamInput) (<-chan p
 		language = constants.Locale(in.Language)
 	}
 
+	sectorIDs, tagIDs, region, stage := s.buildTaxonomyFilter(ctx, in.AccountID)
+
 	req := port.AskRequest{
 		RequestID: uuid.New(),
 		UserID:    in.UserID,
@@ -119,6 +151,10 @@ func (s *AskService) AskStream(ctx context.Context, in AskStreamInput) (<-chan p
 		SessionID: in.SessionID,
 		Title:     in.Title,
 		TopK:      in.TopK,
+		SectorIDs: sectorIDs,
+		TagIDs:    tagIDs,
+		Region:    region,
+		Stage:     stage,
 	}
 
 	return s.inferencePort.AskStream(ctx, req)

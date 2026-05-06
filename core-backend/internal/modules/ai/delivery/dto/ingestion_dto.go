@@ -31,14 +31,18 @@ type CreateUploadIntentOutput struct {
 }
 
 type FinalizeUploadRequest struct {
-	StorageKey       string     `json:"storageKey" doc:"Uploaded object key" minLength:"1"`
-	ContentType      string     `json:"contentType" doc:"Uploaded object MIME type" minLength:"1" maxLength:"255"`
-	SizeBytes        int64      `json:"sizeBytes" doc:"Uploaded object size in bytes" minimum:"0"`
-	ChecksumSHA256   string     `json:"checksumSha256" doc:"Hex encoded SHA-256 checksum" minLength:"1" maxLength:"128"`
-	IdempotencyKey   string     `json:"idempotencyKey" doc:"Client idempotency key for dedupe" minLength:"1" maxLength:"255"`
-	SourceFilename   *string    `json:"sourceFilename,omitempty" doc:"Optional original filename"`
-	DeclaredLanguage *string    `json:"declaredLanguage,omitempty" doc:"Optional language hint (e.g. en, am)"`
-	BatchID          *uuid.UUID `json:"batchId,omitempty" doc:"Optional batch identifier"`
+	StorageKey       string      `json:"storageKey" doc:"Uploaded object key" minLength:"1"`
+	ContentType      string      `json:"contentType" doc:"Uploaded object MIME type" minLength:"1" maxLength:"255"`
+	SizeBytes        int64       `json:"sizeBytes" doc:"Uploaded object size in bytes" minimum:"0"`
+	ChecksumSHA256   string      `json:"checksumSha256" doc:"Hex encoded SHA-256 checksum" minLength:"1" maxLength:"128"`
+	IdempotencyKey   string      `json:"idempotencyKey" doc:"Client idempotency key for dedupe" minLength:"1" maxLength:"255"`
+	SourceFilename   *string     `json:"sourceFilename,omitempty" doc:"Optional original filename"`
+	DeclaredLanguage *string     `json:"declaredLanguage,omitempty" doc:"Optional language hint (e.g. en, am)"`
+	BatchID          *uuid.UUID  `json:"batchId,omitempty" doc:"Optional batch identifier"`
+	SectorIDs        []uuid.UUID `json:"sectorIds,omitempty" doc:"Target sector IDs for document taxonomy"`
+	TagIDs           []uuid.UUID `json:"tagIds,omitempty" doc:"Target tag IDs for document taxonomy"`
+	Region           *string     `json:"region,omitempty" doc:"Target region for document taxonomy"`
+	Stage            *string     `json:"stage,omitempty" doc:"Target business stage for document taxonomy"`
 }
 
 type FinalizeUploadInput struct {
