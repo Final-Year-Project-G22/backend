@@ -20,5 +20,7 @@ const (
 
 	PaymentConfirmation = "payment.confirmation"
 
+	UserEmailOTPRequested = "user.email_otp_requested"
+
 	NotificationFailed = "notification.failed"
 )

@@ -22,6 +22,7 @@ type notificationDeliveryUsecase struct {
 	emailProvider   repository.EmailProvider
 	transactor      sharedrepo.Transactor
 	logger          core.Logger
+	cfg             *core.Config
 }
 
 func NewNotificationDeliveryUsecase(
@@ -32,6 +33,7 @@ func NewNotificationDeliveryUsecase(
 	emailProvider repository.EmailProvider,
 	transactor sharedrepo.Transactor,
 	logger core.Logger,
+	cfg *core.Config,
 ) usecase.NotificationDeliveryUsecase {
 	return &notificationDeliveryUsecase{
 		queueRepo:       queueRepo,
@@ -41,6 +43,7 @@ func NewNotificationDeliveryUsecase(
 		emailProvider:   emailProvider,
 		transactor:      transactor,
 		logger:          logger,
+		cfg:             cfg,
 	}
 }
 
@@ -145,7 +148,7 @@ func (uc *notificationDeliveryUsecase) CancelPendingForAccount(ctx context.Conte
 func (uc *notificationDeliveryUsecase) deliverEmail(ctx context.Context, item *entity.NotificationQueue) error {
 	to, _ := item.Payload["to"].(string)
 	subject, _ := item.Payload["subject"].(string)
-	body, _ := item.Payload["content"].(string)
+	body, _ := item.Payload["body"].(string)
 
 	if to == "" || subject == "" {
 		msg := "missing required email payload fields"
@@ -205,9 +208,14 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 			return fmt.Errorf("failed to create history entry: %w", err)
 		}
 
+		providerName := "resend"
+		if uc.cfg.Email.Enabled {
+			providerName = "smtp"
+		}
+
 		deliveryLog := &entity.EmailDeliveryLog{
 			NotificationHistoryID: history.ID,
-			Provider:              "resend",
+			Provider:              providerName,
 			ProviderMessageID:     &providerMsgID,
 			RecipientEmail:        to,
 			Subject:               subject,
@@ -305,6 +313,8 @@ func (uc *notificationDeliveryUsecase) toCategory(nt entity.NotificationType) en
 		return entity.NotificationCategorySecurity
 	case entity.NotificationTypePaymentConfirmation:
 		return entity.NotificationCategoryPayment
+	case entity.NotificationTypeCampaign:
+		return entity.NotificationCategoryCampaign
 	default:
 		return entity.NotificationCategorySystem
 	}

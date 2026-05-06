@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	iamrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	iamnotification "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/notification"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/usecase"
@@ -36,7 +37,8 @@ var Modules = fx.Options(
 	fx.Decorate(func(
 		_ notifrepo.AccountReader,
 		accountRepo iamrepo.AccountRepository,
+		db *core.Database,
 	) notifrepo.AccountReader {
-		return iamnotification.NewAccountReaderAdapter(accountRepo)
+		return iamnotification.NewAccountReaderAdapter(accountRepo, db)
 	}),
 )

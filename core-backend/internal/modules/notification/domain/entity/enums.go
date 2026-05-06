@@ -9,7 +9,7 @@ const (
 	NotificationCategoryAI        NotificationCategory = "ai"
 	NotificationCategorySecurity  NotificationCategory = "security"
 	NotificationCategoryPayment   NotificationCategory = "payment"
-	NotificationCategoryMarketing NotificationCategory = "marketing"
+	NotificationCategoryCampaign  NotificationCategory = "Campaign"
 )
 
 type NotificationType string
@@ -32,6 +32,7 @@ const (
 	NotificationTypeAccountVerification  NotificationType = "account_verification"
 	NotificationTypePasswordReset        NotificationType = "password_reset"
 	NotificationTypePaymentConfirmation  NotificationType = "payment_confirmation"
+	NotificationTypeCampaign             NotificationType = "campaign"
 )
 
 type NotificationPriority int8

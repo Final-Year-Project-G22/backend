@@ -31,6 +31,7 @@ func registerEventSubscriptions(lc fx.Lifecycle, bus rabbitmq.Bus, ingestUC usec
 				event.AIQuotaLimit,
 				event.AIResponseReady,
 				event.PaymentConfirmation,
+				event.UserEmailOTPRequested,
 			}
 			for _, e := range events {
 				evt := e
