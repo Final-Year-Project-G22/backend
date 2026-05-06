@@ -100,6 +100,10 @@ type CreateCampaignInput struct {
 	TargetSegment      *map[string]interface{} `json:"targetSegment,omitempty"`
 	CampaignTemplateID uuid.UUID               `json:"campaignTemplateId"`
 	ScheduledFor       *time.Time              `json:"scheduledFor,omitempty"`
+	SectorIDs          []uuid.UUID             `json:"sectorIds,omitempty"`
+	TagIDs             []uuid.UUID             `json:"tagIds,omitempty"`
+	Region             *string                 `json:"region,omitempty"`
+	Stage              *string                 `json:"stage,omitempty"`
 }
 
 type UpdateCampaignInput struct {
@@ -107,6 +111,10 @@ type UpdateCampaignInput struct {
 	Description   *string                 `json:"description,omitempty"`
 	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty"`
 	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty"`
+	SectorIDs     []uuid.UUID             `json:"sectorIds,omitempty"`
+	TagIDs        []uuid.UUID             `json:"tagIds,omitempty"`
+	Region        *string                 `json:"region,omitempty"`
+	Stage         *string                 `json:"stage,omitempty"`
 }
 
 type ScheduleCampaignInput struct {

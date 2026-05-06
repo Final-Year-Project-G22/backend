@@ -302,6 +302,10 @@ type CreateCampaignRequest struct {
 	TargetSegment      *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
 	CampaignTemplateID uuid.UUID               `json:"campaignTemplateId" doc:"Campaign template ID"`
 	ScheduledFor       *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SectorIDs          []uuid.UUID             `json:"sectorIds,omitempty" doc:"Target sector IDs"`
+	TagIDs             []uuid.UUID             `json:"tagIds,omitempty" doc:"Target tag IDs"`
+	Region             *string                 `json:"region,omitempty" doc:"Target region"`
+	Stage              *string                 `json:"stage,omitempty" doc:"Target business stage"`
 }
 
 type CreateCampaignInput struct {
@@ -336,6 +340,10 @@ type CampaignDetailResponse struct {
 	ScheduledFor       *time.Time                    `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
 	SentAt             *time.Time                    `json:"sentAt,omitempty" doc:"Actual sending time"`
 	Status             entity.CampaignStatus         `json:"status" doc:"Campaign status"`
+	SectorIDs          []uuid.UUID                   `json:"sectorIds" doc:"Target sector IDs"`
+	TagIDs             []uuid.UUID                   `json:"tagIds" doc:"Target tag IDs"`
+	Region             *string                       `json:"region,omitempty" doc:"Target region"`
+	Stage              *string                       `json:"stage,omitempty" doc:"Target business stage"`
 	CreatedAt          time.Time                     `json:"createdAt" doc:"Creation time"`
 }
 
@@ -386,6 +394,10 @@ type UpdateCampaignRequest struct {
 	Description   *string                 `json:"description,omitempty" doc:"Campaign description"`
 	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
 	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SectorIDs     []uuid.UUID             `json:"sectorIds,omitempty" doc:"Target sector IDs"`
+	TagIDs        []uuid.UUID             `json:"tagIds,omitempty" doc:"Target tag IDs"`
+	Region        *string                 `json:"region,omitempty" doc:"Target region"`
+	Stage         *string                 `json:"stage,omitempty" doc:"Target business stage"`
 }
 
 type UpdateCampaignInput struct {
@@ -433,6 +445,10 @@ func ToCreateCampaignInput(createdBy uuid.UUID, body CreateCampaignRequest) usec
 		TargetSegment:      body.TargetSegment,
 		CampaignTemplateID: body.CampaignTemplateID,
 		ScheduledFor:       body.ScheduledFor,
+		SectorIDs:          body.SectorIDs,
+		TagIDs:             body.TagIDs,
+		Region:             body.Region,
+		Stage:              body.Stage,
 	}
 }
 
@@ -442,6 +458,10 @@ func ToUpdateCampaignInput(body UpdateCampaignRequest) usecase.UpdateCampaignInp
 		Description:   body.Description,
 		TargetSegment: body.TargetSegment,
 		ScheduledFor:  body.ScheduledFor,
+		SectorIDs:     body.SectorIDs,
+		TagIDs:        body.TagIDs,
+		Region:        body.Region,
+		Stage:         body.Stage,
 	}
 }
 
@@ -455,6 +475,10 @@ func ToCampaignDetailResponse(detail *usecase.CampaignDetail) CampaignDetailResp
 		ScheduledFor:       detail.Campaign.ScheduledFor,
 		SentAt:             detail.Campaign.SentAt,
 		Status:             detail.Campaign.Status,
+		SectorIDs:          detail.Campaign.SectorIDs,
+		TagIDs:             detail.Campaign.TagIDs,
+		Region:             detail.Campaign.Region,
+		Stage:              detail.Campaign.Stage,
 		CreatedAt:          *detail.Campaign.CreatedAt,
 	}
 	if detail.Campaign.TargetSegment != nil {

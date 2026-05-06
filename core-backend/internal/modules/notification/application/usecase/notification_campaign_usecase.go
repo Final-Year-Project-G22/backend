@@ -74,6 +74,10 @@ func (uc *notificationCampaignUsecase) CreateCampaign(ctx context.Context, creat
 		ScheduledFor:       input.ScheduledFor,
 		Status:             entity.CampaignStatusDraft,
 		CreatedBy:          createdBy,
+		SectorIDs:          input.SectorIDs,
+		TagIDs:             input.TagIDs,
+		Region:             input.Region,
+		Stage:              input.Stage,
 	}
 
 	if err := uc.campaignRepo.Create(ctx, campaign); err != nil {
@@ -142,6 +146,18 @@ func (uc *notificationCampaignUsecase) UpdateCampaign(ctx context.Context, id uu
 	}
 	if input.ScheduledFor != nil {
 		updates["scheduled_for"] = input.ScheduledFor
+	}
+	if input.SectorIDs != nil {
+		updates["sector_ids"] = input.SectorIDs
+	}
+	if input.TagIDs != nil {
+		updates["tag_ids"] = input.TagIDs
+	}
+	if input.Region != nil {
+		updates["region"] = input.Region
+	}
+	if input.Stage != nil {
+		updates["stage"] = input.Stage
 	}
 
 	if len(updates) > 0 {
