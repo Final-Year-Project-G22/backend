@@ -96,6 +96,9 @@ func NewConfig() (*Config, error) {
 	v.SetDefault("ai.conversation_cache_ttl", "5m")
 	v.SetDefault("logger.level", "info")
 	v.SetDefault("database.sslmode", "disable")
+	v.SetDefault("email.enabled", false)
+	v.SetDefault("email.port", 587)
+	v.SetDefault("email.enable_tls", true)
 
 	// 5. Read Base Config File (config.yaml)
 	v.SetConfigName("config")

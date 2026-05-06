@@ -33,15 +33,22 @@ func (r *notificationCampaignRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *notificationCampaignRepository) ListByStatus(ctx context.Context, status entity.CampaignStatus, q query.QueryOptions) ([]*entity.NotificationCampaign, error) {
+func (r *notificationCampaignRepository) ListByStatus(ctx context.Context, status entity.CampaignStatus, q query.QueryOptions) ([]*entity.NotificationCampaign, int64, error) {
+	var total int64
+	baseDB := r.getDB(ctx).Where("status = ?", status)
+
+	if err := baseDB.Model(&entity.NotificationCampaign{}).Count(&total).Error; err != nil {
+		r.logger.Error("Failed to count campaigns by status", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+
 	var campaigns []*entity.NotificationCampaign
-	db := r.getDB(ctx).Where("status = ?", status)
-	db = applyPaginationAndSorting(db, q, "created_at desc")
+	db := applyPaginationAndSorting(baseDB, q, "created_at desc")
 	if err := db.Find(&campaigns).Error; err != nil {
 		r.logger.Error("Failed to list campaigns by status", core.Error(err))
-		return nil, errors.InternalError("errors.databaseError", err)
+		return nil, 0, errors.InternalError("errors.databaseError", err)
 	}
-	return campaigns, nil
+	return campaigns, total, nil
 }
 
 func (r *notificationCampaignRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status entity.CampaignStatus) error {

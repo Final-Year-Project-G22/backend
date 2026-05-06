@@ -8,14 +8,18 @@ import (
 
 type RouteDependencies struct {
 	AdminHandler            *handler.NotificationAdminHandler
+	CampaignTemplateHandler *handler.CampaignTemplateHandler
 	NotificationHandler     *handler.NotificationHandler
 	WebhookHandler          *handler.WebhookHandler
+	SSEHandler              *handler.SSEHandler
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 }
 
 func RegisterRoutes(api huma.API, engine *gin.Engine, deps RouteDependencies) {
 	RegisterAdminNotificationRoutes(api, deps)
+	RegisterCampaignTemplateRoutes(api, deps)
 	RegisterNotificationRoutes(api, deps)
 	RegisterWebhookRoutes(engine, deps)
+	RegisterSSERoutes(engine, deps)
 }
