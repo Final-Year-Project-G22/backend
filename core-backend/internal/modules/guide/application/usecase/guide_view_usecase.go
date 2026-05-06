@@ -480,7 +480,8 @@ func (s *guideViewUsecase) toGuideCard(g *entity.Guide) *usecase.GuideCard {
 		Name:        name,
 		Description: desc,
 		Icon:        g.Icon,
-		CategoryID:  g.CategoryID,
+		SectorIDs:   g.SectorIDs,
+		TagIDs:      g.TagIDs,
 	}
 }
 

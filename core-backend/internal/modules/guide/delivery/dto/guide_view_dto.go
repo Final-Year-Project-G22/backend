@@ -32,12 +32,13 @@ type CategoryNodeDTO struct {
 }
 
 type GuideCardDTO struct {
-	ID          uuid.UUID `json:"id" doc:"Guide ID"`
-	Slug        string    `json:"slug" doc:"Guide slug"`
-	Name        string    `json:"name" doc:"Localized guide name"`
-	Description *string   `json:"description,omitempty" doc:"Localized description"`
-	Icon        *string   `json:"icon,omitempty" doc:"Icon identifier"`
-	CategoryID  uuid.UUID `json:"categoryId" doc:"Parent category ID"`
+	ID          uuid.UUID   `json:"id" doc:"Guide ID"`
+	Slug        string      `json:"slug" doc:"Guide slug"`
+	Name        string      `json:"name" doc:"Localized guide name"`
+	Description *string     `json:"description,omitempty" doc:"Localized description"`
+	Icon        *string     `json:"icon,omitempty" doc:"Icon identifier"`
+	SectorIDs   []uuid.UUID `json:"sectorIds" doc:"Target sector IDs"`
+	TagIDs      []uuid.UUID `json:"tagIds" doc:"Target tag IDs"`
 }
 
 type SearchGuidesInput struct {
@@ -299,7 +300,8 @@ func ToGuideCardDTO(card *usecase.GuideCard) *GuideCardDTO {
 		Name:        card.Name,
 		Description: card.Description,
 		Icon:        card.Icon,
-		CategoryID:  card.CategoryID,
+		SectorIDs:   card.SectorIDs,
+		TagIDs:      card.TagIDs,
 	}
 }
 

@@ -200,10 +200,11 @@ func (u *guideAdminUsecase) CreateGuide(ctx context.Context, input usecase.Creat
 	var guide *entity.Guide
 	err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		guide = &entity.Guide{
-			CategoryID: input.CategoryID,
-			Slug:       input.Slug,
-			Icon:       input.Icon,
-			SortOrder:  input.SortOrder,
+			SectorIDs: input.SectorIDs,
+			TagIDs:    input.TagIDs,
+			Slug:      input.Slug,
+			Icon:      input.Icon,
+			SortOrder: input.SortOrder,
 		}
 		if err := u.guideRepo.Create(txCtx, guide); err != nil {
 			return err
@@ -225,8 +226,11 @@ func (u *guideAdminUsecase) UpdateGuide(ctx context.Context, id uuid.UUID, input
 		if err != nil {
 			return err
 		}
-		if input.CategoryID != nil {
-			guide.CategoryID = *input.CategoryID
+		if input.SectorIDs != nil {
+			guide.SectorIDs = input.SectorIDs
+		}
+		if input.TagIDs != nil {
+			guide.TagIDs = input.TagIDs
 		}
 		if input.Slug != nil {
 			guide.Slug = *input.Slug

@@ -72,7 +72,7 @@ func (h *NotificationAdminHandler) HandleListTemplates(ctx context.Context, inpu
 			ID:               tmpl.ID,
 			Name:             tmpl.Name,
 			NotificationType: tmpl.NotificationType,
-			Category:         tmpl.Category,
+			TemplateGroup:    tmpl.TemplateGroup,
 			IsSystemManaged:  tmpl.IsSystemManaged,
 		})
 	}

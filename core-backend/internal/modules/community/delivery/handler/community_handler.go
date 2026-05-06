@@ -166,11 +166,6 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
 	}
 
-	categoryID, err := uuid.Parse(formData.CategoryID)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "community.errors.invalidInput"))
-	}
-
 	var parentThreadID *uuid.UUID
 	if formData.ParentThreadID != "" {
 		parsed, err := uuid.Parse(formData.ParentThreadID)
@@ -181,7 +176,8 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 	}
 
 	thread, post, err := h.communityService.CreateThreadWithPost(ctx, accountID, dto.ToCreateThreadInput(
-		categoryID,
+		formData.SectorIDs,
+		formData.TagIDs,
 		parentThreadID,
 		formData.Title,
 		formData.Slug,

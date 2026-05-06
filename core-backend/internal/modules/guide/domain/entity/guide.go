@@ -7,9 +7,9 @@ import (
 
 type Guide struct {
 	model.BaseModel `gorm:"embedded"`
-	CategoryID      uuid.UUID          `gorm:"type:uuid;not null;uniqueIndex:idx_guides_slug_per_category,priority:1;index:idx_guides_category"`
-	Category        GuideCategory      `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Slug            string             `gorm:"type:varchar(200);not null;uniqueIndex:idx_guides_slug_per_category,priority:2"`
+	SectorIDs       []uuid.UUID        `gorm:"type:uuid[];index:idx_guides_sector_ids,using:gin"`
+	TagIDs          []uuid.UUID        `gorm:"type:uuid[];index:idx_guides_tag_ids,using:gin"`
+	Slug            string             `gorm:"type:varchar(200);not null;uniqueIndex:idx_guides_slug"`
 	Icon            *string            `gorm:"type:varchar(100)"`
 	SortOrder       int                `gorm:"not null;default:0"`
 	Conditions      []GuideCondition   `gorm:"foreignKey:GuideID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

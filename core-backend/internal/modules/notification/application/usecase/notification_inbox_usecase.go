@@ -27,13 +27,13 @@ func NewNotificationInboxUsecase(
 	}
 }
 
-func (uc *notificationInboxUsecase) ListInbox(ctx context.Context, accountID uuid.UUID, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.UserNotificationInbox, int64, error) {
+func (uc *notificationInboxUsecase) ListInbox(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserNotificationInbox, int64, error) {
 	if q.Preload == nil {
 		q.Preload = []string{"NotificationHistory"}
 	} else {
 		q.Preload = append(q.Preload, "NotificationHistory")
 	}
-	return uc.inboxRepo.ListByAccount(ctx, accountID, category, q)
+	return uc.inboxRepo.ListByAccount(ctx, accountID, q)
 }
 
 func (uc *notificationInboxUsecase) GetUnreadCount(ctx context.Context, accountID uuid.UUID) (int64, error) {

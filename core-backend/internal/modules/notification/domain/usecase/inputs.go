@@ -11,7 +11,7 @@ type CreateTemplateInput struct {
 	Name             string                      `json:"name"`
 	Description      *string                     `json:"description,omitempty"`
 	NotificationType entity.NotificationType     `json:"notificationType"`
-	Category         entity.NotificationCategory `json:"category"`
+	TemplateGroup    string                      `json:"templateGroup"`
 	Priority         entity.NotificationPriority `json:"priority"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent"`
 	VariablesSchema  *map[string]interface{}     `json:"variablesSchema,omitempty"`

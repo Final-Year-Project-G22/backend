@@ -41,12 +41,13 @@ type CategoryNode struct {
 }
 
 type GuideCard struct {
-	ID          uuid.UUID `json:"id"`
-	Slug        string    `json:"slug"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	Icon        *string   `json:"icon,omitempty"`
-	CategoryID  uuid.UUID `json:"categoryId"`
+	ID          uuid.UUID   `json:"id"`
+	Slug        string      `json:"slug"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	SectorIDs   []uuid.UUID `json:"sectorIds"`
+	TagIDs      []uuid.UUID `json:"tagIds"`
 }
 
 type PersonalizedGuide struct {

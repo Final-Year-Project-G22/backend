@@ -13,7 +13,7 @@ import (
 type DiscussionThreadRepository interface {
 	sharedrepo.GenericRepository[entity.DiscussionThread]
 
-	GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, parentThreadID *uuid.UUID) (*entity.DiscussionThread, error)
+	GetBySlug(ctx context.Context, slug string, parentThreadID *uuid.UUID) (*entity.DiscussionThread, error)
 	ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
 	Search(ctx context.Context, keyword string, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
 	IncrementViews(ctx context.Context, threadID uuid.UUID) error

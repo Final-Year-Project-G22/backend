@@ -37,9 +37,6 @@ func NewDiscussionThreadUsecase(
 }
 
 func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uuid.UUID, input usecase.CreateThreadInput) (*entity.DiscussionThread, *entity.DiscussionPost, error) {
-	if input.CategoryID == uuid.Nil {
-		return nil, nil, apperrors.RequiredFieldError("categoryId")
-	}
 	if strings.TrimSpace(input.Title) == "" {
 		return nil, nil, apperrors.RequiredFieldError("title")
 	}
@@ -48,14 +45,6 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 	}
 	if strings.TrimSpace(input.InitialPostContent) == "" {
 		return nil, nil, apperrors.RequiredFieldError("initialPostContent")
-	}
-
-	category, err := u.catRepo.GetByID(ctx, input.CategoryID)
-	if err != nil {
-		return nil, nil, err
-	}
-	if !category.IsActive {
-		return nil, nil, apperrors.InvalidInputError("categoryId", "community.errors.categoryInactive")
 	}
 
 	if input.ParentThreadID != nil {
@@ -71,7 +60,7 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 		}
 	}
 
-	existing, err := u.threadRepo.GetBySlug(ctx, input.CategoryID, input.Slug, input.ParentThreadID)
+	existing, err := u.threadRepo.GetBySlug(ctx, input.Slug, input.ParentThreadID)
 	if err != nil && err != communityerror.ErrThreadNotFound {
 		return nil, nil, err
 	}
@@ -84,7 +73,8 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 	now := time.Now().UTC()
 	if err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		thread = &entity.DiscussionThread{
-			CategoryID:      input.CategoryID,
+			SectorIDs:       input.SectorIDs,
+			TagIDs:          input.TagIDs,
 			ParentThreadID:  input.ParentThreadID,
 			AuthorAccountID: accountID,
 			Title:           strings.TrimSpace(input.Title),

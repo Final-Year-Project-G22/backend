@@ -33,9 +33,9 @@ func (r *discussionThreadRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *discussionThreadRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, parentThreadID *uuid.UUID) (*entity.DiscussionThread, error) {
+func (r *discussionThreadRepository) GetBySlug(ctx context.Context, slug string, parentThreadID *uuid.UUID) (*entity.DiscussionThread, error) {
 	var thread entity.DiscussionThread
-	db := r.getDB(ctx).Where("category_id = ? AND slug = ?", categoryID, slug)
+	db := r.getDB(ctx).Where("slug = ?", slug)
 	if parentThreadID != nil {
 		db = db.Where("parent_thread_id = ?", parentThreadID)
 	} else {

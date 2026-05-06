@@ -145,7 +145,8 @@ type SetCategoryTranslationsResponseBody struct {
 // --- Guide ---
 
 type CreateGuideRequest struct {
-	CategoryID   uuid.UUID                `json:"categoryId" doc:"Parent category ID"`
+	SectorIDs    []uuid.UUID              `json:"sectorIds" doc:"Target sector IDs"`
+	TagIDs       []uuid.UUID              `json:"tagIds" doc:"Target tag IDs"`
 	Slug         string                   `json:"slug" doc:"Guide slug" minLength:"1" maxLength:"100"`
 	Icon         *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
 	SortOrder    int                      `json:"sortOrder" doc:"Display order"`
@@ -179,7 +180,8 @@ type CreateGuideResponseBody struct {
 }
 
 type UpdateGuideRequest struct {
-	CategoryID   *uuid.UUID               `json:"categoryId,omitempty" doc:"Parent category ID"`
+	SectorIDs    []uuid.UUID              `json:"sectorIds,omitempty" doc:"Target sector IDs"`
+	TagIDs       []uuid.UUID              `json:"tagIds,omitempty" doc:"Target tag IDs"`
 	Slug         *string                  `json:"slug,omitempty" doc:"Guide slug" maxLength:"100"`
 	Icon         *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
 	SortOrder    *int                     `json:"sortOrder,omitempty" doc:"Display order"`
@@ -628,13 +630,14 @@ type AdminCategoryDTO struct {
 }
 
 type AdminGuideCardDTO struct {
-	ID          uuid.UUID `json:"id"`
-	Slug        string    `json:"slug"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description,omitempty"`
-	Icon        *string   `json:"icon,omitempty"`
-	CategoryID  uuid.UUID `json:"categoryId"`
-	SortOrder   int       `json:"sortOrder"`
+	ID          uuid.UUID   `json:"id"`
+	Slug        string      `json:"slug"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	SectorIDs   []uuid.UUID `json:"sectorIds"`
+	TagIDs      []uuid.UUID `json:"tagIds"`
+	SortOrder   int         `json:"sortOrder"`
 }
 
 type AdminTranslationDTO struct {
@@ -653,7 +656,8 @@ type AdminConditionDTO struct {
 
 type AdminGuideDetailDTO struct {
 	ID           uuid.UUID             `json:"id"`
-	CategoryID   uuid.UUID             `json:"categoryId"`
+	SectorIDs    []uuid.UUID           `json:"sectorIds"`
+	TagIDs       []uuid.UUID           `json:"tagIds"`
 	Slug         string                `json:"slug"`
 	Icon         *string               `json:"icon,omitempty"`
 	SortOrder    int                   `json:"sortOrder"`
@@ -760,7 +764,8 @@ func ToCreateGuideInput(body CreateGuideRequest) usecase.CreateGuideInput {
 		})
 	}
 	return usecase.CreateGuideInput{
-		CategoryID:   body.CategoryID,
+		SectorIDs:    body.SectorIDs,
+		TagIDs:       body.TagIDs,
 		Slug:         body.Slug,
 		Icon:         body.Icon,
 		SortOrder:    body.SortOrder,
@@ -788,7 +793,8 @@ func ToUpdateGuideInput(body UpdateGuideRequest) usecase.UpdateGuideInput {
 		})
 	}
 	return usecase.UpdateGuideInput{
-		CategoryID:   body.CategoryID,
+		SectorIDs:    body.SectorIDs,
+		TagIDs:       body.TagIDs,
 		Slug:         body.Slug,
 		Icon:         body.Icon,
 		SortOrder:    body.SortOrder,
@@ -937,7 +943,8 @@ func ToAdminGuideCardDTO(guide *entity.Guide) AdminGuideCardDTO {
 		Name:        name,
 		Description: description,
 		Icon:        guide.Icon,
-		CategoryID:  guide.CategoryID,
+		SectorIDs:   guide.SectorIDs,
+		TagIDs:      guide.TagIDs,
 		SortOrder:   guide.SortOrder,
 	}
 }
@@ -965,7 +972,8 @@ func ToAdminGuideDetailDTO(guide *entity.Guide) AdminGuideDetailDTO {
 
 	return AdminGuideDetailDTO{
 		ID:           guide.ID,
-		CategoryID:   guide.CategoryID,
+		SectorIDs:    guide.SectorIDs,
+		TagIDs:       guide.TagIDs,
 		Slug:         guide.Slug,
 		Icon:         guide.Icon,
 		SortOrder:    guide.SortOrder,

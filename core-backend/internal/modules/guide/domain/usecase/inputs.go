@@ -38,7 +38,8 @@ type UpdateCategoryInput struct {
 }
 
 type CreateGuideInput struct {
-	CategoryID   uuid.UUID          `json:"categoryId"`
+	SectorIDs    []uuid.UUID        `json:"sectorIds"`
+	TagIDs       []uuid.UUID        `json:"tagIds"`
 	Slug         string             `json:"slug"`
 	Icon         *string            `json:"icon,omitempty"`
 	SortOrder    int                `json:"sortOrder"`
@@ -47,7 +48,8 @@ type CreateGuideInput struct {
 }
 
 type UpdateGuideInput struct {
-	CategoryID   *uuid.UUID         `json:"categoryId,omitempty"`
+	SectorIDs    []uuid.UUID        `json:"sectorIds,omitempty"`
+	TagIDs       []uuid.UUID        `json:"tagIds,omitempty"`
 	Slug         *string            `json:"slug,omitempty"`
 	Icon         *string            `json:"icon,omitempty"`
 	SortOrder    *int               `json:"sortOrder,omitempty"`

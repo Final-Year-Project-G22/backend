@@ -15,7 +15,7 @@ type CreateTemplateRequest struct {
 	Name             string                      `json:"name" doc:"Template name" minLength:"1" maxLength:"200"`
 	Description      *string                     `json:"description,omitempty" doc:"Template description"`
 	NotificationType entity.NotificationType     `json:"notificationType" doc:"Notification type"`
-	Category         entity.NotificationCategory `json:"category" doc:"Notification category"`
+	TemplateGroup    string                      `json:"templateGroup" doc:"Template group"`
 	Priority         entity.NotificationPriority `json:"priority" doc:"Default priority"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent" doc:"Multi-channel content"`
 	VariablesSchema  *map[string]interface{}     `json:"variablesSchema,omitempty" doc:"Template variable schema"`
@@ -49,7 +49,7 @@ type TemplateDetailResponse struct {
 	Name             string                      `json:"name" doc:"Template name"`
 	Description      *string                     `json:"description,omitempty" doc:"Template description"`
 	NotificationType entity.NotificationType     `json:"notificationType" doc:"Notification type"`
-	Category         entity.NotificationCategory `json:"category" doc:"Notification category"`
+	TemplateGroup    string                      `json:"templateGroup" doc:"Template group"`
 	Priority         entity.NotificationPriority `json:"priority" doc:"Default priority"`
 	IsSystemManaged  bool                        `json:"isSystemManaged" doc:"Whether template is system-managed"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent" doc:"Multi-channel content"`
@@ -79,11 +79,11 @@ type ListTemplatesResponseBody struct {
 }
 
 type TemplateSummaryResponse struct {
-	ID               uuid.UUID                   `json:"id" doc:"Template ID"`
-	Name             string                      `json:"name" doc:"Template name"`
-	NotificationType entity.NotificationType     `json:"notificationType" doc:"Notification type"`
-	Category         entity.NotificationCategory `json:"category" doc:"Notification category"`
-	IsSystemManaged  bool                        `json:"isSystemManaged" doc:"Whether template is system-managed"`
+	ID               uuid.UUID               `json:"id" doc:"Template ID"`
+	Name             string                  `json:"name" doc:"Template name"`
+	NotificationType entity.NotificationType `json:"notificationType" doc:"Notification type"`
+	TemplateGroup    string                  `json:"templateGroup" doc:"Template group"`
+	IsSystemManaged  bool                    `json:"isSystemManaged" doc:"Whether template is system-managed"`
 }
 
 // --- Update Template ---
@@ -219,7 +219,7 @@ func ToCreateTemplateInput(body CreateTemplateRequest) usecase.CreateTemplateInp
 		Name:             body.Name,
 		Description:      body.Description,
 		NotificationType: body.NotificationType,
-		Category:         body.Category,
+		TemplateGroup:    body.TemplateGroup,
 		Priority:         body.Priority,
 		DefaultContent:   body.DefaultContent,
 		VariablesSchema:  body.VariablesSchema,
@@ -270,7 +270,7 @@ func ToTemplateDetailResponse(tmpl *entity.NotificationTemplate, translations []
 		Name:             tmpl.Name,
 		Description:      tmpl.Description,
 		NotificationType: tmpl.NotificationType,
-		Category:         tmpl.Category,
+		TemplateGroup:    tmpl.TemplateGroup,
 		Priority:         tmpl.Priority,
 		IsSystemManaged:  tmpl.IsSystemManaged,
 		DefaultContent:   tmpl.DefaultContent,

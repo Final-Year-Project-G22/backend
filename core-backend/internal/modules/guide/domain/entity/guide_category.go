@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO: remove when category endpoints are removed.
 type GuideCategory struct {
 	model.BaseModel  `gorm:"embedded"`
 	Slug             string                     `gorm:"type:varchar(200);not null;uniqueIndex:idx_guide_categories_slug_per_parent,priority:2"`
@@ -13,7 +14,6 @@ type GuideCategory struct {
 	ParentCategoryID *uuid.UUID                 `gorm:"type:uuid;uniqueIndex:idx_guide_categories_slug_per_parent,priority:1;index:idx_guide_categories_parent"`
 	ParentCategory   *GuideCategory             `gorm:"foreignKey:ParentCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	ChildCategories  []GuideCategory            `gorm:"foreignKey:ParentCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Guides           []Guide                    `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Conditions       []GuideCategoryCondition   `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Translations     []GuideCategoryTranslation `gorm:"foreignKey:GuideCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

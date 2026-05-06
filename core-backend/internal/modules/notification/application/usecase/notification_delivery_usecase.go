@@ -234,7 +234,6 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 		inbox := &entity.UserNotificationInbox{
 			AccountID:             item.AccountID,
 			NotificationHistoryID: history.ID,
-			Category:              uc.toCategory(item.NotificationType),
 			ActionUrl:             actionUrl,
 			IsRead:                false,
 			IsArchived:            false,
@@ -285,7 +284,6 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 		inbox := &entity.UserNotificationInbox{
 			AccountID:             item.AccountID,
 			NotificationHistoryID: history.ID,
-			Category:              uc.toCategory(item.NotificationType),
 			ActionUrl:             actionUrl,
 			IsRead:                false,
 			IsArchived:            false,
@@ -297,27 +295,6 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 
 		return nil
 	})
-}
-
-func (uc *notificationDeliveryUsecase) toCategory(nt entity.NotificationType) entity.NotificationCategory {
-	switch nt {
-	case entity.NotificationTypeSystemAnnouncement, entity.NotificationTypePolicyUpdate, entity.NotificationTypeWelcomeMessage:
-		return entity.NotificationCategorySystem
-	case entity.NotificationTypeCommunityReply, entity.NotificationTypeCommunitySolution, entity.NotificationTypeCommunityMention:
-		return entity.NotificationCategoryCommunity
-	case entity.NotificationTypeGuideStepCompleted, entity.NotificationTypeGuideDeadline, entity.NotificationTypeGuideUpdate:
-		return entity.NotificationCategoryGuide
-	case entity.NotificationTypeAIQuotaLimit, entity.NotificationTypeAIResponseReady:
-		return entity.NotificationCategoryAI
-	case entity.NotificationTypeAccountAlert, entity.NotificationTypeAccountAlertCritical, entity.NotificationTypeAccountAlertInfo, entity.NotificationTypeAccountVerification, entity.NotificationTypePasswordReset:
-		return entity.NotificationCategorySecurity
-	case entity.NotificationTypePaymentConfirmation:
-		return entity.NotificationCategoryPayment
-	case entity.NotificationTypeCampaign:
-		return entity.NotificationCategoryCampaign
-	default:
-		return entity.NotificationCategorySystem
-	}
 }
 
 func retryBackoff(retryCount int) time.Duration {
