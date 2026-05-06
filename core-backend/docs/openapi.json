@@ -50,6 +50,58 @@
         ],
         "type": "object"
       },
+      "AddCampaignTemplateTranslationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AddCampaignTemplateTranslationRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "content": {
+            "additionalProperties": {},
+            "description": "Multi-channel localized content",
+            "type": "object"
+          },
+          "language": {
+            "description": "Language code",
+            "maxLength": 10,
+            "minLength": 2,
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "content"
+        ],
+        "type": "object"
+      },
+      "AddCampaignTemplateTranslationResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AddCampaignTemplateTranslationResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created translation ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
       "AddCategoryConditionRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1204,6 +1256,29 @@
         ],
         "type": "object"
       },
+      "CampaignCreatedByResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "description": "Account email",
+            "type": "string"
+          },
+          "id": {
+            "description": "Account ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Account name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "type": "object"
+      },
       "CampaignDetailResponse": {
         "additionalProperties": false,
         "properties": {
@@ -1216,6 +1291,14 @@
             "readOnly": true,
             "type": "string"
           },
+          "campaignTemplate": {
+            "$ref": "#/components/schemas/CampaignTemplateInfoResponse",
+            "description": "Campaign template details"
+          },
+          "campaignTemplateId": {
+            "description": "Campaign template ID",
+            "type": "string"
+          },
           "campaignType": {
             "description": "Campaign type",
             "type": "string"
@@ -1226,17 +1309,8 @@
             "type": "string"
           },
           "createdBy": {
-            "description": "Creator account ID",
-            "type": "string"
-          },
-          "customContent": {
-            "additionalProperties": {},
-            "description": "Override multi-channel content",
-            "type": "object"
-          },
-          "customSubject": {
-            "description": "Override email subject",
-            "type": "string"
+            "$ref": "#/components/schemas/CampaignCreatedByResponse",
+            "description": "Creator account info"
           },
           "description": {
             "description": "Campaign description",
@@ -1268,19 +1342,15 @@
             "additionalProperties": {},
             "description": "Segment filters or resolved recipients",
             "type": "object"
-          },
-          "templateId": {
-            "description": "Notification template ID",
-            "type": "string"
           }
         },
         "required": [
           "id",
           "name",
           "campaignType",
-          "templateId",
-          "status",
+          "campaignTemplateId",
           "createdBy",
+          "status",
           "createdAt"
         ],
         "type": "object"
@@ -1331,6 +1401,139 @@
           "status",
           "createdBy",
           "createdAt"
+        ],
+        "type": "object"
+      },
+      "CampaignTemplateDetailResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CampaignTemplateDetailResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation time",
+            "format": "date-time",
+            "type": "string"
+          },
+          "defaultContent": {
+            "additionalProperties": {},
+            "description": "Multi-channel content",
+            "type": "object"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Template ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Template name",
+            "type": "string"
+          },
+          "translations": {
+            "description": "Template translations",
+            "items": {
+              "$ref": "#/components/schemas/CampaignTemplateTranslationResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "defaultContent",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "CampaignTemplateInfoResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "defaultContent": {
+            "additionalProperties": {},
+            "description": "Multi-channel content",
+            "type": "object"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Template ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Template name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "defaultContent"
+        ],
+        "type": "object"
+      },
+      "CampaignTemplateSummaryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "description": "Creation time",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Template ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Template name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "CampaignTemplateTranslationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "additionalProperties": {},
+            "description": "Multi-channel localized content",
+            "type": "object"
+          },
+          "id": {
+            "description": "Translation ID",
+            "type": "string"
+          },
+          "language": {
+            "description": "Language code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "language",
+          "content"
         ],
         "type": "object"
       },
@@ -1903,17 +2106,12 @@
             "readOnly": true,
             "type": "string"
           },
-          "campaignType": {
-            "description": "Campaign type (broadcast or segmented)",
+          "campaignTemplateId": {
+            "description": "Campaign template ID",
             "type": "string"
           },
-          "customContent": {
-            "additionalProperties": {},
-            "description": "Override multi-channel content",
-            "type": "object"
-          },
-          "customSubject": {
-            "description": "Override email subject",
+          "campaignType": {
+            "description": "Campaign type (broadcast or segmented)",
             "type": "string"
           },
           "description": {
@@ -1935,16 +2133,12 @@
             "additionalProperties": {},
             "description": "Segment filters for segmented campaigns",
             "type": "object"
-          },
-          "templateId": {
-            "description": "Notification template ID",
-            "type": "string"
           }
         },
         "required": [
           "name",
           "campaignType",
-          "templateId"
+          "campaignTemplateId"
         ],
         "type": "object"
       },
@@ -1962,6 +2156,62 @@
           },
           "id": {
             "description": "Created campaign ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "CreateCampaignTemplateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateCampaignTemplateRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "defaultContent": {
+            "additionalProperties": {},
+            "description": "Multi-channel content (in_app, email, push, sms)",
+            "type": "object"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "name": {
+            "description": "Template name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "defaultContent"
+        ],
+        "type": "object"
+      },
+      "CreateCampaignTemplateResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateCampaignTemplateResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created template ID",
             "type": "string"
           }
         },
@@ -3069,6 +3319,50 @@
           "status",
           "createdAt",
           "replayCount"
+        ],
+        "type": "object"
+      },
+      "DeleteCampaignTemplateResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteCampaignTemplateResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeleteCampaignTemplateTranslationResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteCampaignTemplateTranslationResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       },
@@ -5026,6 +5320,58 @@
         },
         "required": [
           "bookmarks"
+        ],
+        "type": "object"
+      },
+      "ListCampaignTemplatesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListCampaignTemplatesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Template list",
+            "items": {
+              "$ref": "#/components/schemas/CampaignTemplateSummaryResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Items per page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
         ],
         "type": "object"
       },
@@ -8904,15 +9250,6 @@
             "readOnly": true,
             "type": "string"
           },
-          "customContent": {
-            "additionalProperties": {},
-            "description": "Override multi-channel content",
-            "type": "object"
-          },
-          "customSubject": {
-            "description": "Override email subject",
-            "type": "string"
-          },
           "description": {
             "description": "Campaign description",
             "type": "string"
@@ -8942,6 +9279,99 @@
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
               "https://example.com/schemas/UpdateCampaignResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "UpdateCampaignTemplateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateCampaignTemplateRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "defaultContent": {
+            "additionalProperties": {},
+            "description": "Multi-channel content",
+            "type": "object"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "name": {
+            "description": "Template name",
+            "maxLength": 200,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateCampaignTemplateResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateCampaignTemplateResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "UpdateCampaignTemplateTranslationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateCampaignTemplateTranslationRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "content": {
+            "additionalProperties": {},
+            "description": "Multi-channel localized content",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateCampaignTemplateTranslationResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateCampaignTemplateTranslationResponseBody.json"
             ],
             "format": "uri",
             "readOnly": true,
@@ -14859,6 +15289,450 @@
         "summary": "Create interactive form",
         "tags": [
           "Admin - Library"
+        ]
+      }
+    },
+    "/api/v1/admin/notifications/campaign-templates": {
+      "get": {
+        "description": "Lists all campaign templates.",
+        "operationId": "listCampaignTemplates",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCampaignTemplatesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List campaign templates",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      },
+      "post": {
+        "description": "Creates a new campaign template.",
+        "operationId": "createCampaignTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCampaignTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCampaignTemplateResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create campaign template",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      }
+    },
+    "/api/v1/admin/notifications/campaign-templates/{id}": {
+      "delete": {
+        "description": "Deletes a campaign template.",
+        "operationId": "deleteCampaignTemplate",
+        "parameters": [
+          {
+            "description": "Campaign template ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Campaign template ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCampaignTemplateResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete campaign template",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      },
+      "get": {
+        "description": "Gets a campaign template with its translations.",
+        "operationId": "getCampaignTemplate",
+        "parameters": [
+          {
+            "description": "Campaign template ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Campaign template ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignTemplateDetailResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get campaign template",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      },
+      "patch": {
+        "description": "Updates a campaign template.",
+        "operationId": "updateCampaignTemplate",
+        "parameters": [
+          {
+            "description": "Campaign template ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Campaign template ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCampaignTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCampaignTemplateResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update campaign template",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      }
+    },
+    "/api/v1/admin/notifications/campaign-templates/{id}/translations": {
+      "post": {
+        "description": "Adds a translation to a campaign template.",
+        "operationId": "addCampaignTemplateTranslation",
+        "parameters": [
+          {
+            "description": "Campaign template ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Campaign template ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCampaignTemplateTranslationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddCampaignTemplateTranslationResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Add campaign template translation",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      }
+    },
+    "/api/v1/admin/notifications/campaign-templates/{id}/translations/{lang}": {
+      "delete": {
+        "description": "Deletes a translation from a campaign template.",
+        "operationId": "deleteCampaignTemplateTranslation",
+        "parameters": [
+          {
+            "description": "Campaign template ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Campaign template ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language code",
+            "in": "path",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "Language code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteCampaignTemplateTranslationResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete campaign template translation",
+        "tags": [
+          "Admin - Campaign Templates"
+        ]
+      },
+      "patch": {
+        "description": "Updates an existing translation for a campaign template.",
+        "operationId": "updateCampaignTemplateTranslation",
+        "parameters": [
+          {
+            "description": "Campaign template ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Campaign template ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language code",
+            "in": "path",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "Language code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCampaignTemplateTranslationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCampaignTemplateTranslationResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update campaign template translation",
+        "tags": [
+          "Admin - Campaign Templates"
         ]
       }
     },

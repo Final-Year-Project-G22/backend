@@ -180,11 +180,11 @@ func (h *NotificationAdminHandler) HandleCreateCampaign(ctx context.Context, inp
 }
 
 func (h *NotificationAdminHandler) HandleGetCampaign(ctx context.Context, input *dto.GetCampaignInput) (*dto.GetCampaignOutput, error) {
-	campaign, err := h.campaignUC.GetCampaign(ctx, input.ID)
+	detail, err := h.campaignUC.GetCampaign(ctx, input.ID)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.GetCampaignOutput{Body: dto.ToCampaignDetailResponse(campaign)}, nil
+	return &dto.GetCampaignOutput{Body: dto.ToCampaignDetailResponse(detail)}, nil
 }
 
 func (h *NotificationAdminHandler) HandleListCampaigns(ctx context.Context, input *dto.ListCampaignsInput) (*dto.ListCampaignsOutput, error) {
@@ -194,7 +194,7 @@ func (h *NotificationAdminHandler) HandleListCampaigns(ctx context.Context, inpu
 		s := input.Status
 		statusFilter = &s
 	}
-	items, err := h.campaignUC.ListCampaigns(ctx, statusFilter, q)
+	items, total, err := h.campaignUC.ListCampaigns(ctx, statusFilter, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -206,10 +206,10 @@ func (h *NotificationAdminHandler) HandleListCampaigns(ctx context.Context, inpu
 	if pageSize <= 0 {
 		pageSize = 20
 	}
-	totalPages := int((int64(len(data)) + int64(pageSize) - 1) / int64(pageSize))
+	totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
 	return &dto.ListCampaignsOutput{Body: dto.ListCampaignsResponseBody{
 		Data:       data,
-		Total:      int64(len(data)),
+		Total:      total,
 		Page:       q.Page,
 		PageSize:   pageSize,
 		TotalPages: totalPages,

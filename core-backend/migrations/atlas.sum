@@ -1,4 +1,4 @@
-h1:xzeshWG435D/yt0CmWbiqP1H0x4R8xrytVDLTYKQsWo=
+h1:/9GMWUz50Nijw6Ll3GF5GEXyos4m9cJ2LKskQWkxQ2s=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -21,3 +21,4 @@ h1:xzeshWG435D/yt0CmWbiqP1H0x4R8xrytVDLTYKQsWo=
 20260504131003_updateOnGuideStep.sql h1:9tMzrdlriQQuKmFJ8MXPUXnydE1WhzfkGV7N9jTse9o=
 20260504202038_attachment_table.sql h1:Uhf2wPk06z84pFCVQ7TXrU98KUWKH0Kiqz0PlEr8XUY=
 20260505122034_updateOnAccountEmailOtp.sql h1:k0Iv6OrBYQARw/+hK+hAiRtJ5htbumU0rFKrPjLoGjI=
+20260506005502_Campaign_table_and_translation.sql h1:4Shw/AdroARrinOX/FQG9xfAA1Jox0XU9DxI14yUP/0=

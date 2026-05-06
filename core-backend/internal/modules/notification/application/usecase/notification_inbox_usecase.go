@@ -27,7 +27,7 @@ func NewNotificationInboxUsecase(
 	}
 }
 
-func (uc *notificationInboxUsecase) ListInbox(ctx context.Context, accountID uuid.UUID, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.UserNotificationInbox, error) {
+func (uc *notificationInboxUsecase) ListInbox(ctx context.Context, accountID uuid.UUID, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.UserNotificationInbox, int64, error) {
 	if q.Preload == nil {
 		q.Preload = []string{"NotificationHistory"}
 	} else {

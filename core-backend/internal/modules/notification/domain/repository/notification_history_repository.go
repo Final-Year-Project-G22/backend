@@ -13,7 +13,7 @@ import (
 type NotificationHistoryRepository interface {
 	sharedrepo.GenericRepository[entity.NotificationHistory]
 
-	ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, error)
+	ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, int64, error)
 	UpdateDeliveryStatus(ctx context.Context, id uuid.UUID, status entity.DeliveryStatus, deliveredAt *time.Time) error
 	MarkRead(ctx context.Context, id uuid.UUID) error
 	MarkClicked(ctx context.Context, id uuid.UUID) error
