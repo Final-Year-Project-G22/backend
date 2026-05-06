@@ -10,7 +10,7 @@ import (
 )
 
 type GuideViewUseCase interface {
-	GetCategoryTree(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*CategoryNode, error)
+	ListGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 	SearchGuides(ctx context.Context, accountID, userID uuid.UUID, keyword string, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 	GetRecentlyViewed(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 

@@ -48,13 +48,7 @@ func (u *guideAdminUsecase) ListCategoriesTree(ctx context.Context, includeInact
 	return u.catRepo.ListTree(ctx, includeInactive, locale)
 }
 
-func (u *guideAdminUsecase) ListGuides(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.Guide], error) {
-	if categoryID != nil {
-		if q.Filters == nil {
-			q.Filters = make(map[string]interface{})
-		}
-		q.Filters["category_id"] = *categoryID
-	}
+func (u *guideAdminUsecase) ListGuides(ctx context.Context, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.Guide], error) {
 	if q.Preload == nil {
 		q.Preload = []string{"Translations"}
 	}

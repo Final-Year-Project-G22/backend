@@ -571,8 +571,7 @@ type GuideCategoryTreeAdminResponseBody struct {
 
 type ListGuidesAdminInput struct {
 	AdminPaginationQuery
-	CategoryID string           `query:"categoryId" doc:"Category ID filter (UUID)"`
-	Locale     constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	Locale constants.Locale `query:"locale" doc:"Language locale (en, am)"`
 }
 
 type ListGuidesAdminOutput struct {

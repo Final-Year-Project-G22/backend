@@ -14,6 +14,7 @@ import (
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
+	iamrepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	sharedRepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
@@ -23,69 +24,62 @@ import (
 )
 
 type guideViewUsecase struct {
-	catRepo      repository.CategoryRepository
 	guideRepo    repository.GuideRepository
 	stepRepo     repository.StepRepository
 	progressRepo repository.ProgressRepository
+	profileRepo  iamrepository.BusinessProfileRepository
 	transactor   sharedRepo.Transactor
 	logger       core.Logger
 }
 
 func NewGuideViewUsecase(
-	catRepo repository.CategoryRepository,
 	guideRepo repository.GuideRepository,
 	stepRepo repository.StepRepository,
 	progressRepo repository.ProgressRepository,
+	profileRepo iamrepository.BusinessProfileRepository,
 	transactor sharedRepo.Transactor,
 	logger core.Logger,
 ) usecase.GuideViewUseCase {
 	return &guideViewUsecase{
-		catRepo:      catRepo,
 		guideRepo:    guideRepo,
 		stepRepo:     stepRepo,
 		progressRepo: progressRepo,
+		profileRepo:  profileRepo,
 		transactor:   transactor,
 		logger:       logger,
 	}
 }
 
-func (s *guideViewUsecase) GetCategoryTree(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*usecase.CategoryNode, error) {
-	categories, err := s.catRepo.ListTree(ctx, false, locale)
+func (s *guideViewUsecase) ListGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*usecase.GuideCard, error) {
+	// Fetch user's business profile for taxonomy filtering
+	profile, err := s.profileRepo.GetByAccountID(ctx, accountID)
+	if err != nil {
+		s.logger.Error("Failed to get business profile for guide filtering", core.Error(err))
+		// If profile not found, return all guides (no restriction)
+	}
+
+	var sectorIDs, tagIDs []uuid.UUID
+	if profile != nil {
+		// Build sector filter: include profile's sector and its ancestors
+		if profile.SectorID != nil {
+			sectorIDs = append(sectorIDs, *profile.SectorID)
+		}
+		// TODO: include ancestor sectors from sector repository when subtree lookup is available
+		for _, tag := range profile.Tags {
+			tagIDs = append(tagIDs, tag.ID)
+		}
+	}
+
+	guides, err := s.guideRepo.ListByTaxonomy(ctx, sectorIDs, tagIDs, q, locale)
 	if err != nil {
 		return nil, err
 	}
 
-	nodeMap := make(map[uuid.UUID]*usecase.CategoryNode)
-	var roots []*usecase.CategoryNode
-
-	for _, cat := range categories {
-		node := s.toCategoryNode(cat, locale)
-		nodeMap[cat.ID] = node
-		if cat.ParentCategoryID == nil {
-			roots = append(roots, node)
-		}
+	cards := make([]*usecase.GuideCard, len(guides))
+	for i, g := range guides {
+		cards[i] = s.toGuideCard(g)
 	}
-
-	for _, cat := range categories {
-		if cat.ParentCategoryID != nil {
-			if parent, ok := nodeMap[*cat.ParentCategoryID]; ok {
-				parent.Children = append(parent.Children, nodeMap[cat.ID])
-			}
-		}
-	}
-
-	for _, root := range roots {
-		guides, err := s.guideRepo.ListByCategory(ctx, root.ID, query.QueryOptions{PageSize: 50}, locale)
-		if err != nil {
-			s.logger.Error("Failed to list guides for category", core.Error(err), core.String("categoryId", root.ID.String()))
-			continue
-		}
-		for _, g := range guides {
-			root.Guides = append(root.Guides, s.toGuideCard(g))
-		}
-	}
-
-	return roots, nil
+	return cards, nil
 }
 
 func (s *guideViewUsecase) SearchGuides(ctx context.Context, accountID, userID uuid.UUID, keyword string, q query.QueryOptions, locale constants.Locale) ([]*usecase.GuideCard, error) {
@@ -446,24 +440,6 @@ func (s *guideViewUsecase) ListBookmarks(ctx context.Context, accountID, userID 
 		}
 	}
 	return result, nil
-}
-
-func (s *guideViewUsecase) toCategoryNode(cat *entity.GuideCategory, locale constants.Locale) *usecase.CategoryNode {
-	name := cat.Slug
-	var desc *string
-	if len(cat.Translations) > 0 {
-		t := cat.Translations[0]
-		name = t.Name
-		desc = t.Description
-	}
-	return &usecase.CategoryNode{
-		ID:          cat.ID,
-		Slug:        cat.Slug,
-		Name:        name,
-		Description: desc,
-		Icon:        cat.Icon,
-		SortOrder:   cat.SortOrder,
-	}
 }
 
 func (s *guideViewUsecase) toGuideCard(g *entity.Guide) *usecase.GuideCard {

@@ -8,7 +8,6 @@ import (
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
-	"github.com/google/uuid"
 )
 
 type GuideAdminHandler struct {
@@ -62,16 +61,8 @@ func (h *GuideAdminHandler) HandleGetCategoryTreeAdmin(ctx context.Context, inpu
 }
 
 func (h *GuideAdminHandler) HandleListGuides(ctx context.Context, input *dto.ListGuidesAdminInput) (*dto.ListGuidesAdminOutput, error) {
-	var categoryID *uuid.UUID
-	if input.CategoryID != "" {
-		parsed, err := uuid.Parse(input.CategoryID)
-		if err != nil {
-			return nil, apperrors.BadRequestError("guides.errors.invalidCategoryId")
-		}
-		categoryID = &parsed
-	}
 	q := dto.ToAdminQueryOptions(input.AdminPaginationQuery)
-	result, err := h.guideAdminUC.ListGuides(ctx, categoryID, q)
+	result, err := h.guideAdminUC.ListGuides(ctx, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

@@ -8,27 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type GetCategoryTreeInput struct {
-	Locale constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+type ListGuidesInput struct {
+	Page     int              `query:"page" doc:"Page number"`
+	PageSize int              `query:"pageSize" doc:"Items per page"`
+	Locale   constants.Locale `query:"locale" doc:"Language locale (en, am)"`
 }
 
-type GetCategoryTreeOutput struct {
-	Body GetCategoryTreeResponseBody
+type ListGuidesOutput struct {
+	Body ListGuidesResponseBody
 }
 
-type GetCategoryTreeResponseBody struct {
-	Categories []*CategoryNodeDTO `json:"categories"`
-}
-
-type CategoryNodeDTO struct {
-	ID          uuid.UUID          `json:"id" doc:"Category ID"`
-	Slug        string             `json:"slug" doc:"Category slug"`
-	Name        string             `json:"name" doc:"Localized category name"`
-	Description *string            `json:"description,omitempty" doc:"Localized description"`
-	Icon        *string            `json:"icon,omitempty" doc:"Icon identifier"`
-	SortOrder   int                `json:"sortOrder" doc:"Display order"`
-	Children    []*CategoryNodeDTO `json:"children,omitempty" doc:"Nested subcategories"`
-	Guides      []*GuideCardDTO    `json:"guides,omitempty" doc:"Guides in this category"`
+type ListGuidesResponseBody struct {
+	Guides []*GuideCardDTO `json:"guides"`
 }
 
 type GuideCardDTO struct {
@@ -264,30 +255,6 @@ type BookmarkWithStepDTO struct {
 	StepTitle string    `json:"stepTitle" doc:"Step title"`
 	GuideName string    `json:"guideName" doc:"Guide name"`
 	CreatedAt string    `json:"createdAt" doc:"Creation timestamp"`
-}
-
-func ToCategoryNodeDTO(node *usecase.CategoryNode) *CategoryNodeDTO {
-	if node == nil {
-		return nil
-	}
-	children := make([]*CategoryNodeDTO, 0, len(node.Children))
-	for _, child := range node.Children {
-		children = append(children, ToCategoryNodeDTO(child))
-	}
-	guides := make([]*GuideCardDTO, 0, len(node.Guides))
-	for _, guide := range node.Guides {
-		guides = append(guides, ToGuideCardDTO(guide))
-	}
-	return &CategoryNodeDTO{
-		ID:          node.ID,
-		Slug:        node.Slug,
-		Name:        node.Name,
-		Description: node.Description,
-		Icon:        node.Icon,
-		SortOrder:   node.SortOrder,
-		Children:    children,
-		Guides:      guides,
-	}
 }
 
 func ToGuideCardDTO(card *usecase.GuideCard) *GuideCardDTO {

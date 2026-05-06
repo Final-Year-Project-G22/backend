@@ -12,7 +12,7 @@ import (
 
 type GuideManagementUseCase interface {
 	ListCategoriesTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error)
-	ListGuides(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.Guide], error)
+	ListGuides(ctx context.Context, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.Guide], error)
 	GetGuideDetail(ctx context.Context, guideID uuid.UUID, locale constants.Locale) (*entity.Guide, error)
 	ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.GuideStep], error)
 
