@@ -10,7 +10,7 @@ import (
 )
 
 type NotificationHistoryUsecase interface {
-	ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, error)
+	ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, int64, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*entity.NotificationHistory, error)
 	MarkRead(ctx context.Context, id uuid.UUID) error
 	MarkClicked(ctx context.Context, id uuid.UUID) error

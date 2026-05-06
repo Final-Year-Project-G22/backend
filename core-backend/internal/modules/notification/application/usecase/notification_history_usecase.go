@@ -23,7 +23,7 @@ func NewNotificationHistoryUsecase(
 	}
 }
 
-func (uc *notificationHistoryUsecase) ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, error) {
+func (uc *notificationHistoryUsecase) ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, int64, error) {
 	return uc.historyRepo.ListByAccount(ctx, accountID, q)
 }
 

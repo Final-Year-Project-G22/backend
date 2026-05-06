@@ -44,17 +44,17 @@ func (h *NotificationHandler) HandleListInbox(ctx context.Context, input *dto.Li
 		cat := entity.NotificationCategory(input.Category)
 		category = &cat
 	}
-	inboxes, err := h.inboxUC.ListInbox(ctx, accountID, category, q)
+	inboxes, total, err := h.inboxUC.ListInbox(ctx, accountID, category, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	data := dto.ToInboxEntryResponses(inboxes)
 	return &dto.ListInboxOutput{Body: dto.ListInboxResponseBody{
 		Data:       data,
-		Total:      int64(len(data)),
+		Total:      total,
 		Page:       q.Page,
 		PageSize:   q.PageSize,
-		TotalPages: calcTotalPages(len(data), q.PageSize),
+		TotalPages: calcTotalPages(int(total), q.PageSize),
 	}}, nil
 }
 
@@ -112,17 +112,17 @@ func (h *NotificationHandler) HandleDeleteNotification(ctx context.Context, inpu
 func (h *NotificationHandler) HandleListHistory(ctx context.Context, input *dto.ListHistoryInput) (*dto.ListHistoryOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	histories, err := h.historyUC.ListByAccount(ctx, accountID, q)
+	histories, total, err := h.historyUC.ListByAccount(ctx, accountID, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	data := dto.ToHistoryEntryResponses(histories)
 	return &dto.ListHistoryOutput{Body: dto.ListHistoryResponseBody{
 		Data:       data,
-		Total:      int64(len(data)),
+		Total:      total,
 		Page:       q.Page,
 		PageSize:   q.PageSize,
-		TotalPages: calcTotalPages(len(data), q.PageSize),
+		TotalPages: calcTotalPages(int(total), q.PageSize),
 	}}, nil
 }
 

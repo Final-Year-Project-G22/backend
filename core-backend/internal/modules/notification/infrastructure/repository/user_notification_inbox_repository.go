@@ -33,18 +33,25 @@ func (r *userNotificationInboxRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *userNotificationInboxRepository) ListByAccount(ctx context.Context, accountID uuid.UUID, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.UserNotificationInbox, error) {
-	var inbox []*entity.UserNotificationInbox
-	db := r.getDB(ctx).Where("account_id = ? AND is_archived = ? AND (expires_at IS NULL OR expires_at > ?)", accountID, false, time.Now())
+func (r *userNotificationInboxRepository) ListByAccount(ctx context.Context, accountID uuid.UUID, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.UserNotificationInbox, int64, error) {
+	var total int64
+	baseDB := r.getDB(ctx).Where("account_id = ? AND is_archived = ? AND (expires_at IS NULL OR expires_at > ?)", accountID, false, time.Now())
 	if category != nil {
-		db = db.Where("category = ?", *category)
+		baseDB = baseDB.Where("category = ?", *category)
 	}
-	db = applyPaginationAndSorting(db, q, "created_at desc")
+
+	if err := baseDB.Model(&entity.UserNotificationInbox{}).Count(&total).Error; err != nil {
+		r.logger.Error("Failed to count inbox", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+
+	var inbox []*entity.UserNotificationInbox
+	db := applyPaginationAndSorting(baseDB, q, "created_at desc")
 	if err := db.Find(&inbox).Error; err != nil {
 		r.logger.Error("Failed to list inbox", core.Error(err))
-		return nil, errors.InternalError("errors.databaseError", err)
+		return nil, 0, errors.InternalError("errors.databaseError", err)
 	}
-	return inbox, nil
+	return inbox, total, nil
 }
 
 func (r *userNotificationInboxRepository) GetUnreadCount(ctx context.Context, accountID uuid.UUID) (int64, error) {

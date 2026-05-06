@@ -94,27 +94,30 @@ type SendNotificationInput struct {
 }
 
 type CreateCampaignInput struct {
-	Name          string                  `json:"name"`
-	Description   *string                 `json:"description,omitempty"`
-	CampaignType  entity.CampaignType     `json:"campaignType"`
-	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty"`
-	TemplateID    uuid.UUID               `json:"templateId"`
-	CustomSubject *string                 `json:"customSubject,omitempty"`
-	CustomContent *map[string]interface{} `json:"customContent,omitempty"`
-	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty"`
+	Name               string                  `json:"name"`
+	Description        *string                 `json:"description,omitempty"`
+	CampaignType       entity.CampaignType     `json:"campaignType"`
+	TargetSegment      *map[string]interface{} `json:"targetSegment,omitempty"`
+	CampaignTemplateID uuid.UUID               `json:"campaignTemplateId"`
+	ScheduledFor       *time.Time              `json:"scheduledFor,omitempty"`
 }
 
 type UpdateCampaignInput struct {
 	Name          *string                 `json:"name,omitempty"`
 	Description   *string                 `json:"description,omitempty"`
 	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty"`
-	CustomSubject *string                 `json:"customSubject,omitempty"`
-	CustomContent *map[string]interface{} `json:"customContent,omitempty"`
 	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty"`
 }
 
 type ScheduleCampaignInput struct {
 	CampaignID uuid.UUID `json:"campaignId"`
+}
+
+type CampaignDetail struct {
+	Campaign         *entity.NotificationCampaign
+	CampaignTemplate *entity.CampaignTemplate
+	CreatedByName    string
+	CreatedByEmail   string
 }
 
 type ResendWebhookEvent struct {
