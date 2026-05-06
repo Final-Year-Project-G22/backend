@@ -20,32 +20,36 @@ type CreateBusinessProfileInput struct {
 	CompanyName             string
 	CompanyEmail            string
 	CompanyPhoneNumber      string
-	BusinessType            *string
-	BusinessSector          *string
 	RegistrationNumber      *string
 	RegistrationDate        *time.Time
 	TaxIdentificationNumber *string
 	TradeLicenseNumber      *string
-	Location                *string
+	PhysicalAddress         *string
 	Description             *string
 	LogoURL                 *string
 	BannerURL               *string
 	SocialLinks             datatypes.JSONMap
+	SectorID                *uuid.UUID
+	TagIDs                  []uuid.UUID
+	Region                  *entity.Region
+	Stage                   *entity.BusinessStage
 }
 
 type UpdateBusinessProfileInput struct {
 	CompanyName             *string
 	CompanyEmail            *string
 	CompanyPhoneNumber      *string
-	BusinessType            *string
-	BusinessSector          *string
 	RegistrationNumber      *string
 	RegistrationDate        *time.Time
 	TaxIdentificationNumber *string
 	TradeLicenseNumber      *string
-	Location                *string
+	PhysicalAddress         *string
 	Description             *string
 	LogoURL                 *string
 	BannerURL               *string
 	SocialLinks             datatypes.JSONMap
+	SectorID                *uuid.UUID
+	TagIDs                  []uuid.UUID
+	Region                  *entity.Region
+	Stage                   *entity.BusinessStage
 }

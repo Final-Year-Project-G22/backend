@@ -100,6 +100,24 @@ var Module = fx.Module("iam",
 			fx.As(new(repository.NotificationPreferenceRepository)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewBusinessProfileRepository,
+			fx.As(new(repository.BusinessProfileRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewTagRepository,
+			fx.As(new(repository.TagRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewSectorRepository,
+			fx.As(new(repository.SectorRepository)),
+		),
+	),
 
 	// OAuth Infrastructure
 	fx.Provide(fx.Annotate(
@@ -231,6 +249,12 @@ var Module = fx.Module("iam",
 		fx.Annotate(
 			appusecase.NewOAuthIdentityUsecase,
 			fx.As(new(usecase.OAuthIdentityUsecase)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			appusecase.NewBusinessProfileUsecase,
+			fx.As(new(usecase.BusinessProfileUsecase)),
 		),
 	),
 
