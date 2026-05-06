@@ -51,9 +51,20 @@ func (r *discussionThreadRepository) GetBySlug(ctx context.Context, slug string,
 	return &thread, nil
 }
 
-func (r *discussionThreadRepository) ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
+func (r *discussionThreadRepository) ListByTaxonomy(ctx context.Context, sectorIDs []uuid.UUID, tagIDs []uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
 	var threads []*entity.DiscussionThread
-	db := r.getDB(ctx).Where("category_id = ?", categoryID)
+	db := r.getDB(ctx)
+
+	// Apply sector filter: thread.sector_ids overlaps with user's sector_ids
+	if len(sectorIDs) > 0 {
+		db = db.Where("sector_ids && ?", sectorIDs)
+	}
+	// Apply tag filter: thread.tag_ids overlaps with user's tag_ids
+	if len(tagIDs) > 0 {
+		db = db.Where("tag_ids && ?", tagIDs)
+	}
+	// If both are empty, return all threads (no restriction)
+
 	if q.Search != "" {
 		search := "%" + q.Search + "%"
 		db = db.Where("title ILIKE ? OR description ILIKE ? OR slug ILIKE ?", search, search, search)
@@ -63,22 +74,28 @@ func (r *discussionThreadRepository) ListByCategory(ctx context.Context, categor
 	}
 	db = applyPaginationAndSorting(db, q, "last_activity_at desc")
 	if err := db.Find(&threads).Error; err != nil {
-		r.logger.Error("Failed to list threads by category", core.Error(err))
+		r.logger.Error("Failed to list threads by taxonomy", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
 	return threads, nil
 }
 
-func (r *discussionThreadRepository) Search(ctx context.Context, keyword string, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
+func (r *discussionThreadRepository) Search(ctx context.Context, keyword string, sectorIDs []uuid.UUID, tagIDs []uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
 	var threads []*entity.DiscussionThread
 	searchTerm := keyword
 	if searchTerm == "" {
 		searchTerm = q.Search
 	}
 	db := r.getDB(ctx)
-	if categoryID != nil {
-		db = db.Where("category_id = ?", *categoryID)
+
+	// Apply taxonomy filters
+	if len(sectorIDs) > 0 {
+		db = db.Where("sector_ids && ?", sectorIDs)
 	}
+	if len(tagIDs) > 0 {
+		db = db.Where("tag_ids && ?", tagIDs)
+	}
+
 	if searchTerm != "" {
 		search := "%" + searchTerm + "%"
 		db = db.Where("title ILIKE ? OR description ILIKE ? OR slug ILIKE ?", search, search, search)

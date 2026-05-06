@@ -103,33 +103,20 @@ type GetCategoryResponseBody struct {
 	Category *CategoryDTO `json:"category" doc:"Category details"`
 }
 
-type ListThreadsByCategoryInput struct {
-	CategoryID uuid.UUID `path:"id" doc:"Category ID"`
-	Page       int       `query:"page" doc:"Page number"`
-	PageSize   int       `query:"pageSize" doc:"Page size"`
-	Search     string    `query:"search" doc:"Search term"`
-}
-
-type ListThreadsByCategoryOutput struct {
-	Body ListThreadsResponseBody
+type ListThreadsInput struct {
+	Search   string `query:"search" doc:"Search term"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Page size"`
 }
 
 type SearchThreadsInput struct {
-	Keyword    string `query:"keyword" doc:"Search keyword"`
-	CategoryID string `query:"categoryId" doc:"Category ID"`
-	Page       int    `query:"page" doc:"Page number"`
-	PageSize   int    `query:"pageSize" doc:"Page size"`
+	Keyword  string `query:"keyword" doc:"Search keyword"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Page size"`
 }
 
 type SearchThreadsOutput struct {
 	Body ListThreadsResponseBody
-}
-
-type ListThreadsInput struct {
-	CategoryID string `query:"categoryId" doc:"Category ID"`
-	Search     string `query:"search" doc:"Search term"`
-	Page       int    `query:"page" doc:"Page number"`
-	PageSize   int    `query:"pageSize" doc:"Page size"`
 }
 
 type ListThreadsOutput struct {

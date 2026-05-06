@@ -14,8 +14,8 @@ type DiscussionThreadRepository interface {
 	sharedrepo.GenericRepository[entity.DiscussionThread]
 
 	GetBySlug(ctx context.Context, slug string, parentThreadID *uuid.UUID) (*entity.DiscussionThread, error)
-	ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
-	Search(ctx context.Context, keyword string, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
+	ListByTaxonomy(ctx context.Context, sectorIDs []uuid.UUID, tagIDs []uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
+	Search(ctx context.Context, keyword string, sectorIDs []uuid.UUID, tagIDs []uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
 	IncrementViews(ctx context.Context, threadID uuid.UUID) error
 	UpdateLastActivity(ctx context.Context, threadID uuid.UUID, at time.Time) error
 	UpdateReplyCount(ctx context.Context, threadID uuid.UUID, delta int) error

@@ -5,10 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	communityerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
+	iamrepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -16,23 +18,26 @@ import (
 )
 
 type discussionThreadUsecase struct {
-	catRepo    repository.CommunityCategoryRepository
-	threadRepo repository.DiscussionThreadRepository
-	postRepo   repository.DiscussionPostRepository
-	transactor sharedrepo.Transactor
+	threadRepo  repository.DiscussionThreadRepository
+	postRepo    repository.DiscussionPostRepository
+	profileRepo iamrepository.BusinessProfileRepository
+	transactor  sharedrepo.Transactor
+	logger      core.Logger
 }
 
 func NewDiscussionThreadUsecase(
-	catRepo repository.CommunityCategoryRepository,
 	threadRepo repository.DiscussionThreadRepository,
 	postRepo repository.DiscussionPostRepository,
+	profileRepo iamrepository.BusinessProfileRepository,
 	transactor sharedrepo.Transactor,
+	logger core.Logger,
 ) usecase.DiscussionThreadUsecase {
 	return &discussionThreadUsecase{
-		catRepo:    catRepo,
-		threadRepo: threadRepo,
-		postRepo:   postRepo,
-		transactor: transactor,
+		threadRepo:  threadRepo,
+		postRepo:    postRepo,
+		profileRepo: profileRepo,
+		transactor:  transactor,
+		logger:      logger,
 	}
 }
 
@@ -142,12 +147,32 @@ func (u *discussionThreadUsecase) CloseThread(ctx context.Context, accountID, th
 	})
 }
 
-func (u *discussionThreadUsecase) ListThreadsByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
-	return u.threadRepo.ListByCategory(ctx, categoryID, q)
+func (u *discussionThreadUsecase) buildTaxonomyFilter(ctx context.Context, accountID uuid.UUID) (sectorIDs []uuid.UUID, tagIDs []uuid.UUID) {
+	profile, err := u.profileRepo.GetByAccountID(ctx, accountID)
+	if err != nil {
+		u.logger.Error("Failed to get business profile for thread filtering", core.Error(err))
+		return nil, nil
+	}
+	if profile == nil {
+		return nil, nil
+	}
+	if profile.SectorID != nil {
+		sectorIDs = append(sectorIDs, *profile.SectorID)
+	}
+	for _, tag := range profile.Tags {
+		tagIDs = append(tagIDs, tag.ID)
+	}
+	return sectorIDs, tagIDs
 }
 
-func (u *discussionThreadUsecase) SearchThreads(ctx context.Context, keyword string, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
-	return u.threadRepo.Search(ctx, keyword, categoryID, q)
+func (u *discussionThreadUsecase) ListThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
+	sectorIDs, tagIDs := u.buildTaxonomyFilter(ctx, accountID)
+	return u.threadRepo.ListByTaxonomy(ctx, sectorIDs, tagIDs, q)
+}
+
+func (u *discussionThreadUsecase) SearchThreads(ctx context.Context, accountID uuid.UUID, keyword string, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
+	sectorIDs, tagIDs := u.buildTaxonomyFilter(ctx, accountID)
+	return u.threadRepo.Search(ctx, keyword, sectorIDs, tagIDs, q)
 }
 
 func (u *discussionThreadUsecase) GetThread(ctx context.Context, threadID uuid.UUID) (*entity.DiscussionThread, error) {
