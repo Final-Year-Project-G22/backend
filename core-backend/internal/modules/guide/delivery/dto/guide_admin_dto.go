@@ -688,62 +688,6 @@ type AdminGuideStepDTO struct {
 
 // --- Mappers ---
 
-func ToCreateCategoryInput(body CreateCategoryRequest) usecase.CreateCategoryInput {
-	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
-	for _, t := range body.Translations {
-		translations = append(translations, usecase.TranslationInput{
-			Language:    t.Language,
-			Name:        t.Name,
-			Description: t.Description,
-		})
-	}
-	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
-	for _, c := range body.Conditions {
-		conditions = append(conditions, usecase.ConditionInput{
-			ConditionType:  c.ConditionType,
-			Operator:       c.Operator,
-			ConditionValue: c.ConditionValue,
-			IsInverse:      c.IsInverse,
-		})
-	}
-	return usecase.CreateCategoryInput{
-		Slug:         body.Slug,
-		Icon:         body.Icon,
-		SortOrder:    body.SortOrder,
-		ParentID:     body.ParentID,
-		Translations: translations,
-		Conditions:   conditions,
-	}
-}
-
-func ToUpdateCategoryInput(body UpdateCategoryRequest) usecase.UpdateCategoryInput {
-	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
-	for _, t := range body.Translations {
-		translations = append(translations, usecase.TranslationInput{
-			Language:    t.Language,
-			Name:        t.Name,
-			Description: t.Description,
-		})
-	}
-	conditions := make([]usecase.ConditionInput, 0, len(body.Conditions))
-	for _, c := range body.Conditions {
-		conditions = append(conditions, usecase.ConditionInput{
-			ConditionType:  c.ConditionType,
-			Operator:       c.Operator,
-			ConditionValue: c.ConditionValue,
-			IsInverse:      c.IsInverse,
-		})
-	}
-	return usecase.UpdateCategoryInput{
-		Slug:         body.Slug,
-		Icon:         body.Icon,
-		SortOrder:    body.SortOrder,
-		ParentID:     body.ParentID,
-		Translations: translations,
-		Conditions:   conditions,
-	}
-}
-
 func ToCreateGuideInput(body CreateGuideRequest) usecase.CreateGuideInput {
 	translations := make([]usecase.TranslationInput, 0, len(body.Translations))
 	for _, t := range body.Translations {
@@ -909,24 +853,6 @@ func ToAdminQueryOptions(q AdminPaginationQuery) query.QueryOptions {
 	opts.SortBy = q.SortBy
 	opts.SortOrder = q.SortOrder
 	return opts
-}
-
-func ToAdminCategoryDTO(cat *entity.GuideCategory) AdminCategoryDTO {
-	name := ""
-	var description *string
-	if len(cat.Translations) > 0 {
-		name = cat.Translations[0].Name
-		description = cat.Translations[0].Description
-	}
-	return AdminCategoryDTO{
-		ID:          cat.ID,
-		ParentID:    cat.ParentCategoryID,
-		Slug:        cat.Slug,
-		Name:        name,
-		Description: description,
-		Icon:        cat.Icon,
-		SortOrder:   cat.SortOrder,
-	}
 }
 
 func ToAdminGuideCardDTO(guide *entity.Guide) AdminGuideCardDTO {

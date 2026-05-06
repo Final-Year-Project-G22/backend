@@ -53,17 +53,6 @@ func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.NotificationHandler.HandleMarkAllAsRead)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "markCategoryAsRead",
-		Method:      "POST",
-		Path:        notifBase + "/inbox/category/{category}/read",
-		Summary:     "Mark category as read",
-		Description: "Marks all inbox notifications in a category as read.",
-		Tags:        []string{"Notifications"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
-	}, deps.NotificationHandler.HandleMarkCategoryAsRead)
-
-	huma.Register(api, huma.Operation{
 		OperationID: "archiveNotification",
 		Method:      "PATCH",
 		Path:        notifBase + "/inbox/{id}/archive",

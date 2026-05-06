@@ -22,44 +22,6 @@ func NewGuideAdminHandler(guideAdminUC usecase.GuideManagementUseCase, journeyAd
 	}
 }
 
-func (h *GuideAdminHandler) HandleGetCategoryTreeAdmin(ctx context.Context, input *dto.GuideCategoryTreeAdminInput) (*dto.GuideCategoryTreeAdminOutput, error) {
-	categories, err := h.guideAdminUC.ListCategoriesTree(ctx, input.IncludeInactive, input.Locale)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-
-	byParent := map[string][]dto.AdminCategoryDTO{}
-	roots := make([]dto.AdminCategoryDTO, 0)
-	for _, cat := range categories {
-		mapped := dto.ToAdminCategoryDTO(cat)
-		if mapped.ParentID == nil {
-			roots = append(roots, mapped)
-			continue
-		}
-		byParent[mapped.ParentID.String()] = append(byParent[mapped.ParentID.String()], mapped)
-	}
-
-	var attachChildren func(node dto.AdminCategoryDTO) dto.AdminCategoryDTO
-	attachChildren = func(node dto.AdminCategoryDTO) dto.AdminCategoryDTO {
-		children := byParent[node.ID.String()]
-		if len(children) == 0 {
-			return node
-		}
-		node.Children = make([]dto.AdminCategoryDTO, 0, len(children))
-		for _, child := range children {
-			node.Children = append(node.Children, attachChildren(child))
-		}
-		return node
-	}
-
-	result := make([]dto.AdminCategoryDTO, 0, len(roots))
-	for _, root := range roots {
-		result = append(result, attachChildren(root))
-	}
-
-	return &dto.GuideCategoryTreeAdminOutput{Body: dto.GuideCategoryTreeAdminResponseBody{Categories: result}}, nil
-}
-
 func (h *GuideAdminHandler) HandleListGuides(ctx context.Context, input *dto.ListGuidesAdminInput) (*dto.ListGuidesAdminOutput, error) {
 	q := dto.ToAdminQueryOptions(input.AdminPaginationQuery)
 	result, err := h.guideAdminUC.ListGuides(ctx, q)
@@ -108,64 +70,6 @@ func (h *GuideAdminHandler) HandleListGuideStepsAdmin(ctx context.Context, input
 		TotalItems: result.Total,
 		TotalPages: result.TotalPages,
 	}}, nil
-}
-
-// --- Category ---
-
-func (h *GuideAdminHandler) HandleCreateCategory(ctx context.Context, input *dto.CreateCategoryInput) (*dto.CreateCategoryOutput, error) {
-	result, err := h.guideAdminUC.CreateCategory(ctx, dto.ToCreateCategoryInput(input.Body))
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.CreateCategoryOutput{Body: dto.CreateCategoryResponseBody{ID: result.ID}}, nil
-}
-
-func (h *GuideAdminHandler) HandleUpdateCategory(ctx context.Context, input *dto.UpdateCategoryInput) (*dto.UpdateCategoryOutput, error) {
-	if err := h.guideAdminUC.UpdateCategory(ctx, input.ID, dto.ToUpdateCategoryInput(input.Body)); err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.UpdateCategoryOutput{Body: dto.UpdateCategoryResponseBody{Message: "Category updated"}}, nil
-}
-
-func (h *GuideAdminHandler) HandleDeleteCategory(ctx context.Context, input *dto.DeleteCategoryInput) (*dto.DeleteCategoryOutput, error) {
-	if err := h.guideAdminUC.DeleteCategory(ctx, input.ID); err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.DeleteCategoryOutput{Body: dto.DeleteCategoryResponseBody{Message: "Category deleted"}}, nil
-}
-
-func (h *GuideAdminHandler) HandleAddCategoryCondition(ctx context.Context, input *dto.AddCategoryConditionInput) (*dto.AddCategoryConditionOutput, error) {
-	if err := h.guideAdminUC.AddCategoryCondition(ctx, input.CategoryID, usecase.ConditionInput{
-		ConditionType:  input.Body.ConditionType,
-		Operator:       input.Body.Operator,
-		ConditionValue: input.Body.ConditionValue,
-		IsInverse:      input.Body.IsInverse,
-	}); err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.AddCategoryConditionOutput{Body: dto.AddCategoryConditionResponseBody{Message: "Condition added"}}, nil
-}
-
-func (h *GuideAdminHandler) HandleRemoveCategoryCondition(ctx context.Context, input *dto.RemoveCategoryConditionInput) (*dto.RemoveCategoryConditionOutput, error) {
-	if err := h.guideAdminUC.RemoveCategoryCondition(ctx, input.CondID); err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.RemoveCategoryConditionOutput{Body: dto.RemoveCategoryConditionResponseBody{Message: "Condition removed"}}, nil
-}
-
-func (h *GuideAdminHandler) HandleSetCategoryTranslations(ctx context.Context, input *dto.SetCategoryTranslationsInput) (*dto.SetCategoryTranslationsOutput, error) {
-	translations := make([]usecase.TranslationInput, 0, len(input.Body.Translations))
-	for _, t := range input.Body.Translations {
-		translations = append(translations, usecase.TranslationInput{
-			Language:    t.Language,
-			Name:        t.Name,
-			Description: t.Description,
-		})
-	}
-	if err := h.guideAdminUC.SetCategoryTranslations(ctx, input.ID, translations); err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.SetCategoryTranslationsOutput{Body: dto.SetCategoryTranslationsResponseBody{Message: "Translations updated"}}, nil
 }
 
 // --- Guide ---

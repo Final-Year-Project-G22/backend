@@ -19,24 +19,6 @@ type UpdateProgressInput struct {
 	TimeSpentSeconds  *int     `json:"timeSpentSeconds,omitempty"`
 }
 
-type CreateCategoryInput struct {
-	Slug         string             `json:"slug"`
-	Icon         *string            `json:"icon,omitempty"`
-	SortOrder    int                `json:"sortOrder"`
-	ParentID     *uuid.UUID         `json:"parentId,omitempty"`
-	Translations []TranslationInput `json:"translations,omitempty"`
-	Conditions   []ConditionInput   `json:"conditions,omitempty"`
-}
-
-type UpdateCategoryInput struct {
-	Slug         *string            `json:"slug,omitempty"`
-	Icon         *string            `json:"icon,omitempty"`
-	SortOrder    *int               `json:"sortOrder,omitempty"`
-	ParentID     *uuid.UUID         `json:"parentId,omitempty"`
-	Translations []TranslationInput `json:"translations,omitempty"`
-	Conditions   []ConditionInput   `json:"conditions,omitempty"`
-}
-
 type CreateGuideInput struct {
 	SectorIDs    []uuid.UUID        `json:"sectorIds"`
 	TagIDs       []uuid.UUID        `json:"tagIds"`

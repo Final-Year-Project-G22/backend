@@ -118,17 +118,3 @@ func (r *userNotificationInboxRepository) ExpireOld(ctx context.Context, before 
 	}
 	return nil
 }
-
-func (r *userNotificationInboxRepository) MarkAllReadByCategory(ctx context.Context, accountID uuid.UUID, category entity.NotificationCategory) error {
-	result := r.getDB(ctx).Model(&entity.UserNotificationInbox{}).
-		Where("account_id = ? AND category = ? AND is_read = ? AND is_archived = ?", accountID, category, false, false).
-		Updates(map[string]interface{}{
-			"is_read":    true,
-			"updated_at": gorm.Expr("CURRENT_TIMESTAMP"),
-		})
-	if result.Error != nil {
-		r.logger.Error("Failed to mark category as read", core.Error(result.Error))
-		return errors.InternalError("errors.databaseError", result.Error)
-	}
-	return nil
-}

@@ -19,5 +19,4 @@ type UserNotificationInboxRepository interface {
 	MarkAllAsRead(ctx context.Context, accountID uuid.UUID) error
 	Archive(ctx context.Context, id uuid.UUID) error
 	ExpireOld(ctx context.Context, before time.Time) error
-	MarkAllReadByCategory(ctx context.Context, accountID uuid.UUID, category entity.NotificationCategory) error
 }

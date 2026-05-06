@@ -11,17 +11,9 @@ import (
 )
 
 type GuideManagementUseCase interface {
-	ListCategoriesTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error)
 	ListGuides(ctx context.Context, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.Guide], error)
 	GetGuideDetail(ctx context.Context, guideID uuid.UUID, locale constants.Locale) (*entity.Guide, error)
 	ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.GuideStep], error)
-
-	CreateCategory(ctx context.Context, input CreateCategoryInput) (*entity.GuideCategory, error)
-	UpdateCategory(ctx context.Context, id uuid.UUID, input UpdateCategoryInput) error
-	DeleteCategory(ctx context.Context, id uuid.UUID) error
-	AddCategoryCondition(ctx context.Context, categoryID uuid.UUID, cond ConditionInput) error
-	RemoveCategoryCondition(ctx context.Context, condID uuid.UUID) error
-	SetCategoryTranslations(ctx context.Context, categoryID uuid.UUID, translations []TranslationInput) error
 
 	CreateGuide(ctx context.Context, input CreateGuideInput) (*entity.Guide, error)
 	UpdateGuide(ctx context.Context, id uuid.UUID, input UpdateGuideInput) error

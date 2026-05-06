@@ -60,10 +60,6 @@ func (uc *notificationInboxUsecase) MarkAllAsRead(ctx context.Context, accountID
 	return uc.inboxRepo.MarkAllAsRead(ctx, accountID)
 }
 
-func (uc *notificationInboxUsecase) MarkCategoryAsRead(ctx context.Context, accountID uuid.UUID, category entity.NotificationCategory) error {
-	return uc.inboxRepo.MarkAllReadByCategory(ctx, accountID, category)
-}
-
 func (uc *notificationInboxUsecase) ArchiveNotification(ctx context.Context, accountID uuid.UUID, inboxID uuid.UUID) error {
 	inbox, err := uc.inboxRepo.GetByID(ctx, inboxID)
 	if err != nil {

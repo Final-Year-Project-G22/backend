@@ -77,14 +77,6 @@ func (h *NotificationHandler) HandleMarkAllAsRead(ctx context.Context, input *st
 	return &dto.MarkAllAsReadOutput{Body: dto.MarkAllAsReadResponseBody{Message: "All marked as read"}}, nil
 }
 
-func (h *NotificationHandler) HandleMarkCategoryAsRead(ctx context.Context, input *dto.MarkCategoryAsReadInput) (*dto.MarkCategoryAsReadOutput, error) {
-	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
-	if err := h.inboxUC.MarkCategoryAsRead(ctx, accountID, input.Category); err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	return &dto.MarkCategoryAsReadOutput{Body: dto.MarkCategoryAsReadResponseBody{Message: "Category marked as read"}}, nil
-}
-
 func (h *NotificationHandler) HandleArchiveNotification(ctx context.Context, input *dto.ArchiveNotificationInput) (*dto.ArchiveNotificationOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	if err := h.inboxUC.ArchiveNotification(ctx, accountID, input.ID); err != nil {

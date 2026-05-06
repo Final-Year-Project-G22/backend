@@ -80,20 +80,6 @@ type MarkAllAsReadResponseBody struct {
 	Message string `json:"message" doc:"Success message"`
 }
 
-// --- Mark Category As Read ---
-
-type MarkCategoryAsReadInput struct {
-	Category entity.NotificationCategory `path:"category" doc:"Notification category"`
-}
-
-type MarkCategoryAsReadOutput struct {
-	Body MarkCategoryAsReadResponseBody
-}
-
-type MarkCategoryAsReadResponseBody struct {
-	Message string `json:"message" doc:"Success message"`
-}
-
 // --- Archive ---
 
 type ArchiveNotificationInput struct {
