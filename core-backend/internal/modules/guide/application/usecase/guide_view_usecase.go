@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -532,26 +533,28 @@ func (s *guideViewUsecase) resolveStepDescription(step *entity.GuideStep, locale
 	return nil
 }
 
-func documentsToJSONMap(documents []string) datatypes.JSONMap {
+func documentsToJSONMap(documents []string) datatypes.JSON {
 	if len(documents) == 0 {
-		return datatypes.JSONMap{}
+		return datatypes.JSON("{}")
 	}
 	result := datatypes.JSONMap{}
 	for i, doc := range documents {
 		result[strconv.Itoa(i)] = doc
 	}
-	return result
+	b, _ := json.Marshal(result)
+	return datatypes.JSON(b)
 }
 
-func stepsToSequenceJSONMap(steps []*entity.GuideStep) datatypes.JSONMap {
+func stepsToSequenceJSONMap(steps []*entity.GuideStep) datatypes.JSON {
 	if len(steps) == 0 {
-		return datatypes.JSONMap{}
+		return datatypes.JSON("{}")
 	}
 	result := datatypes.JSONMap{}
 	for i, step := range steps {
 		result[strconv.Itoa(i)] = step.ID.String()
 	}
-	return result
+	b, _ := json.Marshal(result)
+	return datatypes.JSON(b)
 }
 
 func journeyHashForSteps(steps []*entity.GuideStep) *string {
