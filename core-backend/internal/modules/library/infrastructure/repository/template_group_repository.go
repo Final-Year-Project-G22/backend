@@ -25,6 +25,18 @@ func NewLibraryTemplateGroupRepository(db *core.Database, logger core.Logger) li
 	return &libraryTemplateGroupRepository{GenericRepository: base, db: db, logger: logger}
 }
 
+func (r *libraryTemplateGroupRepository) GetByID(ctx context.Context, id uuid.UUID) (*entity.LibraryTemplateGroup, error) {
+	var group entity.LibraryTemplateGroup
+	if err := getDB(ctx, r.db).Preload("Templates").First(&group, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, libraryerror.ErrTemplateGroupNotFound
+		}
+		r.logger.Error("Failed to get template group by ID", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return &group, nil
+}
+
 func (r *libraryTemplateGroupRepository) GetBySlug(ctx context.Context, categoryID *uuid.UUID, slug string) (*entity.LibraryTemplateGroup, error) {
 	var group entity.LibraryTemplateGroup
 	db := getDB(ctx, r.db).Where("slug = ?", slug)

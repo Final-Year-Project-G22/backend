@@ -28,7 +28,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "LibraryGetTemplateGroup",
 		Method:      "GET",
-		Path:        base + "/templates/{slug}",
+		Path:        base + "/templates/{groupId}",
 		Summary:     "Get template group",
 		Description: "Gets a template group with its language variants.",
 		Tags:        []string{"Library"},
@@ -37,7 +37,7 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "LibraryDownloadTemplate",
 		Method:      "GET",
-		Path:        base + "/templates/{slug}/download",
+		Path:        base + "/templates/{groupId}/download",
 		Summary:     "Download template",
 		Description: "Generates a presigned download URL for a template.",
 		Tags:        []string{"Library"},
