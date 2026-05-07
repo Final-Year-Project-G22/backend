@@ -77,12 +77,12 @@ func (h *LibraryHandler) HandleListTemplateGroups(ctx context.Context, input *dt
 	}}, nil
 }
 
-func (h *LibraryHandler) HandleGetTemplateGroup(ctx context.Context, input *dto.GetTemplateGroupBySlugInput) (*dto.GetTemplateGroupDetailOutput, error) {
+func (h *LibraryHandler) HandleGetTemplateGroup(ctx context.Context, input *dto.GetPublicTemplateGroupInput) (*dto.GetTemplateGroupDetailOutput, error) {
 	var locale *string
 	if input.Locale != "" {
 		locale = &input.Locale
 	}
-	group, templates, err := h.viewUC.GetTemplateGroup(ctx, input.Slug, locale)
+	group, templates, err := h.viewUC.GetTemplateGroup(ctx, input.GroupID, locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -100,7 +100,7 @@ func (h *LibraryHandler) HandleDownloadTemplate(ctx context.Context, input *dto.
 	}
 
 	result, err := h.viewUC.DownloadTemplate(ctx, usecase.DownloadInput{
-		Slug:      input.Slug,
+		GroupID:   input.GroupID,
 		Language:  language,
 		AccountID: accountID,
 	})

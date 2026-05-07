@@ -71,6 +71,15 @@
       "bookmarkUpdated": "Bookmark updated"
     }
   },
+  "library": {
+    "errors": {
+      "authRequired": "Authentication required",
+      "tierAccessDenied": "Tier access denied",
+      "templateGroupNotFound": "Template group not found",
+      "templateNotFound": "Template not found",
+      "downloadFailed": "Failed to generate download link"
+    }
+  },
   "community": {
     "errors": {
       "permissionDenied": "Permission denied",

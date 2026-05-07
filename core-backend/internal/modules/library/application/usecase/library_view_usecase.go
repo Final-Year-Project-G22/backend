@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/entity"
-	libraryerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/usecase"
 	sharedRepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
@@ -85,14 +83,14 @@ func (u *libraryViewUsecase) ListTemplateGroups(ctx context.Context, categoryID 
 	return u.groupRepo.Find(ctx, q)
 }
 
-func (u *libraryViewUsecase) GetTemplateGroup(ctx context.Context, slug string, locale *string) (*entity.LibraryTemplateGroup, []*entity.LibraryTemplate, error) {
-	group, err := u.groupRepo.GetBySlug(ctx, nil, slug)
+func (u *libraryViewUsecase) GetTemplateGroup(ctx context.Context, groupID uuid.UUID, locale *string) (*entity.LibraryTemplateGroup, []*entity.LibraryTemplate, error) {
+	group, err := u.groupRepo.GetByID(ctx, groupID)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if !group.IsActive {
-		return nil, nil, libraryerror.ErrTemplateGroupNotFound
+		return nil, nil, apperrors.NotFoundErrorWithKey("library.errors.templateGroupNotFound")
 	}
 
 	templates, err := u.tmplRepo.FindActiveByGroup(ctx, group.ID)
@@ -122,17 +120,17 @@ func (u *libraryViewUsecase) GetTemplateGroup(ctx context.Context, slug string, 
 }
 
 func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase.DownloadInput) (*usecase.DownloadOutput, error) {
-	group, err := u.groupRepo.GetBySlug(ctx, nil, input.Slug)
+	group, err := u.groupRepo.GetByID(ctx, input.GroupID)
 	if err != nil {
 		return nil, err
 	}
 
 	if !group.IsActive {
-		return nil, libraryerror.ErrTemplateGroupNotFound
+		return nil, apperrors.NotFoundErrorWithKey("library.errors.templateGroupNotFound")
 	}
 
 	if group.RequiresAuth && input.AccountID == nil {
-		return nil, libraryerror.ErrAuthRequired
+		return nil, apperrors.UnauthorizedError("library.errors.authRequired")
 	}
 
 	if input.AccountID != nil {
@@ -141,10 +139,10 @@ func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase
 			return nil, err
 		}
 		if !allowed {
-			return nil, libraryerror.ErrTierAccessDenied
+			return nil, apperrors.ForbiddenError("library.errors.tierAccessDenied")
 		}
 	} else if group.TierAccess == entity.TierAccessPro {
-		return nil, libraryerror.ErrTierAccessDenied
+		return nil, apperrors.ForbiddenError("library.errors.tierAccessDenied")
 	}
 
 	lang := group.DefaultLanguage
@@ -157,13 +155,16 @@ func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase
 		return nil, err
 	}
 	if tmpl == nil || !tmpl.IsActive {
-		return nil, libraryerror.ErrTemplateNotFound
+		return nil, apperrors.NotFoundErrorWithKey("library.errors.templateNotFound")
 	}
 
-	presignedURL, err := u.storage.GetPresignedURL(ctx, tmpl.FileKey, 5*time.Minute)
-	if err != nil {
-		u.logger.Error("Failed to generate presigned URL", core.Error(err))
-		return nil, apperrors.InternalError("library.errors.downloadFailed", err)
+	downloadURL := ""
+	if tmpl.FileURL != nil {
+		downloadURL = *tmpl.FileURL
+	}
+	if downloadURL == "" {
+		u.logger.Error("No download URL available for template", core.String("templateId", tmpl.ID.String()))
+		return nil, apperrors.InternalError("library.errors.downloadFailed", nil)
 	}
 
 	filename := fmt.Sprintf("%s_%s%s", group.Slug, tmpl.Language, u.extFromContentType(tmpl.ContentType))
@@ -191,7 +192,7 @@ func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase
 	}
 
 	return &usecase.DownloadOutput{
-		PresignedURL: presignedURL,
+		PresignedURL: downloadURL,
 		ExpiresAt:    "5m",
 		Filename:     filename,
 	}, nil
