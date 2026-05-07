@@ -61,9 +61,9 @@ type ListTemplateGroupsOutput struct {
 
 // --- Get Template Group ---
 
-type GetTemplateGroupBySlugInput struct {
-	Slug   string `path:"slug" doc:"Template group slug"`
-	Locale string `query:"locale,omitempty" doc:"Language code"`
+type GetPublicTemplateGroupInput struct {
+	GroupID uuid.UUID `path:"groupId" doc:"Template group ID"`
+	Locale  string    `query:"locale,omitempty" doc:"Language code"`
 }
 
 type LanguageVariantResponse struct {
@@ -97,8 +97,8 @@ type GetTemplateGroupDetailOutput struct {
 // --- Download Template ---
 
 type DownloadTemplateInput struct {
-	Slug     string `path:"slug" doc:"Template group slug"`
-	Language string `query:"language,omitempty" doc:"Language code"`
+	GroupID  uuid.UUID `path:"groupId" doc:"Template group ID"`
+	Language string    `query:"language,omitempty" doc:"Language code"`
 }
 
 type DownloadTemplateOutput struct {

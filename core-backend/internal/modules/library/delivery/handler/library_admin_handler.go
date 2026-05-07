@@ -262,6 +262,10 @@ func (h *LibraryAdminHandler) HandleGetTemplate(ctx context.Context, input *dto.
 
 func (h *LibraryAdminHandler) HandleUpdateTemplate(ctx context.Context, input *dto.LibraryUpdateTemplateInput) (*dto.LibraryUpdateTemplateOutput, error) {
 	data := input.RawBody.Data()
+	if data == nil {
+		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("library.errors.invalidFile"))
+	}
+
 	var title *string
 	if data.Title != "" {
 		title = &data.Title

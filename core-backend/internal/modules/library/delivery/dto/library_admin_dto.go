@@ -265,10 +265,10 @@ type ListAllTemplateGroupsOutput struct {
 // --- Templates ---
 
 type CreateTemplateFormData struct {
-	File        huma.FormFile `form:"file" doc:"Template file"`
-	Language    string        `form:"language" doc:"Language code"`
-	Title       string        `form:"title" doc:"Template title"`
-	Description string        `form:"description,omitempty" doc:"Template description"`
+	File        huma.FormFile `form:"file" required:"true" doc:"Template file"`
+	Language    string        `form:"language" required:"true" doc:"Language code"`
+	Title       string        `form:"title" required:"true" doc:"Template title"`
+	Description string        `form:"description" doc:"Template description"`
 }
 
 type LibraryCreateTemplateInput struct {
@@ -305,9 +305,9 @@ type LibraryGetTemplateOutput struct {
 
 type UpdateTemplateFormData struct {
 	File        huma.FormFile `form:"file" doc:"Template file (optional)"`
-	Title       string        `form:"title,omitempty" doc:"Template title"`
-	Description string        `form:"description,omitempty" doc:"Template description"`
-	IsActive    string        `form:"isActive,omitempty" doc:"Active flag (true/false)"`
+	Title       string        `form:"title" doc:"Template title"`
+	Description string        `form:"description" doc:"Template description"`
+	IsActive    string        `form:"isActive" doc:"Active flag (true/false)"`
 }
 
 type LibraryUpdateTemplateInput struct {
