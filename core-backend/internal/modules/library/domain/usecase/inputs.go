@@ -102,7 +102,7 @@ type UpdateInteractiveFormInput struct {
 }
 
 type DownloadInput struct {
-	Slug      string
+	GroupID   uuid.UUID
 	Language  *string
 	AccountID *uuid.UUID
 }

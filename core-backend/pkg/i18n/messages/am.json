@@ -63,6 +63,15 @@
       "bookmarkUpdated": "ምልክት ተዘምኗል"
     }
   },
+  "library": {
+    "errors": {
+      "authRequired": "ማረጋገጫ ያስፈላጊ ነው",
+      "tierAccessDenied": "የደረጃ መድረስ ተከልክሏል",
+      "templateGroupNotFound": "የቴምፕሌት ቡድን አልተገኘም",
+      "templateNotFound": "ቴምፕሌቱ አልተገኘም",
+      "downloadFailed": "የማውረጃ ማገናኛ ማመንጨት አልተሳካም"
+    }
+  },
   "community": {
     "errors": {
       "permissionDenied": "ፈቃድ ተከልክሏል",
