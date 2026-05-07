@@ -40,6 +40,10 @@ func applyPaginationAndSorting(q query.QueryOptions, defaultSort string) func(db
 			db = db.Order(defaultSort)
 		}
 
+		for _, preload := range q.Preload {
+			db = db.Preload(preload)
+		}
+
 		return db.Offset((q.Page - 1) * q.PageSize).Limit(q.PageSize)
 	}
 }
