@@ -38,7 +38,7 @@ func (h *SSEHandler) HandleCampaignEvents(c *gin.Context) {
 			if err != nil {
 				continue
 			}
-			fmt.Fprintf(c.Writer, "event: campaign_status\ndata: %s\n\n", data)
+			_, _ = fmt.Fprintf(c.Writer, "event: campaign_status\ndata: %s\n\n", data)
 			flusher.Flush()
 		case <-c.Request.Context().Done():
 			return
