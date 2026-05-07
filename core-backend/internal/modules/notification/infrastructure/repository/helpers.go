@@ -31,6 +31,10 @@ func applyPaginationAndSorting(db *gorm.DB, q query.QueryOptions, defaultOrder s
 		db = db.Order(defaultOrder)
 	}
 
+	for _, preload := range q.Preload {
+		db = db.Preload(preload)
+	}
+
 	offset := (q.Page - 1) * q.PageSize
 	return db.Offset(offset).Limit(q.PageSize)
 }
