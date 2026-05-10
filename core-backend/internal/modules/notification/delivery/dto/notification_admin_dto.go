@@ -296,14 +296,12 @@ func ToTemplateDetailResponse(tmpl *entity.NotificationTemplate, translations []
 // --- Campaigns ---
 
 type CreateCampaignRequest struct {
-	Name          string                  `json:"name" doc:"Campaign name" minLength:"1" maxLength:"200"`
-	Description   *string                 `json:"description,omitempty" doc:"Campaign description"`
-	CampaignType  entity.CampaignType     `json:"campaignType" doc:"Campaign type (broadcast or segmented)"`
-	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
-	TemplateID    uuid.UUID               `json:"templateId" doc:"Notification template ID"`
-	CustomSubject *string                 `json:"customSubject,omitempty" doc:"Override email subject"`
-	CustomContent *map[string]interface{} `json:"customContent,omitempty" doc:"Override multi-channel content"`
-	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	Name               string                  `json:"name" doc:"Campaign name" minLength:"1" maxLength:"200"`
+	Description        *string                 `json:"description,omitempty" doc:"Campaign description"`
+	CampaignType       entity.CampaignType     `json:"campaignType" doc:"Campaign type (broadcast or segmented)"`
+	TargetSegment      *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
+	CampaignTemplateID uuid.UUID               `json:"campaignTemplateId" doc:"Campaign template ID"`
+	ScheduledFor       *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
 }
 
 type CreateCampaignInput struct {
@@ -327,19 +325,31 @@ type GetCampaignOutput struct {
 }
 
 type CampaignDetailResponse struct {
-	ID            uuid.UUID              `json:"id" doc:"Campaign ID"`
-	Name          string                 `json:"name" doc:"Campaign name"`
-	Description   *string                `json:"description,omitempty" doc:"Campaign description"`
-	CampaignType  entity.CampaignType    `json:"campaignType" doc:"Campaign type"`
-	TargetSegment map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters or resolved recipients"`
-	TemplateID    uuid.UUID              `json:"templateId" doc:"Notification template ID"`
-	CustomSubject *string                `json:"customSubject,omitempty" doc:"Override email subject"`
-	CustomContent map[string]interface{} `json:"customContent,omitempty" doc:"Override multi-channel content"`
-	ScheduledFor  *time.Time             `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
-	SentAt        *time.Time             `json:"sentAt,omitempty" doc:"Actual sending time"`
-	Status        entity.CampaignStatus  `json:"status" doc:"Campaign status"`
-	CreatedBy     uuid.UUID              `json:"createdBy" doc:"Creator account ID"`
-	CreatedAt     time.Time              `json:"createdAt" doc:"Creation time"`
+	ID                 uuid.UUID                     `json:"id" doc:"Campaign ID"`
+	Name               string                        `json:"name" doc:"Campaign name"`
+	Description        *string                       `json:"description,omitempty" doc:"Campaign description"`
+	CampaignType       entity.CampaignType           `json:"campaignType" doc:"Campaign type"`
+	TargetSegment      map[string]interface{}        `json:"targetSegment,omitempty" doc:"Segment filters or resolved recipients"`
+	CampaignTemplateID uuid.UUID                     `json:"campaignTemplateId" doc:"Campaign template ID"`
+	CampaignTemplate   *CampaignTemplateInfoResponse `json:"campaignTemplate,omitempty" doc:"Campaign template details"`
+	CreatedBy          *CampaignCreatedByResponse    `json:"createdBy" doc:"Creator account info"`
+	ScheduledFor       *time.Time                    `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SentAt             *time.Time                    `json:"sentAt,omitempty" doc:"Actual sending time"`
+	Status             entity.CampaignStatus         `json:"status" doc:"Campaign status"`
+	CreatedAt          time.Time                     `json:"createdAt" doc:"Creation time"`
+}
+
+type CampaignTemplateInfoResponse struct {
+	ID             uuid.UUID              `json:"id" doc:"Template ID"`
+	Name           string                 `json:"name" doc:"Template name"`
+	Description    *string                `json:"description,omitempty" doc:"Template description"`
+	DefaultContent map[string]interface{} `json:"defaultContent" doc:"Multi-channel content"`
+}
+
+type CampaignCreatedByResponse struct {
+	ID    uuid.UUID `json:"id" doc:"Account ID"`
+	Name  string    `json:"name" doc:"Account name"`
+	Email string    `json:"email" doc:"Account email"`
 }
 
 type ListCampaignsInput struct {
@@ -375,8 +385,6 @@ type UpdateCampaignRequest struct {
 	Name          *string                 `json:"name,omitempty" doc:"Campaign name" maxLength:"200"`
 	Description   *string                 `json:"description,omitempty" doc:"Campaign description"`
 	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
-	CustomSubject *string                 `json:"customSubject,omitempty" doc:"Override email subject"`
-	CustomContent *map[string]interface{} `json:"customContent,omitempty" doc:"Override multi-channel content"`
 	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
 }
 
@@ -419,14 +427,12 @@ type CancelCampaignResponseBody struct {
 
 func ToCreateCampaignInput(createdBy uuid.UUID, body CreateCampaignRequest) usecase.CreateCampaignInput {
 	return usecase.CreateCampaignInput{
-		Name:          body.Name,
-		Description:   body.Description,
-		CampaignType:  body.CampaignType,
-		TargetSegment: body.TargetSegment,
-		TemplateID:    body.TemplateID,
-		CustomSubject: body.CustomSubject,
-		CustomContent: body.CustomContent,
-		ScheduledFor:  body.ScheduledFor,
+		Name:               body.Name,
+		Description:        body.Description,
+		CampaignType:       body.CampaignType,
+		TargetSegment:      body.TargetSegment,
+		CampaignTemplateID: body.CampaignTemplateID,
+		ScheduledFor:       body.ScheduledFor,
 	}
 }
 
@@ -435,30 +441,37 @@ func ToUpdateCampaignInput(body UpdateCampaignRequest) usecase.UpdateCampaignInp
 		Name:          body.Name,
 		Description:   body.Description,
 		TargetSegment: body.TargetSegment,
-		CustomSubject: body.CustomSubject,
-		CustomContent: body.CustomContent,
 		ScheduledFor:  body.ScheduledFor,
 	}
 }
 
-func ToCampaignDetailResponse(c *entity.NotificationCampaign) CampaignDetailResponse {
+func ToCampaignDetailResponse(detail *usecase.CampaignDetail) CampaignDetailResponse {
 	resp := CampaignDetailResponse{
-		ID:            c.ID,
-		Name:          c.Name,
-		Description:   c.Description,
-		CampaignType:  c.CampaignType,
-		TemplateID:    c.TemplateID,
-		CustomSubject: c.CustomSubject,
-		ScheduledFor:  c.ScheduledFor,
-		SentAt:        c.SentAt,
-		Status:        c.Status,
-		CreatedBy:     c.CreatedBy,
+		ID:                 detail.Campaign.ID,
+		Name:               detail.Campaign.Name,
+		Description:        detail.Campaign.Description,
+		CampaignType:       detail.Campaign.CampaignType,
+		CampaignTemplateID: detail.Campaign.CampaignTemplateID,
+		ScheduledFor:       detail.Campaign.ScheduledFor,
+		SentAt:             detail.Campaign.SentAt,
+		Status:             detail.Campaign.Status,
+		CreatedAt:          *detail.Campaign.CreatedAt,
 	}
-	if c.TargetSegment != nil {
-		resp.TargetSegment = *c.TargetSegment
+	if detail.Campaign.TargetSegment != nil {
+		resp.TargetSegment = *detail.Campaign.TargetSegment
 	}
-	if c.CustomContent != nil {
-		resp.CustomContent = *c.CustomContent
+	if detail.CampaignTemplate != nil {
+		resp.CampaignTemplate = &CampaignTemplateInfoResponse{
+			ID:             detail.CampaignTemplate.ID,
+			Name:           detail.CampaignTemplate.Name,
+			Description:    detail.CampaignTemplate.Description,
+			DefaultContent: detail.CampaignTemplate.DefaultContent,
+		}
+	}
+	resp.CreatedBy = &CampaignCreatedByResponse{
+		ID:    detail.Campaign.CreatedBy,
+		Name:  detail.CreatedByName,
+		Email: detail.CreatedByEmail,
 	}
 	return resp
 }

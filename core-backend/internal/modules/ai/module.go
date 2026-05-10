@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -13,6 +14,7 @@ import (
 	aisvc "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/service"
 	aiinfra "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure"
 	aiinfraclient "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/client"
+	aiinframsg "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/messaging"
 	aiinfrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/infrastructure/repository"
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
@@ -80,11 +82,13 @@ var Module = fx.Module("ai",
 			fx.As(new(aisvc.EnvelopeSigner)),
 		),
 	),
-	fx.Provide(func(cfg *core.Config, s stg.Storage, docRepo airepository.IngestionDocumentRepository, outboxRepo airepository.IngestionOutboxRepository, transactor sharedrepo.Transactor) *service.IngestionService {
-		return service.NewIngestionService(cfg.Ingestion.Enabled, s, docRepo, outboxRepo, transactor)
+	fx.Provide(func(cfg *core.Config, s stg.Storage, docRepo airepository.IngestionDocumentRepository, outboxRepo airepository.IngestionOutboxRepository, projectionRepo airepository.IngestionStatusProjectionRepository, transactor sharedrepo.Transactor) *service.IngestionService {
+		return service.NewIngestionService(cfg.Ingestion.Enabled, s, docRepo, outboxRepo, projectionRepo, transactor)
 	}),
 	fx.Provide(service.NewOutboxDispatcher),
 	fx.Provide(service.NewSSEGateway),
+	fx.Provide(service.NewStatusProjectionService),
+	fx.Provide(aiinframsg.NewStatusEventSubscriber),
 	fx.Provide(handler.NewIngestionHandler),
 	fx.Provide(handler.NewStatusHandler),
 	fx.Provide(service.NewAskService),
@@ -106,7 +110,7 @@ var Module = fx.Module("ai",
 			fx.As(new(port.IngestControl)),
 		),
 	),
-	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, tokenService token.TokenService, authService iamservice.AuthService) {
+	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, tokenService token.TokenService, authService iamservice.AuthService, logger core.Logger) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, routes.RouteDependencies{
@@ -116,6 +120,7 @@ var Module = fx.Module("ai",
 			DLQHandler:              dlqHandler,
 			SSEHandler:              sseHandler,
 			ToggleHandler:           toggleHandler,
+			Logger:                  logger,
 			AskEnabled:              cfg.AI.AskEnabled,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
@@ -144,6 +149,19 @@ var Module = fx.Module("ai",
 			},
 			OnStop: func(context.Context) error {
 				cancel()
+				return nil
+			},
+		})
+	}),
+	fx.Invoke(func(lc fx.Lifecycle, subscriber *aiinframsg.StatusEventSubscriber) {
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				if err := subscriber.Subscribe(); err != nil {
+					return fmt.Errorf("failed to subscribe to status events: %w", err)
+				}
+				return nil
+			},
+			OnStop: func(context.Context) error {
 				return nil
 			},
 		})

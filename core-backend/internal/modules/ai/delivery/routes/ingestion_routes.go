@@ -30,4 +30,15 @@ func registerIngestionRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.IngestionHandler.HandleFinalizeUpload)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "deleteIngestionDocument",
+		Method:      "DELETE",
+		Path:        aiIngestionBase + "/documents/{documentId}",
+		Summary:     "Delete ingestion document",
+		Description: "Soft-deletes an ingestion document and its status projection.",
+		Tags:        []string{"AI Ingestion"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.IngestionHandler.HandleDeleteDocument)
 }

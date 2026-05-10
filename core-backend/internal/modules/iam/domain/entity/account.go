@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/model"
@@ -47,4 +48,21 @@ type Account struct {
 
 func (Account) TableName() string {
 	return "accounts"
+}
+
+func ParseAccountStatus(s string) (AccountStatus, error) {
+	switch s {
+	case "pending_verification":
+		return AccountStatusPendingVerification, nil
+	case "active":
+		return AccountStatusActive, nil
+	case "locked":
+		return AccountStatusLocked, nil
+	case "suspended":
+		return AccountStatusSuspended, nil
+	case "disabled":
+		return AccountStatusDisabled, nil
+	default:
+		return "", errors.New("invalid account status: " + s)
+	}
 }

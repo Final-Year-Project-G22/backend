@@ -12,4 +12,5 @@ type IngestionDocumentRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*entity.IngestionDocument, error)
 	GetByIdempotencyKey(ctx context.Context, accountID uuid.UUID, idempotencyKey string) (*entity.IngestionDocument, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status entity.IngestionDocumentStatus, lastError *string) error
+	SoftDelete(ctx context.Context, id uuid.UUID, accountID uuid.UUID) error
 }

@@ -10,24 +10,19 @@
       "badRequest": "ጥሩ ያልሆነ ጥያቄ",
       "alreadyExists": "ሃብቱ አስቀድሞ አለ",
       "invalidInput": "ዋጋ የማይሰራ",
-
       "userNotFound": "ተጠቃሚው አልተገኘም",
       "userAlreadyExists": "ተጠቃሚው አስቀድሞ አለ",
       "invalidCredentials": "የኢሜይል ወይም የይለፍ ቃል ትክክል አይደለም",
       "tokenExpired": "ቶኬን ጊዜው አልቋል",
       "tokenInvalid": "ቶኬን ዋጋ የሌለው",
-
       "roleNotFound": "ሚና አልተገኘም",
       "permissionDenied": "ፈቃድ ተከልክሏል",
-
       "resourceNotFound": "{{resource}} አልተገኘም",
       "resourceAlreadyExists": "{{resource}} አስቀድሞ አለ",
-
       "requiredField": "{{field}} ያስፈላጊ ነው",
       "invalidEmail": "የኢሜይል አድራሻ ዋጋ የሌለው",
       "invalidPassword": "የይለፍ ቃል ቢያንስ 8 ፊደላት መሆን አለ።",
       "passwordMismatch": "የይለፍ ቃላት አይዛመዱም",
-
       "invalidFile": "ዋጋ የማይሰራ ፋይል ተላልፏል",
       "invalidFileType": "ዋጋ የማይሰራ የፋይል አይነት። የተፈቀዱት: JPEG, PNG, GIF, WebP",
       "fileTooLarge": "የፋይል ልክ ከፍተኛ ነው (ከ5MB)",
@@ -39,7 +34,9 @@
       "otpAttemptsExceeded": "ብዙ ጊዜ የተሳሳተ ኮድ ገብቷል። እባክዎ አዲስ ኮድ ይጠይቁ",
       "emailAlreadyVerified": "ኢሜይሉ አስቀድሞ ተረጋግጧል",
       "otpResendTooSoon": "ሌላ ኮድ ከመጠየቅዎ በፊት ትንሽ ይጠብቁ",
-      "otpResendLimitExceeded": "የኮድ ድጋሚ መላክ ገደብ ደርሷል። በኋላ ይሞክሩ"
+      "otpResendLimitExceeded": "የኮድ ድጋሚ መላክ ገደብ ደርሷል። በኋላ ይሞክሩ",
+      "emailAlreadyExists": "ኢሜይል አስቀድም ነው",
+      "usernameAlreadyExists": "የተጠቃሚ ስም አስቀድሞ አለ።"
     },
     "successes": {
       "passwordUpdated": "የይለፍ ቃል ተዘምኗል",
@@ -66,6 +63,15 @@
       "bookmarkUpdated": "ምልክት ተዘምኗል"
     }
   },
+  "library": {
+    "errors": {
+      "authRequired": "ማረጋገጫ ያስፈላጊ ነው",
+      "tierAccessDenied": "የደረጃ መድረስ ተከልክሏል",
+      "templateGroupNotFound": "የቴምፕሌት ቡድን አልተገኘም",
+      "templateNotFound": "ቴምፕሌቱ አልተገኘም",
+      "downloadFailed": "የማውረጃ ማገናኛ ማመንጨት አልተሳካም"
+    }
+  },
   "community": {
     "errors": {
       "permissionDenied": "ፈቃድ ተከልክሏል",
@@ -87,7 +93,11 @@
       "fileTooLarge": "የፋይል ልክ ከፍተኛ ነው (ከ10MB)",
       "readFileFailed": "ፋይል ለማንበብ አልተሳካም",
       "uploadFailed": "ፋይል ለማስተላለፍ አልተሳካም",
-      "noChanges": "ማሻሻያ አልተገኘም"
+      "noChanges": "ማሻሻያ አልተገኘም",
+      "invalidAttachment": "ዋጋ የሌለው ቅልጽ ፋይል",
+      "attachmentNotPending": "ቅልጽ ፋይሉ በመጠባበቅ ላይ አይደለም",
+      "attachmentNotOwned": "ይህን ቅልጽ ፋይል የሉት አይደለም",
+      "attachmentNotLinked": "ቅልጽ ፋይሉ ከዚህ ልጥፍ ጋር አልተገናኘም"
     }
   },
   "email": {

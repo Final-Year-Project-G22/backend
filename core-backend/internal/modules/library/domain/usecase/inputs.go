@@ -60,6 +60,7 @@ type UpdateTemplateGroupInput struct {
 	IsActive          *bool
 	ThumbnailBytes    []byte
 	ThumbnailFilename *string
+	ThumbnailURL      *string
 }
 
 type CreateTemplateInput struct {
@@ -69,6 +70,10 @@ type CreateTemplateInput struct {
 	Description *string
 	FileBytes   []byte
 	Filename    string
+	FileKey     string
+	FileURL     *string
+	FileSize    int64
+	ContentType string
 }
 
 type UpdateTemplateInput struct {
@@ -77,6 +82,10 @@ type UpdateTemplateInput struct {
 	FileBytes   []byte
 	Filename    *string
 	IsActive    *bool
+	FileKey     *string
+	FileURL     *string
+	FileSize    *int64
+	ContentType *string
 }
 
 type CreateInteractiveFormInput struct {
@@ -93,7 +102,7 @@ type UpdateInteractiveFormInput struct {
 }
 
 type DownloadInput struct {
-	Slug      string
+	GroupID   uuid.UUID
 	Language  *string
 	AccountID *uuid.UUID
 }

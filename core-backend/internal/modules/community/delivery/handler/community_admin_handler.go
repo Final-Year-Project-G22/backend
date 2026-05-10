@@ -372,8 +372,6 @@ func (h *CommunityAdminHandler) HandleListPostReports(ctx context.Context, input
 					AuthorLastName:  authorLastName,
 					Content:         post.Content,
 					IsSolution:      post.IsSolution,
-					AttachmentURL:   post.AttachmentURL,
-					AttachmentType:  post.AttachmentType,
 					CreatedAt:       createdAt,
 					UpdatedAt:       updatedAt,
 				}
@@ -589,8 +587,6 @@ func (h *CommunityAdminHandler) HandleGetPostReport(ctx context.Context, input *
 				AuthorLastName:  authorLastName,
 				Content:         post.Content,
 				IsSolution:      post.IsSolution,
-				AttachmentURL:   post.AttachmentURL,
-				AttachmentType:  post.AttachmentType,
 				CreatedAt:       createdAt,
 				UpdatedAt:       updatedAt,
 			}

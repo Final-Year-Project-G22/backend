@@ -166,7 +166,7 @@ func (r *BaseRepository[T]) findAll(ctx context.Context, opts query.QueryOptions
 	}
 
 	// Count total records
-	total := builder.Count(db.Session(&gorm.Session{}), opts, archived)
+	total := builder.Count(db.Model(new(T)), opts, archived)
 
 	// Build and execute query
 	var queryDB *gorm.DB

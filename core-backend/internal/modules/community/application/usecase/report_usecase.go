@@ -9,6 +9,7 @@ import (
 	communityerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ type contentReportUsecase struct {
 	threadRepo repository.DiscussionThreadRepository
 	postRepo   repository.DiscussionPostRepository
 	blockRepo  repository.ThreadBlockedUserRepository
+	transactor sharedrepo.Transactor
 }
 
 func NewContentReportUsecase(
@@ -26,12 +28,14 @@ func NewContentReportUsecase(
 	threadRepo repository.DiscussionThreadRepository,
 	postRepo repository.DiscussionPostRepository,
 	blockRepo repository.ThreadBlockedUserRepository,
+	transactor sharedrepo.Transactor,
 ) usecase.ContentReportUsecase {
 	return &contentReportUsecase{
 		reportRepo: reportRepo,
 		threadRepo: threadRepo,
 		postRepo:   postRepo,
 		blockRepo:  blockRepo,
+		transactor: transactor,
 	}
 }
 
@@ -238,7 +242,18 @@ func (u *contentReportUsecase) DeleteReportedPost(ctx context.Context, reportID 
 		return apperrors.InvalidInputError("reportId", "community.errors.invalidReportType")
 	}
 
-	if err := u.postRepo.HardDelete(ctx, *report.PostID); err != nil {
+	post, err := u.postRepo.GetByID(ctx, *report.PostID)
+	if err != nil {
+		return err
+	}
+	threadID := post.ThreadID
+
+	if err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if err := u.postRepo.HardDelete(txCtx, *report.PostID); err != nil {
+			return err
+		}
+		return u.threadRepo.UpdateReplyCount(txCtx, threadID, -1)
+	}); err != nil {
 		return err
 	}
 

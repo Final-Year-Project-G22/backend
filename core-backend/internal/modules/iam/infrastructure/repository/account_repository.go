@@ -203,3 +203,75 @@ func (r *accountRepository) FindBySegment(ctx context.Context, segment map[strin
 	}
 	return accounts, nil
 }
+
+func (r *accountRepository) ListAdmins(ctx context.Context, permissionCodes []string, queryOpts map[string]interface{}) ([]*entity.Account, int64, error) {
+	var accounts []*entity.Account
+
+	db := r.getDB(ctx).
+		Joins("JOIN role_assignments ra ON ra.account_id = accounts.id").
+		Joins("JOIN roles ro ON ro.id = ra.role_id").
+		Joins("JOIN role_permissions rp ON rp.role_id = ro.id").
+		Joins("JOIN permissions p ON p.id = rp.permission_id").
+		Where("p.code IN ?", permissionCodes).
+		Where("ra.revoked_at IS NULL").
+		Group("accounts.id")
+
+	if search, ok := queryOpts["search"].(string); ok && search != "" {
+		searchTerm := "%" + search + "%"
+		db = db.Where("(accounts.email ILIKE ? OR accounts.username ILIKE ? OR users.first_name ILIKE ? OR users.last_name ILIKE ?)",
+			searchTerm, searchTerm, searchTerm, searchTerm)
+		db = db.Joins("JOIN users ON users.id = accounts.user_id")
+	}
+
+	if status, ok := queryOpts["status"].(string); ok && status != "" {
+		db = db.Where("accounts.status = ?", status)
+	}
+
+	if roleID, ok := queryOpts["roleId"].(string); ok && roleID != "" {
+		db = db.Where("ro.id = ?", roleID)
+	}
+
+	if page, ok := queryOpts["page"].(int); ok && page > 0 {
+		pageSize := 20
+		if ps, ok := queryOpts["pageSize"].(int); ok && ps > 0 {
+			pageSize = ps
+		}
+		offset := (page - 1) * pageSize
+		db = db.Offset(offset).Limit(pageSize)
+	}
+
+	db = db.Order("accounts.created_at DESC")
+
+	if err := db.Find(&accounts).Error; err != nil {
+		r.logger.Error("Failed to list admin accounts", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+
+	var total int64
+	countDB := r.getDB(ctx).
+		Joins("JOIN role_assignments ra ON ra.account_id = accounts.id").
+		Joins("JOIN roles ro ON ro.id = ra.role_id").
+		Joins("JOIN role_permissions rp ON rp.role_id = ro.id").
+		Joins("JOIN permissions p ON p.id = rp.permission_id").
+		Where("p.code IN ?", permissionCodes).
+		Where("ra.revoked_at IS NULL")
+
+	if search, ok := queryOpts["search"].(string); ok && search != "" {
+		searchTerm := "%" + search + "%"
+		countDB = countDB.Where("(accounts.email ILIKE ? OR accounts.username ILIKE ? OR users.first_name ILIKE ? OR users.last_name ILIKE ?)",
+			searchTerm, searchTerm, searchTerm, searchTerm)
+		countDB = countDB.Joins("JOIN users ON users.id = accounts.user_id")
+	}
+
+	if status, ok := queryOpts["status"].(string); ok && status != "" {
+		countDB = countDB.Where("accounts.status = ?", status)
+	}
+
+	if roleID, ok := queryOpts["roleId"].(string); ok && roleID != "" {
+		countDB = countDB.Where("ro.id = ?", roleID)
+	}
+
+	countDB.Model(&entity.Account{}).Count(&total)
+
+	return accounts, total, nil
+}

@@ -81,8 +81,6 @@ func (u *discussionPostUsecase) CreatePost(ctx context.Context, accountID, threa
 			ThreadID:        threadID,
 			AuthorAccountID: accountID,
 			Content:         strings.TrimSpace(input.Content),
-			AttachmentURL:   input.AttachmentURL,
-			AttachmentType:  input.AttachmentType,
 		}
 		if err := u.postRepo.Create(txCtx, post); err != nil {
 			return err
@@ -134,8 +132,6 @@ func (u *discussionPostUsecase) ReplyToPost(ctx context.Context, accountID, thre
 			ParentPostID:    &parentPostID,
 			AuthorAccountID: accountID,
 			Content:         strings.TrimSpace(input.Content),
-			AttachmentURL:   input.AttachmentURL,
-			AttachmentType:  input.AttachmentType,
 		}
 		if err := u.postRepo.Create(txCtx, post); err != nil {
 			return err
@@ -182,19 +178,6 @@ func (u *discussionPostUsecase) UpdatePost(ctx context.Context, accountID, postI
 		post.Content = content
 		updated = true
 	}
-	if input.AttachmentURL != nil {
-		post.AttachmentURL = input.AttachmentURL
-		updated = true
-	}
-	if input.AttachmentType != nil {
-		post.AttachmentType = input.AttachmentType
-		updated = true
-	}
-	if input.RemoveAttachment != nil && *input.RemoveAttachment {
-		updated = true
-		post.AttachmentURL = nil
-		post.AttachmentType = nil
-	}
 	if !updated {
 		return nil, apperrors.BadRequestError("community.errors.noChanges")
 	}
@@ -230,7 +213,13 @@ func (u *discussionPostUsecase) DeletePost(ctx context.Context, accountID, postI
 	} else if solution != nil {
 		return apperrors.ForbiddenError("community.errors.postLocked")
 	}
-	return u.postRepo.Delete(ctx, postID)
+	threadID := post.ThreadID
+	return u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if err := u.postRepo.Delete(txCtx, postID); err != nil {
+			return err
+		}
+		return u.threadRepo.UpdateReplyCount(txCtx, threadID, -1)
+	})
 }
 
 func (u *discussionPostUsecase) MarkSolution(ctx context.Context, accountID, threadID, postID uuid.UUID) error {

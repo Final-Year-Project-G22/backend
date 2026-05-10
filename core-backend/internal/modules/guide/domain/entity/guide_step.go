@@ -27,8 +27,8 @@ type GuideStep struct {
 	EstimatedTime       *int                   `gorm:"column:estimated_time"`
 	DifficultyLevel     *int                   `gorm:"check:difficulty_level_check,difficulty_level BETWEEN 1 AND 5"`
 	IsOptional          bool                   `gorm:"not null;default:false"`
-	RequiredDocuments   datatypes.JSONMap      `gorm:"type:jsonb;not null;default:'[]'"`
-	ExternalLinks       datatypes.JSONMap      `gorm:"type:jsonb;not null;default:'[]'"`
+	RequiredDocuments   *datatypes.JSON        `gorm:"type:jsonb;default:'[]'"`
+	ExternalLinks       *datatypes.JSON        `gorm:"type:jsonb;default:'[]'"`
 	FeeEstimate         *int                   `gorm:"column:fee_estimate"`
 	Version             int                    `gorm:"not null;default:1"`
 	EffectiveDate       time.Time              `gorm:"type:date;not null;default:CURRENT_DATE"`

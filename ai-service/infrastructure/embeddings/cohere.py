@@ -55,9 +55,11 @@ class CohereEmbeddingAdapter(EmbeddingPort):
         if input_type is not None:
             payload["input_type"] = input_type
 
+        embed_url = "https://api.cohere.com/v1/embed"
+
         try:
             response = await self._http.post(
-                "https://api.cohere.com/v1/embed",
+                embed_url,
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
                     "Content-Type": "application/json",
@@ -66,10 +68,23 @@ class CohereEmbeddingAdapter(EmbeddingPort):
                 timeout=30,
             )
             response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise EmbeddingError(
+                "cohere embedding request failed",
+                details={
+                    "provider": self.provider,
+                    "status": exc.response.status_code,
+                    "response": exc.response.text,
+                },
+            ) from exc
         except httpx.HTTPError as exc:
             raise EmbeddingError(
                 "cohere embedding request failed",
-                details={"provider": self.provider},
+                details={
+                    "provider": self.provider,
+                    "reason": type(exc).__name__,
+                    "detail": str(exc),
+                },
             ) from exc
 
         data = response.json()

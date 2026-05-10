@@ -113,3 +113,11 @@ func (r *ingestionStatusProjectionRepository) GetByUserID(ctx context.Context, u
 	}
 	return projections, nil
 }
+
+func (r *ingestionStatusProjectionRepository) DeleteByDocumentID(ctx context.Context, documentID uuid.UUID) error {
+	if err := r.getDB(ctx).Where("document_id = ?", documentID).Delete(&entity.IngestionStatusProjection{}).Error; err != nil {
+		r.logger.Error("Failed to delete status projection", core.Error(err))
+		return apperrors.InternalError("errors.databaseError", err)
+	}
+	return nil
+}

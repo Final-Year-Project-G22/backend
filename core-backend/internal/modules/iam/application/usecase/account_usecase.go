@@ -115,6 +115,9 @@ func (u *accountUsecase) UpdateAccount(ctx context.Context, accountID uuid.UUID,
 	if input.PhoneNumber != nil {
 		account.PhoneNumber = input.PhoneNumber
 	}
+	if input.LastLoginAt != nil {
+		account.LastLoginAt = input.LastLoginAt
+	}
 
 	if err := u.accountRepo.Update(ctx, account); err != nil {
 		return nil, err
@@ -165,4 +168,8 @@ func (u *accountUsecase) MarkEmailVerifiedAndActivate(ctx context.Context, accou
 	)
 
 	return nil
+}
+
+func (u *accountUsecase) ListAdmins(ctx context.Context, permissionCodes []string, queryOpts map[string]interface{}) ([]*entity.Account, int64, error) {
+	return u.accountRepo.ListAdmins(ctx, permissionCodes, queryOpts)
 }

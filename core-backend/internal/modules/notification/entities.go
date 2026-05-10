@@ -22,6 +22,9 @@ func (e *EntityProvider) Entities() []any {
 		&entity.UserNotificationInbox{},
 		&entity.NotificationCampaign{},
 		&entity.EmailDeliveryLog{},
+		&entity.NotificationOutbox{},
+		&entity.CampaignTemplate{},
+		&entity.CampaignTemplateTranslation{},
 	}
 }
 

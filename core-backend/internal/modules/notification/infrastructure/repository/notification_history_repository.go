@@ -33,15 +33,22 @@ func (r *notificationHistoryRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *notificationHistoryRepository) ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, error) {
+func (r *notificationHistoryRepository) ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.NotificationHistory, int64, error) {
+	var total int64
+	baseDB := r.getDB(ctx).Where("account_id = ?", accountID)
+
+	if err := baseDB.Model(&entity.NotificationHistory{}).Count(&total).Error; err != nil {
+		r.logger.Error("Failed to count history", core.Error(err))
+		return nil, 0, errors.InternalError("errors.databaseError", err)
+	}
+
 	var history []*entity.NotificationHistory
-	db := r.getDB(ctx).Where("account_id = ?", accountID)
-	db = applyPaginationAndSorting(db, q, "sent_at desc")
+	db := applyPaginationAndSorting(baseDB, q, "sent_at desc")
 	if err := db.Find(&history).Error; err != nil {
 		r.logger.Error("Failed to list notification history", core.Error(err))
-		return nil, errors.InternalError("errors.databaseError", err)
+		return nil, 0, errors.InternalError("errors.databaseError", err)
 	}
-	return history, nil
+	return history, total, nil
 }
 
 func (r *notificationHistoryRepository) UpdateDeliveryStatus(ctx context.Context, id uuid.UUID, status entity.DeliveryStatus, deliveredAt *time.Time) error {

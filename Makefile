@@ -105,8 +105,11 @@ infra-down:
 
 # Start all dev servers
 dev:
-	cd core-backend && air
-	cd ai-service && uv run python main.py
+	@trap 'kill 0' EXIT; \
+	cd core-backend && air & \
+	cd ai-service && uv run python main.py & \
+	cd ai-service && uv run python -m workers.ingestion_worker & \
+	wait
 
 # Start core-backend only
 dev-go:
@@ -115,6 +118,9 @@ dev-go:
 # Start ai-service only
 dev-python:
 	cd ai-service && uv run python main.py
+
+dev-worker:
+	cd ai-service && uv run python -m workers.ingestion_worker
 
 # ==============================================================================
 # Clean

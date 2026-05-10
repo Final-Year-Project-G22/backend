@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
@@ -108,25 +109,77 @@ func (r *stepRepository) Reorder(ctx context.Context, guideID uuid.UUID, stepIDs
 	if len(stepIDsInOrder) == 0 {
 		return nil
 	}
-	var steps []*entity.GuideStep
-	if err := r.getDB(ctx).Where("guide_id = ? AND id IN ?", guideID, stepIDsInOrder).Find(&steps).Error; err != nil {
-		r.logger.Error("Failed to load steps for reorder", core.Error(err))
+	db := r.getDB(ctx)
+
+	// Phase 0: Lock all active steps for this guide to prevent concurrent modifications
+	var lockedIDs []uuid.UUID
+	if err := db.Raw("SELECT id FROM guide_steps WHERE guide_id = ? AND deleted_at IS NULL FOR UPDATE", guideID).Scan(&lockedIDs).Error; err != nil {
+		r.logger.Error("Failed to lock steps for reorder", core.Error(err))
 		return errors.InternalError("errors.databaseError", err)
 	}
-	if len(steps) != len(stepIDsInOrder) {
-		return guideerror.ErrStepNotFound
+
+	// Validate that the frontend sent ALL active steps (not a partial list)
+	if len(lockedIDs) != len(stepIDsInOrder) {
+		return guideerror.ErrIncompleteStepList
 	}
+
+	// Hard-delete any legacy soft-deleted rows for this guide.
+	if err := db.Exec("DELETE FROM guide_steps WHERE guide_id = ? AND deleted_at IS NOT NULL", guideID).Error; err != nil {
+		r.logger.Error("Failed to cleanup soft-deleted steps", core.Error(err))
+		return errors.InternalError("errors.databaseError", err)
+	}
+
+	// Phase 1: Move all active rows to unique temporary negative values using a CTE.
+	// This frees up their current sort_order values so Phase 2 can assign
+	// the final 1-based ordering without violating the unique constraint.
+	shiftSQL := `WITH temp AS (
+		SELECT id, -(ROW_NUMBER() OVER (ORDER BY sort_order, created_at)) AS new_order
+		FROM guide_steps
+		WHERE guide_id = ? AND deleted_at IS NULL
+	)
+	UPDATE guide_steps gs SET sort_order = temp.new_order, updated_at = NOW()
+	FROM temp WHERE gs.id = temp.id`
+	if err := db.Exec(shiftSQL, guideID).Error; err != nil {
+		r.logger.Error("Failed to shift step sort orders to temp values", core.Error(err))
+		return errors.InternalError("errors.databaseError", err)
+	}
+
+	// Phase 2: assign final consecutive sort_order (1-based) using parameterized CASE.
+	// Integer THEN values are embedded as literals (safe: sequential counters, not user input).
+	// UUID WHEN values and IN clause use ? placeholders.
+	caseSQL := "UPDATE guide_steps SET sort_order = CAST(CASE id "
+	args := make([]interface{}, 0, len(stepIDsInOrder)+1)
 	for i, stepID := range stepIDsInOrder {
-		result := r.getDB(ctx).Model(&entity.GuideStep{}).Where("id = ? AND guide_id = ?", stepID, guideID).Update("sort_order", i)
-		if result.Error != nil {
-			r.logger.Error("Failed to reorder step", core.Error(result.Error))
-			return errors.InternalError("errors.databaseError", result.Error)
-		}
-		if result.RowsAffected == 0 {
-			return guideerror.ErrStepNotFound
-		}
+		caseSQL += fmt.Sprintf("WHEN ? THEN %d ", i+1)
+		args = append(args, stepID)
 	}
+	caseSQL += "END AS integer), updated_at = NOW() WHERE id IN ("
+	inPlaceholders := make([]string, len(stepIDsInOrder))
+	for i, stepID := range stepIDsInOrder {
+		inPlaceholders[i] = "?"
+		args = append(args, stepID)
+	}
+	caseSQL += strings.Join(inPlaceholders, ",") + ") AND guide_id = ?"
+	args = append(args, guideID)
+
+	if err := db.Exec(caseSQL, args...).Error; err != nil {
+		r.logger.Error("Failed to set final step sort order", core.Error(err))
+		return errors.InternalError("errors.databaseError", err)
+	}
+
 	return nil
+}
+
+func (r *stepRepository) GetMaxSortOrder(ctx context.Context, guideID uuid.UUID) (int, error) {
+	var maxOrder int
+	if err := r.getDB(ctx).Model(&entity.GuideStep{}).
+		Select("COALESCE(MAX(sort_order), 0)").
+		Where("guide_id = ? AND deleted_at IS NULL", guideID).
+		Scan(&maxOrder).Error; err != nil {
+		r.logger.Error("Failed to get max sort order", core.Error(err))
+		return 0, errors.InternalError("errors.databaseError", err)
+	}
+	return maxOrder, nil
 }
 
 func (r *stepRepository) GetConditions(ctx context.Context, stepID uuid.UUID) ([]*entity.StepCondition, error) {
