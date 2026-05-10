@@ -13,7 +13,7 @@ type NotificationTemplateRepository interface {
 	sharedrepo.GenericRepository[entity.NotificationTemplate]
 
 	GetByType(ctx context.Context, notificationType entity.NotificationType) (*entity.NotificationTemplate, error)
-	GetByCategory(ctx context.Context, category entity.NotificationCategory, q query.QueryOptions) ([]*entity.NotificationTemplate, error)
+	ListByTemplateGroup(ctx context.Context, group string, q query.QueryOptions) ([]*entity.NotificationTemplate, error)
 	GetTranslations(ctx context.Context, templateID uuid.UUID) ([]*entity.NotificationTemplateTranslation, error)
 	UpsertTranslation(ctx context.Context, translation *entity.NotificationTemplateTranslation) error
 	DeleteTranslation(ctx context.Context, templateID uuid.UUID, language string) error

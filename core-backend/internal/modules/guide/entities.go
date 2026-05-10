@@ -27,10 +27,8 @@ func NewEntityProvider() *EntityProvider {
 
 func (e *EntityProvider) Entities() []any {
 	return []any{
-		&entity.GuideCategory{},
 		&entity.Guide{},
 		&entity.GuideCondition{},
-		&entity.GuideCategoryCondition{},
 		&entity.GuideStep{},
 		&entity.StepCondition{},
 		&entity.StepDependency{},
@@ -38,7 +36,6 @@ func (e *EntityProvider) Entities() []any {
 		&entity.UserGuideJourney{},
 		&entity.UserGuideBookmark{},
 		&entity.GuideStepVersion{},
-		&entity.GuideCategoryTranslation{},
 		&entity.GuideTranslation{},
 		&entity.GuideStepTranslation{},
 		&entity.UserGuideRecentView{},

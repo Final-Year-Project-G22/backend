@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -77,6 +78,28 @@ func (c *InferenceGRPCClient) Ask(ctx context.Context, req port.AskRequest) (por
 	}
 	if req.Title != nil {
 		protoReq.Title = req.Title
+	}
+
+	// Pass taxonomy filters as gRPC metadata for retrieval narrowing.
+	if len(req.SectorIDs) > 0 {
+		var parts []string
+		for _, id := range req.SectorIDs {
+			parts = append(parts, id.String())
+		}
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-sector-ids", strings.Join(parts, ","))
+	}
+	if len(req.TagIDs) > 0 {
+		var parts []string
+		for _, id := range req.TagIDs {
+			parts = append(parts, id.String())
+		}
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-tag-ids", strings.Join(parts, ","))
+	}
+	if req.Region != nil {
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-region", *req.Region)
+	}
+	if req.Stage != nil {
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-stage", *req.Stage)
 	}
 
 	resp, err := c.client.Ask(callCtx, protoReq)
@@ -213,6 +236,28 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 	}
 	if req.Title != nil {
 		protoReq.Title = req.Title
+	}
+
+	// Pass taxonomy filters as gRPC metadata for retrieval narrowing.
+	if len(req.SectorIDs) > 0 {
+		var parts []string
+		for _, id := range req.SectorIDs {
+			parts = append(parts, id.String())
+		}
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-sector-ids", strings.Join(parts, ","))
+	}
+	if len(req.TagIDs) > 0 {
+		var parts []string
+		for _, id := range req.TagIDs {
+			parts = append(parts, id.String())
+		}
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-tag-ids", strings.Join(parts, ","))
+	}
+	if req.Region != nil {
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-region", *req.Region)
+	}
+	if req.Stage != nil {
+		callCtx = metadata.AppendToOutgoingContext(callCtx, "x-taxonomy-stage", *req.Stage)
 	}
 
 	stream, err := c.client.AskStream(callCtx, protoReq)

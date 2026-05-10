@@ -76,6 +76,10 @@ func (h *IngestionHandler) HandleFinalizeUpload(ctx context.Context, input *dto.
 		SourceFilename:   input.Body.SourceFilename,
 		DeclaredLanguage: input.Body.DeclaredLanguage,
 		BatchID:          input.Body.BatchID,
+		SectorIDs:        input.Body.SectorIDs,
+		TagIDs:           input.Body.TagIDs,
+		Region:           input.Body.Region,
+		Stage:            input.Body.Stage,
 	})
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)

@@ -67,59 +67,12 @@ func (h *CommunityHandler) HandleGetCategory(ctx context.Context, input *dto.Get
 	return &dto.GetCategoryOutput{Body: dto.GetCategoryResponseBody{Category: dto.ToCategoryDTO(category)}}, nil
 }
 
-func (h *CommunityHandler) HandleListThreadsByCategory(ctx context.Context, input *dto.ListThreadsByCategoryInput) (*dto.ListThreadsByCategoryOutput, error) {
-	opts := dto.ToQueryOptions(input.Page, input.PageSize)
-	opts.Search = input.Search
-	threads, err := h.threadUsecase.ListThreadsByCategory(ctx, input.CategoryID, opts)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
-	items := make([]*dto.ThreadDTO, 0, len(threads))
-	for _, thread := range threads {
-		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta))
-	}
-	return &dto.ListThreadsByCategoryOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
-}
-
-func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.SearchThreadsInput) (*dto.SearchThreadsOutput, error) {
-	opts := dto.ToQueryOptions(input.Page, input.PageSize)
-	var categoryID *uuid.UUID
-	if input.CategoryID != "" {
-		parsed, err := uuid.Parse(input.CategoryID)
-		if err != nil {
-			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "community.errors.invalidInput"))
-		}
-		categoryID = &parsed
-	}
-	threads, err := h.threadUsecase.SearchThreads(ctx, input.Keyword, categoryID, opts)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, err)
-	}
-	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
-	items := make([]*dto.ThreadDTO, 0, len(threads))
-	for _, thread := range threads {
-		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta))
-	}
-	return &dto.SearchThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
-}
-
 func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.ListThreadsInput) (*dto.ListThreadsOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	opts := dto.ToQueryOptions(input.Page, input.PageSize)
 	opts.Search = input.Search
 
-	var categoryID *uuid.UUID
-	if input.CategoryID != "" {
-		parsed, err := uuid.Parse(input.CategoryID)
-		if err != nil {
-			return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "community.errors.invalidInput"))
-		}
-		categoryID = &parsed
-	}
-
-	threads, err := h.threadUsecase.SearchThreads(ctx, input.Search, categoryID, opts)
+	threads, err := h.threadUsecase.ListThreads(ctx, accountID, opts)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -132,6 +85,23 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 	}
 
 	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
+}
+
+func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.SearchThreadsInput) (*dto.SearchThreadsOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	opts := dto.ToQueryOptions(input.Page, input.PageSize)
+
+	threads, err := h.threadUsecase.SearchThreads(ctx, accountID, input.Keyword, opts)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
+	items := make([]*dto.ThreadDTO, 0, len(threads))
+	for _, thread := range threads {
+		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
+		items = append(items, dto.ToThreadDTO(thread, authorMeta))
+	}
+	return &dto.SearchThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
 }
 
 func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetThreadInput) (*dto.GetThreadOutput, error) {
@@ -166,11 +136,6 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
 	}
 
-	categoryID, err := uuid.Parse(formData.CategoryID)
-	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, apperrors.InvalidInputError("categoryId", "community.errors.invalidInput"))
-	}
-
 	var parentThreadID *uuid.UUID
 	if formData.ParentThreadID != "" {
 		parsed, err := uuid.Parse(formData.ParentThreadID)
@@ -181,7 +146,8 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 	}
 
 	thread, post, err := h.communityService.CreateThreadWithPost(ctx, accountID, dto.ToCreateThreadInput(
-		categoryID,
+		formData.SectorIDs,
+		formData.TagIDs,
 		parentThreadID,
 		formData.Title,
 		formData.Slug,

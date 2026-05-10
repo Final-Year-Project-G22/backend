@@ -41,11 +41,6 @@ func (uc *notificationTemplateUsecase) CreateTemplate(ctx context.Context, input
 		return nil, notiferror.ErrTemplateTypeConflict
 	}
 
-	category := input.Category
-	if category == "" {
-		category = notificationTypeToCategory(input.NotificationType)
-	}
-
 	var variablesSchema *datatypes.JSONMap
 	if input.VariablesSchema != nil {
 		vs := datatypes.JSONMap(*input.VariablesSchema)
@@ -56,7 +51,7 @@ func (uc *notificationTemplateUsecase) CreateTemplate(ctx context.Context, input
 		Name:             input.Name,
 		Description:      input.Description,
 		NotificationType: input.NotificationType,
-		Category:         category,
+		TemplateGroup:    input.TemplateGroup,
 		Priority:         input.Priority,
 		DefaultContent:   datatypes.JSONMap(input.DefaultContent),
 		VariablesSchema:  variablesSchema,
@@ -77,9 +72,9 @@ func (uc *notificationTemplateUsecase) GetTemplateByType(ctx context.Context, no
 	return uc.repo.GetByType(ctx, notificationType)
 }
 
-func (uc *notificationTemplateUsecase) ListTemplates(ctx context.Context, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.NotificationTemplate, error) {
-	if category != nil {
-		return uc.repo.GetByCategory(ctx, *category, q)
+func (uc *notificationTemplateUsecase) ListTemplates(ctx context.Context, templateGroup string, q query.QueryOptions) ([]*entity.NotificationTemplate, error) {
+	if templateGroup != "" {
+		return uc.repo.ListByTemplateGroup(ctx, templateGroup, q)
 	}
 	result := uc.repo.FindAll(ctx, q)
 	return result.Data, nil
@@ -193,23 +188,4 @@ func (uc *notificationTemplateUsecase) DeleteTranslation(ctx context.Context, te
 
 func (uc *notificationTemplateUsecase) GetTranslations(ctx context.Context, templateID uuid.UUID) ([]*entity.NotificationTemplateTranslation, error) {
 	return uc.repo.GetTranslations(ctx, templateID)
-}
-
-func notificationTypeToCategory(nt entity.NotificationType) entity.NotificationCategory {
-	switch nt {
-	case entity.NotificationTypeSystemAnnouncement, entity.NotificationTypePolicyUpdate, entity.NotificationTypeWelcomeMessage:
-		return entity.NotificationCategorySystem
-	case entity.NotificationTypeCommunityReply, entity.NotificationTypeCommunitySolution, entity.NotificationTypeCommunityMention:
-		return entity.NotificationCategoryCommunity
-	case entity.NotificationTypeGuideStepCompleted, entity.NotificationTypeGuideDeadline, entity.NotificationTypeGuideUpdate:
-		return entity.NotificationCategoryGuide
-	case entity.NotificationTypeAIQuotaLimit, entity.NotificationTypeAIResponseReady:
-		return entity.NotificationCategoryAI
-	case entity.NotificationTypeAccountAlert, entity.NotificationTypeAccountAlertCritical, entity.NotificationTypeAccountAlertInfo, entity.NotificationTypeAccountVerification, entity.NotificationTypePasswordReset:
-		return entity.NotificationCategorySecurity
-	case entity.NotificationTypePaymentConfirmation:
-		return entity.NotificationCategoryPayment
-	default:
-		return entity.NotificationCategorySystem
-	}
 }

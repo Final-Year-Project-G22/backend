@@ -17,22 +17,23 @@ func NewGuideViewHandler(guideViewUC usecase.GuideViewUseCase) *GuideViewHandler
 	return &GuideViewHandler{guideViewUC: guideViewUC}
 }
 
-func (h *GuideViewHandler) HandleGetCategoryTree(ctx context.Context, input *dto.GetCategoryTreeInput) (*dto.GetCategoryTreeOutput, error) {
+func (h *GuideViewHandler) HandleListGuides(ctx context.Context, input *dto.ListGuidesInput) (*dto.ListGuidesOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
-	nodes, err := h.guideViewUC.GetCategoryTree(ctx, accountID, userID, input.Locale)
+	q := dto.ToQueryOptions(input.Page, input.PageSize)
+	cards, err := h.guideViewUC.ListGuides(ctx, accountID, userID, q, input.Locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
-	categories := make([]*dto.CategoryNodeDTO, 0, len(nodes))
-	for _, node := range nodes {
-		categories = append(categories, dto.ToCategoryNodeDTO(node))
+	guides := make([]*dto.GuideCardDTO, 0, len(cards))
+	for _, card := range cards {
+		guides = append(guides, dto.ToGuideCardDTO(card))
 	}
 
-	return &dto.GetCategoryTreeOutput{
-		Body: dto.GetCategoryTreeResponseBody{Categories: categories},
+	return &dto.ListGuidesOutput{
+		Body: dto.ListGuidesResponseBody{Guides: guides},
 	}, nil
 }
 

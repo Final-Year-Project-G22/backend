@@ -22,7 +22,8 @@ type UpdateCategoryInput struct {
 }
 
 type CreateThreadInput struct {
-	CategoryID         uuid.UUID
+	SectorIDs          []uuid.UUID
+	TagIDs             []uuid.UUID
 	ParentThreadID     *uuid.UUID
 	Title              string
 	Slug               string

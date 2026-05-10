@@ -11,9 +11,8 @@ import (
 // --- Inbox List ---
 
 type ListInboxInput struct {
-	Category string `query:"category" doc:"Filter by notification category"`
-	Page     int    `query:"page" doc:"Page number"`
-	PageSize int    `query:"pageSize" doc:"Items per page"`
+	Page     int `query:"page" doc:"Page number"`
+	PageSize int `query:"pageSize" doc:"Items per page"`
 }
 
 type ListInboxOutput struct {
@@ -30,7 +29,6 @@ type ListInboxResponseBody struct {
 
 type InboxEntryResponse struct {
 	ID           uuid.UUID                   `json:"id" doc:"Inbox entry ID"`
-	Category     entity.NotificationCategory `json:"category" doc:"Notification category"`
 	ActionUrl    *string                     `json:"actionUrl,omitempty" doc:"Action URL"`
 	IsRead       bool                        `json:"isRead" doc:"Whether the notification has been read"`
 	IsArchived   bool                        `json:"isArchived" doc:"Whether the notification has been archived"`
@@ -79,20 +77,6 @@ type MarkAllAsReadOutput struct {
 }
 
 type MarkAllAsReadResponseBody struct {
-	Message string `json:"message" doc:"Success message"`
-}
-
-// --- Mark Category As Read ---
-
-type MarkCategoryAsReadInput struct {
-	Category entity.NotificationCategory `path:"category" doc:"Notification category"`
-}
-
-type MarkCategoryAsReadOutput struct {
-	Body MarkCategoryAsReadResponseBody
-}
-
-type MarkCategoryAsReadResponseBody struct {
 	Message string `json:"message" doc:"Success message"`
 }
 
@@ -457,8 +441,8 @@ func ToDeviceResponses(devices []*entity.UserDevice) []DeviceResponse {
 
 func ToInboxEntryResponse(inbox *entity.UserNotificationInbox) InboxEntryResponse {
 	resp := InboxEntryResponse{
-		ID:         inbox.ID,
-		Category:   inbox.Category,
+		ID: inbox.ID,
+
 		ActionUrl:  inbox.ActionUrl,
 		IsRead:     inbox.IsRead,
 		IsArchived: inbox.IsArchived,

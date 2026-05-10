@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO: remove when category endpoints are removed.
 type CommunityCategory struct {
 	model.BaseModel  `gorm:"embedded"`
 	Name             string              `gorm:"type:varchar(200);not null"`
@@ -13,7 +14,6 @@ type CommunityCategory struct {
 	ParentCategoryID *uuid.UUID          `gorm:"type:uuid;uniqueIndex:idx_community_categories_slug_per_parent,priority:1;index:idx_community_categories_parent"`
 	ParentCategory   *CommunityCategory  `gorm:"foreignKey:ParentCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	ChildCategories  []CommunityCategory `gorm:"foreignKey:ParentCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Threads          []DiscussionThread  `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	IsActive         bool                `gorm:"not null;default:true"`
 }
 

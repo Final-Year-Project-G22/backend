@@ -1,4 +1,4 @@
-h1:J3HNgpN1+O8Mq7gXzP2YymNsTH8MHVKzCNavfA3W4uM=
+h1:JLLn90nkzmcTSvwJVOFY49N5z+4QFzfJht2FnhMWbCA=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -23,3 +23,5 @@ h1:J3HNgpN1+O8Mq7gXzP2YymNsTH8MHVKzCNavfA3W4uM=
 20260505122034_updateOnAccountEmailOtp.sql h1:k0Iv6OrBYQARw/+hK+hAiRtJ5htbumU0rFKrPjLoGjI=
 20260506005502_Campaign_table_and_translation.sql h1:4Shw/AdroARrinOX/FQG9xfAA1Jox0XU9DxI14yUP/0=
 20260507013736_updateOnUserGuidepogress.sql h1:BKHyz0uzWoExtv4PGsobf0ZHQXIBz/xPNJYsr3br4zg=
+20260510191725_updateFromCategoryToSector.sql h1:8wOTQQI5785P4pXvGll/4Fk4xlOZVKEgOovg1Xyfz64=
+20260510191726_seedForSectorAndTags.sql h1:+6h5aLbxVg2K6eGZ7WTz8nknFMBVdI76Qtbis0qVTTQ=

@@ -11,7 +11,7 @@ type CreateTemplateInput struct {
 	Name             string                      `json:"name"`
 	Description      *string                     `json:"description,omitempty"`
 	NotificationType entity.NotificationType     `json:"notificationType"`
-	Category         entity.NotificationCategory `json:"category"`
+	TemplateGroup    string                      `json:"templateGroup"`
 	Priority         entity.NotificationPriority `json:"priority"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent"`
 	VariablesSchema  *map[string]interface{}     `json:"variablesSchema,omitempty"`
@@ -100,6 +100,10 @@ type CreateCampaignInput struct {
 	TargetSegment      *map[string]interface{} `json:"targetSegment,omitempty"`
 	CampaignTemplateID uuid.UUID               `json:"campaignTemplateId"`
 	ScheduledFor       *time.Time              `json:"scheduledFor,omitempty"`
+	SectorIDs          []uuid.UUID             `json:"sectorIds,omitempty"`
+	TagIDs             []uuid.UUID             `json:"tagIds,omitempty"`
+	Region             *string                 `json:"region,omitempty"`
+	Stage              *string                 `json:"stage,omitempty"`
 }
 
 type UpdateCampaignInput struct {
@@ -107,6 +111,10 @@ type UpdateCampaignInput struct {
 	Description   *string                 `json:"description,omitempty"`
 	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty"`
 	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty"`
+	SectorIDs     []uuid.UUID             `json:"sectorIds,omitempty"`
+	TagIDs        []uuid.UUID             `json:"tagIds,omitempty"`
+	Region        *string                 `json:"region,omitempty"`
+	Stage         *string                 `json:"stage,omitempty"`
 }
 
 type ScheduleCampaignInput struct {

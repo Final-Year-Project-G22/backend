@@ -19,6 +19,10 @@ type NotificationCampaign struct {
 	SentAt             *time.Time         `gorm:"type:timestamptz"`
 	Status             CampaignStatus     `gorm:"type:varchar(20);not null;default:'draft'"`
 	CreatedBy          uuid.UUID          `gorm:"type:uuid;not null;index:idx_notif_campaigns_creator"`
+	SectorIDs          []uuid.UUID        `gorm:"type:uuid[];index:idx_notif_campaigns_sector_ids,using:gin"`
+	TagIDs             []uuid.UUID        `gorm:"type:uuid[];index:idx_notif_campaigns_tag_ids,using:gin"`
+	Region             *string            `gorm:"type:varchar(50)"`
+	Stage              *string            `gorm:"type:varchar(50)"`
 }
 
 func (NotificationCampaign) TableName() string {

@@ -30,6 +30,10 @@ func (p *EntityProvider) Entities() []interface{} {
 		&entity.NotificationPreference{},
 		&entity.CommunityPreference{},
 		&entity.BusinessProfile{},
+		&entity.Sector{},
+		&entity.SectorTranslation{},
+		&entity.Tag{},
+		&entity.TagTranslation{},
 	}
 }
 

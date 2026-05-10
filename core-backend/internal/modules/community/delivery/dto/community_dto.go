@@ -28,7 +28,8 @@ type ThreadDTO struct {
 	Title          string              `json:"title" doc:"Thread title"`
 	Slug           string              `json:"slug" doc:"Thread slug"`
 	Description    *string             `json:"description,omitempty" doc:"Thread description"`
-	CategoryID     uuid.UUID           `json:"categoryId" doc:"Category ID"`
+	SectorIDs      []uuid.UUID         `json:"sectorIds" doc:"Sector IDs"`
+	TagIDs         []uuid.UUID         `json:"tagIds" doc:"Tag IDs"`
 	AuthorID       uuid.UUID           `json:"authorId" doc:"Author account ID"`
 	AuthorUsername string              `json:"authorUsername,omitempty" doc:"Author username"`
 	AuthorDisplay  string              `json:"authorDisplayName" doc:"Author display name"`
@@ -102,33 +103,20 @@ type GetCategoryResponseBody struct {
 	Category *CategoryDTO `json:"category" doc:"Category details"`
 }
 
-type ListThreadsByCategoryInput struct {
-	CategoryID uuid.UUID `path:"id" doc:"Category ID"`
-	Page       int       `query:"page" doc:"Page number"`
-	PageSize   int       `query:"pageSize" doc:"Page size"`
-	Search     string    `query:"search" doc:"Search term"`
-}
-
-type ListThreadsByCategoryOutput struct {
-	Body ListThreadsResponseBody
+type ListThreadsInput struct {
+	Search   string `query:"search" doc:"Search term"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Page size"`
 }
 
 type SearchThreadsInput struct {
-	Keyword    string `query:"keyword" doc:"Search keyword"`
-	CategoryID string `query:"categoryId" doc:"Category ID"`
-	Page       int    `query:"page" doc:"Page number"`
-	PageSize   int    `query:"pageSize" doc:"Page size"`
+	Keyword  string `query:"keyword" doc:"Search keyword"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Page size"`
 }
 
 type SearchThreadsOutput struct {
 	Body ListThreadsResponseBody
-}
-
-type ListThreadsInput struct {
-	CategoryID string `query:"categoryId" doc:"Category ID"`
-	Search     string `query:"search" doc:"Search term"`
-	Page       int    `query:"page" doc:"Page number"`
-	PageSize   int    `query:"pageSize" doc:"Page size"`
 }
 
 type ListThreadsOutput struct {
@@ -166,7 +154,8 @@ type ListPostsResponseBody struct {
 }
 
 type CreateThreadFormData struct {
-	CategoryID         string `form:"categoryId" doc:"Category ID"`
+	SectorIDs          string `form:"sectorIds" doc:"Sector IDs (comma-separated)" required:"false"`
+	TagIDs             string `form:"tagIds" doc:"Tag IDs (comma-separated)" required:"false"`
 	ParentThreadID     string `form:"parentThreadId" doc:"Parent thread ID for sub-threads" required:"false"`
 	Title              string `form:"title" doc:"Thread title"`
 	Slug               string `form:"slug" doc:"Thread slug"`
@@ -453,7 +442,8 @@ func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta) *Threa
 		Title:          thread.Title,
 		Slug:           thread.Slug,
 		Description:    thread.Description,
-		CategoryID:     thread.CategoryID,
+		SectorIDs:      thread.SectorIDs,
+		TagIDs:         thread.TagIDs,
 		AuthorID:       thread.AuthorAccountID,
 		AuthorUsername: authorUsername,
 		AuthorDisplay:  displayName,
@@ -549,7 +539,7 @@ func parseCSVToStringSlice(csv string) []string {
 	return result
 }
 
-func ToCreateThreadInput(categoryID uuid.UUID, parentThreadID *uuid.UUID, title, slug, description, initialPostContent string, attachmentIds string) usecase.CreateThreadInput {
+func ToCreateThreadInput(sectorIDs, tagIDs string, parentThreadID *uuid.UUID, title, slug, description, initialPostContent string, attachmentIds string) usecase.CreateThreadInput {
 	var descriptionPtr *string
 	if strings.TrimSpace(description) != "" {
 		d := strings.TrimSpace(description)
@@ -557,7 +547,8 @@ func ToCreateThreadInput(categoryID uuid.UUID, parentThreadID *uuid.UUID, title,
 	}
 
 	return usecase.CreateThreadInput{
-		CategoryID:         categoryID,
+		SectorIDs:          parseStringSliceToUUID(parseCSVToStringSlice(sectorIDs)),
+		TagIDs:             parseStringSliceToUUID(parseCSVToStringSlice(tagIDs)),
 		ParentThreadID:     parentThreadID,
 		Title:              title,
 		Slug:               slug,

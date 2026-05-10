@@ -12,6 +12,7 @@ const adminBase = apiV1Base + "/admin"
 
 type AdminRouteDependencies struct {
 	AdminHandler            *handler.AdminHandler
+	TaxonomyAdminHandler    *handler.TaxonomyAdminHandler
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 	RoleAssignmentUsecase   usecase.RoleAssignmentUsecase
@@ -63,4 +64,6 @@ func RegisterAdminRoutes(api huma.API, deps AdminRouteDependencies) {
 		Description: "Validates the reset token and sets a new password for the admin account.",
 		Tags:        []string{"Authentication"},
 	}, deps.AdminHandler.HandleCompleteAdminPasswordReset)
+
+	RegisterTaxonomyAdminRoutes(api, deps)
 }

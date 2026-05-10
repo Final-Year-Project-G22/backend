@@ -10,7 +10,7 @@ type NotificationTemplate struct {
 	Name             string                            `gorm:"type:varchar(200);not null;uniqueIndex:idx_notif_templates_name"`
 	Description      *string                           `gorm:"type:text"`
 	NotificationType NotificationType                  `gorm:"type:varchar(64);not null;uniqueIndex:idx_notif_templates_type"`
-	Category         NotificationCategory              `gorm:"type:varchar(32);not null;index:idx_notif_templates_category"`
+	TemplateGroup    string                            `gorm:"type:varchar(100);index:idx_notif_templates_group"`
 	Priority         NotificationPriority              `gorm:"type:smallint;not null;default:1"`
 	IsSystemManaged  bool                              `gorm:"not null;default:false"`
 	DefaultContent   datatypes.JSONMap                 `gorm:"type:jsonb;not null"`

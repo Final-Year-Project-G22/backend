@@ -35,9 +35,9 @@ func (r *guideRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *guideRepository) GetBySlug(ctx context.Context, categoryID uuid.UUID, slug string, locale constants.Locale) (*entity.Guide, error) {
+func (r *guideRepository) GetBySlug(ctx context.Context, slug string, locale constants.Locale) (*entity.Guide, error) {
 	var guide entity.Guide
-	if err := r.getDB(ctx).Preload("Translations", "language = ?", locale).Where("category_id = ? AND slug = ?", categoryID, slug).First(&guide).Error; err != nil {
+	if err := r.getDB(ctx).Preload("Translations", "language = ?", locale).Where("slug = ?", slug).First(&guide).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, guideerror.ErrGuideNotFound
 		}
@@ -73,16 +73,26 @@ func (r *guideRepository) GetBySlugGlobal(ctx context.Context, slug string, loca
 	return &guide, nil
 }
 
-func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error) {
+func (r *guideRepository) ListByTaxonomy(ctx context.Context, sectorIDs []uuid.UUID, tagIDs []uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error) {
 	var guides []*entity.Guide
-	db := r.getDB(ctx).Where("category_id = ?", categoryID)
+	db := r.getDB(ctx)
+
+	// Apply sector filter: guide.sector_ids overlaps with user's sector_ids (or subtree)
+	if len(sectorIDs) > 0 {
+		db = db.Where("sector_ids && ?", sectorIDs)
+	}
+	// Apply tag filter: guide.tag_ids overlaps with user's tag_ids
+	if len(tagIDs) > 0 {
+		db = db.Where("tag_ids && ?", tagIDs)
+	}
+	// If both are empty, return all guides (no restriction)
+
 	for _, preload := range q.Preload {
 		db = db.Preload(preload)
 	}
 	if len(q.Preload) == 0 {
 		db = db.Preload("Translations", "language = ?", locale)
 	}
-	// TODO: integrate condition evaluation against business profile once guide visibility rules are implemented.
 	if q.Search != "" {
 		db = db.Where("slug ILIKE ?", "%"+q.Search+"%")
 	}
@@ -107,7 +117,7 @@ func (r *guideRepository) ListByCategory(ctx context.Context, categoryID uuid.UU
 		q.PageSize = query.MaxPageSize
 	}
 	if err := db.Offset((q.Page - 1) * q.PageSize).Limit(q.PageSize).Find(&guides).Error; err != nil {
-		r.logger.Error("Failed to list guides by category", core.Error(err))
+		r.logger.Error("Failed to list guides by taxonomy", core.Error(err))
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
 

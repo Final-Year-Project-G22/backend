@@ -16,6 +16,11 @@ type AskRequest struct {
 	SessionID *uuid.UUID
 	Title     *string
 	TopK      int32
+	// Taxonomy filters for retrieval narrowing
+	SectorIDs []uuid.UUID
+	TagIDs    []uuid.UUID
+	Region    *string
+	Stage     *string
 }
 
 type Citation struct {

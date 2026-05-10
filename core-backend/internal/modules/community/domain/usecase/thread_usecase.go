@@ -12,7 +12,7 @@ type DiscussionThreadUsecase interface {
 	CreateThread(ctx context.Context, accountID uuid.UUID, input CreateThreadInput) (*entity.DiscussionThread, *entity.DiscussionPost, error)
 	UpdateThread(ctx context.Context, accountID, threadID uuid.UUID, input UpdateThreadInput) (*entity.DiscussionThread, error)
 	CloseThread(ctx context.Context, accountID, threadID uuid.UUID) error
-	ListThreadsByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
-	SearchThreads(ctx context.Context, keyword string, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
+	ListThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.DiscussionThread, error)
+	SearchThreads(ctx context.Context, accountID uuid.UUID, keyword string, q query.QueryOptions) ([]*entity.DiscussionThread, error)
 	GetThread(ctx context.Context, threadID uuid.UUID) (*entity.DiscussionThread, error)
 }

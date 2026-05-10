@@ -33,12 +33,9 @@ func (r *userNotificationInboxRepository) getDB(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *userNotificationInboxRepository) ListByAccount(ctx context.Context, accountID uuid.UUID, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.UserNotificationInbox, int64, error) {
+func (r *userNotificationInboxRepository) ListByAccount(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserNotificationInbox, int64, error) {
 	var total int64
 	baseDB := r.getDB(ctx).Where("account_id = ? AND is_archived = ? AND (expires_at IS NULL OR expires_at > ?)", accountID, false, time.Now())
-	if category != nil {
-		baseDB = baseDB.Where("category = ?", *category)
-	}
 
 	if err := baseDB.Model(&entity.UserNotificationInbox{}).Count(&total).Error; err != nil {
 		r.logger.Error("Failed to count inbox", core.Error(err))
@@ -117,20 +114,6 @@ func (r *userNotificationInboxRepository) ExpireOld(ctx context.Context, before 
 	result := r.getDB(ctx).Where("expires_at <= ?", before).Delete(&entity.UserNotificationInbox{})
 	if result.Error != nil {
 		r.logger.Error("Failed to expire old inbox entries", core.Error(result.Error))
-		return errors.InternalError("errors.databaseError", result.Error)
-	}
-	return nil
-}
-
-func (r *userNotificationInboxRepository) MarkAllReadByCategory(ctx context.Context, accountID uuid.UUID, category entity.NotificationCategory) error {
-	result := r.getDB(ctx).Model(&entity.UserNotificationInbox{}).
-		Where("account_id = ? AND category = ? AND is_read = ? AND is_archived = ?", accountID, category, false, false).
-		Updates(map[string]interface{}{
-			"is_read":    true,
-			"updated_at": gorm.Expr("CURRENT_TIMESTAMP"),
-		})
-	if result.Error != nil {
-		r.logger.Error("Failed to mark category as read", core.Error(result.Error))
 		return errors.InternalError("errors.databaseError", result.Error)
 	}
 	return nil
