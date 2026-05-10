@@ -5,8 +5,62 @@ import (
 	"testing"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/port"
+	iamentity "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
+	iamrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
+
+type mockProfileRepo struct{}
+
+func (m *mockProfileRepo) Create(ctx context.Context, profile *iamentity.BusinessProfile) error {
+	return nil
+}
+func (m *mockProfileRepo) BulkCreate(ctx context.Context, profiles []*iamentity.BusinessProfile) error {
+	return nil
+}
+func (m *mockProfileRepo) GetByID(ctx context.Context, id uuid.UUID) (*iamentity.BusinessProfile, error) {
+	return nil, nil
+}
+func (m *mockProfileRepo) Update(ctx context.Context, profile *iamentity.BusinessProfile) error {
+	return nil
+}
+func (m *mockProfileRepo) UpdateByID(ctx context.Context, id uuid.UUID, updates map[string]interface{}) error {
+	return nil
+}
+func (m *mockProfileRepo) Delete(ctx context.Context, id uuid.UUID) error     { return nil }
+func (m *mockProfileRepo) HardDelete(ctx context.Context, id uuid.UUID) error { return nil }
+func (m *mockProfileRepo) FindAll(ctx context.Context, opts query.QueryOptions) sharedrepo.PaginatedResult[iamentity.BusinessProfile] {
+	return sharedrepo.PaginatedResult[iamentity.BusinessProfile]{}
+}
+func (m *mockProfileRepo) FindAllArchived(ctx context.Context, opts query.QueryOptions) sharedrepo.PaginatedResult[iamentity.BusinessProfile] {
+	return sharedrepo.PaginatedResult[iamentity.BusinessProfile]{}
+}
+func (m *mockProfileRepo) First(ctx context.Context, opts query.QueryOptions) (*iamentity.BusinessProfile, error) {
+	return nil, nil
+}
+func (m *mockProfileRepo) Find(ctx context.Context, opts query.QueryOptions) ([]*iamentity.BusinessProfile, error) {
+	return nil, nil
+}
+func (m *mockProfileRepo) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]*iamentity.BusinessProfile, error) {
+	return nil, nil
+}
+func (m *mockProfileRepo) Exists(ctx context.Context, id uuid.UUID) (bool, error) { return false, nil }
+func (m *mockProfileRepo) Count(ctx context.Context) (int64, error)               { return 0, nil }
+func (m *mockProfileRepo) Transaction(ctx context.Context, fn func(repo sharedrepo.GenericRepository[iamentity.BusinessProfile]) error) error {
+	return nil
+}
+func (m *mockProfileRepo) GetDB() *gorm.DB { return nil }
+func (m *mockProfileRepo) GetByAccountID(ctx context.Context, accountID uuid.UUID) (*iamentity.BusinessProfile, error) {
+	return nil, nil
+}
+func (m *mockProfileRepo) ExistsByAccountID(ctx context.Context, accountID uuid.UUID) (bool, error) {
+	return false, nil
+}
+
+var _ iamrepo.BusinessProfileRepository = (*mockProfileRepo)(nil)
 
 type mockInferencePort struct {
 	askResult       port.AskResponse
@@ -50,7 +104,7 @@ func TestAskService_Ask_PassesTitleToPort(t *testing.T) {
 	mock := &mockInferencePort{
 		askResult: port.AskResponse{RequestID: uuid.New(), SessionID: uuid.New(), Answer: "ok"},
 	}
-	svc := NewAskService(mock)
+	svc := NewAskService(mock, &mockProfileRepo{})
 	title := "Custom Title"
 
 	_, err := svc.Ask(context.Background(), AskInput{
@@ -71,7 +125,7 @@ func TestAskService_Ask_PassesTitleToPort(t *testing.T) {
 
 func TestAskService_AskStream_ReturnsChunks(t *testing.T) {
 	mock := &mockInferencePort{askStreamChunks: []port.AskStreamChunk{{Text: ptr("Hello")}, {Done: &port.DoneInfo{Model: "m"}}}}
-	svc := NewAskService(mock)
+	svc := NewAskService(mock, &mockProfileRepo{})
 
 	stream, err := svc.AskStream(context.Background(), AskStreamInput{UserID: uuid.New(), AccountID: uuid.New(), Query: "q"})
 	if err != nil {
@@ -88,7 +142,7 @@ func TestAskService_AskStream_ReturnsChunks(t *testing.T) {
 }
 
 func TestAskService_ArchiveConversation(t *testing.T) {
-	svc := NewAskService(&mockInferencePort{})
+	svc := NewAskService(&mockInferencePort{}, &mockProfileRepo{})
 	out, err := svc.ArchiveConversation(context.Background(), ArchiveConversationInput{SessionID: uuid.New(), AccountID: uuid.New()})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

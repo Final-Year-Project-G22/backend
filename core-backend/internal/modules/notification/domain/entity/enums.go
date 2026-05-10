@@ -1,17 +1,5 @@
 package entity
 
-type NotificationCategory string
-
-const (
-	NotificationCategorySystem    NotificationCategory = "system"
-	NotificationCategoryCommunity NotificationCategory = "community"
-	NotificationCategoryGuide     NotificationCategory = "guide"
-	NotificationCategoryAI        NotificationCategory = "ai"
-	NotificationCategorySecurity  NotificationCategory = "security"
-	NotificationCategoryPayment   NotificationCategory = "payment"
-	NotificationCategoryCampaign  NotificationCategory = "Campaign"
-)
-
 type NotificationType string
 
 const (

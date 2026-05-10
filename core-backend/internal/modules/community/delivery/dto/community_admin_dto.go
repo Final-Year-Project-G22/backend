@@ -143,20 +143,20 @@ type ContentDTO struct {
 }
 
 type ThreadContentDTO struct {
-	ID              uuid.UUID `json:"id" doc:"Thread ID"`
-	Title           string    `json:"title" doc:"Thread title"`
-	Slug            string    `json:"slug" doc:"Thread slug"`
-	Description     *string   `json:"description,omitempty" doc:"Thread description"`
-	CategoryID      uuid.UUID `json:"categoryId" doc:"Category ID"`
-	CategoryName    string    `json:"categoryName,omitempty" doc:"Category name"`
-	AuthorAccountID uuid.UUID `json:"authorId" doc:"Author account ID"`
-	AuthorFirstName string    `json:"authorFirstName" doc:"Author first name"`
-	AuthorLastName  string    `json:"authorLastName" doc:"Author last name"`
-	Status          string    `json:"status" doc:"Thread status"`
-	ReplyCount      int       `json:"replyCount" doc:"Reply count"`
-	ViewCount       int       `json:"viewCount" doc:"View count"`
-	CreatedAt       string    `json:"createdAt" doc:"Created timestamp"`
-	UpdatedAt       string    `json:"updatedAt,omitempty" doc:"Updated timestamp"`
+	ID              uuid.UUID   `json:"id" doc:"Thread ID"`
+	Title           string      `json:"title" doc:"Thread title"`
+	Slug            string      `json:"slug" doc:"Thread slug"`
+	Description     *string     `json:"description,omitempty" doc:"Thread description"`
+	SectorIDs       []uuid.UUID `json:"sectorIds" doc:"Sector IDs"`
+	TagIDs          []uuid.UUID `json:"tagIds" doc:"Tag IDs"`
+	AuthorAccountID uuid.UUID   `json:"authorId" doc:"Author account ID"`
+	AuthorFirstName string      `json:"authorFirstName" doc:"Author first name"`
+	AuthorLastName  string      `json:"authorLastName" doc:"Author last name"`
+	Status          string      `json:"status" doc:"Thread status"`
+	ReplyCount      int         `json:"replyCount" doc:"Reply count"`
+	ViewCount       int         `json:"viewCount" doc:"View count"`
+	CreatedAt       string      `json:"createdAt" doc:"Created timestamp"`
+	UpdatedAt       string      `json:"updatedAt,omitempty" doc:"Updated timestamp"`
 }
 
 type PostContentDTO struct {

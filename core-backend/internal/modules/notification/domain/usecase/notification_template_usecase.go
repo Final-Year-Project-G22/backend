@@ -12,7 +12,7 @@ type NotificationTemplateUsecase interface {
 	CreateTemplate(ctx context.Context, input CreateTemplateInput) (*entity.NotificationTemplate, error)
 	GetTemplate(ctx context.Context, id uuid.UUID) (*entity.NotificationTemplate, error)
 	GetTemplateByType(ctx context.Context, notificationType entity.NotificationType) (*entity.NotificationTemplate, error)
-	ListTemplates(ctx context.Context, category *entity.NotificationCategory, q query.QueryOptions) ([]*entity.NotificationTemplate, error)
+	ListTemplates(ctx context.Context, templateGroup string, q query.QueryOptions) ([]*entity.NotificationTemplate, error)
 	UpdateTemplate(ctx context.Context, id uuid.UUID, input UpdateTemplateInput) (*entity.NotificationTemplate, error)
 	DeleteTemplate(ctx context.Context, id uuid.UUID) error
 

@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO: remove when category endpoints are removed.
 type LibraryCategory struct {
 	model.BaseModel  `gorm:"embedded"`
 	Name             string                       `gorm:"type:varchar(200);not null"`
@@ -14,7 +15,6 @@ type LibraryCategory struct {
 	ParentCategoryID *uuid.UUID                   `gorm:"type:uuid;uniqueIndex:idx_library_categories_slug_per_parent,priority:1;index:idx_library_categories_parent"`
 	ParentCategory   *LibraryCategory             `gorm:"foreignKey:ParentCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	ChildCategories  []LibraryCategory            `gorm:"foreignKey:ParentCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	TemplateGroups   []LibraryTemplateGroup       `gorm:"foreignKey:CategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;"`
 	Translations     []LibraryCategoryTranslation `gorm:"foreignKey:LibraryCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	IsActive         bool                         `gorm:"not null;default:true"`
 }

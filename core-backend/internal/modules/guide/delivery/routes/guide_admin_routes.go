@@ -10,16 +10,6 @@ const (
 
 func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
-		OperationID: "getCategoryTreeAdmin",
-		Method:      "GET",
-		Path:        adminGuideBase + "/categories/tree",
-		Summary:     "Get admin guide category tree",
-		Description: "Retrieves guide categories tree for admin management.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleGetCategoryTreeAdmin)
-
-	huma.Register(api, huma.Operation{
 		OperationID: "listGuidesAdmin",
 		Method:      "GET",
 		Path:        adminGuideBase,
@@ -48,66 +38,6 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.GuideAdminHandler.HandleListGuideStepsAdmin)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "createCategory",
-		Method:      "POST",
-		Path:        adminGuideBase + "/categories",
-		Summary:     "Create category",
-		Description: "Creates a new guide category with optional translations and conditions.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleCreateCategory)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "updateCategory",
-		Method:      "PUT",
-		Path:        adminGuideBase + "/categories/{id}",
-		Summary:     "Update category",
-		Description: "Updates an existing guide category.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleUpdateCategory)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "deleteCategory",
-		Method:      "DELETE",
-		Path:        adminGuideBase + "/categories/{id}",
-		Summary:     "Delete category",
-		Description: "Deletes a guide category.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleDeleteCategory)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "addCategoryCondition",
-		Method:      "POST",
-		Path:        adminGuideBase + "/categories/{id}/conditions",
-		Summary:     "Add category condition",
-		Description: "Adds a visibility condition to a category.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleAddCategoryCondition)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "removeCategoryCondition",
-		Method:      "DELETE",
-		Path:        adminGuideBase + "/categories/conditions/{condId}",
-		Summary:     "Remove category condition",
-		Description: "Removes a visibility condition from a category.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleRemoveCategoryCondition)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "setCategoryTranslations",
-		Method:      "PUT",
-		Path:        adminGuideBase + "/categories/{id}/translations",
-		Summary:     "Set category translations",
-		Description: "Replaces all translations for a category.",
-		Tags:        []string{"Admin - Categories"},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.GuideAdminHandler.HandleSetCategoryTranslations)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "createGuide",

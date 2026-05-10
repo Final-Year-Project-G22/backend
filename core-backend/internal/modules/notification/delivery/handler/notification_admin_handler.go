@@ -56,12 +56,7 @@ func (h *NotificationAdminHandler) HandleGetTemplate(ctx context.Context, input 
 
 func (h *NotificationAdminHandler) HandleListTemplates(ctx context.Context, input *dto.ListTemplatesInput) (*dto.ListTemplatesOutput, error) {
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	var category *entity.NotificationCategory
-	if input.Category != "" {
-		cat := entity.NotificationCategory(input.Category)
-		category = &cat
-	}
-	templates, err := h.templateUC.ListTemplates(ctx, category, q)
+	templates, err := h.templateUC.ListTemplates(ctx, input.TemplateGroup, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -72,7 +67,7 @@ func (h *NotificationAdminHandler) HandleListTemplates(ctx context.Context, inpu
 			ID:               tmpl.ID,
 			Name:             tmpl.Name,
 			NotificationType: tmpl.NotificationType,
-			Category:         tmpl.Category,
+			TemplateGroup:    tmpl.TemplateGroup,
 			IsSystemManaged:  tmpl.IsSystemManaged,
 		})
 	}

@@ -30,35 +30,24 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
 		OperationID: "listCommunityThreads",
 		Method:      "GET",
-		Path:        communityBase + "/categories/{id}/threads",
-		Summary:     "List threads by category",
-		Description: "Lists discussion threads in a category.",
+		Path:        communityBase + "/threads",
+		Summary:     "List discussion threads",
+		Description: "Lists discussion threads filtered by user's business profile taxonomy.",
 		Tags:        []string{"Community"},
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.CommunityHandler.HandleListThreadsByCategory)
+	}, deps.CommunityHandler.HandleListThreads)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "searchCommunityThreads",
 		Method:      "GET",
 		Path:        communityBase + "/threads/search",
 		Summary:     "Search discussion threads",
-		Description: "Searches threads by keyword and category.",
+		Description: "Searches threads by keyword, filtered by user's business profile taxonomy.",
 		Tags:        []string{"Community"},
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.CommunityHandler.HandleSearchThreads)
-
-	huma.Register(api, huma.Operation{
-		OperationID: "listAllCommunityThreads",
-		Method:      "GET",
-		Path:        communityBase + "/threads",
-		Summary:     "List discussion threads",
-		Description: "Lists discussion threads across categories, including sub-threads.",
-		Tags:        []string{"Community"},
-		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
-		Security:    []map[string][]string{{"bearerAuth": {}}},
-	}, deps.CommunityHandler.HandleListThreads)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "getCommunityThread",

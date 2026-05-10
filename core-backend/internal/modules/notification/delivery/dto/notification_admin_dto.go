@@ -15,7 +15,7 @@ type CreateTemplateRequest struct {
 	Name             string                      `json:"name" doc:"Template name" minLength:"1" maxLength:"200"`
 	Description      *string                     `json:"description,omitempty" doc:"Template description"`
 	NotificationType entity.NotificationType     `json:"notificationType" doc:"Notification type"`
-	Category         entity.NotificationCategory `json:"category" doc:"Notification category"`
+	TemplateGroup    string                      `json:"templateGroup" doc:"Template group"`
 	Priority         entity.NotificationPriority `json:"priority" doc:"Default priority"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent" doc:"Multi-channel content"`
 	VariablesSchema  *map[string]interface{}     `json:"variablesSchema,omitempty" doc:"Template variable schema"`
@@ -49,7 +49,7 @@ type TemplateDetailResponse struct {
 	Name             string                      `json:"name" doc:"Template name"`
 	Description      *string                     `json:"description,omitempty" doc:"Template description"`
 	NotificationType entity.NotificationType     `json:"notificationType" doc:"Notification type"`
-	Category         entity.NotificationCategory `json:"category" doc:"Notification category"`
+	TemplateGroup    string                      `json:"templateGroup" doc:"Template group"`
 	Priority         entity.NotificationPriority `json:"priority" doc:"Default priority"`
 	IsSystemManaged  bool                        `json:"isSystemManaged" doc:"Whether template is system-managed"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent" doc:"Multi-channel content"`
@@ -61,9 +61,9 @@ type TemplateDetailResponse struct {
 // --- List Templates ---
 
 type ListTemplatesInput struct {
-	Category string `query:"category" doc:"Filter by category"`
-	Page     int    `query:"page" doc:"Page number"`
-	PageSize int    `query:"pageSize" doc:"Items per page"`
+	TemplateGroup string `query:"templateGroup" doc:"Filter by template group"`
+	Page          int    `query:"page" doc:"Page number"`
+	PageSize      int    `query:"pageSize" doc:"Items per page"`
 }
 
 type ListTemplatesOutput struct {
@@ -79,11 +79,11 @@ type ListTemplatesResponseBody struct {
 }
 
 type TemplateSummaryResponse struct {
-	ID               uuid.UUID                   `json:"id" doc:"Template ID"`
-	Name             string                      `json:"name" doc:"Template name"`
-	NotificationType entity.NotificationType     `json:"notificationType" doc:"Notification type"`
-	Category         entity.NotificationCategory `json:"category" doc:"Notification category"`
-	IsSystemManaged  bool                        `json:"isSystemManaged" doc:"Whether template is system-managed"`
+	ID               uuid.UUID               `json:"id" doc:"Template ID"`
+	Name             string                  `json:"name" doc:"Template name"`
+	NotificationType entity.NotificationType `json:"notificationType" doc:"Notification type"`
+	TemplateGroup    string                  `json:"templateGroup" doc:"Template group"`
+	IsSystemManaged  bool                    `json:"isSystemManaged" doc:"Whether template is system-managed"`
 }
 
 // --- Update Template ---
@@ -219,7 +219,7 @@ func ToCreateTemplateInput(body CreateTemplateRequest) usecase.CreateTemplateInp
 		Name:             body.Name,
 		Description:      body.Description,
 		NotificationType: body.NotificationType,
-		Category:         body.Category,
+		TemplateGroup:    body.TemplateGroup,
 		Priority:         body.Priority,
 		DefaultContent:   body.DefaultContent,
 		VariablesSchema:  body.VariablesSchema,
@@ -270,7 +270,7 @@ func ToTemplateDetailResponse(tmpl *entity.NotificationTemplate, translations []
 		Name:             tmpl.Name,
 		Description:      tmpl.Description,
 		NotificationType: tmpl.NotificationType,
-		Category:         tmpl.Category,
+		TemplateGroup:    tmpl.TemplateGroup,
 		Priority:         tmpl.Priority,
 		IsSystemManaged:  tmpl.IsSystemManaged,
 		DefaultContent:   tmpl.DefaultContent,
@@ -302,6 +302,10 @@ type CreateCampaignRequest struct {
 	TargetSegment      *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
 	CampaignTemplateID uuid.UUID               `json:"campaignTemplateId" doc:"Campaign template ID"`
 	ScheduledFor       *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SectorIDs          []uuid.UUID             `json:"sectorIds,omitempty" doc:"Target sector IDs"`
+	TagIDs             []uuid.UUID             `json:"tagIds,omitempty" doc:"Target tag IDs"`
+	Region             *string                 `json:"region,omitempty" doc:"Target region"`
+	Stage              *string                 `json:"stage,omitempty" doc:"Target business stage"`
 }
 
 type CreateCampaignInput struct {
@@ -336,6 +340,10 @@ type CampaignDetailResponse struct {
 	ScheduledFor       *time.Time                    `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
 	SentAt             *time.Time                    `json:"sentAt,omitempty" doc:"Actual sending time"`
 	Status             entity.CampaignStatus         `json:"status" doc:"Campaign status"`
+	SectorIDs          []uuid.UUID                   `json:"sectorIds" doc:"Target sector IDs"`
+	TagIDs             []uuid.UUID                   `json:"tagIds" doc:"Target tag IDs"`
+	Region             *string                       `json:"region,omitempty" doc:"Target region"`
+	Stage              *string                       `json:"stage,omitempty" doc:"Target business stage"`
 	CreatedAt          time.Time                     `json:"createdAt" doc:"Creation time"`
 }
 
@@ -386,6 +394,10 @@ type UpdateCampaignRequest struct {
 	Description   *string                 `json:"description,omitempty" doc:"Campaign description"`
 	TargetSegment *map[string]interface{} `json:"targetSegment,omitempty" doc:"Segment filters for segmented campaigns"`
 	ScheduledFor  *time.Time              `json:"scheduledFor,omitempty" doc:"Scheduled sending time"`
+	SectorIDs     []uuid.UUID             `json:"sectorIds,omitempty" doc:"Target sector IDs"`
+	TagIDs        []uuid.UUID             `json:"tagIds,omitempty" doc:"Target tag IDs"`
+	Region        *string                 `json:"region,omitempty" doc:"Target region"`
+	Stage         *string                 `json:"stage,omitempty" doc:"Target business stage"`
 }
 
 type UpdateCampaignInput struct {
@@ -433,6 +445,10 @@ func ToCreateCampaignInput(createdBy uuid.UUID, body CreateCampaignRequest) usec
 		TargetSegment:      body.TargetSegment,
 		CampaignTemplateID: body.CampaignTemplateID,
 		ScheduledFor:       body.ScheduledFor,
+		SectorIDs:          body.SectorIDs,
+		TagIDs:             body.TagIDs,
+		Region:             body.Region,
+		Stage:              body.Stage,
 	}
 }
 
@@ -442,6 +458,10 @@ func ToUpdateCampaignInput(body UpdateCampaignRequest) usecase.UpdateCampaignInp
 		Description:   body.Description,
 		TargetSegment: body.TargetSegment,
 		ScheduledFor:  body.ScheduledFor,
+		SectorIDs:     body.SectorIDs,
+		TagIDs:        body.TagIDs,
+		Region:        body.Region,
+		Stage:         body.Stage,
 	}
 }
 
@@ -455,6 +475,10 @@ func ToCampaignDetailResponse(detail *usecase.CampaignDetail) CampaignDetailResp
 		ScheduledFor:       detail.Campaign.ScheduledFor,
 		SentAt:             detail.Campaign.SentAt,
 		Status:             detail.Campaign.Status,
+		SectorIDs:          detail.Campaign.SectorIDs,
+		TagIDs:             detail.Campaign.TagIDs,
+		Region:             detail.Campaign.Region,
+		Stage:              detail.Campaign.Stage,
 		CreatedAt:          *detail.Campaign.CreatedAt,
 	}
 	if detail.Campaign.TargetSegment != nil {

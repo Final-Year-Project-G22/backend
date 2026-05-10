@@ -100,6 +100,24 @@ var Module = fx.Module("iam",
 			fx.As(new(repository.NotificationPreferenceRepository)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewBusinessProfileRepository,
+			fx.As(new(repository.BusinessProfileRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewTagRepository,
+			fx.As(new(repository.TagRepository)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewSectorRepository,
+			fx.As(new(repository.SectorRepository)),
+		),
+	),
 
 	// OAuth Infrastructure
 	fx.Provide(fx.Annotate(
@@ -233,6 +251,12 @@ var Module = fx.Module("iam",
 			fx.As(new(usecase.OAuthIdentityUsecase)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			appusecase.NewBusinessProfileUsecase,
+			fx.As(new(usecase.BusinessProfileUsecase)),
+		),
+	),
 
 	// OAuth Service
 	fx.Provide(iamoauth.NewOAuthService),
@@ -245,11 +269,13 @@ var Module = fx.Module("iam",
 	fx.Provide(handler.NewUserHandler),
 	fx.Provide(handler.NewImageHandler),
 	fx.Provide(handler.NewOAuthHandler),
+	fx.Provide(handler.NewTaxonomyAdminHandler),
 
 	// Invocations
 
 	// Register all routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, adminHandler *handler.AdminHandler,
+		taxonomyAdminHandler *handler.TaxonomyAdminHandler,
 		permissionHandler *handler.PermissionHandler, roleHandler *handler.RoleHandler,
 		userHandler *handler.UserHandler, imageHandler *handler.ImageHandler,
 		oauthHandler *handler.OAuthHandler, tokenService token.TokenService,
@@ -259,6 +285,7 @@ var Module = fx.Module("iam",
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			AuthHandler:             authHandler,
 			AdminHandler:            adminHandler,
+			TaxonomyAdminHandler:    taxonomyAdminHandler,
 			PermissionHandler:       permissionHandler,
 			RoleHandler:             roleHandler,
 			UserHandler:             userHandler,

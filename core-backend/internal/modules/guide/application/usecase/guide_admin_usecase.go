@@ -18,7 +18,6 @@ import (
 )
 
 type guideAdminUsecase struct {
-	catRepo      repository.CategoryRepository
 	guideRepo    repository.GuideRepository
 	stepRepo     repository.StepRepository
 	progressRepo repository.ProgressRepository
@@ -27,7 +26,6 @@ type guideAdminUsecase struct {
 }
 
 func NewGuideAdminUsecase(
-	catRepo repository.CategoryRepository,
 	guideRepo repository.GuideRepository,
 	stepRepo repository.StepRepository,
 	progressRepo repository.ProgressRepository,
@@ -35,7 +33,6 @@ func NewGuideAdminUsecase(
 	logger core.Logger,
 ) usecase.GuideManagementUseCase {
 	return &guideAdminUsecase{
-		catRepo:      catRepo,
 		guideRepo:    guideRepo,
 		stepRepo:     stepRepo,
 		progressRepo: progressRepo,
@@ -44,17 +41,7 @@ func NewGuideAdminUsecase(
 	}
 }
 
-func (u *guideAdminUsecase) ListCategoriesTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error) {
-	return u.catRepo.ListTree(ctx, includeInactive, locale)
-}
-
-func (u *guideAdminUsecase) ListGuides(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.Guide], error) {
-	if categoryID != nil {
-		if q.Filters == nil {
-			q.Filters = make(map[string]interface{})
-		}
-		q.Filters["category_id"] = *categoryID
-	}
+func (u *guideAdminUsecase) ListGuides(ctx context.Context, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.Guide], error) {
 	if q.Preload == nil {
 		q.Preload = []string{"Translations"}
 	}
@@ -109,101 +96,15 @@ func (u *guideAdminUsecase) GetGuideDetail(ctx context.Context, guideID uuid.UUI
 	return guide, nil
 }
 
-func (u *guideAdminUsecase) CreateCategory(ctx context.Context, input usecase.CreateCategoryInput) (*entity.GuideCategory, error) {
-	var category *entity.GuideCategory
-	err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		category = &entity.GuideCategory{
-			Slug:             input.Slug,
-			Icon:             input.Icon,
-			SortOrder:        input.SortOrder,
-			ParentCategoryID: input.ParentID,
-		}
-		if err := u.catRepo.Create(txCtx, category); err != nil {
-			return err
-		}
-
-		if err := u.setCategoryTranslations(txCtx, category.ID, input.Translations); err != nil {
-			return err
-		}
-		return u.setCategoryConditions(txCtx, category.ID, input.Conditions)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return category, nil
-}
-
-func (u *guideAdminUsecase) UpdateCategory(ctx context.Context, id uuid.UUID, input usecase.UpdateCategoryInput) error {
-	return u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		category, err := u.catRepo.GetByID(txCtx, id)
-		if err != nil {
-			return err
-		}
-		if input.Slug != nil {
-			category.Slug = *input.Slug
-		}
-		if input.Icon != nil {
-			category.Icon = input.Icon
-		}
-		if input.SortOrder != nil {
-			category.SortOrder = *input.SortOrder
-		}
-		if input.ParentID != nil {
-			category.ParentCategoryID = input.ParentID
-		}
-		if err := u.catRepo.Update(txCtx, category); err != nil {
-			return err
-		}
-		if input.Translations != nil {
-			if err := u.setCategoryTranslations(txCtx, id, input.Translations); err != nil {
-				return err
-			}
-		}
-		if input.Conditions != nil {
-			return u.setCategoryConditions(txCtx, id, input.Conditions)
-		}
-		return nil
-	})
-}
-
-func (u *guideAdminUsecase) DeleteCategory(ctx context.Context, id uuid.UUID) error {
-	return u.catRepo.Delete(ctx, id)
-}
-
-func (u *guideAdminUsecase) AddCategoryCondition(ctx context.Context, categoryID uuid.UUID, cond usecase.ConditionInput) error {
-	condition := &entity.GuideCategoryCondition{
-		CategoryID:     categoryID,
-		ConditionType:  cond.ConditionType,
-		Operator:       cond.Operator,
-		ConditionValue: toJSONMap(cond.ConditionValue),
-		IsInverse:      cond.IsInverse,
-	}
-	return u.catRepo.AddCondition(ctx, condition)
-}
-
-func (u *guideAdminUsecase) RemoveCategoryCondition(ctx context.Context, condID uuid.UUID) error {
-	return u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		if err := u.catRepo.RemoveCondition(txCtx, condID); err != nil {
-			return err
-		}
-		return nil
-	})
-}
-
-func (u *guideAdminUsecase) SetCategoryTranslations(ctx context.Context, categoryID uuid.UUID, translations []usecase.TranslationInput) error {
-	return u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		return u.setCategoryTranslations(txCtx, categoryID, translations)
-	})
-}
-
 func (u *guideAdminUsecase) CreateGuide(ctx context.Context, input usecase.CreateGuideInput) (*entity.Guide, error) {
 	var guide *entity.Guide
 	err := u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		guide = &entity.Guide{
-			CategoryID: input.CategoryID,
-			Slug:       input.Slug,
-			Icon:       input.Icon,
-			SortOrder:  input.SortOrder,
+			SectorIDs: input.SectorIDs,
+			TagIDs:    input.TagIDs,
+			Slug:      input.Slug,
+			Icon:      input.Icon,
+			SortOrder: input.SortOrder,
 		}
 		if err := u.guideRepo.Create(txCtx, guide); err != nil {
 			return err
@@ -225,8 +126,11 @@ func (u *guideAdminUsecase) UpdateGuide(ctx context.Context, id uuid.UUID, input
 		if err != nil {
 			return err
 		}
-		if input.CategoryID != nil {
-			guide.CategoryID = *input.CategoryID
+		if input.SectorIDs != nil {
+			guide.SectorIDs = input.SectorIDs
+		}
+		if input.TagIDs != nil {
+			guide.TagIDs = input.TagIDs
 		}
 		if input.Slug != nil {
 			guide.Slug = *input.Slug
@@ -480,36 +384,6 @@ func (u *guideAdminUsecase) RevertStepToVersion(ctx context.Context, stepID uuid
 	return guideerror.ErrVersionRestoreNotSupported
 }
 
-func (u *guideAdminUsecase) setCategoryTranslations(ctx context.Context, categoryID uuid.UUID, translations []usecase.TranslationInput) error {
-	current, err := u.catRepo.GetTranslations(ctx, categoryID)
-	if err != nil {
-		return err
-	}
-	incoming := make(map[string]usecase.TranslationInput, len(translations))
-	for _, t := range translations {
-		if t.Language == "" {
-			continue
-		}
-		incoming[t.Language] = t
-		if err := u.catRepo.UpsertTranslation(ctx, &entity.GuideCategoryTranslation{
-			GuideCategoryID: categoryID,
-			Language:        t.Language,
-			Name:            t.Name,
-			Description:     t.Description,
-		}); err != nil {
-			return err
-		}
-	}
-	for _, existing := range current {
-		if _, ok := incoming[existing.Language]; !ok {
-			if err := u.catRepo.DeleteTranslation(ctx, categoryID, existing.Language); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func (u *guideAdminUsecase) setGuideTranslations(ctx context.Context, guideID uuid.UUID, translations []usecase.TranslationInput) error {
 	current, err := u.guideRepo.GetTranslations(ctx, guideID)
 	if err != nil {
@@ -571,24 +445,6 @@ func (u *guideAdminUsecase) setStepTranslations(ctx context.Context, stepID uuid
 	return nil
 }
 
-func (u *guideAdminUsecase) setCategoryConditions(ctx context.Context, categoryID uuid.UUID, conditions []usecase.ConditionInput) error {
-	if err := u.removeCategoryConditions(ctx, categoryID); err != nil {
-		return err
-	}
-	for _, cond := range conditions {
-		if err := u.catRepo.AddCondition(ctx, &entity.GuideCategoryCondition{
-			CategoryID:     categoryID,
-			ConditionType:  cond.ConditionType,
-			Operator:       cond.Operator,
-			ConditionValue: toJSONMap(cond.ConditionValue),
-			IsInverse:      cond.IsInverse,
-		}); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (u *guideAdminUsecase) setGuideConditions(ctx context.Context, guideID uuid.UUID, conditions []usecase.ConditionInput) error {
 	if err := u.removeGuideConditions(ctx, guideID); err != nil {
 		return err
@@ -641,19 +497,6 @@ func (u *guideAdminUsecase) setStepDependencies(ctx context.Context, stepID uuid
 			RequiredStepID: dep.RequiredStepID,
 			DependencyType: dep.DependencyType,
 		}); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (u *guideAdminUsecase) removeCategoryConditions(ctx context.Context, categoryID uuid.UUID) error {
-	conditions, err := u.catRepo.GetConditions(ctx, categoryID)
-	if err != nil {
-		return err
-	}
-	for _, cond := range conditions {
-		if err := u.catRepo.RemoveCondition(ctx, cond.ID); err != nil && err != guideerror.ErrCategoryConditionNotFound {
 			return err
 		}
 	}

@@ -26,12 +26,6 @@ var Module = fx.Module(
 
 	fx.Provide(
 		fx.Annotate(
-			infrarepo.NewCategoryRepository,
-			fx.As(new(repository.CategoryRepository)),
-		),
-	),
-	fx.Provide(
-		fx.Annotate(
 			infrarepo.NewGuideRepository,
 			fx.As(new(repository.GuideRepository)),
 		),

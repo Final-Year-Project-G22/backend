@@ -10,13 +10,15 @@ const (
 
 func RegisterGuideViewRoutes(api huma.API, deps RouteDependencies) {
 	huma.Register(api, huma.Operation{
-		OperationID: "getCategoryTree",
+		OperationID: "listGuides",
 		Method:      "GET",
-		Path:        guideBase + "/categories/tree",
-		Summary:     "Get guide category tree",
-		Description: "Retrieves the hierarchical category tree for guides with localized names.",
+		Path:        guideBase,
+		Summary:     "List guides",
+		Description: "Lists guides filtered by the user's business profile taxonomy (sector, tags, region, stage).",
 		Tags:        []string{"Guides"},
-	}, deps.GuideViewHandler.HandleGetCategoryTree)
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideViewHandler.HandleListGuides)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "searchGuides",
