@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.9.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.8.0...core-backend-v0.9.0) (2026-05-10)
+
+
+### Features
+
+* **core:** added user browsing and dowload endpoints ([4972bfc](https://github.com/Final-Year-Project-G22/backend/commit/4972bfcb27895197156ef7a0d8fd8300cb9a9843))
+* **core:** added user browsing and dowload endpoints ([dbd3d7f](https://github.com/Final-Year-Project-G22/backend/commit/dbd3d7ff492c27aaf2fccd70109a009f362a6041))
+* **core:** Library admin crud and storage ([#112](https://github.com/Final-Year-Project-G22/backend/issues/112)) ([f2aae72](https://github.com/Final-Year-Project-G22/backend/commit/f2aae722469fc1e77f790aa0d49f9b73d23ef078))
+* **core:** library module integration and seed migration ([f45897c](https://github.com/Final-Year-Project-G22/backend/commit/f45897c8b42cbee5aa04aac73e57350ca642d698))
+* **core:** library module integration and seed migration ([79ee3d1](https://github.com/Final-Year-Project-G22/backend/commit/79ee3d137a039767151e9e0454a07995f454d2b4))
+* **core:** new notification templates ([3481064](https://github.com/Final-Year-Project-G22/backend/commit/34810644577a3d62a8307f2a547100595a8b44d2))
+* **core:** shared canonical event contract package ([60628b8](https://github.com/Final-Year-Project-G22/backend/commit/60628b8255ac9f7d819d485c1e4e44410c67dc22))
+
+
+### Bug Fixes
+
+* **core:** add loggers for ask stream ([#118](https://github.com/Final-Year-Project-G22/backend/issues/118)) ([793aa69](https://github.com/Final-Year-Project-G22/backend/commit/793aa692ebf6f64302f79f266171348c254ea012))
+* **core:** Admin module redesign ([#122](https://github.com/Final-Year-Project-G22/backend/issues/122)) ([da2ae10](https://github.com/Final-Year-Project-G22/backend/commit/da2ae1059b3433e445910682fe1247b8833e5ee4))
+* **core:** Guide module admin side addons ([#119](https://github.com/Final-Year-Project-G22/backend/issues/119)) ([811e0c5](https://github.com/Final-Year-Project-G22/backend/commit/811e0c591a9b34ec08e5ee5253cf79833a0209fc))
+* **core:** Latest api spec ([#116](https://github.com/Final-Year-Project-G22/backend/issues/116)) ([6c3c6fa](https://github.com/Final-Year-Project-G22/backend/commit/6c3c6fa833fcad8bdc7549750f99ef1e53c62534))
+* **core:** made uploaded documents object ([b16d719](https://github.com/Final-Year-Project-G22/backend/commit/b16d71962563f20dbec8d19060f1ee6a417df379))
+* **core:** made uploaded documents object ([c7fc47f](https://github.com/Final-Year-Project-G22/backend/commit/c7fc47f0e8ebf90d85c92fcf6622f42247670fb8))
+* **core:** notification body not being populated ([aca6709](https://github.com/Final-Year-Project-G22/backend/commit/aca67094ce0e6f63437c7c120a8fc47dd5acc6b4))
+* **core:** notification body not being populated ([#126](https://github.com/Final-Year-Project-G22/backend/issues/126)) ([fc42bfe](https://github.com/Final-Year-Project-G22/backend/commit/fc42bfe559a6a471d2ebd01c7f080663567973d2))
+* **core:** notification Ingest - Canonical ([d2a1804](https://github.com/Final-Year-Project-G22/backend/commit/d2a1804d6b2f8801dc2007042e926511adb9c127))
+* **core:** Notification module orchestration ([d932736](https://github.com/Final-Year-Project-G22/backend/commit/d932736e960acb4cc585de4b9308bc8e0a271e2d))
+* **core:** removed previous notification setup ([221e49c](https://github.com/Final-Year-Project-G22/backend/commit/221e49c80a482dbfd6f822907222afb27b78c7a2))
+* **core:** update get template group and download flow ([c34c704](https://github.com/Final-Year-Project-G22/backend/commit/c34c70453be32231b3e0be48c33f0a2127af4d84))
+* **core:** update get template group and download flow ([#125](https://github.com/Final-Year-Project-G22/backend/issues/125)) ([1baccbb](https://github.com/Final-Year-Project-G22/backend/commit/1baccbb06e113ec7f0514cb0277a9273347e5263))
+* **core:** updated current iam notification setup ([8f4a06e](https://github.com/Final-Year-Project-G22/backend/commit/8f4a06edc51f5a08012e9aa22e3d2ad3d935fd15))
+* **core:** updated guide step reorder bug ([#121](https://github.com/Final-Year-Project-G22/backend/issues/121)) ([90c53c1](https://github.com/Final-Year-Project-G22/backend/commit/90c53c1e9be2c57916915bad9dc3a689a8080918))
+* **cross:** Ai document ingestion update ([#117](https://github.com/Final-Year-Project-G22/backend/issues/117)) ([749a919](https://github.com/Final-Year-Project-G22/backend/commit/749a9197450a44a799189e51c1eba2701ed5276b))
+
 ## [0.8.0](https://github.com/Final-Year-Project-G22/backend/compare/core-backend-v0.7.0...core-backend-v0.8.0) (2026-04-29)
 
 

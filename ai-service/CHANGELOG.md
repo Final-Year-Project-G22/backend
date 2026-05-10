@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/Final-Year-Project-G22/backend/compare/ai-service-v0.5.0...ai-service-v0.5.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* **cross:** Ai document ingestion update ([#117](https://github.com/Final-Year-Project-G22/backend/issues/117)) ([749a919](https://github.com/Final-Year-Project-G22/backend/commit/749a9197450a44a799189e51c1eba2701ed5276b))
+
 ## [0.5.0](https://github.com/Final-Year-Project-G22/backend/compare/ai-service-v0.4.0...ai-service-v0.5.0) (2026-04-22)
 
 
