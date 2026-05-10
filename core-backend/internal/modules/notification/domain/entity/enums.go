@@ -9,27 +9,30 @@ const (
 	NotificationCategoryAI        NotificationCategory = "ai"
 	NotificationCategorySecurity  NotificationCategory = "security"
 	NotificationCategoryPayment   NotificationCategory = "payment"
-	NotificationCategoryMarketing NotificationCategory = "marketing"
+	NotificationCategoryCampaign  NotificationCategory = "Campaign"
 )
 
 type NotificationType string
 
 const (
-	NotificationTypeSystemAnnouncement  NotificationType = "system_announcement"
-	NotificationTypePolicyUpdate        NotificationType = "policy_update"
-	NotificationTypeWelcomeMessage      NotificationType = "welcome_message"
-	NotificationTypeCommunityReply      NotificationType = "community_reply"
-	NotificationTypeCommunitySolution   NotificationType = "community_solution"
-	NotificationTypeCommunityMention    NotificationType = "community_mention"
-	NotificationTypeGuideStepCompleted  NotificationType = "guide_step_completed"
-	NotificationTypeGuideDeadline       NotificationType = "guide_deadline"
-	NotificationTypeGuideUpdate         NotificationType = "guide_update"
-	NotificationTypeAIQuotaLimit        NotificationType = "ai_quota_limit"
-	NotificationTypeAIResponseReady     NotificationType = "ai_response_ready"
-	NotificationTypeAccountAlert        NotificationType = "account_alert"
-	NotificationTypeAccountVerification NotificationType = "account_verification"
-	NotificationTypePasswordReset       NotificationType = "password_reset"
-	NotificationTypePaymentConfirmation NotificationType = "payment_confirmation"
+	NotificationTypeSystemAnnouncement   NotificationType = "system_announcement"
+	NotificationTypePolicyUpdate         NotificationType = "policy_update"
+	NotificationTypeWelcomeMessage       NotificationType = "welcome_message"
+	NotificationTypeCommunityReply       NotificationType = "community_reply"
+	NotificationTypeCommunitySolution    NotificationType = "community_solution"
+	NotificationTypeCommunityMention     NotificationType = "community_mention"
+	NotificationTypeGuideStepCompleted   NotificationType = "guide_step_completed"
+	NotificationTypeGuideDeadline        NotificationType = "guide_deadline"
+	NotificationTypeGuideUpdate          NotificationType = "guide_update"
+	NotificationTypeAIQuotaLimit         NotificationType = "ai_quota_limit"
+	NotificationTypeAIResponseReady      NotificationType = "ai_response_ready"
+	NotificationTypeAccountAlert         NotificationType = "account_alert"
+	NotificationTypeAccountAlertCritical NotificationType = "account_alert_critical"
+	NotificationTypeAccountAlertInfo     NotificationType = "account_alert_info"
+	NotificationTypeAccountVerification  NotificationType = "account_verification"
+	NotificationTypePasswordReset        NotificationType = "password_reset"
+	NotificationTypePaymentConfirmation  NotificationType = "payment_confirmation"
+	NotificationTypeCampaign             NotificationType = "campaign"
 )
 
 type NotificationPriority int8

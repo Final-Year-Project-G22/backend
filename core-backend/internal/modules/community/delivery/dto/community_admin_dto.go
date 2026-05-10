@@ -170,8 +170,6 @@ type PostContentDTO struct {
 	AuthorLastName  string     `json:"authorLastName" doc:"Author last name"`
 	Content         string     `json:"content" doc:"Post content"`
 	IsSolution      bool       `json:"isSolution" doc:"Is solution"`
-	AttachmentURL   *string    `json:"attachmentUrl,omitempty" doc:"Attachment URL"`
-	AttachmentType  *string    `json:"attachmentType,omitempty" doc:"Attachment type"`
 	CreatedAt       string     `json:"createdAt" doc:"Created timestamp"`
 	UpdatedAt       string     `json:"updatedAt,omitempty" doc:"Updated timestamp"`
 }

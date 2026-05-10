@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import logging
 from typing import Any
 
 from core.domain.ingestion_events import ACCEPTED_ENVELOPE_SCHEMA_VERSIONS
@@ -23,6 +24,7 @@ class EnvelopeVerifier:
             self._keys.update(previous_keys)
 
     def verify(self, envelope: dict[str, Any]) -> None:
+        logger = logging.getLogger(__name__)
         schema_version = str(envelope.get("schema_version", ""))
         if schema_version not in ACCEPTED_ENVELOPE_SCHEMA_VERSIONS:
             raise EnvelopeVerificationError(f"unsupported schema_version: {schema_version}")
@@ -38,10 +40,23 @@ class EnvelopeVerifier:
 
         payload = dict(envelope)
         payload.pop("signature", None)
+        payload.pop("key_id", None)
         canonical = _canonical_json(payload)
         expected = hmac.new(secret.encode("utf-8"), canonical, hashlib.sha256).hexdigest()
+        canonical_str = canonical.decode("utf-8")
         if not hmac.compare_digest(expected, signature):
+            logger.error(
+                "EnvelopeVerificationError: signature mismatch for key_id=%r\n"
+                "  expected=%s\n"
+                "  got=%s\n"
+                "  canonical_payload=%s",
+                key_id,
+                expected,
+                signature,
+                canonical_str,
+            )
             raise EnvelopeVerificationError("invalid envelope signature")
+        logger.info("envelope signature verified key_id=%s", key_id)
 
 
 def _canonical_json(value: Any) -> bytes:

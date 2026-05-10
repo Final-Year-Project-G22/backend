@@ -26,3 +26,10 @@ const (
 	ReportStatusResolved    ReportStatus = "resolved"
 	ReportStatusDismissed   ReportStatus = "dismissed"
 )
+
+type AttachmentStatus string
+
+const (
+	AttachmentStatusPending AttachmentStatus = "pending"
+	AttachmentStatusLinked  AttachmentStatus = "linked"
+)

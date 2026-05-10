@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-import importlib
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from functools import lru_cache
-from types import ModuleType, SimpleNamespace
 from typing import Any, Protocol
 
 import grpc
 from core.domain.enums import Language, Tier
 from core.domain.exceptions import ConfigurationError, RepositoryError
 from core.ports.core_service import CoreServicePort, CoreUserProfile, SignedUrlResult
+from infrastructure.rpc.grpc_stub_loader import (
+    build_get_signed_url_request,
+    build_get_user_request,
+    get_core_user_stub,
+    get_document_fetch_stub,
+)
 
 GRPC_NOT_FOUND_CODE = 5
 
@@ -93,7 +96,7 @@ class CoreServiceGrpcAdapter(CoreServicePort):
                 details={"endpoint": self._endpoint},
             )
 
-        document_fetch_client = _build_document_fetch_client(channel)
+        document_fetch_client = get_document_fetch_stub(channel)
         if document_fetch_client is None:
             raise RepositoryError(
                 "document fetch stubs are not available",
@@ -101,9 +104,9 @@ class CoreServiceGrpcAdapter(CoreServicePort):
             )
 
         try:
-            request = _build_get_signed_url_request(
-                document_id,
-                account_id,
+            request = build_get_signed_url_request(
+                str(document_id),
+                str(account_id),
                 expires_in_seconds,
             )
             response = await document_fetch_client.get_signed_url(request)
@@ -152,12 +155,12 @@ class CoreUserGrpcClient(CoreServiceClient):
 
         self._endpoint = endpoint
         self._channel = _create_async_channel(endpoint)
-        self._stub: Any | None = _build_core_user_stub(self._channel)
+        self._stub: Any | None = get_core_user_stub(self._channel)
 
     async def get_user(self, user_id: uuid.UUID) -> CoreUserResponse | None:
         stub = self._stub
         if stub is None:
-            stub = _build_core_user_stub(self._channel)
+            stub = get_core_user_stub(self._channel)
             if stub is None:
                 raise RepositoryError(
                     "core grpc stubs are not available",
@@ -165,7 +168,7 @@ class CoreUserGrpcClient(CoreServiceClient):
                 )
             self._stub = stub
 
-        request: Any = _build_get_user_request(str(user_id))
+        request: Any = build_get_user_request(str(user_id))
         response = await stub.GetUserProfile(request)
 
         parsed_user_id = _parse_uuid(str(getattr(response, "user_id", "")), field="user_id")
@@ -240,83 +243,6 @@ def _create_async_channel(endpoint: str) -> Any:
     grpc_aio: Any = getattr(grpc, "aio")  # noqa: B009
     insecure_channel: Any = getattr(grpc_aio, "insecure_channel")  # noqa: B009
     return insecure_channel(endpoint)
-
-
-@lru_cache(maxsize=1)
-def _load_user_proto_modules() -> tuple[ModuleType | None, ModuleType | None]:
-    service_pb2_mod = _import_optional_module("core.user.v1.service_pb2")
-    service_pb2_grpc_mod = _import_optional_module("core.user.v1.service_pb2_grpc")
-    return service_pb2_mod, service_pb2_grpc_mod
-
-
-def _import_optional_module(module_path: str) -> ModuleType | None:
-    try:
-        return importlib.import_module(module_path)
-    except Exception:
-        return None
-
-
-def _build_core_user_stub(channel: Any) -> Any | None:
-    _, service_pb2_grpc = _load_user_proto_modules()
-    if service_pb2_grpc is None:
-        return None
-
-    stub_ctor: Any = getattr(service_pb2_grpc, "CoreUserServiceStub", None)
-    if not callable(stub_ctor):
-        return None
-
-    return stub_ctor(channel)
-
-
-def _build_get_user_request(user_id: str) -> Any:
-    service_pb2, _ = _load_user_proto_modules()
-    if service_pb2 is not None:
-        request_ctor: Any = getattr(service_pb2, "GetUserProfileRequest", None)
-        if callable(request_ctor):
-            return request_ctor(user_id=user_id)
-
-    return SimpleNamespace(user_id=user_id)
-
-
-@lru_cache(maxsize=1)
-def _load_document_proto_modules() -> tuple[ModuleType | None, ModuleType | None]:
-    service_pb2_mod = _import_optional_module("core.document.v1.document_pb2")
-    service_pb2_grpc_mod = _import_optional_module("core.document.v1.document_pb2_grpc")
-    return service_pb2_mod, service_pb2_grpc_mod
-
-
-def _build_document_fetch_client(channel: Any) -> Any | None:
-    _, service_pb2_grpc = _load_document_proto_modules()
-    if service_pb2_grpc is None:
-        return None
-
-    stub_ctor: Any = getattr(service_pb2_grpc, "DocumentFetchServiceStub", None)
-    if not callable(stub_ctor):
-        return None
-
-    return stub_ctor(channel)
-
-
-def _build_get_signed_url_request(
-    document_id: uuid.UUID,
-    account_id: uuid.UUID,
-    expires_in_seconds: int,
-) -> Any:
-    service_pb2, _ = _load_document_proto_modules()
-    if service_pb2 is not None:
-        request_ctor: Any = getattr(service_pb2, "GetSignedUrlRequest", None)
-        if callable(request_ctor):
-            return request_ctor(
-                document_id=str(document_id),
-                account_id=str(account_id),
-                expires_in_seconds=expires_in_seconds,
-            )
-
-    return SimpleNamespace(
-        document_id=str(document_id),
-        account_id=str(account_id),
-        expires_in_seconds=expires_in_seconds,
-    )
 
 
 __all__ = [

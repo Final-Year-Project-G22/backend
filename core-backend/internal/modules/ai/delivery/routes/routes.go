@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/delivery/handler"
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -12,6 +13,7 @@ type RouteDependencies struct {
 	DLQHandler              *handler.DLQHandler
 	SSEHandler              *handler.SSEHandler
 	ToggleHandler           *handler.ToggleHandler
+	Logger                  core.Logger
 	AskEnabled              bool
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))

@@ -100,8 +100,6 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 			ThreadID:        thread.ID,
 			AuthorAccountID: accountID,
 			Content:         strings.TrimSpace(input.InitialPostContent),
-			AttachmentURL:   input.AttachmentURL,
-			AttachmentType:  input.AttachmentType,
 		}
 		return u.postRepo.Create(txCtx, post)
 	}); err != nil {

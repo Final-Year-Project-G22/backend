@@ -160,12 +160,21 @@ class IngestionRequestedConsumer:
         retry_count = self._get_retry_count(message)
         error_message = ""
 
+        logger.info(
+            "message received delivery_tag=%s content_type=%s body_len=%d",
+            message.delivery_tag,
+            message.content_type,
+            len(message.body),
+        )
+
         try:
             payload = _decode_payload(message.body)
         except (TypeError, ValueError):
             await message.nack(requeue=False)
             logger.warning("invalid ingestion message payload rejected")
             return
+
+        logger.info("message decoded event_type=%s", payload.get("event_type", "unknown"))
 
         try:
             await handler(payload)

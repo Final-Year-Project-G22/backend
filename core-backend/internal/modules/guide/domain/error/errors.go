@@ -20,4 +20,5 @@ var (
 	ErrDependenciesNotMet         = errors.New("guide: dependencies not met")
 	ErrStepNotOptional            = errors.New("guide: step not optional")
 	ErrDependencyCycle            = errors.New("guide: dependency cycle detected")
+	ErrIncompleteStepList         = errors.New("guide: incomplete step list for reorder")
 )

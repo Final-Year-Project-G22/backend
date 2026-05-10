@@ -23,11 +23,12 @@ const (
 )
 
 type IngestionService struct {
-	enabled      bool
-	storage      storage.Storage
-	documentRepo airepo.IngestionDocumentRepository
-	outboxRepo   airepo.IngestionOutboxRepository
-	transactor   sharedrepo.Transactor
+	enabled        bool
+	storage        storage.Storage
+	documentRepo   airepo.IngestionDocumentRepository
+	outboxRepo     airepo.IngestionOutboxRepository
+	projectionRepo airepo.IngestionStatusProjectionRepository
+	transactor     sharedrepo.Transactor
 }
 
 type CreateUploadIntentInput struct {
@@ -70,14 +71,16 @@ func NewIngestionService(
 	storage storage.Storage,
 	documentRepo airepo.IngestionDocumentRepository,
 	outboxRepo airepo.IngestionOutboxRepository,
+	projectionRepo airepo.IngestionStatusProjectionRepository,
 	transactor sharedrepo.Transactor,
 ) *IngestionService {
 	return &IngestionService{
-		enabled:      enabled,
-		storage:      storage,
-		documentRepo: documentRepo,
-		outboxRepo:   outboxRepo,
-		transactor:   transactor,
+		enabled:        enabled,
+		storage:        storage,
+		documentRepo:   documentRepo,
+		outboxRepo:     outboxRepo,
+		projectionRepo: projectionRepo,
+		transactor:     transactor,
 	}
 }
 
@@ -207,7 +210,7 @@ func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUpload
 			return err
 		}
 
-		payload := datatypes.JSONMap{
+		innerPayload := datatypes.JSONMap{
 			"document_id":            documentID.String(),
 			"storage_key":            doc.StorageKey,
 			"content_type":           doc.ContentType,
@@ -216,10 +219,13 @@ func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUpload
 			"payload_schema_version": aievent.IngestionRequestedPayloadSchemaVersion,
 		}
 		if doc.SourceFilename != nil {
-			payload["source_filename"] = *doc.SourceFilename
+			innerPayload["source_filename"] = *doc.SourceFilename
 		}
 		if doc.DeclaredLanguage != nil {
-			payload["declared_language"] = *doc.DeclaredLanguage
+			innerPayload["declared_language"] = *doc.DeclaredLanguage
+		}
+		payload := datatypes.JSONMap{
+			"ingestion_requested": innerPayload,
 		}
 
 		outbox := &entity.IngestionOutbox{
@@ -242,6 +248,23 @@ func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUpload
 			return err
 		}
 
+		now := time.Now().UTC()
+		projection := &entity.IngestionStatusProjection{
+			ID:                uuid.New(),
+			DocumentID:        documentID,
+			AccountID:         in.AccountID,
+			UserID:            in.UserID,
+			EventID:           eventID.String(),
+			CurrentStage:      entity.IngestionStageQueued,
+			IsTerminal:        false,
+			StartedAt:         now,
+			UpdatedAt:         now,
+			LastEventSequence: now.UnixMilli(),
+		}
+		if err := s.projectionRepo.UpsertProjection(txCtx, projection); err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -254,6 +277,26 @@ func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUpload
 		EventID:     eventID,
 		State:       string(entity.IngestionDocumentStatusQueued),
 	}, nil
+}
+
+func (s *IngestionService) DeleteDocument(ctx context.Context, documentID uuid.UUID, accountID uuid.UUID) error {
+	if documentID == uuid.Nil || accountID == uuid.Nil {
+		return apperrors.UnauthorizedError("ingestion.errors.unauthorized")
+	}
+
+	if err := s.documentRepo.SoftDelete(ctx, documentID, accountID); err != nil {
+		// If the document is already soft-deleted, treat it as success and
+		// still delete the projection (idempotent delete).
+		if appErr, ok := err.(*apperrors.AppError); !ok || appErr.GetCode() != apperrors.ErrCodeNotFound {
+			return err
+		}
+	}
+
+	if err := s.projectionRepo.DeleteByDocumentID(ctx, documentID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func sanitizeNullableString(v *string) *string {

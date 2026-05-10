@@ -4,11 +4,18 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
 type GuideManagementUseCase interface {
+	ListCategoriesTree(ctx context.Context, includeInactive bool, locale constants.Locale) ([]*entity.GuideCategory, error)
+	ListGuides(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.Guide], error)
+	GetGuideDetail(ctx context.Context, guideID uuid.UUID, locale constants.Locale) (*entity.Guide, error)
+	ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedrepo.PaginatedResult[entity.GuideStep], error)
+
 	CreateCategory(ctx context.Context, input CreateCategoryInput) (*entity.GuideCategory, error)
 	UpdateCategory(ctx context.Context, id uuid.UUID, input UpdateCategoryInput) error
 	DeleteCategory(ctx context.Context, id uuid.UUID) error

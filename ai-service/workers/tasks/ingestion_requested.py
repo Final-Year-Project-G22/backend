@@ -31,9 +31,22 @@ class IngestionRequestedTaskHandler:
         self._ingestion_orchestrator = ingestion_orchestrator
 
     async def handle(self, payload: dict[str, Any]) -> None:
+        logger.debug(
+            "event_type=%s key_id=%s has_signature=%s",
+            payload.get("event_type"),
+            payload.get("key_id"),
+            "signature" in payload,
+        )
         try:
             self._envelope_verifier.verify(payload)
         except EnvelopeVerificationError as exc:
+            logger.warning(
+                "envelope verification failed: %s (key_id=%s schema_version=%s has_signature=%s)",
+                exc,
+                payload.get("key_id"),
+                payload.get("schema_version"),
+                "signature" in payload,
+            )
             raise MessageHandlingRejectError("invalid ingestion envelope") from exc
 
         event_type = str(payload.get("event_type", ""))

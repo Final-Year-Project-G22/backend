@@ -133,15 +133,15 @@ func (u *roleAssignmentUsecase) GetEffectivePermissions(ctx context.Context, acc
 	return permissions, nil
 }
 
-func (u *roleAssignmentUsecase) HasPermission(ctx context.Context, accountID uuid.UUID, permissionName string) (bool, error) {
+func (u *roleAssignmentUsecase) HasPermission(ctx context.Context, accountID uuid.UUID, permissionCode string) (bool, error) {
 	permissions, err := u.GetEffectivePermissions(ctx, accountID)
 	if err != nil {
 		return false, err
 	}
 
-	normalizedName := strings.TrimSpace(permissionName)
+	normalizedCode := strings.TrimSpace(permissionCode)
 	for _, perm := range permissions {
-		if strings.EqualFold(perm.Name, normalizedName) {
+		if strings.EqualFold(perm.Code, normalizedCode) {
 			return true, nil
 		}
 	}

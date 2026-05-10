@@ -18,35 +18,41 @@ import (
 )
 
 type notificationCampaignUsecase struct {
-	campaignRepo repository.NotificationCampaignRepository
-	templateRepo repository.NotificationTemplateRepository
-	queueRepo    repository.NotificationQueueRepository
-	campaignProc *service.CampaignProcessor
-	transactor   sharedrepo.Transactor
-	logger       core.Logger
+	campaignRepo         repository.NotificationCampaignRepository
+	campaignTemplateRepo repository.CampaignTemplateRepository
+	queueRepo            repository.NotificationQueueRepository
+	accountReader        repository.AccountReader
+	campaignProc         *service.CampaignProcessor
+	sseBroadcaster       *service.CampaignSSEBroadcaster
+	transactor           sharedrepo.Transactor
+	logger               core.Logger
 }
 
 func NewNotificationCampaignUsecase(
 	campaignRepo repository.NotificationCampaignRepository,
-	templateRepo repository.NotificationTemplateRepository,
+	campaignTemplateRepo repository.CampaignTemplateRepository,
 	queueRepo repository.NotificationQueueRepository,
+	accountReader repository.AccountReader,
 	campaignProc *service.CampaignProcessor,
+	sseBroadcaster *service.CampaignSSEBroadcaster,
 	transactor sharedrepo.Transactor,
 	logger core.Logger,
 ) usecase.NotificationCampaignUsecase {
 	return &notificationCampaignUsecase{
-		campaignRepo: campaignRepo,
-		templateRepo: templateRepo,
-		queueRepo:    queueRepo,
-		campaignProc: campaignProc,
-		transactor:   transactor,
-		logger:       logger,
+		campaignRepo:         campaignRepo,
+		campaignTemplateRepo: campaignTemplateRepo,
+		queueRepo:            queueRepo,
+		accountReader:        accountReader,
+		campaignProc:         campaignProc,
+		sseBroadcaster:       sseBroadcaster,
+		transactor:           transactor,
+		logger:               logger,
 	}
 }
 
 func (uc *notificationCampaignUsecase) CreateCampaign(ctx context.Context, createdBy uuid.UUID, input usecase.CreateCampaignInput) (*entity.NotificationCampaign, error) {
-	if _, err := uc.templateRepo.GetByID(ctx, input.TemplateID); err != nil {
-		return nil, notiferror.ErrTemplateNotFound
+	if _, err := uc.campaignTemplateRepo.GetByID(ctx, input.CampaignTemplateID); err != nil {
+		return nil, notiferror.ErrCampaignTemplateNotFound
 	}
 
 	if input.CampaignType == entity.CampaignTypeSegmented && input.TargetSegment == nil {
@@ -59,23 +65,15 @@ func (uc *notificationCampaignUsecase) CreateCampaign(ctx context.Context, creat
 		targetSegment = &ts
 	}
 
-	var customContent *datatypes.JSONMap
-	if input.CustomContent != nil {
-		cc := datatypes.JSONMap(*input.CustomContent)
-		customContent = &cc
-	}
-
 	campaign := &entity.NotificationCampaign{
-		Name:          input.Name,
-		Description:   input.Description,
-		CampaignType:  input.CampaignType,
-		TargetSegment: targetSegment,
-		TemplateID:    input.TemplateID,
-		CustomSubject: input.CustomSubject,
-		CustomContent: customContent,
-		ScheduledFor:  input.ScheduledFor,
-		Status:        entity.CampaignStatusDraft,
-		CreatedBy:     createdBy,
+		Name:               input.Name,
+		Description:        input.Description,
+		CampaignType:       input.CampaignType,
+		TargetSegment:      targetSegment,
+		CampaignTemplateID: input.CampaignTemplateID,
+		ScheduledFor:       input.ScheduledFor,
+		Status:             entity.CampaignStatusDraft,
+		CreatedBy:          createdBy,
 	}
 
 	if err := uc.campaignRepo.Create(ctx, campaign); err != nil {
@@ -85,15 +83,40 @@ func (uc *notificationCampaignUsecase) CreateCampaign(ctx context.Context, creat
 	return campaign, nil
 }
 
-func (uc *notificationCampaignUsecase) GetCampaign(ctx context.Context, id uuid.UUID) (*entity.NotificationCampaign, error) {
-	return uc.campaignRepo.GetByID(ctx, id)
+func (uc *notificationCampaignUsecase) GetCampaign(ctx context.Context, id uuid.UUID) (*usecase.CampaignDetail, error) {
+	campaign, err := uc.campaignRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	detail := &usecase.CampaignDetail{
+		Campaign: campaign,
+	}
+
+	tmpl, err := uc.campaignTemplateRepo.GetByID(ctx, campaign.CampaignTemplateID)
+	if err == nil {
+		detail.CampaignTemplate = tmpl
+	}
+
+	accountInfo, err := uc.accountReader.GetAccountInfo(ctx, campaign.CreatedBy)
+	if err == nil {
+		detail.CreatedByName = accountInfo.Name
+		detail.CreatedByEmail = accountInfo.Email
+	}
+
+	return detail, nil
 }
 
-func (uc *notificationCampaignUsecase) ListCampaigns(ctx context.Context, status *entity.CampaignStatus, q query.QueryOptions) ([]*entity.NotificationCampaign, error) {
+func (uc *notificationCampaignUsecase) ListCampaigns(ctx context.Context, status *entity.CampaignStatus, q query.QueryOptions) ([]*entity.NotificationCampaign, int64, error) {
 	if status != nil {
 		return uc.campaignRepo.ListByStatus(ctx, *status, q)
 	}
-	return uc.campaignRepo.Find(ctx, q)
+	total, err := uc.campaignRepo.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	campaigns, err := uc.campaignRepo.Find(ctx, q)
+	return campaigns, total, err
 }
 
 func (uc *notificationCampaignUsecase) UpdateCampaign(ctx context.Context, id uuid.UUID, input usecase.UpdateCampaignInput) (*entity.NotificationCampaign, error) {
@@ -106,32 +129,28 @@ func (uc *notificationCampaignUsecase) UpdateCampaign(ctx context.Context, id uu
 		return nil, notiferror.ErrCampaignNotDraft
 	}
 
+	updates := make(map[string]interface{})
 	if input.Name != nil {
-		campaign.Name = *input.Name
+		updates["name"] = *input.Name
 	}
 	if input.Description != nil {
-		campaign.Description = input.Description
+		updates["description"] = input.Description
 	}
 	if input.TargetSegment != nil {
 		ts := datatypes.JSONMap(*input.TargetSegment)
-		campaign.TargetSegment = &ts
-	}
-	if input.CustomSubject != nil {
-		campaign.CustomSubject = input.CustomSubject
-	}
-	if input.CustomContent != nil {
-		cc := datatypes.JSONMap(*input.CustomContent)
-		campaign.CustomContent = &cc
+		updates["target_segment"] = &ts
 	}
 	if input.ScheduledFor != nil {
-		campaign.ScheduledFor = input.ScheduledFor
+		updates["scheduled_for"] = input.ScheduledFor
 	}
 
-	if err := uc.campaignRepo.Update(ctx, campaign); err != nil {
-		return nil, err
+	if len(updates) > 0 {
+		if err := uc.campaignRepo.UpdateByID(ctx, id, updates); err != nil {
+			return nil, err
+		}
 	}
 
-	return campaign, nil
+	return uc.campaignRepo.GetByID(ctx, id)
 }
 
 func (uc *notificationCampaignUsecase) ScheduleCampaign(ctx context.Context, input usecase.ScheduleCampaignInput) error {
@@ -144,8 +163,8 @@ func (uc *notificationCampaignUsecase) ScheduleCampaign(ctx context.Context, inp
 		return notiferror.ErrCampaignNotDraft
 	}
 
-	if _, err := uc.templateRepo.GetByID(ctx, campaign.TemplateID); err != nil {
-		return notiferror.ErrTemplateNotFound
+	if _, err := uc.campaignTemplateRepo.GetByID(ctx, campaign.CampaignTemplateID); err != nil {
+		return notiferror.ErrCampaignTemplateNotFound
 	}
 
 	var segment map[string]interface{}
@@ -172,7 +191,7 @@ func (uc *notificationCampaignUsecase) ScheduleCampaign(ctx context.Context, inp
 		scheduledFor = *campaign.ScheduledFor
 	}
 
-	return uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+	err = uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		if err := uc.campaignRepo.UpdateByID(txCtx, campaign.ID, map[string]interface{}{
 			"target_segment": resolvedMap,
 			"status":         entity.CampaignStatusScheduled,
@@ -182,6 +201,20 @@ func (uc *notificationCampaignUsecase) ScheduleCampaign(ctx context.Context, inp
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	uc.publishSSEEvent(campaign.ID, entity.CampaignStatusScheduled)
+	return nil
+}
+
+func (uc *notificationCampaignUsecase) publishSSEEvent(campaignID uuid.UUID, status entity.CampaignStatus) {
+	uc.sseBroadcaster.Publish(service.CampaignStatusEvent{
+		CampaignID: campaignID,
+		Status:     status,
+		Timestamp:  time.Now().UTC(),
+	})
 }
 
 func (uc *notificationCampaignUsecase) CancelCampaign(ctx context.Context, id uuid.UUID) error {
@@ -190,19 +223,15 @@ func (uc *notificationCampaignUsecase) CancelCampaign(ctx context.Context, id uu
 		return err
 	}
 
-	if campaign.Status != entity.CampaignStatusScheduled && campaign.Status != entity.CampaignStatusSending {
+	if campaign.Status != entity.CampaignStatusScheduled {
 		return notiferror.ErrCampaignInvalidTransition
 	}
 
-	return uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		if err := uc.campaignRepo.UpdateStatus(txCtx, id, entity.CampaignStatusCancelled); err != nil {
-			return err
-		}
-		if err := uc.queueRepo.CancelByCampaign(txCtx, id); err != nil {
-			return err
-		}
-		return nil
-	})
+	if err := uc.campaignRepo.UpdateStatus(ctx, id, entity.CampaignStatusCancelled); err != nil {
+		return err
+	}
+	uc.publishSSEEvent(id, entity.CampaignStatusCancelled)
+	return nil
 }
 
 func (uc *notificationCampaignUsecase) ProcessScheduledCampaigns(ctx context.Context) error {
@@ -228,10 +257,15 @@ func (uc *notificationCampaignUsecase) processCampaign(ctx context.Context, camp
 	if err := uc.campaignRepo.UpdateStatus(ctx, campaign.ID, entity.CampaignStatusSending); err != nil {
 		return err
 	}
+	uc.publishSSEEvent(campaign.ID, entity.CampaignStatusSending)
 
 	if err := uc.campaignProc.ProcessCampaign(ctx, campaign); err != nil {
 		return err
 	}
 
-	return uc.campaignRepo.UpdateStatus(ctx, campaign.ID, entity.CampaignStatusCompleted)
+	if err := uc.campaignRepo.UpdateStatus(ctx, campaign.ID, entity.CampaignStatusCompleted); err != nil {
+		return err
+	}
+	uc.publishSSEEvent(campaign.ID, entity.CampaignStatusCompleted)
+	return nil
 }

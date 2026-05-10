@@ -146,11 +146,11 @@ def to_orm_message(domain: AIChatMessage) -> sa_models.AIChatMessage:
         query_language=domain.query_language.value,
         query_embedding=domain.query_embedding,
         retrieved_chunk_ids=domain.retrieved_chunk_ids,
-        context_chunks=_serialize_search_hits(domain.context_chunks),
+        context_chunks=serialize_search_hits(domain.context_chunks),
         llm_response=domain.llm_response,
-        response_sources=_serialize_response_sources(domain.response_sources),
+        response_sources=serialize_response_sources(domain.response_sources),
         processing_time_ms=domain.processing_time_ms,
-        token_usage=_serialize_token_usage(domain.token_usage),
+        token_usage=serialize_token_usage(domain.token_usage),
         model_used=domain.model_used,
         prompt_version=domain.prompt_version,
         trace_id=domain.trace_id,
@@ -246,7 +246,7 @@ def to_orm_chunk(domain: DocumentChunk) -> sa_models.DocumentChunk:
     )
 
 
-def _serialize_token_usage(token_usage: TokenUsage | None) -> dict[str, Any] | None:
+def serialize_token_usage(token_usage: TokenUsage | None) -> dict[str, Any] | None:
     if token_usage is None:
         return None
     return token_usage.model_dump(mode="python")
@@ -258,10 +258,10 @@ def _deserialize_token_usage(raw: dict[str, Any] | None) -> TokenUsage | None:
     return TokenUsage.model_validate(raw)
 
 
-def _serialize_response_sources(
+def serialize_response_sources(
     sources: list[ResponseSource],
 ) -> list[dict[str, Any]]:
-    return [source.model_dump(mode="python") for source in sources]
+    return [source.model_dump(mode="json") for source in sources]
 
 
 def _deserialize_response_sources(raw: list[dict[str, Any]] | None) -> list[ResponseSource]:
@@ -270,10 +270,10 @@ def _deserialize_response_sources(raw: list[dict[str, Any]] | None) -> list[Resp
     return [ResponseSource.model_validate(item) for item in raw]
 
 
-def _serialize_search_hits(hits: list[SearchHit] | None) -> list[dict[str, Any]] | None:
+def serialize_search_hits(hits: list[SearchHit] | None) -> list[dict[str, Any]] | None:
     if hits is None:
         return None
-    return [hit.model_dump(mode="python") for hit in hits]
+    return [hit.model_dump(mode="json") for hit in hits]
 
 
 def _deserialize_search_hits(raw: list[dict[str, Any]] | None) -> list[SearchHit] | None:

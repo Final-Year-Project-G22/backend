@@ -31,6 +31,7 @@ type LibraryAdminUsecase interface {
 
 	CreateInteractiveForm(ctx context.Context, input CreateInteractiveFormInput) (*entity.LibraryInteractiveForm, error)
 	GetInteractiveForm(ctx context.Context, id uuid.UUID) (*entity.LibraryInteractiveForm, error)
+	GetInteractiveFormByTemplate(ctx context.Context, templateID uuid.UUID) (*entity.LibraryInteractiveForm, error)
 	UpdateInteractiveForm(ctx context.Context, id uuid.UUID, input UpdateInteractiveFormInput) (*entity.LibraryInteractiveForm, error)
 	DeleteInteractiveForm(ctx context.Context, id uuid.UUID) error
 

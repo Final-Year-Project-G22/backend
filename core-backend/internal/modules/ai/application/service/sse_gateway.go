@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -34,7 +35,7 @@ func (s *SSEGateway) StreamStatusByDocument(ctx context.Context, documentID uuid
 		}
 	}
 
-	pollInterval := 2 * time.Second
+	pollInterval := 500 * time.Millisecond
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 
@@ -91,15 +92,15 @@ func (s *SSEGateway) StreamStatusByDocument(ctx context.Context, documentID uuid
 }
 
 func (s *SSEGateway) StreamStatusByAccount(ctx context.Context, accountID uuid.UUID, lastEventID string, sendFunc SSEDeliveryFunc) error {
-	var lastSequence int64
+	var lastUpdatedAt time.Time
 	if lastEventID != "" {
-		_, err := fmt.Sscanf(lastEventID, "%d", &lastSequence)
-		if err != nil {
-			lastSequence = 0
+		seq, err := strconv.ParseInt(lastEventID, 10, 64)
+		if err == nil {
+			lastUpdatedAt = time.UnixMilli(seq)
 		}
 	}
 
-	pollInterval := 2 * time.Second
+	pollInterval := 500 * time.Millisecond
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 
@@ -114,36 +115,47 @@ func (s *SSEGateway) StreamStatusByAccount(ctx context.Context, accountID uuid.U
 				continue
 			}
 
-			if len(projections) == 0 {
-				continue
-			}
-
-			maxSeq := lastSequence
-			for _, p := range projections {
-				if p.LastEventSequence > maxSeq {
-					maxSeq = p.LastEventSequence
+			maxUpdated := lastUpdatedAt
+			formattedProjections := make([]map[string]any, len(projections))
+			for i, p := range projections {
+				if p.UpdatedAt.After(maxUpdated) {
+					maxUpdated = p.UpdatedAt
+				}
+				formattedProjections[i] = map[string]any{
+					"documentId":           p.DocumentID,
+					"accountId":            p.AccountID,
+					"userId":               p.UserID,
+					"currentStage":         string(p.CurrentStage),
+					"isTerminal":           p.IsTerminal,
+					"startedAt":            p.StartedAt,
+					"updatedAt":            p.UpdatedAt,
+					"completedAt":          p.CompletedAt,
+					"lastError":            p.LastError,
+					"chunksProcessedCount": p.ChunksProcessedCount,
+					"chunksFailedCount":    p.ChunksFailedCount,
+					"eventSequence":        p.LastEventSequence,
 				}
 			}
 
-			if maxSeq <= lastSequence {
+			if !maxUpdated.After(lastUpdatedAt) {
 				continue
 			}
 
 			eventData, err := json.Marshal(map[string]any{
-				"projections": projections,
-				"maxSequence": maxSeq,
+				"projections": formattedProjections,
+				"maxSequence": maxUpdated.UnixMilli(),
 			})
 			if err != nil {
 				s.logger.Error("Failed to marshal status list event", core.Error(err))
 				continue
 			}
 
-			eventID := fmt.Sprintf("%d", maxSeq)
+			eventID := fmt.Sprintf("%d", maxUpdated.UnixMilli())
 			if err := sendFunc(eventID, eventData); err != nil {
 				return err
 			}
 
-			lastSequence = maxSeq
+			lastUpdatedAt = maxUpdated
 		}
 	}
 }

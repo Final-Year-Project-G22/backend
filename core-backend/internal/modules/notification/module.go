@@ -32,6 +32,7 @@ var Module = fx.Module(
 
 	// --- Repositories ---
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationTemplateRepository, fx.As(new(repository.NotificationTemplateRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewCampaignTemplateRepository, fx.As(new(repository.CampaignTemplateRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewUserNotificationPreferenceRepository, fx.As(new(repository.UserNotificationPreferenceRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewMutedAccountRepository, fx.As(new(repository.MutedAccountRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewUserDeviceRepository, fx.As(new(repository.UserDeviceRepository)))),
@@ -40,16 +41,25 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewUserNotificationInboxRepository, fx.As(new(repository.UserNotificationInboxRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewEmailDeliveryLogRepository, fx.As(new(repository.EmailDeliveryLogRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationCampaignRepository, fx.As(new(repository.NotificationCampaignRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewNotificationOutboxRepository, fx.As(new(repository.NotificationOutboxRepository)))),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
+	fx.Provide(appservice.NewCampaignSSEBroadcaster),
 	fx.Provide(appservice.NewDeliveryWorker),
 	fx.Provide(appservice.NewCampaignProcessor),
 	fx.Provide(appservice.NewCampaignScheduler),
+	fx.Provide(appservice.NewNotificationOutboxDispatcher),
 
 	// --- Email Provider ---
 	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.EmailProvider {
-		return emailProvider.NewResendProvider(cfg.Resend, logger)
+		if cfg.Email.Enabled {
+			return emailProvider.NewSMTPProvider(cfg.Email, logger)
+		}
+		if cfg.Resend.Enabled {
+			return emailProvider.NewResendProvider(cfg.Resend, logger)
+		}
+		return nil
 	}, fx.As(new(repository.EmailProvider)))),
 
 	// --- IAM global preference reader (default: enabled) ---
@@ -72,20 +82,25 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(appusecase.NewNotificationMuteUsecase, fx.As(new(usecase.NotificationMuteUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationDeviceUsecase, fx.As(new(usecase.NotificationDeviceUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewEmailDeliveryUsecase, fx.As(new(usecase.EmailDeliveryUsecase)))),
+	fx.Provide(fx.Annotate(appusecase.NewCampaignTemplateUsecase, fx.As(new(usecase.CampaignTemplateUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationCampaignUsecase, fx.As(new(usecase.NotificationCampaignUsecase)))),
 
 	// --- Handlers ---
 	fx.Provide(handler.NewNotificationAdminHandler),
+	fx.Provide(handler.NewCampaignTemplateHandler),
 	fx.Provide(handler.NewNotificationHandler),
 	fx.Provide(handler.NewWebhookHandler),
+	fx.Provide(handler.NewSSEHandler),
 
 	// --- Routes ---
 	fx.Invoke(func(
 		api huma.API,
 		engine *gin.Engine,
 		adminHandler *handler.NotificationAdminHandler,
+		campaignTemplateHandler *handler.CampaignTemplateHandler,
 		notificationHandler *handler.NotificationHandler,
 		webhookHandler *handler.WebhookHandler,
+		sseHandler *handler.SSEHandler,
 		tokenService token.TokenService,
 		authService service.AuthService,
 	) {
@@ -93,8 +108,10 @@ var Module = fx.Module(
 		accountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
 		routes.RegisterRoutes(api, engine, routes.RouteDependencies{
 			AdminHandler:            adminHandler,
+			CampaignTemplateHandler: campaignTemplateHandler,
 			NotificationHandler:     notificationHandler,
 			WebhookHandler:          webhookHandler,
+			SSEHandler:              sseHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 		})
@@ -130,6 +147,36 @@ var Module = fx.Module(
 		})
 	}),
 
+	// --- Notification Outbox Dispatcher ---
+	fx.Invoke(func(lc fx.Lifecycle, dispatcher *appservice.NotificationOutboxDispatcher) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				go dispatcher.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
+
+	// --- Campaign SSE Broadcaster ---
+	fx.Invoke(func(lc fx.Lifecycle, broadcaster *appservice.CampaignSSEBroadcaster) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				broadcaster.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
+
 	// --- Event Subscriptions ---
 	fx.Invoke(registerEventSubscriptions),
 )
@@ -148,4 +195,8 @@ func (r *defaultAccountReader) FindAll(_ context.Context) ([]uuid.UUID, error) {
 
 func (r *defaultAccountReader) FindBySegment(_ context.Context, _ map[string]interface{}) ([]uuid.UUID, error) {
 	return nil, nil
+}
+
+func (r *defaultAccountReader) GetAccountInfo(_ context.Context, _ uuid.UUID) (*repository.AccountInfo, error) {
+	return &repository.AccountInfo{Email: "", Locale: "en", Name: ""}, nil
 }

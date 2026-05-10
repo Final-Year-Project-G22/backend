@@ -90,3 +90,18 @@ func (h *IngestionHandler) HandleFinalizeUpload(ctx context.Context, input *dto.
 		},
 	}, nil
 }
+
+func (h *IngestionHandler) HandleDeleteDocument(ctx context.Context, input *dto.DeleteDocumentInput) (*dto.DeleteDocumentOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if accountID == contextkeys.NilUUID {
+		return nil, apperrors.ToHumaError(ctx, apperrors.UnauthorizedError("ingestion.errors.unauthorized"))
+	}
+
+	if err := h.ingestionService.DeleteDocument(ctx, input.DocumentID, accountID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.DeleteDocumentOutput{
+		Body: dto.DeleteDocumentResponseBody{Success: true},
+	}, nil
+}

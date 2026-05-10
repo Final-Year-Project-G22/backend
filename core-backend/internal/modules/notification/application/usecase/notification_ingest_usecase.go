@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	iamrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	notiferror "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/error"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
+	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/google/uuid"
@@ -16,29 +17,32 @@ import (
 )
 
 type notificationIngestUsecase struct {
-	tmplRepo      repository.NotificationTemplateRepository
-	prefRepo      repository.UserNotificationPreferenceRepository
-	mutedRepo     repository.MutedAccountRepository
-	queueRepo     repository.NotificationQueueRepository
-	muteResolvers []repository.MuteResolver
+	tmplRepo      notifrepo.NotificationTemplateRepository
+	prefRepo      notifrepo.UserNotificationPreferenceRepository
+	mutedRepo     notifrepo.MutedAccountRepository
+	queueRepo     notifrepo.NotificationQueueRepository
+	accountRepo   iamrepo.AccountRepository
+	muteResolvers []notifrepo.MuteResolver
 	renderer      *service.TemplateRenderer
 	transactor    sharedrepo.Transactor
 }
 
 func NewNotificationIngestUsecase(
-	tmplRepo repository.NotificationTemplateRepository,
-	prefRepo repository.UserNotificationPreferenceRepository,
-	mutedRepo repository.MutedAccountRepository,
-	queueRepo repository.NotificationQueueRepository,
+	tmplRepo notifrepo.NotificationTemplateRepository,
+	prefRepo notifrepo.UserNotificationPreferenceRepository,
+	mutedRepo notifrepo.MutedAccountRepository,
+	queueRepo notifrepo.NotificationQueueRepository,
+	accountRepo iamrepo.AccountRepository,
 	renderer *service.TemplateRenderer,
 	transactor sharedrepo.Transactor,
-	muteResolvers ...repository.MuteResolver,
+	muteResolvers ...notifrepo.MuteResolver,
 ) usecase.NotificationIngestUsecase {
 	return &notificationIngestUsecase{
 		tmplRepo:      tmplRepo,
 		prefRepo:      prefRepo,
 		mutedRepo:     mutedRepo,
 		queueRepo:     queueRepo,
+		accountRepo:   accountRepo,
 		renderer:      renderer,
 		transactor:    transactor,
 		muteResolvers: muteResolvers,
@@ -55,7 +59,7 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 		return err
 	}
 
-	channels := uc.channelsFromTemplate(tmpl)
+	channels := uc.resolveChannels(tmpl, input.ChannelPolicy, input.Channel)
 	if len(channels) == 0 {
 		return nil
 	}
@@ -84,6 +88,16 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	}
 
 	return nil
+}
+
+func (uc *notificationIngestUsecase) resolveChannels(tmpl *entity.NotificationTemplate, channelPolicy string, singleChannel *entity.Channel) []entity.Channel {
+	if channelPolicy == "single" && singleChannel != nil {
+		if _, ok := tmpl.DefaultContent[string(*singleChannel)]; ok {
+			return []entity.Channel{*singleChannel}
+		}
+		return nil
+	}
+	return uc.channelsFromTemplate(tmpl)
 }
 
 func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input usecase.SendNotificationInput) error {
@@ -182,6 +196,12 @@ func (uc *notificationIngestUsecase) enqueue(
 	if isMuted {
 		payloadMap["_isMuted"] = true
 	}
+
+	account, err := uc.accountRepo.GetByID(ctx, accountID)
+	if err != nil {
+		return fmt.Errorf("failed to get account email: %w", err)
+	}
+	payloadMap["to"] = account.Email
 
 	item := &entity.NotificationQueue{
 		NotificationType: tmpl.NotificationType,

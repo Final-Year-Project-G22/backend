@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"math/big"
 	"strings"
 	"time"
@@ -27,6 +28,10 @@ const adminPasswordLength = 12
 type AdminService interface {
 	RegisterAdmin(ctx context.Context, input RegisterAdminInput) (*RegisterAdminOutput, error)
 	UpdateAdminRoles(ctx context.Context, input UpdateAdminRolesInput) error
+	ListAdmins(ctx context.Context, input ListAdminsInput) (*ListAdminsOutput, error)
+	UpdateAdminStatus(ctx context.Context, input UpdateAdminStatusInput) error
+	ResetAdminPassword(ctx context.Context, input ResetAdminPasswordInput) error
+	CompletePasswordReset(ctx context.Context, token string, newPassword string) error
 }
 
 type RegisterAdminInput struct {
@@ -48,12 +53,57 @@ type UpdateAdminRolesInput struct {
 	UpdatedBy uuid.UUID
 }
 
+type ListAdminsInput struct {
+	Search   string
+	Status   string
+	RoleID   string
+	Page     int
+	PageSize int
+}
+
+type ListAdminsOutput struct {
+	Admins     []AdminAccountInfo
+	Total      int64
+	Page       int
+	PageSize   int
+	TotalPages int
+}
+
+type AdminAccountInfo struct {
+	ID        uuid.UUID
+	Email     string
+	Username  *string
+	Status    string
+	FirstName string
+	LastName  string
+	Roles     []RoleInfo
+	CreatedAt string
+	LastLogin *string
+}
+
+type RoleInfo struct {
+	ID   uuid.UUID
+	Code string
+	Name string
+}
+
+type UpdateAdminStatusInput struct {
+	AccountID uuid.UUID
+	Status    entity.AccountStatus
+}
+
+type ResetAdminPasswordInput struct {
+	AccountID   uuid.UUID
+	TriggeredBy uuid.UUID
+}
+
 type adminService struct {
 	transactor         sharedrepo.Transactor
 	userUsecase        usecase.UserUsecase
 	accountUsecase     usecase.AccountUsecase
 	roleRepo           repository.RoleRepository
 	roleAssignmentRepo repository.RoleAssignmentRepository
+	otpUsecase         usecase.AccountEmailOTPUsecase
 	messageBus         rabbitmq.Bus
 	logger             core.Logger
 }
@@ -64,6 +114,7 @@ func NewAdminService(
 	accountUsecase usecase.AccountUsecase,
 	roleRepo repository.RoleRepository,
 	roleAssignmentRepo repository.RoleAssignmentRepository,
+	otpUsecase usecase.AccountEmailOTPUsecase,
 	messageBus rabbitmq.Bus,
 	logger core.Logger,
 ) AdminService {
@@ -73,6 +124,7 @@ func NewAdminService(
 		accountUsecase:     accountUsecase,
 		roleRepo:           roleRepo,
 		roleAssignmentRepo: roleAssignmentRepo,
+		otpUsecase:         otpUsecase,
 		messageBus:         messageBus,
 		logger:             logger,
 	}
@@ -208,6 +260,192 @@ func (s *adminService) UpdateAdminRoles(ctx context.Context, input UpdateAdminRo
 
 		return nil
 	})
+}
+
+func (s *adminService) ListAdmins(ctx context.Context, input ListAdminsInput) (*ListAdminsOutput, error) {
+	permissionCodes := []string{"iam.admin.list", "iam.role.read"}
+	queryOpts := map[string]interface{}{
+		"search":   input.Search,
+		"status":   input.Status,
+		"roleId":   input.RoleID,
+		"page":     input.Page,
+		"pageSize": input.PageSize,
+	}
+
+	accounts, total, err := s.accountUsecase.ListAdmins(ctx, permissionCodes, queryOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	admins := make([]AdminAccountInfo, 0, len(accounts))
+	for _, account := range accounts {
+		user, _ := s.userUsecase.GetUser(ctx, account.UserID)
+		assignments, _ := s.roleAssignmentRepo.ListByAccountID(ctx, account.ID)
+		roles := make([]RoleInfo, 0)
+		for _, a := range assignments {
+			if a.RevokedAt != nil {
+				continue
+			}
+			role, _ := s.roleRepo.GetByID(ctx, a.RoleID)
+			if role != nil {
+				roles = append(roles, RoleInfo{
+					ID:   role.ID,
+					Code: role.Code,
+					Name: role.Name,
+				})
+			}
+		}
+		firstName, lastName := "", ""
+		if user != nil {
+			firstName = user.FirstName
+			lastName = user.LastName
+		}
+		var lastLogin *string
+		if account.LastLoginAt != nil {
+			t := account.LastLoginAt.Format(time.RFC3339)
+			lastLogin = &t
+		}
+		createdAt := account.CreatedAt.Format(time.RFC3339)
+		admins = append(admins, AdminAccountInfo{
+			ID:        account.ID,
+			Email:     account.Email,
+			Username:  account.Username,
+			Status:    string(account.Status),
+			FirstName: firstName,
+			LastName:  lastName,
+			Roles:     roles,
+			CreatedAt: createdAt,
+			LastLogin: lastLogin,
+		})
+	}
+
+	pageSize := input.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	page := input.Page
+	if page <= 0 {
+		page = 1
+	}
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+
+	return &ListAdminsOutput{
+		Admins:     admins,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}, nil
+}
+
+func (s *adminService) UpdateAdminStatus(ctx context.Context, input UpdateAdminStatusInput) error {
+	validTransitions := map[entity.AccountStatus][]entity.AccountStatus{
+		entity.AccountStatusActive:    {entity.AccountStatusLocked, entity.AccountStatusSuspended},
+		entity.AccountStatusLocked:    {entity.AccountStatusActive},
+		entity.AccountStatusSuspended: {entity.AccountStatusActive},
+	}
+	account, err := s.accountUsecase.GetAccount(ctx, input.AccountID)
+	if err != nil {
+		return err
+	}
+	allowed, ok := validTransitions[account.Status]
+	if !ok {
+		return errors.BadRequestError("iam.errors.invalidStatusTransition")
+	}
+	allowedMap := make(map[entity.AccountStatus]bool)
+	for _, s := range allowed {
+		allowedMap[s] = true
+	}
+	if !allowedMap[input.Status] {
+		return errors.BadRequestError("iam.errors.invalidStatusTransition")
+	}
+	return s.accountUsecase.ChangeAccountStatus(ctx, input.AccountID, input.Status)
+}
+
+func (s *adminService) ResetAdminPassword(ctx context.Context, input ResetAdminPasswordInput) error {
+	account, err := s.accountUsecase.GetAccount(ctx, input.AccountID)
+	if err != nil {
+		return err
+	}
+	user, err := s.userUsecase.GetUser(ctx, account.UserID)
+	if err != nil {
+		return err
+	}
+	otpCode, err := generateAdminPassword(8)
+	if err != nil {
+		return errors.InternalError("iam.errors.failedToGenerateOtp", err)
+	}
+	now := time.Now()
+	resetTTL := 5 * time.Minute
+	if _, err := s.otpUsecase.CreateOTP(ctx, account.ID, hashOTPCode(otpCode), now.Add(resetTTL), 0, now, string(entity.EmailOTPPurposePasswordReset)); err != nil {
+		return err
+	}
+	s.publishPasswordReset(ctx, account, user, otpCode)
+	return nil
+}
+
+func (s *adminService) CompletePasswordReset(ctx context.Context, token string, newPassword string) error {
+	accounts, _, err := s.accountUsecase.ListAdmins(ctx, []string{}, map[string]interface{}{"page": 1, "pageSize": 1000})
+	if err != nil {
+		return err
+	}
+	var found *entity.Account
+	var activeOTP *entity.AccountEmailOTP
+	now := time.Now()
+	for _, account := range accounts {
+		_, err := s.userUsecase.GetUser(ctx, account.UserID)
+		if err != nil {
+			continue
+		}
+		otp, err := s.otpUsecase.GetActiveOTPByPurpose(ctx, account.ID, string(entity.EmailOTPPurposePasswordReset), now)
+		if err != nil || otp == nil {
+			continue
+		}
+		inputHash := hashOTPCode(token)
+		if subtle.ConstantTimeCompare([]byte(inputHash), []byte(otp.CodeHash)) == 1 {
+			found = account
+			activeOTP = otp
+			break
+		}
+	}
+	if found == nil {
+		return errors.BadRequestError("iam.errors.invalidOtp")
+	}
+	if activeOTP.AttemptCount >= 5 {
+		return errors.BadRequestError("iam.errors.otpAttemptsExceeded")
+	}
+	inputHash := hashOTPCode(token)
+	if subtle.ConstantTimeCompare([]byte(inputHash), []byte(activeOTP.CodeHash)) != 1 {
+		_ = s.otpUsecase.IncrementAttemptCount(ctx, activeOTP.ID)
+		return errors.BadRequestError("iam.errors.invalidOtp")
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.InternalError("iam.errors.passwordHashFailed", err)
+	}
+	if err := s.accountUsecase.UpdateAccountPassword(ctx, found.ID, usecase.UpdateAccountPasswordInput{NewHashedPassword: string(hashed)}); err != nil {
+		return err
+	}
+	_ = s.otpUsecase.ConsumeOTP(ctx, activeOTP.ID, now)
+	return nil
+}
+
+func (s *adminService) publishPasswordReset(ctx context.Context, account *entity.Account, user *entity.User, otpCode string) {
+	err := s.messageBus.Publish(ctx, event.UserEmailOTPRequested, map[string]interface{}{
+		"accountId": account.ID.String(),
+		"email":     account.Email,
+		"firstName": user.FirstName,
+		"lastName":  user.LastName,
+		"otpCode":   otpCode,
+		"purpose":   "password_reset",
+		"locale":    i18n.LocaleFromContext(ctx),
+	})
+	if err != nil {
+		s.logger.Error("Failed to publish password reset event", core.Error(err))
+	}
 }
 
 func (s *adminService) publishAdminCreated(ctx context.Context, account *entity.Account, user *entity.User, password string) {

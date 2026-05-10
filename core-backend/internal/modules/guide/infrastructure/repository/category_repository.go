@@ -77,9 +77,9 @@ func (r *categoryRepository) ListTree(ctx context.Context, includeInactive bool,
 
 	for i := range categories {
 		if len(categories[i].Translations) == 0 {
-			if err := db.Preload("Translations", "language = ?", constants.LocaleEnglish).
-				Where("id = ?", categories[i].ID).
-				First(categories[i]).Error; err != nil {
+			if err := r.getDB(ctx).
+				Preload("Translations", "language = ?", constants.LocaleEnglish).
+				First(categories[i], "id = ?", categories[i].ID).Error; err != nil {
 				r.logger.Error("Failed to load fallback translation for category", core.Error(err))
 			}
 		}

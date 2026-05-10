@@ -24,11 +24,15 @@ type CategoryDTO struct {
 
 type ThreadDTO struct {
 	ID             uuid.UUID           `json:"id" doc:"Thread ID"`
+	ParentThreadID *uuid.UUID          `json:"parentThreadId,omitempty" doc:"Parent thread ID for sub-threads"`
 	Title          string              `json:"title" doc:"Thread title"`
 	Slug           string              `json:"slug" doc:"Thread slug"`
 	Description    *string             `json:"description,omitempty" doc:"Thread description"`
 	CategoryID     uuid.UUID           `json:"categoryId" doc:"Category ID"`
 	AuthorID       uuid.UUID           `json:"authorId" doc:"Author account ID"`
+	AuthorUsername string              `json:"authorUsername,omitempty" doc:"Author username"`
+	AuthorDisplay  string              `json:"authorDisplayName" doc:"Author display name"`
+	AuthorAvatar   *string             `json:"authorAvatarUrl,omitempty" doc:"Author avatar URL"`
 	IsPinned       bool                `json:"isPinned" doc:"Pinned flag"`
 	Status         entity.ThreadStatus `json:"status" doc:"Thread status"`
 	ViewCount      int                 `json:"viewCount" doc:"View count"`
@@ -39,21 +43,37 @@ type ThreadDTO struct {
 	UpdatedAt      *time.Time          `json:"updatedAt,omitempty" doc:"Updated timestamp"`
 }
 
+type AttachmentDTO struct {
+	ID       uuid.UUID `json:"id"`
+	FileURL  string    `json:"fileUrl"`
+	FileType string    `json:"fileType"`
+	FileName string    `json:"fileName"`
+	FileSize *int64    `json:"fileSize,omitempty"`
+}
+
 type PostDTO struct {
-	ID             uuid.UUID  `json:"id" doc:"Post ID"`
-	ThreadID       uuid.UUID  `json:"threadId" doc:"Thread ID"`
-	ParentPostID   *uuid.UUID `json:"parentPostId,omitempty" doc:"Parent post ID"`
-	AuthorID       uuid.UUID  `json:"authorId" doc:"Author account ID"`
-	Content        string     `json:"content" doc:"Post content"`
-	IsSolution     bool       `json:"isSolution" doc:"Solution flag"`
-	IsPinned       bool       `json:"isPinned" doc:"Pinned flag"`
-	UpvoteCount    int        `json:"upvoteCount" doc:"Upvote count"`
-	AttachmentURL  *string    `json:"attachmentUrl,omitempty" doc:"Attachment URL"`
-	AttachmentType *string    `json:"attachmentType,omitempty" doc:"Attachment type"`
-	EditCount      int        `json:"editCount" doc:"Edit count"`
-	EditedAt       *time.Time `json:"editedAt,omitempty" doc:"Edited timestamp"`
-	CreatedAt      *time.Time `json:"createdAt,omitempty" doc:"Created timestamp"`
-	UpdatedAt      *time.Time `json:"updatedAt,omitempty" doc:"Updated timestamp"`
+	ID             uuid.UUID       `json:"id" doc:"Post ID"`
+	ThreadID       uuid.UUID       `json:"threadId" doc:"Thread ID"`
+	ParentPostID   *uuid.UUID      `json:"parentPostId,omitempty" doc:"Parent post ID"`
+	AuthorID       uuid.UUID       `json:"authorId" doc:"Author account ID"`
+	AuthorUsername string          `json:"authorUsername,omitempty" doc:"Author username"`
+	AuthorDisplay  string          `json:"authorDisplayName" doc:"Author display name"`
+	AuthorAvatar   *string         `json:"authorAvatarUrl,omitempty" doc:"Author avatar URL"`
+	Content        string          `json:"content" doc:"Post content"`
+	IsSolution     bool            `json:"isSolution" doc:"Solution flag"`
+	IsPinned       bool            `json:"isPinned" doc:"Pinned flag"`
+	UpvoteCount    int             `json:"upvoteCount" doc:"Upvote count"`
+	Attachments    []AttachmentDTO `json:"attachments,omitempty" doc:"Post attachments"`
+	EditCount      int             `json:"editCount" doc:"Edit count"`
+	EditedAt       *time.Time      `json:"editedAt,omitempty" doc:"Edited timestamp"`
+	CreatedAt      *time.Time      `json:"createdAt,omitempty" doc:"Created timestamp"`
+	UpdatedAt      *time.Time      `json:"updatedAt,omitempty" doc:"Updated timestamp"`
+}
+
+type AuthorMeta struct {
+	Username    string
+	DisplayName string
+	AvatarURL   *string
 }
 
 type ListCategoriesInput struct {
@@ -104,6 +124,17 @@ type SearchThreadsOutput struct {
 	Body ListThreadsResponseBody
 }
 
+type ListThreadsInput struct {
+	CategoryID string `query:"categoryId" doc:"Category ID"`
+	Search     string `query:"search" doc:"Search term"`
+	Page       int    `query:"page" doc:"Page number"`
+	PageSize   int    `query:"pageSize" doc:"Page size"`
+}
+
+type ListThreadsOutput struct {
+	Body ListThreadsResponseBody
+}
+
 type ListThreadsResponseBody struct {
 	Threads []*ThreadDTO `json:"threads" doc:"Thread list"`
 }
@@ -135,13 +166,13 @@ type ListPostsResponseBody struct {
 }
 
 type CreateThreadFormData struct {
-	CategoryID         string        `form:"categoryId" doc:"Category ID"`
-	ParentThreadID     string        `form:"parentThreadId" doc:"Parent thread ID for sub-threads" required:"false"`
-	Title              string        `form:"title" doc:"Thread title"`
-	Slug               string        `form:"slug" doc:"Thread slug"`
-	Description        string        `form:"description" doc:"Thread description"`
-	InitialPostContent string        `form:"initialPostContent" doc:"Initial post content"`
-	File               huma.FormFile `form:"file" doc:"Optional attachment file" required:"false"`
+	CategoryID         string `form:"categoryId" doc:"Category ID"`
+	ParentThreadID     string `form:"parentThreadId" doc:"Parent thread ID for sub-threads" required:"false"`
+	Title              string `form:"title" doc:"Thread title"`
+	Slug               string `form:"slug" doc:"Thread slug"`
+	Description        string `form:"description" doc:"Thread description"`
+	InitialPostContent string `form:"initialPostContent" doc:"Initial post content"`
+	AttachmentIds      string `form:"attachmentIds" doc:"Pre-uploaded attachment IDs (comma-separated)" required:"false"`
 }
 
 type CreateThreadInput struct {
@@ -158,8 +189,8 @@ type CreateThreadResponseBody struct {
 }
 
 type CreatePostFormData struct {
-	Content string        `form:"content" doc:"Post content"`
-	File    huma.FormFile `form:"file" doc:"Optional attachment file" required:"false"`
+	Content       string `form:"content" doc:"Post content"`
+	AttachmentIds string `form:"attachmentIds" doc:"Pre-uploaded attachment IDs (comma-separated)" required:"false"`
 }
 
 type CreatePostInput struct {
@@ -186,9 +217,10 @@ type ReplyPostOutput struct {
 }
 
 type UpdatePostFormData struct {
-	Content          string        `form:"content" doc:"Post content"`
-	RemoveAttachment bool          `form:"removeAttachment" doc:"Remove existing attachment"`
-	File             huma.FormFile `form:"file" doc:"Optional replacement attachment file" required:"false"`
+	Content              string `form:"content" doc:"Post content"`
+	AttachmentIds        string `form:"attachmentIds" doc:"New attachment IDs to link (comma-separated)" required:"false" explode:"true"`
+	RemoveAttachmentIds  string `form:"removeAttachmentIds" doc:"Attachment IDs to unlink (comma-separated)" required:"false"`
+	RemoveAllAttachments bool   `form:"removeAllAttachments" doc:"Remove all attachments"`
 }
 
 type UpdatePostInput struct {
@@ -400,17 +432,32 @@ func ToCategoryDTO(category *entity.CommunityCategory) *CategoryDTO {
 	}
 }
 
-func ToThreadDTO(thread *entity.DiscussionThread) *ThreadDTO {
+func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta) *ThreadDTO {
 	if thread == nil {
 		return nil
 	}
+	displayName := "User " + thread.AuthorAccountID.String()[:6]
+	authorUsername := ""
+	var authorAvatarURL *string
+	if authorMeta != nil {
+		if authorMeta.DisplayName != "" {
+			displayName = authorMeta.DisplayName
+		}
+		authorUsername = authorMeta.Username
+		authorAvatarURL = authorMeta.AvatarURL
+	}
+
 	return &ThreadDTO{
 		ID:             thread.ID,
+		ParentThreadID: thread.ParentThreadID,
 		Title:          thread.Title,
 		Slug:           thread.Slug,
 		Description:    thread.Description,
 		CategoryID:     thread.CategoryID,
 		AuthorID:       thread.AuthorAccountID,
+		AuthorUsername: authorUsername,
+		AuthorDisplay:  displayName,
+		AuthorAvatar:   authorAvatarURL,
 		IsPinned:       thread.IsPinned,
 		Status:         thread.Status,
 		ViewCount:      thread.ViewCount,
@@ -422,21 +469,46 @@ func ToThreadDTO(thread *entity.DiscussionThread) *ThreadDTO {
 	}
 }
 
-func ToPostDTO(post *entity.DiscussionPost) *PostDTO {
+func ToPostDTO(post *entity.DiscussionPost, authorMeta *AuthorMeta) *PostDTO {
 	if post == nil {
 		return nil
 	}
+	displayName := "User " + post.AuthorAccountID.String()[:6]
+	authorUsername := ""
+	var authorAvatarURL *string
+	if authorMeta != nil {
+		if authorMeta.DisplayName != "" {
+			displayName = authorMeta.DisplayName
+		}
+		authorUsername = authorMeta.Username
+		authorAvatarURL = authorMeta.AvatarURL
+	}
+
+	attachments := make([]AttachmentDTO, 0, len(post.Attachments))
+	for _, att := range post.Attachments {
+		attDTO := AttachmentDTO{
+			ID:       att.ID,
+			FileURL:  att.FileURL,
+			FileType: att.FileType,
+			FileName: att.FileName,
+			FileSize: att.FileSize,
+		}
+		attachments = append(attachments, attDTO)
+	}
+
 	return &PostDTO{
 		ID:             post.ID,
 		ThreadID:       post.ThreadID,
 		ParentPostID:   post.ParentPostID,
 		AuthorID:       post.AuthorAccountID,
+		AuthorUsername: authorUsername,
+		AuthorDisplay:  displayName,
+		AuthorAvatar:   authorAvatarURL,
 		Content:        post.Content,
 		IsSolution:     post.IsSolution,
 		IsPinned:       post.IsPinned,
 		UpvoteCount:    post.UpvoteCount,
-		AttachmentURL:  post.AttachmentURL,
-		AttachmentType: post.AttachmentType,
+		Attachments:    attachments,
 		EditCount:      post.EditCount,
 		EditedAt:       post.EditedAt,
 		CreatedAt:      post.CreatedAt,
@@ -444,7 +516,40 @@ func ToPostDTO(post *entity.DiscussionPost) *PostDTO {
 	}
 }
 
-func ToCreateThreadInput(categoryID uuid.UUID, parentThreadID *uuid.UUID, title, slug, description, initialPostContent string, attachmentURL, attachmentType *string) usecase.CreateThreadInput {
+// parseStringSliceToUUID converts a slice of strings to a slice of UUIDs.
+// Invalid UUID strings are silently skipped.
+func parseStringSliceToUUID(strs []string) []uuid.UUID {
+	if len(strs) == 0 {
+		return nil
+	}
+	result := make([]uuid.UUID, 0, len(strs))
+	for _, s := range strs {
+		if parsed, err := uuid.Parse(s); err == nil {
+			result = append(result, parsed)
+		}
+	}
+	return result
+}
+
+// parseCSVToStringSlice converts a comma-separated string to a slice of strings.
+func parseCSVToStringSlice(csv string) []string {
+	if strings.TrimSpace(csv) == "" {
+		return nil
+	}
+	parts := strings.Split(csv, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
+func ToCreateThreadInput(categoryID uuid.UUID, parentThreadID *uuid.UUID, title, slug, description, initialPostContent string, attachmentIds string) usecase.CreateThreadInput {
 	var descriptionPtr *string
 	if strings.TrimSpace(description) != "" {
 		d := strings.TrimSpace(description)
@@ -458,36 +563,28 @@ func ToCreateThreadInput(categoryID uuid.UUID, parentThreadID *uuid.UUID, title,
 		Slug:               slug,
 		Description:        descriptionPtr,
 		InitialPostContent: initialPostContent,
-		AttachmentURL:      attachmentURL,
-		AttachmentType:     attachmentType,
+		AttachmentIds:      parseStringSliceToUUID(parseCSVToStringSlice(attachmentIds)),
 	}
 }
 
-func ToCreatePostInput(content string, attachmentURL, attachmentType *string) usecase.CreatePostInput {
+func ToCreatePostInput(content string, attachmentIds string) usecase.CreatePostInput {
 	return usecase.CreatePostInput{
-		Content:        content,
-		AttachmentURL:  attachmentURL,
-		AttachmentType: attachmentType,
+		Content:       content,
+		AttachmentIds: parseStringSliceToUUID(parseCSVToStringSlice(attachmentIds)),
 	}
 }
 
-func ToUpdatePostInput(content string, removeAttachment bool) usecase.UpdatePostInput {
+func ToUpdatePostInput(content string, attachmentIds, removeAttachmentIds string, removeAllAttachments bool) usecase.UpdatePostInput {
 	var contentPtr *string
 	if strings.TrimSpace(content) != "" {
 		c := strings.TrimSpace(content)
 		contentPtr = &c
 	}
 
-	var removeAttachmentPtr *bool
-	if removeAttachment {
-		r := true
-		removeAttachmentPtr = &r
-	}
-
 	return usecase.UpdatePostInput{
-		Content:          contentPtr,
-		AttachmentURL:    nil,
-		AttachmentType:   nil,
-		RemoveAttachment: removeAttachmentPtr,
+		Content:              contentPtr,
+		AttachmentIds:        parseStringSliceToUUID(parseCSVToStringSlice(attachmentIds)),
+		RemoveAttachmentIds:  parseStringSliceToUUID(parseCSVToStringSlice(removeAttachmentIds)),
+		RemoveAllAttachments: removeAllAttachments,
 	}
 }

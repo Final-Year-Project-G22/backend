@@ -3,51 +3,48 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
-	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
 
 type CampaignProcessor struct {
-	templateUC   usecase.NotificationTemplateUsecase
-	templateRend *TemplateRenderer
-	queueRepo    repository.NotificationQueueRepository
-	accountRepo  repository.AccountReader
-	transactor   sharedrepo.Transactor
-	ingestUC     usecase.NotificationIngestUsecase
-	logger       core.Logger
+	campaignTemplateRepo repository.CampaignTemplateRepository
+	templateRend         *TemplateRenderer
+	queueRepo            repository.NotificationQueueRepository
+	accountReader        repository.AccountReader
+	transactor           sharedrepo.Transactor
+	logger               core.Logger
 }
 
 func NewCampaignProcessor(
-	templateUC usecase.NotificationTemplateUsecase,
+	campaignTemplateRepo repository.CampaignTemplateRepository,
 	templateRend *TemplateRenderer,
 	queueRepo repository.NotificationQueueRepository,
-	accountRepo repository.AccountReader,
+	accountReader repository.AccountReader,
 	transactor sharedrepo.Transactor,
-	ingestUC usecase.NotificationIngestUsecase,
 	logger core.Logger,
 ) *CampaignProcessor {
 	return &CampaignProcessor{
-		templateUC:   templateUC,
-		templateRend: templateRend,
-		queueRepo:    queueRepo,
-		accountRepo:  accountRepo,
-		transactor:   transactor,
-		ingestUC:     ingestUC,
-		logger:       logger,
+		campaignTemplateRepo: campaignTemplateRepo,
+		templateRend:         templateRend,
+		queueRepo:            queueRepo,
+		accountReader:        accountReader,
+		transactor:           transactor,
+		logger:               logger,
 	}
 }
 
 func (p *CampaignProcessor) ProcessCampaign(ctx context.Context, campaign *entity.NotificationCampaign) error {
-	tmpl, err := p.templateUC.GetTemplate(ctx, campaign.TemplateID)
+	tmpl, err := p.campaignTemplateRepo.GetByID(ctx, campaign.CampaignTemplateID)
 	if err != nil {
-		return fmt.Errorf("failed to load campaign template %s: %w", campaign.TemplateID, err)
+		return fmt.Errorf("failed to load campaign template %s: %w", campaign.CampaignTemplateID, err)
 	}
 
 	accountIDs, err := p.resolveRecipients(ctx, campaign)
@@ -55,15 +52,10 @@ func (p *CampaignProcessor) ProcessCampaign(ctx context.Context, campaign *entit
 		return fmt.Errorf("failed to resolve campaign recipients: %w", err)
 	}
 
-	channels := p.resolveChannels(&tmpl.DefaultContent, campaign.CustomContent)
-
-	content := tmpl.DefaultContent
-	if campaign.CustomContent != nil {
-		content = *campaign.CustomContent
-	}
+	channels := p.resolveChannels(tmpl.DefaultContent)
 
 	for _, accountID := range accountIDs {
-		if err := p.enqueueForRecipient(ctx, campaign, tmpl, accountID, channels, content); err != nil {
+		if err := p.enqueueForRecipient(ctx, campaign, tmpl, accountID, channels); err != nil {
 			p.logger.Error("Failed to enqueue campaign notification for recipient",
 				core.String("campaignID", campaign.ID.String()),
 				core.String("accountID", accountID.String()),
@@ -79,12 +71,12 @@ func (p *CampaignProcessor) ProcessCampaign(ctx context.Context, campaign *entit
 func (p *CampaignProcessor) ResolveSegment(ctx context.Context, campaignType entity.CampaignType, segment map[string]interface{}) ([]uuid.UUID, error) {
 	switch campaignType {
 	case entity.CampaignTypeBroadcast:
-		return p.accountRepo.FindAll(ctx)
+		return p.accountReader.FindAll(ctx)
 	case entity.CampaignTypeSegmented:
 		if len(segment) == 0 {
 			return nil, fmt.Errorf("segment filters required for segmented campaign")
 		}
-		return p.accountRepo.FindBySegment(ctx, segment)
+		return p.accountReader.FindBySegment(ctx, segment)
 	default:
 		return nil, fmt.Errorf("unknown campaign type: %s", campaignType)
 	}
@@ -110,17 +102,12 @@ func (p *CampaignProcessor) resolveRecipients(ctx context.Context, campaign *ent
 	return accountIDs, nil
 }
 
-func (p *CampaignProcessor) resolveChannels(defaultContent, customContent *datatypes.JSONMap) []entity.Channel {
-	source := defaultContent
-	if customContent != nil {
-		source = customContent
-	}
-
+func (p *CampaignProcessor) resolveChannels(content datatypes.JSONMap) []entity.Channel {
 	var channels []entity.Channel
-	if source == nil {
+	if content == nil {
 		return channels
 	}
-	for key := range *source {
+	for key := range content {
 		ch := entity.Channel(key)
 		switch ch {
 		case entity.ChannelEmail, entity.ChannelInApp, entity.ChannelPush, entity.ChannelSMS:
@@ -130,28 +117,53 @@ func (p *CampaignProcessor) resolveChannels(defaultContent, customContent *datat
 	return channels
 }
 
+func isChannelContentValid(ch entity.Channel, content map[string]interface{}) bool {
+	switch ch {
+	case entity.ChannelEmail:
+		subject, _ := content["subject"].(string)
+		body, _ := content["body"].(string)
+		return strings.TrimSpace(subject) != "" && strings.TrimSpace(body) != ""
+	case entity.ChannelInApp:
+		title, _ := content["title"].(string)
+		body, _ := content["body"].(string)
+		return strings.TrimSpace(title) != "" && strings.TrimSpace(body) != ""
+	case entity.ChannelPush:
+		title, _ := content["title"].(string)
+		body, _ := content["body"].(string)
+		return strings.TrimSpace(title) != "" && strings.TrimSpace(body) != ""
+	}
+	return false
+}
+
 func (p *CampaignProcessor) enqueueForRecipient(
 	ctx context.Context,
 	campaign *entity.NotificationCampaign,
-	tmpl *entity.NotificationTemplate,
+	tmpl *entity.CampaignTemplate,
 	accountID uuid.UUID,
 	channels []entity.Channel,
-	content datatypes.JSONMap,
 ) error {
-	subject := ""
-	if campaign.CustomSubject != nil {
-		subject = *campaign.CustomSubject
-	} else if s, ok := content["email"].(map[string]interface{}); ok {
-		if subj, ok := s["subject"].(string); ok {
-			subject = subj
+	// 1. Resolve recipient account info (email + locale)
+	accountInfo, err := p.accountReader.GetAccountInfo(ctx, accountID)
+	if err != nil {
+		return fmt.Errorf("failed to get account info for %s: %w", accountID, err)
+	}
+
+	// 2. Resolve content by locale (try translation, fallback to default)
+	resolvedContent := tmpl.DefaultContent
+	if accountInfo.Locale != "" {
+		translation, err := p.campaignTemplateRepo.GetTranslation(ctx, tmpl.ID, accountInfo.Locale)
+		if err == nil {
+			resolvedContent = translation.Content
 		}
 	}
 
-	rendered, err := p.templateRend.Render(content, nil)
+	// 3. Render (no variable substitution for campaigns)
+	rendered, err := p.templateRend.Render(resolvedContent, nil)
 	if err != nil {
 		return fmt.Errorf("failed to render content for account %s: %w", accountID, err)
 	}
 
+	// 4. For each channel, create queue entry
 	for _, ch := range channels {
 		channelContent, hasChannel := rendered[string(ch)]
 		if !hasChannel {
@@ -167,23 +179,42 @@ func (p *CampaignProcessor) enqueueForRecipient(
 			continue
 		}
 
-		payload := datatypes.JSONMap{
-			"title":     channelMap["title"],
-			"content":   channelMap["body"],
-			"actionUrl": channelMap["actionUrl"],
+		if !isChannelContentValid(ch, channelMap) {
+			p.logger.Warn("Skipping channel with empty required fields",
+				core.String("channel", string(ch)),
+				core.String("accountID", accountID.String()),
+			)
+			continue
 		}
 
-		if ch == entity.ChannelEmail {
-			payload["to"] = ""
-			payload["subject"] = subject
+		var payload datatypes.JSONMap
+		switch ch {
+		case entity.ChannelEmail:
+			payload = datatypes.JSONMap{
+				"to":      accountInfo.Email,
+				"subject": channelMap["subject"],
+				"body":    channelMap["body"],
+			}
+		case entity.ChannelInApp:
+			payload = datatypes.JSONMap{
+				"title":   channelMap["title"],
+				"content": channelMap["body"],
+			}
+			if actionUrl, ok := channelMap["actionUrl"].(string); ok && actionUrl != "" {
+				payload["actionUrl"] = actionUrl
+			}
+		case entity.ChannelPush:
+			payload = datatypes.JSONMap{
+				"title": channelMap["title"],
+				"body":  channelMap["body"],
+			}
 		}
 
 		now := time.Now().UTC()
 		queueItem := &entity.NotificationQueue{
-			NotificationType: tmpl.NotificationType,
+			NotificationType: entity.NotificationTypeCampaign,
 			AccountID:        accountID,
-			Priority:         tmpl.Priority,
-			TemplateID:       &tmpl.ID,
+			Priority:         entity.NotificationPriorityMedium,
 			Channel:          ch,
 			Payload:          payload,
 			ScheduledFor:     now,

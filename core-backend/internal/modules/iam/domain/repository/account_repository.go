@@ -19,8 +19,6 @@ type AccountRepository interface {
 	ExistsByUsernameNormalized(ctx context.Context, username string) (bool, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status entity.AccountStatus) error
 	MarkEmailVerifiedAndActivate(ctx context.Context, id uuid.UUID) error
-
-	// FindBySegment returns accounts matching segment filters.
-	// Supported keys: "status", "created_after" (RFC3339), "created_before" (RFC3339)
 	FindBySegment(ctx context.Context, segment map[string]interface{}) ([]*entity.Account, error)
+	ListAdmins(ctx context.Context, permissionCodes []string, queryOpts map[string]interface{}) ([]*entity.Account, int64, error)
 }
