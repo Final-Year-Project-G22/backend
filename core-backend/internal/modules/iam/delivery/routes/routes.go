@@ -10,6 +10,7 @@ type RouteDependencies struct {
 	AuthHandler             *handler.AuthHandler
 	AdminHandler            *handler.AdminHandler
 	TaxonomyAdminHandler    *handler.TaxonomyAdminHandler
+	TaxonomyHandler         *handler.TaxonomyHandler
 	PermissionHandler       *handler.PermissionHandler
 	RoleHandler             *handler.RoleHandler
 	UserHandler             *handler.UserHandler
@@ -53,5 +54,10 @@ func RegisterRoutes(api huma.API, deps RouteDependencies) {
 		AuthMiddleware:          deps.AuthMiddleware,
 		AccountStatusMiddleware: deps.AccountStatusMiddleware,
 		RoleAssignmentUsecase:   deps.RoleAssignmentUsecase,
+	})
+	RegisterTaxonomyRoutes(api, TaxonomyRouteDependencies{
+		TaxonomyHandler:         deps.TaxonomyHandler,
+		AuthMiddleware:          deps.AuthMiddleware,
+		AccountStatusMiddleware: deps.AccountStatusMiddleware,
 	})
 }

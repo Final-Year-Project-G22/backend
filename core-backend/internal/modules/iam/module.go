@@ -270,12 +270,14 @@ var Module = fx.Module("iam",
 	fx.Provide(handler.NewImageHandler),
 	fx.Provide(handler.NewOAuthHandler),
 	fx.Provide(handler.NewTaxonomyAdminHandler),
+	fx.Provide(handler.NewTaxonomyHandler),
 
 	// Invocations
 
 	// Register all routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, adminHandler *handler.AdminHandler,
 		taxonomyAdminHandler *handler.TaxonomyAdminHandler,
+		taxonomyHandler *handler.TaxonomyHandler,
 		permissionHandler *handler.PermissionHandler, roleHandler *handler.RoleHandler,
 		userHandler *handler.UserHandler, imageHandler *handler.ImageHandler,
 		oauthHandler *handler.OAuthHandler, tokenService token.TokenService,
@@ -286,6 +288,7 @@ var Module = fx.Module("iam",
 			AuthHandler:             authHandler,
 			AdminHandler:            adminHandler,
 			TaxonomyAdminHandler:    taxonomyAdminHandler,
+			TaxonomyHandler:         taxonomyHandler,
 			PermissionHandler:       permissionHandler,
 			RoleHandler:             roleHandler,
 			UserHandler:             userHandler,
