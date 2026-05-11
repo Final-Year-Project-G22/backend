@@ -24,6 +24,7 @@ type Config struct {
 	RabbitMQ  rabbitmq.Config `mapstructure:"rabbitmq"`
 	Email     email.Config    `mapstructure:"email"`
 	Resend    ResendConfig    `mapstructure:"resend"`
+	Chapa     ChapaConfig     `mapstructure:"chapa"`
 }
 
 type ResendConfig struct {
@@ -32,6 +33,16 @@ type ResendConfig struct {
 	WebhookSecret string `mapstructure:"webhook_secret"`
 	FromEmail     string `mapstructure:"from_email"`
 	FromName      string `mapstructure:"from_name"`
+}
+
+type ChapaConfig struct {
+	Enabled       bool   `mapstructure:"enabled"`
+	SecretKey     string `mapstructure:"secret_key"`
+	PublicKey     string `mapstructure:"public_key"`
+	WebhookSecret string `mapstructure:"webhook_secret"`
+	BaseURL       string `mapstructure:"base_url"`
+	CallbackURL   string `mapstructure:"callback_url"`
+	ReturnURL     string `mapstructure:"return_url"`
 }
 
 type AppConfig struct {

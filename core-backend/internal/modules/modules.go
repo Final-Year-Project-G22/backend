@@ -15,6 +15,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/payment"
 )
 
 var Modules = fx.Options(
@@ -25,6 +26,7 @@ var Modules = fx.Options(
 	coregrpc.Module,
 	notification.Module,
 	library.Module,
+	payment.Module,
 
 	// Override notification's default IAM readers with real IAM-backed adapters.
 	fx.Decorate(func(
