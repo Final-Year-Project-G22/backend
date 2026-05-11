@@ -1,11 +1,13 @@
 package dto
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
+	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
@@ -175,6 +177,40 @@ type CreateThreadOutput struct {
 type CreateThreadResponseBody struct {
 	ThreadID uuid.UUID `json:"threadId" doc:"Created thread ID"`
 	PostID   uuid.UUID `json:"postId" doc:"Initial post ID"`
+}
+
+type UpdateThreadFormData struct {
+	SectorIDs   string `form:"sectorIds" doc:"Sector IDs (comma-separated)" required:"false"`
+	TagIDs      string `form:"tagIds" doc:"Tag IDs (comma-separated)" required:"false"`
+	Title       string `form:"title" doc:"Thread title" required:"false"`
+	Description string `form:"description" doc:"Thread description" required:"false"`
+	IsPinned    string `form:"isPinned" doc:"Pinned flag (true/false)" required:"false"`
+	Status      string `form:"status" doc:"Thread status" required:"false"`
+}
+
+type UpdateThreadInput struct {
+	ID      uuid.UUID `path:"id" doc:"Thread ID"`
+	RawBody huma.MultipartFormFiles[UpdateThreadFormData]
+}
+
+type UpdateThreadOutput struct {
+	Body UpdateThreadResponseBody
+}
+
+type UpdateThreadResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
+type DeleteThreadInput struct {
+	ID uuid.UUID `path:"id" doc:"Thread ID"`
+}
+
+type DeleteThreadOutput struct {
+	Body DeleteThreadResponseBody
+}
+
+type DeleteThreadResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
 }
 
 type CreatePostFormData struct {
@@ -578,4 +614,38 @@ func ToUpdatePostInput(content string, attachmentIds, removeAttachmentIds string
 		RemoveAttachmentIds:  parseStringSliceToUUID(parseCSVToStringSlice(removeAttachmentIds)),
 		RemoveAllAttachments: removeAllAttachments,
 	}
+}
+
+func ToUpdateThreadInput(formData *UpdateThreadFormData) (usecase.UpdateThreadInput, error) {
+	input := usecase.UpdateThreadInput{}
+
+	if formData.SectorIDs != "" {
+		ids := parseStringSliceToUUID(parseCSVToStringSlice(formData.SectorIDs))
+		input.SectorIDs = &ids
+	}
+	if formData.TagIDs != "" {
+		ids := parseStringSliceToUUID(parseCSVToStringSlice(formData.TagIDs))
+		input.TagIDs = &ids
+	}
+	if strings.TrimSpace(formData.Title) != "" {
+		t := strings.TrimSpace(formData.Title)
+		input.Title = &t
+	}
+	if strings.TrimSpace(formData.Description) != "" {
+		d := strings.TrimSpace(formData.Description)
+		input.Description = &d
+	}
+	if strings.TrimSpace(formData.IsPinned) != "" {
+		b, err := strconv.ParseBool(strings.TrimSpace(formData.IsPinned))
+		if err != nil {
+			return input, apperrors.InvalidInputError("isPinned", "must be true or false")
+		}
+		input.IsPinned = &b
+	}
+	if strings.TrimSpace(formData.Status) != "" {
+		s := entity.ThreadStatus(strings.TrimSpace(formData.Status))
+		input.Status = &s
+	}
+
+	return input, nil
 }

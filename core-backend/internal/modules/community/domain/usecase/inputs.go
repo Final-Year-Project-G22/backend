@@ -37,6 +37,8 @@ type UpdateThreadInput struct {
 	Description *string
 	IsPinned    *bool
 	Status      *entity.ThreadStatus
+	SectorIDs   *[]uuid.UUID
+	TagIDs      *[]uuid.UUID
 }
 
 type CreatePostInput struct {
