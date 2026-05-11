@@ -17,6 +17,7 @@ import (
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/taxonomy"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -84,6 +85,7 @@ var Module = fx.Module(
 			fx.As(new(usecase.CommunityCategoryUsecase)),
 		),
 	),
+	fx.Provide(taxonomy.NewTaxonomyValidator),
 	fx.Provide(
 		fx.Annotate(
 			appusecase.NewDiscussionThreadUsecase,

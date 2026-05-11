@@ -87,11 +87,28 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
 }
 
-func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.SearchThreadsInput) (*dto.SearchThreadsOutput, error) {
-	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+func (h *CommunityHandler) HandleListAllThreads(ctx context.Context, input *dto.ListThreadsInput) (*dto.ListThreadsOutput, error) {
 	opts := dto.ToQueryOptions(input.Page, input.PageSize)
 
-	threads, err := h.threadUsecase.SearchThreads(ctx, accountID, input.Keyword, opts)
+	threads, err := h.threadUsecase.ListAllThreads(ctx, opts)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
+	items := make([]*dto.ThreadDTO, 0, len(threads))
+	for _, thread := range threads {
+		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
+		items = append(items, dto.ToThreadDTO(thread, authorMeta))
+	}
+
+	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
+}
+
+func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.SearchThreadsInput) (*dto.SearchThreadsOutput, error) {
+	opts := dto.ToQueryOptions(input.Page, input.PageSize)
+
+	threads, err := h.threadUsecase.SearchThreads(ctx, input.Keyword, opts)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -159,6 +176,36 @@ func (h *CommunityHandler) HandleCreateThread(ctx context.Context, input *dto.Cr
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.CreateThreadOutput{Body: dto.CreateThreadResponseBody{ThreadID: thread.ID, PostID: post.ID}}, nil
+}
+
+func (h *CommunityHandler) HandleUpdateThread(ctx context.Context, input *dto.UpdateThreadInput) (*dto.UpdateThreadOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	formData := input.RawBody.Data()
+	if formData == nil {
+		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("community.errors.invalidInput"))
+	}
+
+	updateInput, err := dto.ToUpdateThreadInput(formData)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	_, err = h.threadUsecase.UpdateThread(ctx, accountID, input.ID, updateInput)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.UpdateThreadOutput{Body: dto.UpdateThreadResponseBody{Message: "Thread updated"}}, nil
+}
+
+func (h *CommunityHandler) HandleDeleteThread(ctx context.Context, input *dto.DeleteThreadInput) (*dto.DeleteThreadOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+
+	if err := h.threadUsecase.DeleteThread(ctx, accountID, input.ID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.DeleteThreadOutput{Body: dto.DeleteThreadResponseBody{Message: "Thread deleted"}}, nil
 }
 
 func (h *CommunityHandler) HandleCreatePost(ctx context.Context, input *dto.CreatePostInput) (*dto.CreatePostOutput, error) {

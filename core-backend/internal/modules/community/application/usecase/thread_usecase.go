@@ -12,6 +12,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
 	iamrepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/taxonomy"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
@@ -21,6 +22,7 @@ type discussionThreadUsecase struct {
 	threadRepo  repository.DiscussionThreadRepository
 	postRepo    repository.DiscussionPostRepository
 	profileRepo iamrepository.BusinessProfileRepository
+	validator   *taxonomy.TaxonomyValidator
 	transactor  sharedrepo.Transactor
 	logger      core.Logger
 }
@@ -29,6 +31,7 @@ func NewDiscussionThreadUsecase(
 	threadRepo repository.DiscussionThreadRepository,
 	postRepo repository.DiscussionPostRepository,
 	profileRepo iamrepository.BusinessProfileRepository,
+	validator *taxonomy.TaxonomyValidator,
 	transactor sharedrepo.Transactor,
 	logger core.Logger,
 ) usecase.DiscussionThreadUsecase {
@@ -36,6 +39,7 @@ func NewDiscussionThreadUsecase(
 		threadRepo:  threadRepo,
 		postRepo:    postRepo,
 		profileRepo: profileRepo,
+		validator:   validator,
 		transactor:  transactor,
 		logger:      logger,
 	}
@@ -50,6 +54,10 @@ func (u *discussionThreadUsecase) CreateThread(ctx context.Context, accountID uu
 	}
 	if strings.TrimSpace(input.InitialPostContent) == "" {
 		return nil, nil, apperrors.RequiredFieldError("initialPostContent")
+	}
+
+	if err := u.validator.Validate(ctx, input.SectorIDs, input.TagIDs); err != nil {
+		return nil, nil, err
 	}
 
 	if input.ParentThreadID != nil {
@@ -113,6 +121,11 @@ func (u *discussionThreadUsecase) UpdateThread(ctx context.Context, accountID, t
 	} else if !ok {
 		return nil, apperrors.ForbiddenError("community.errors.permissionDenied")
 	}
+
+	if thread.Status != entity.ThreadStatusActive {
+		return nil, apperrors.BadRequestError("community.errors.threadNotActive")
+	}
+
 	if input.Title != nil {
 		title := strings.TrimSpace(*input.Title)
 		if title == "" {
@@ -128,6 +141,26 @@ func (u *discussionThreadUsecase) UpdateThread(ctx context.Context, accountID, t
 	}
 	if input.Status != nil {
 		thread.Status = *input.Status
+	}
+	if input.SectorIDs != nil {
+		if err := u.validator.Validate(ctx, *input.SectorIDs, nil); err != nil {
+			return nil, err
+		}
+		if len(*input.SectorIDs) == 0 {
+			thread.SectorIDs = nil
+		} else {
+			thread.SectorIDs = *input.SectorIDs
+		}
+	}
+	if input.TagIDs != nil {
+		if err := u.validator.Validate(ctx, nil, *input.TagIDs); err != nil {
+			return nil, err
+		}
+		if len(*input.TagIDs) == 0 {
+			thread.TagIDs = nil
+		} else {
+			thread.TagIDs = *input.TagIDs
+		}
 	}
 	if err := u.threadRepo.Update(ctx, thread); err != nil {
 		return nil, err
@@ -170,11 +203,33 @@ func (u *discussionThreadUsecase) ListThreads(ctx context.Context, accountID uui
 	return u.threadRepo.ListByTaxonomy(ctx, sectorIDs, tagIDs, q)
 }
 
-func (u *discussionThreadUsecase) SearchThreads(ctx context.Context, accountID uuid.UUID, keyword string, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
-	sectorIDs, tagIDs := u.buildTaxonomyFilter(ctx, accountID)
-	return u.threadRepo.Search(ctx, keyword, sectorIDs, tagIDs, q)
+func (u *discussionThreadUsecase) SearchThreads(ctx context.Context, keyword string, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
+	return u.threadRepo.Search(ctx, keyword, nil, nil, q)
+}
+
+func (u *discussionThreadUsecase) ListAllThreads(ctx context.Context, q query.QueryOptions) ([]*entity.DiscussionThread, error) {
+	return u.threadRepo.ListByTaxonomy(ctx, nil, nil, q)
 }
 
 func (u *discussionThreadUsecase) GetThread(ctx context.Context, threadID uuid.UUID) (*entity.DiscussionThread, error) {
 	return u.threadRepo.GetByID(ctx, threadID)
+}
+
+func (u *discussionThreadUsecase) DeleteThread(ctx context.Context, accountID, threadID uuid.UUID) error {
+	thread, err := u.threadRepo.GetByID(ctx, threadID)
+	if err != nil {
+		return err
+	}
+
+	if ok, err := u.threadRepo.IsAuthor(ctx, threadID, accountID); err != nil {
+		return err
+	} else if !ok {
+		return apperrors.ForbiddenError("community.errors.permissionDenied")
+	}
+
+	if thread.ReplyCount > 0 {
+		return apperrors.BadRequestError("community.errors.threadHasReplies")
+	}
+
+	return u.threadRepo.Delete(ctx, threadID)
 }

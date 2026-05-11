@@ -50,6 +50,17 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.CommunityHandler.HandleSearchThreads)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "listAllCommunityThreads",
+		Method:      "GET",
+		Path:        communityBase + "/threads/all",
+		Summary:     "List all discussion threads",
+		Description: "Lists all discussion threads without taxonomy filtering.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleListAllThreads)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "getCommunityThread",
 		Method:      "GET",
 		Path:        communityBase + "/threads/{id}",
@@ -81,6 +92,28 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.CommunityHandler.HandleCreateThread)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "updateCommunityThread",
+		Method:      "PATCH",
+		Path:        communityBase + "/threads/{id}",
+		Summary:     "Update discussion thread",
+		Description: "Updates a thread's metadata (author only, active threads only).",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleUpdateThread)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "deleteCommunityThread",
+		Method:      "DELETE",
+		Path:        communityBase + "/threads/{id}",
+		Summary:     "Delete discussion thread",
+		Description: "Deletes a thread (author only, no replies beyond the initial post).",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleDeleteThread)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "createCommunityPost",
