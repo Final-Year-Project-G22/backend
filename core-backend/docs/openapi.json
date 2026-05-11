@@ -14914,7 +14914,7 @@
           "content": {
             "multipart/form-data": {
               "encoding": {
-                "description,omitempty": {
+                "description": {
                   "contentType": "text/plain"
                 },
                 "file": {
