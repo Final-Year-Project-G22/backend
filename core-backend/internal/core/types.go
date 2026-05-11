@@ -41,6 +41,8 @@ type ChapaConfig struct {
 	PublicKey     string `mapstructure:"public_key"`
 	WebhookSecret string `mapstructure:"webhook_secret"`
 	BaseURL       string `mapstructure:"base_url"`
+	CallbackURL   string `mapstructure:"callback_url"`
+	ReturnURL     string `mapstructure:"return_url"`
 }
 
 type AppConfig struct {

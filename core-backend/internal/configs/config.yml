@@ -107,3 +107,5 @@ chapa:
   public_key: ${CHAPA_PUBLIC_KEY}
   webhook_secret: ${CHAPA_WEBHOOK_SECRET}
   base_url: ${CHAPA_BASE_URL:-https://api.chapa.co/v1}
+  callback_url: ${CHAPA_CALLBACK_URL}
+  return_url: ${CHAPA_RETURN_URL}
