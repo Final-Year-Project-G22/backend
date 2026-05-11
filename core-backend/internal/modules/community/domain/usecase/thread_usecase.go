@@ -16,4 +16,5 @@ type DiscussionThreadUsecase interface {
 	SearchThreads(ctx context.Context, keyword string, q query.QueryOptions) ([]*entity.DiscussionThread, error)
 	ListAllThreads(ctx context.Context, q query.QueryOptions) ([]*entity.DiscussionThread, error)
 	GetThread(ctx context.Context, threadID uuid.UUID) (*entity.DiscussionThread, error)
+	DeleteThread(ctx context.Context, accountID, threadID uuid.UUID) error
 }
