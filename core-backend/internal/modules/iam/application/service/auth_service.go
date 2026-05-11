@@ -464,8 +464,11 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 	}
 
 	var newSession *entity.Session
+	var accessToken string
 
-	// Rotate: revoke old session and create new one atomically
+	// Rotate: revoke old session, create new one, and generate access token atomically.
+	// If access token generation fails, the transaction rolls back and the old
+	// refresh token remains valid so the client can retry.
 	err = s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		// Revoke old session
 		if txErr := s.sessionUsecase.RevokeSession(txCtx, session.ID); txErr != nil {
@@ -480,18 +483,19 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 			IPAddress:        session.IPAddress,
 			ExpiresAt:        time.Now().Add(s.tokenService.GetRefreshTokenTTL()),
 		})
-		return txErr
+		if txErr != nil {
+			return txErr
+		}
+
+		// Generate access token inside the transaction so failure rolls back
+		var tokenErr error
+		accessToken, tokenErr = s.tokenService.GenerateAccessToken(txCtx, token.AccessTokenClaims{
+			SessionID: newSession.ID,
+			Email:     account.Email,
+		})
+		return tokenErr
 	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	// Generate access token
-	accessToken, err := s.tokenService.GenerateAccessToken(ctx, token.AccessTokenClaims{
-		SessionID: newSession.ID,
-		Email:     account.Email,
-	})
 	if err != nil {
 		return nil, err
 	}
