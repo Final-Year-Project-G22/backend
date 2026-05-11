@@ -86,6 +86,26 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("error binding env resend.from_name: %w", err)
 	}
 
+	err = v.BindEnv("chapa.secret_key", "CHAPA_SECRET_KEY")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env chapa.secret_key: %w", err)
+	}
+
+	err = v.BindEnv("chapa.public_key", "CHAPA_PUBLIC_KEY")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env chapa.public_key: %w", err)
+	}
+
+	err = v.BindEnv("chapa.webhook_secret", "CHAPA_WEBHOOK_SECRET")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env chapa.webhook_secret: %w", err)
+	}
+
+	err = v.BindEnv("chapa.base_url", "CHAPA_BASE_URL")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env chapa.base_url: %w", err)
+	}
+
 	// 4. Set defaults
 	v.SetDefault("app.environment", "development")
 	v.SetDefault("app.port", 4000)

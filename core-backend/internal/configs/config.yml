@@ -100,3 +100,10 @@ email:
   from: ${EMAIL_FROM}
   from_name: ${EMAIL_FROM_NAME}
   enable_tls: ${EMAIL_ENABLE_TLS}
+
+chapa:
+  enabled: ${CHAPA_ENABLED:-true}
+  secret_key: ${CHAPA_SECRET_KEY}
+  public_key: ${CHAPA_PUBLIC_KEY}
+  webhook_secret: ${CHAPA_WEBHOOK_SECRET}
+  base_url: ${CHAPA_BASE_URL:-https://api.chapa.co/v1}
