@@ -88,10 +88,9 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 }
 
 func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.SearchThreadsInput) (*dto.SearchThreadsOutput, error) {
-	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	opts := dto.ToQueryOptions(input.Page, input.PageSize)
 
-	threads, err := h.threadUsecase.SearchThreads(ctx, accountID, input.Keyword, opts)
+	threads, err := h.threadUsecase.SearchThreads(ctx, input.Keyword, opts)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
