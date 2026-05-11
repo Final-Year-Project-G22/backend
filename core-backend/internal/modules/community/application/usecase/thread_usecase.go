@@ -214,3 +214,22 @@ func (u *discussionThreadUsecase) ListAllThreads(ctx context.Context, q query.Qu
 func (u *discussionThreadUsecase) GetThread(ctx context.Context, threadID uuid.UUID) (*entity.DiscussionThread, error) {
 	return u.threadRepo.GetByID(ctx, threadID)
 }
+
+func (u *discussionThreadUsecase) DeleteThread(ctx context.Context, accountID, threadID uuid.UUID) error {
+	thread, err := u.threadRepo.GetByID(ctx, threadID)
+	if err != nil {
+		return err
+	}
+
+	if ok, err := u.threadRepo.IsAuthor(ctx, threadID, accountID); err != nil {
+		return err
+	} else if !ok {
+		return apperrors.ForbiddenError("community.errors.permissionDenied")
+	}
+
+	if thread.ReplyCount > 0 {
+		return apperrors.BadRequestError("community.errors.threadHasReplies")
+	}
+
+	return u.threadRepo.Delete(ctx, threadID)
+}
