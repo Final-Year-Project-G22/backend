@@ -57,6 +57,39 @@ func (h *GuideViewHandler) HandleSearchGuides(ctx context.Context, input *dto.Se
 	}, nil
 }
 
+func (h *GuideViewHandler) HandleGetInProgressGuides(ctx context.Context, input *dto.GetInProgressGuidesInput) (*dto.GetInProgressGuidesOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
+
+	guides, err := h.guideViewUC.GetInProgressGuides(ctx, accountID, userID, input.Locale)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	result := make([]*dto.GuideWithProgressDTO, 0, len(guides))
+	for _, g := range guides {
+		result = append(result, dto.ToGuideWithProgressDTO(g))
+	}
+
+	return &dto.GetInProgressGuidesOutput{
+		Body: dto.GetInProgressGuidesResponseBody{Guides: result},
+	}, nil
+}
+
+func (h *GuideViewHandler) HandleGetCompletionStats(ctx context.Context, input *dto.GetCompletionStatsInput) (*dto.GetCompletionStatsOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
+
+	stats, err := h.guideViewUC.GetCompletionStats(ctx, accountID, userID)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.GetCompletionStatsOutput{
+		Body: *dto.ToCompletionStatsDTO(stats),
+	}, nil
+}
+
 func (h *GuideViewHandler) HandleGetRecentlyViewed(ctx context.Context, input *dto.GetRecentlyViewedInput) (*dto.GetRecentlyViewedOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))

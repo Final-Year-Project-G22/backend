@@ -31,4 +31,7 @@ type ProgressRepository interface {
 
 	UpsertRecentView(ctx context.Context, accountID, userID, guideID uuid.UUID) error
 	ListRecentlyViewedGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*entity.Guide, error)
+
+	ListGuidesInProgress(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*entity.Guide, []int, []int, error)
+	GetProgressStats(ctx context.Context, accountID, userID uuid.UUID) (completedGuides, inProgressGuides, totalStepsCompleted, totalStepsAll int, err error)
 }
