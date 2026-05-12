@@ -79,20 +79,13 @@ func (s *communityService) CreateThreadWithPost(ctx context.Context, accountID u
 }
 
 func (s *communityService) ReplyToThread(ctx context.Context, accountID, threadID uuid.UUID, parentPostID *uuid.UUID, input usecase.CreatePostInput) (*entity.DiscussionPost, error) {
+	var post *entity.DiscussionPost
+	var err error
 	if parentPostID != nil {
-		post, err := s.postUsecase.ReplyToPost(ctx, accountID, threadID, *parentPostID, input)
-		if err != nil {
-			return nil, err
-		}
-		if len(input.AttachmentIds) > 0 {
-			if err := s.attachmentUsecase.LinkToPost(ctx, post.ID, input.AttachmentIds, accountID); err != nil {
-				return nil, err
-			}
-		}
-		return post, nil
+		post, err = s.postUsecase.ReplyToPost(ctx, accountID, threadID, *parentPostID, input)
+	} else {
+		post, err = s.postUsecase.CreatePost(ctx, accountID, threadID, input)
 	}
-
-	post, err := s.postUsecase.CreatePost(ctx, accountID, threadID, input)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +94,9 @@ func (s *communityService) ReplyToThread(ctx context.Context, accountID, threadI
 			return nil, err
 		}
 	}
+
+	_ = s.followUsecase.FollowThread(ctx, accountID, threadID)
+
 	return post, nil
 }
 
