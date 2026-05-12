@@ -33,7 +33,7 @@ func (h *PaymentHandler) HandleListPlans(ctx context.Context, input *struct{}) (
 // HandleInitiatePayment starts a new payment transaction.
 func (h *PaymentHandler) HandleInitiatePayment(ctx context.Context, input *dto.InitiatePaymentInput) (*dto.InitiatePaymentOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
-	result, err := h.usecase.InitiatePayment(ctx, accountID, input.Body.PlanName, input.Body.Period)
+	result, err := h.usecase.InitiatePayment(ctx, accountID, input.Body.Email, input.Body.FirstName, input.Body.LastName, input.Body.Phone, input.Body.PlanName, input.Body.Period)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

@@ -11,7 +11,7 @@ import (
 type PaymentUseCase interface {
 	// InitiatePayment starts a new payment transaction.
 	// Returns checkout URL and tx_ref.
-	InitiatePayment(ctx context.Context, accountID uuid.UUID, planName, period string) (*InitiatePaymentResult, error)
+	InitiatePayment(ctx context.Context, accountID uuid.UUID, email, firstName, lastName, phone, planName, period string) (*InitiatePaymentResult, error)
 
 	// VerifyPayment verifies a payment by tx_ref.
 	// Calls Chapa API and updates the payment record.

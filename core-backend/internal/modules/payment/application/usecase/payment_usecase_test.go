@@ -324,7 +324,7 @@ func TestPaymentUseCase_InitiatePayment_Success(t *testing.T) {
 		&mockLogger{},
 	)
 
-	result, err := uc.InitiatePayment(context.Background(), accountID, "Pro", "monthly")
+	result, err := uc.InitiatePayment(context.Background(), accountID, "test@example.com", "Test", "User", "", "Pro", "monthly")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -349,7 +349,7 @@ func TestPaymentUseCase_InitiatePayment_PlanNotFound(t *testing.T) {
 		&mockLogger{},
 	)
 
-	_, err := uc.InitiatePayment(context.Background(), accountID, "NonExistent", "monthly")
+	_, err := uc.InitiatePayment(context.Background(), accountID, "test@example.com", "Test", "User", "", "NonExistent", "monthly")
 	if err == nil {
 		t.Fatal("expected error for missing plan")
 	}
@@ -382,7 +382,8 @@ func TestPaymentUseCase_InitiatePayment_AlreadyPaid(t *testing.T) {
 		&mockLogger{},
 	)
 
-	_, err := uc.InitiatePayment(context.Background(), accountID, "Pro", "monthly")
+	_, err := uc.InitiatePayment(context.Background(), accountID, "test@example.com", "Test", "User", "", "Pro", "monthly")
+
 	if err == nil {
 		t.Fatal("expected error for already paid")
 	}
