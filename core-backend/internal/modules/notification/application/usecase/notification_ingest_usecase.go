@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
@@ -52,6 +54,9 @@ func NewNotificationIngestUsecase(
 func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input usecase.ProcessEventInput) error {
 	tmpl, err := uc.tmplRepo.GetByType(ctx, input.NotificationType)
 	if err != nil {
+		if errors.Is(err, notiferror.ErrTemplateNotFound) {
+			return rabbitmq.NewPermanentError(err)
+		}
 		return err
 	}
 
@@ -199,7 +204,7 @@ func (uc *notificationIngestUsecase) enqueue(
 
 	account, err := uc.accountRepo.GetByID(ctx, accountID)
 	if err != nil {
-		return fmt.Errorf("failed to get account email: %w", err)
+		return rabbitmq.NewPermanentError(fmt.Errorf("failed to get account email: %w", err))
 	}
 	payloadMap["to"] = account.Email
 
