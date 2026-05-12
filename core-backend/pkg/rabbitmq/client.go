@@ -137,7 +137,11 @@ func (c *client) Subscribe(event string, handler func(context.Context, []byte) e
 		for msg := range msgs {
 			err := handler(context.Background(), msg.Body)
 			if err != nil {
-				_ = msg.Nack(false, true)
+				if IsPermanent(err) || msg.Redelivered {
+					_ = msg.Nack(false, false)
+				} else {
+					_ = msg.Nack(false, true)
+				}
 				continue
 			}
 			_ = msg.Ack(false)

@@ -23,7 +23,7 @@ func NewTaxonomyAdminHandler(sectorRepo repository.SectorRepository, tagRepo rep
 // --- Sector ---
 
 func (h *TaxonomyAdminHandler) HandleListSectors(ctx context.Context, input *dto.ListSectorsInput) (*dto.ListSectorsOutput, error) {
-	q := query.QueryOptions{}
+	q := query.QueryOptions{Preload: []string{"Translations"}}
 	if input.Page > 0 {
 		q.Page = input.Page
 	}
@@ -57,10 +57,12 @@ func (h *TaxonomyAdminHandler) HandleGetSector(ctx context.Context, input *dto.G
 func (h *TaxonomyAdminHandler) HandleCreateSector(ctx context.Context, input *dto.CreateSectorInput) (*dto.CreateSectorOutput, error) {
 	body := input.Body
 	sector := &entity.Sector{
-		Slug: body.Slug,
-	}
-	if body.ParentID != nil {
-		sector.ParentID = body.ParentID
+		Slug:     body.Slug,
+		ParentID: body.ParentID,
+		Translations: []entity.SectorTranslation{
+			{Language: constants.LocaleEnglish, Name: body.NameEN, Description: body.DescEN},
+			{Language: constants.LocaleAmharic, Name: body.NameAM, Description: body.DescAM},
+		},
 	}
 	if err := h.sectorRepo.Create(ctx, sector); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -83,6 +85,28 @@ func (h *TaxonomyAdminHandler) HandleUpdateSector(ctx context.Context, input *dt
 	if err := h.sectorRepo.Update(ctx, sector); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	if body.NameEN != nil || body.NameAM != nil {
+		if body.NameEN != nil {
+			if err := h.sectorRepo.UpsertTranslation(ctx, &entity.SectorTranslation{
+				SectorID:    sector.ID,
+				Language:    constants.LocaleEnglish,
+				Name:        *body.NameEN,
+				Description: body.DescEN,
+			}); err != nil {
+				return nil, apperrors.ToHumaError(ctx, err)
+			}
+		}
+		if body.NameAM != nil {
+			if err := h.sectorRepo.UpsertTranslation(ctx, &entity.SectorTranslation{
+				SectorID:    sector.ID,
+				Language:    constants.LocaleAmharic,
+				Name:        *body.NameAM,
+				Description: body.DescAM,
+			}); err != nil {
+				return nil, apperrors.ToHumaError(ctx, err)
+			}
+		}
+	}
 	return &dto.UpdateSectorOutput{Body: dto.UpdateSectorResponseBody{Message: "Sector updated"}}, nil
 }
 
@@ -96,7 +120,7 @@ func (h *TaxonomyAdminHandler) HandleDeleteSector(ctx context.Context, input *dt
 // --- Tag ---
 
 func (h *TaxonomyAdminHandler) HandleListTags(ctx context.Context, input *dto.ListTagsInput) (*dto.ListTagsOutput, error) {
-	q := query.QueryOptions{}
+	q := query.QueryOptions{Preload: []string{"Translations"}}
 	if input.Page > 0 {
 		q.Page = input.Page
 	}
@@ -133,6 +157,10 @@ func (h *TaxonomyAdminHandler) HandleCreateTag(ctx context.Context, input *dto.C
 		Slug:          body.Slug,
 		Group:         body.Group,
 		IsMultiSelect: body.IsMultiSelect,
+		Translations: []entity.TagTranslation{
+			{Language: constants.LocaleEnglish, Name: body.NameEN, Description: body.DescEN},
+			{Language: constants.LocaleAmharic, Name: body.NameAM, Description: body.DescAM},
+		},
 	}
 	if err := h.tagRepo.Create(ctx, tag); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -157,6 +185,28 @@ func (h *TaxonomyAdminHandler) HandleUpdateTag(ctx context.Context, input *dto.U
 	}
 	if err := h.tagRepo.Update(ctx, tag); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	if body.NameEN != nil || body.NameAM != nil {
+		if body.NameEN != nil {
+			if err := h.tagRepo.UpsertTranslation(ctx, &entity.TagTranslation{
+				TagID:       tag.ID,
+				Language:    constants.LocaleEnglish,
+				Name:        *body.NameEN,
+				Description: body.DescEN,
+			}); err != nil {
+				return nil, apperrors.ToHumaError(ctx, err)
+			}
+		}
+		if body.NameAM != nil {
+			if err := h.tagRepo.UpsertTranslation(ctx, &entity.TagTranslation{
+				TagID:       tag.ID,
+				Language:    constants.LocaleAmharic,
+				Name:        *body.NameAM,
+				Description: body.DescAM,
+			}); err != nil {
+				return nil, apperrors.ToHumaError(ctx, err)
+			}
+		}
 	}
 	return &dto.UpdateTagOutput{Body: dto.UpdateTagResponseBody{Message: "Tag updated"}}, nil
 }
