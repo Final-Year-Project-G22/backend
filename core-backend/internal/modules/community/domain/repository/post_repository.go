@@ -18,4 +18,5 @@ type DiscussionPostRepository interface {
 	ClearSolution(ctx context.Context, threadID uuid.UUID) error
 	IsAuthor(ctx context.Context, postID, accountID uuid.UUID) (bool, error)
 	CountUnreadByThreadIDs(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error)
+	ListSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
 }

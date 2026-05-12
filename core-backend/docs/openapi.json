@@ -10281,6 +10281,10 @@
             "description": "Thread description",
             "type": "string"
           },
+          "hasSolution": {
+            "description": "Whether thread has an accepted solution",
+            "type": "boolean"
+          },
           "id": {
             "description": "Thread ID",
             "type": "string"
@@ -10393,6 +10397,7 @@
           "isPinned",
           "isFollowed",
           "unreadCount",
+          "hasSolution",
           "status",
           "viewCount",
           "shareCount",

@@ -39,6 +39,7 @@ type ThreadDTO struct {
 	IsPinned       bool                `json:"isPinned" doc:"Pinned flag"`
 	IsFollowed     bool                `json:"isFollowed" doc:"Whether current user follows this thread"`
 	UnreadCount    int                 `json:"unreadCount" doc:"Number of unread posts/replies"`
+	HasSolution    bool                `json:"hasSolution" doc:"Whether thread has an accepted solution"`
 	Status         entity.ThreadStatus `json:"status" doc:"Thread status"`
 	ViewCount      int                 `json:"viewCount" doc:"View count"`
 	ShareCount     int                 `json:"shareCount" doc:"Share count"`
@@ -471,7 +472,7 @@ func ToCategoryDTO(category *entity.CommunityCategory) *CategoryDTO {
 	}
 }
 
-func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFollowed bool, unreadCount int) *ThreadDTO {
+func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFollowed bool, unreadCount int, hasSolution bool) *ThreadDTO {
 	if thread == nil {
 		return nil
 	}
@@ -501,6 +502,7 @@ func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFoll
 		IsPinned:       thread.IsPinned,
 		IsFollowed:     isFollowed,
 		UnreadCount:    unreadCount,
+		HasSolution:    hasSolution,
 		Status:         thread.Status,
 		ViewCount:      thread.ViewCount,
 		ShareCount:     thread.ShareCount,
