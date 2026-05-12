@@ -201,6 +201,11 @@ func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetTh
 func (h *CommunityHandler) HandleListPosts(ctx context.Context, input *dto.ListPostsInput) (*dto.ListPostsOutput, error) {
 	opts := dto.ToQueryOptions(input.Page, input.PageSize)
 	opts.Preload = []string{"Attachments"}
+	// Return a large batch when the client does not send explicit pagination.
+	// This keeps the mobile thread-details view simple until infinite scroll is added.
+	if opts.PageSize < 1 {
+		opts.PageSize = 1000
+	}
 	posts, err := h.postUsecase.ListPostsByThread(ctx, input.ThreadID, opts)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)

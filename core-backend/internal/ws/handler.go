@@ -64,12 +64,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) extractToken(r *http.Request) string {
 	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return ""
+	if authHeader != "" {
+		const bearerPrefix = "Bearer "
+		if strings.HasPrefix(authHeader, bearerPrefix) {
+			return strings.TrimPrefix(authHeader, bearerPrefix)
+		}
 	}
-	const bearerPrefix = "Bearer "
-	if !strings.HasPrefix(authHeader, bearerPrefix) {
-		return ""
+
+	// Fallback to query parameter (required for Flutter Web because browsers
+	// cannot set custom headers on WebSocket connections).
+	if token := r.URL.Query().Get("token"); token != "" {
+		return token
 	}
-	return strings.TrimPrefix(authHeader, bearerPrefix)
+
+	return ""
 }
