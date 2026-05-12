@@ -55,13 +55,7 @@ func (u *communityFollowUsecase) FollowThread(ctx context.Context, accountID, th
 }
 
 func (u *communityFollowUsecase) UnfollowThread(ctx context.Context, accountID, threadID uuid.UUID) error {
-	if err := u.threadSettingsRepo.Delete(ctx, accountID, threadID); err != nil {
-		if err == communityerror.ErrThreadSettingNotFound {
-			return nil
-		}
-		return err
-	}
-	return nil
+	return u.threadSettingsRepo.UpsertFollow(ctx, accountID, threadID, false)
 }
 
 func (u *communityFollowUsecase) FollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error {

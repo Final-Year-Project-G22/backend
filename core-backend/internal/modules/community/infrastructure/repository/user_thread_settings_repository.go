@@ -80,6 +80,7 @@ func (r *userThreadSettingsRepository) UpsertFollow(ctx context.Context, account
 		DoUpdates: clause.Assignments(map[string]interface{}{
 			"is_following": following,
 			"updated_at":   gorm.Expr("CURRENT_TIMESTAMP"),
+			"deleted_at":   nil,
 		}),
 	}).Create(settings).Error; err != nil {
 		r.logger.Error("Failed to upsert thread follow", core.Error(err))
@@ -110,16 +111,16 @@ func (r *userThreadSettingsRepository) SetMuted(ctx context.Context, accountID, 
 
 func (r *userThreadSettingsRepository) UpdateLastRead(ctx context.Context, accountID, threadID uuid.UUID, at time.Time) error {
 	settings := &entity.UserThreadSettings{
-		AccountID:   accountID,
-		ThreadID:    threadID,
-		IsFollowing: true,
-		LastReadAt:  &at,
+		AccountID:  accountID,
+		ThreadID:   threadID,
+		LastReadAt: &at,
 	}
 	if err := r.getDB(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "account_id"}, {Name: "thread_id"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
 			"last_read_at": at,
 			"updated_at":   gorm.Expr("CURRENT_TIMESTAMP"),
+			"deleted_at":   nil,
 		}),
 	}).Create(settings).Error; err != nil {
 		r.logger.Error("Failed to update thread last read", core.Error(err))
