@@ -18,7 +18,9 @@ import (
 	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/taxonomy"
+	"github.com/Final-Year-Project-G22/backend/core/internal/ws"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
 
@@ -138,15 +140,20 @@ var Module = fx.Module(
 	fx.Provide(handler.NewCommunityAdminHandler),
 	fx.Provide(service.NewCommunityAttachmentValidator),
 	fx.Provide(handler.NewCommunityHandler),
+	fx.Provide(ws.NewHub),
+	fx.Provide(ws.NewHandler),
 	fx.Invoke(func(
 		api huma.API,
+		engine *gin.Engine,
 		communityHandler *handler.CommunityHandler,
 		communityAdminHandler *handler.CommunityAdminHandler,
 		attachmentCleanupWorker *service.AttachmentCleanupWorker,
+		wsHandler *ws.Handler,
 		tokenService token.TokenService,
 		authService iamservice.AuthService,
 		roleAssignmentUsecase iamusecase.RoleAssignmentUsecase,
 	) {
+		engine.GET("/ws", gin.WrapH(wsHandler))
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
 		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMRead, nil)
