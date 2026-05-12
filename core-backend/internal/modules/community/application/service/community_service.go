@@ -6,6 +6,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/internal/ws"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
@@ -28,6 +29,7 @@ type CommunityService interface {
 	ListThreadSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
 	MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error
 	RecordThreadView(ctx context.Context, accountID, threadID uuid.UUID) error
+	NotifyThreadUpdated(ctx context.Context, threadID uuid.UUID)
 	ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error)
 	ReportPost(ctx context.Context, reporterID uuid.UUID, input usecase.ReportPostInput) (*entity.ContentReport, error)
 	ReportUser(ctx context.Context, reporterID uuid.UUID, input usecase.ReportUserInput) (*entity.ContentReport, error)
@@ -41,6 +43,7 @@ type communityService struct {
 	followUsecase     usecase.CommunityFollowUsecase
 	reportUsecase     usecase.ContentReportUsecase
 	threadRepo        repository.DiscussionThreadRepository
+	wsHub             *ws.Hub
 }
 
 func NewCommunityService(
@@ -51,6 +54,7 @@ func NewCommunityService(
 	followUsecase usecase.CommunityFollowUsecase,
 	reportUsecase usecase.ContentReportUsecase,
 	threadRepo repository.DiscussionThreadRepository,
+	wsHub *ws.Hub,
 ) CommunityService {
 	return &communityService{
 		threadUsecase:     threadUsecase,
@@ -60,6 +64,7 @@ func NewCommunityService(
 		followUsecase:     followUsecase,
 		reportUsecase:     reportUsecase,
 		threadRepo:        threadRepo,
+		wsHub:             wsHub,
 	}
 }
 
@@ -96,6 +101,8 @@ func (s *communityService) ReplyToThread(ctx context.Context, accountID, threadI
 	}
 
 	_ = s.followUsecase.FollowThread(ctx, accountID, threadID)
+
+	s.wsHub.PublishToThread(threadID, ws.NewPostCreatedEvent(threadID.String(), post.ID.String()))
 
 	return post, nil
 }
@@ -189,6 +196,10 @@ func (s *communityService) MarkThreadRead(ctx context.Context, accountID, thread
 
 func (s *communityService) RecordThreadView(ctx context.Context, accountID, threadID uuid.UUID) error {
 	return s.threadRepo.IncrementViews(ctx, threadID)
+}
+
+func (s *communityService) NotifyThreadUpdated(ctx context.Context, threadID uuid.UUID) {
+	s.wsHub.PublishToThread(threadID, ws.NewThreadUpdatedEvent(threadID.String()))
 }
 
 func (s *communityService) ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error) {
