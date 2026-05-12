@@ -32,7 +32,13 @@ func NewBusinessProfileRepository(db *core.Database, logger core.Logger) reposit
 // GetByAccountID retrieves a business profile by account ID.
 func (r *businessProfileRepository) GetByAccountID(ctx context.Context, accountID uuid.UUID) (*entity.BusinessProfile, error) {
 	var profile entity.BusinessProfile
-	if err := r.db.WithContext(ctx).Preload("Sector").Preload("Tags").Where("account_id = ?", accountID).First(&profile).Error; err != nil {
+	if err := r.db.WithContext(ctx).
+		Preload("Sector", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, slug, parent_id")
+		}).
+		Preload("Tags").
+		Where("account_id = ?", accountID).
+		First(&profile).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, iamerror.ErrBusinessProfileNotFound
 		}
