@@ -102,66 +102,6 @@
         ],
         "type": "object"
       },
-      "AddCategoryConditionRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/AddCategoryConditionRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "conditionType": {
-            "description": "Condition type",
-            "minLength": 1,
-            "type": "string"
-          },
-          "conditionValue": {
-            "description": "Condition value"
-          },
-          "isInverse": {
-            "description": "Whether to invert the condition",
-            "type": "boolean"
-          },
-          "operator": {
-            "description": "Comparison operator",
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "conditionType",
-          "operator",
-          "conditionValue",
-          "isInverse"
-        ],
-        "type": "object"
-      },
-      "AddCategoryConditionResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/AddCategoryConditionResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "message": {
-            "description": "Success message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "type": "object"
-      },
       "AddCategoryTranslationOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -504,49 +444,6 @@
         ],
         "type": "object"
       },
-      "AdminCategoryDTO": {
-        "additionalProperties": false,
-        "properties": {
-          "children": {
-            "items": {
-              "$ref": "#/components/schemas/AdminCategoryDTO"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "description": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "parentId": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "sortOrder": {
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "slug",
-          "name",
-          "sortOrder"
-        ],
-        "type": "object"
-      },
       "AdminConditionDTO": {
         "additionalProperties": false,
         "properties": {
@@ -576,9 +473,6 @@
       "AdminGuideCardDTO": {
         "additionalProperties": false,
         "properties": {
-          "categoryId": {
-            "type": "string"
-          },
           "description": {
             "type": "string"
           },
@@ -591,19 +485,38 @@
           "name": {
             "type": "string"
           },
+          "sectorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "type": "string"
           },
           "sortOrder": {
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           }
         },
         "required": [
           "id",
           "slug",
           "name",
-          "categoryId",
+          "sectorIds",
+          "tagIds",
           "sortOrder"
         ],
         "type": "object"
@@ -611,9 +524,6 @@
       "AdminGuideDetailDTO": {
         "additionalProperties": false,
         "properties": {
-          "categoryId": {
-            "type": "string"
-          },
           "conditions": {
             "items": {
               "$ref": "#/components/schemas/AdminConditionDTO"
@@ -629,12 +539,30 @@
           "id": {
             "type": "string"
           },
+          "sectorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "type": "string"
           },
           "sortOrder": {
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "translations": {
             "items": {
@@ -648,7 +576,8 @@
         },
         "required": [
           "id",
-          "categoryId",
+          "sectorIds",
+          "tagIds",
           "slug",
           "sortOrder",
           "translations",
@@ -1256,6 +1185,123 @@
         ],
         "type": "object"
       },
+      "BusinessProfileResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/BusinessProfileResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "bannerUrl": {
+            "description": "Banner URL",
+            "type": "string"
+          },
+          "companyEmail": {
+            "description": "Company email",
+            "type": "string"
+          },
+          "companyName": {
+            "description": "Company name",
+            "type": "string"
+          },
+          "companyPhoneNumber": {
+            "description": "Company phone number",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "description": "Business description",
+            "type": "string"
+          },
+          "id": {
+            "description": "Business profile identifier",
+            "type": "string"
+          },
+          "logoUrl": {
+            "description": "Logo URL",
+            "type": "string"
+          },
+          "physicalAddress": {
+            "description": "Physical address",
+            "type": "string"
+          },
+          "region": {
+            "description": "Business region",
+            "type": "string"
+          },
+          "registrationDate": {
+            "description": "Registration date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "registrationNumber": {
+            "description": "Business registration number",
+            "type": "string"
+          },
+          "sector": {
+            "$ref": "#/components/schemas/SectorRef",
+            "description": "Business sector"
+          },
+          "socialLinks": {
+            "additionalProperties": {},
+            "description": "Social media links",
+            "type": "object"
+          },
+          "stage": {
+            "description": "Business lifecycle stage",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Associated tags",
+            "items": {
+              "$ref": "#/components/schemas/TagRef"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "taxIdentificationNumber": {
+            "description": "TIN",
+            "type": "string"
+          },
+          "tradeLicenseNumber": {
+            "description": "Trade license number",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "companyName",
+          "companyEmail",
+          "companyPhoneNumber",
+          "socialLinks",
+          "tags",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "CampaignCreatedByResponse": {
         "additionalProperties": false,
         "properties": {
@@ -1324,19 +1370,47 @@
             "description": "Campaign name",
             "type": "string"
           },
+          "region": {
+            "description": "Target region",
+            "type": "string"
+          },
           "scheduledFor": {
             "description": "Scheduled sending time",
             "format": "date-time",
             "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "sentAt": {
             "description": "Actual sending time",
             "format": "date-time",
             "type": "string"
           },
+          "stage": {
+            "description": "Target business stage",
+            "type": "string"
+          },
           "status": {
             "description": "Campaign status",
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "targetSegment": {
             "additionalProperties": {},
@@ -1351,6 +1425,8 @@
           "campaignTemplateId",
           "createdBy",
           "status",
+          "sectorIds",
+          "tagIds",
           "createdAt"
         ],
         "type": "object"
@@ -1663,63 +1739,6 @@
           "slug",
           "sortOrder",
           "isActive"
-        ],
-        "type": "object"
-      },
-      "CategoryNodeDTO": {
-        "additionalProperties": false,
-        "properties": {
-          "children": {
-            "description": "Nested subcategories",
-            "items": {
-              "$ref": "#/components/schemas/CategoryNodeDTO"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "description": {
-            "description": "Localized description",
-            "type": "string"
-          },
-          "guides": {
-            "description": "Guides in this category",
-            "items": {
-              "$ref": "#/components/schemas/GuideCardDTO"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "icon": {
-            "description": "Icon identifier",
-            "type": "string"
-          },
-          "id": {
-            "description": "Category ID",
-            "type": "string"
-          },
-          "name": {
-            "description": "Localized category name",
-            "type": "string"
-          },
-          "slug": {
-            "description": "Category slug",
-            "type": "string"
-          },
-          "sortOrder": {
-            "description": "Display order",
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "slug",
-          "name",
-          "sortOrder"
         ],
         "type": "object"
       },
@@ -2094,6 +2113,93 @@
         ],
         "type": "object"
       },
+      "CreateBusinessProfileRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateBusinessProfileRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "bannerUrl": {
+            "description": "Banner URL",
+            "type": "string"
+          },
+          "companyEmail": {
+            "description": "Company email (auto-filled if omitted)",
+            "type": "string"
+          },
+          "companyName": {
+            "description": "Company name (auto-filled if omitted)",
+            "type": "string"
+          },
+          "companyPhoneNumber": {
+            "description": "Company phone (auto-filled if omitted)",
+            "type": "string"
+          },
+          "description": {
+            "description": "Business description",
+            "type": "string"
+          },
+          "logoUrl": {
+            "description": "Logo URL",
+            "type": "string"
+          },
+          "physicalAddress": {
+            "description": "Physical address",
+            "type": "string"
+          },
+          "region": {
+            "description": "Business region",
+            "type": "string"
+          },
+          "registrationDate": {
+            "description": "Registration date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "registrationNumber": {
+            "description": "Business registration number",
+            "type": "string"
+          },
+          "sectorSlug": {
+            "description": "Sector slug (e.g., trade, manufacturing)",
+            "type": "string"
+          },
+          "socialLinks": {
+            "additionalProperties": {},
+            "description": "Social media links",
+            "type": "object"
+          },
+          "stage": {
+            "description": "Business lifecycle stage",
+            "type": "string"
+          },
+          "tagSlugs": {
+            "description": "Tag slugs (e.g., sole-proprietor, tax-vat)",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "taxIdentificationNumber": {
+            "description": "TIN",
+            "type": "string"
+          },
+          "tradeLicenseNumber": {
+            "description": "Trade license number",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CreateCampaignRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2124,10 +2230,38 @@
             "minLength": 1,
             "type": "string"
           },
+          "region": {
+            "description": "Target region",
+            "type": "string"
+          },
           "scheduledFor": {
             "description": "Scheduled sending time",
             "format": "date-time",
             "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "stage": {
+            "description": "Target business stage",
+            "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "targetSegment": {
             "additionalProperties": {},
@@ -2217,142 +2351,6 @@
         },
         "required": [
           "id"
-        ],
-        "type": "object"
-      },
-      "CreateCategoryCondition": {
-        "additionalProperties": false,
-        "properties": {
-          "conditionType": {
-            "description": "Condition type",
-            "minLength": 1,
-            "type": "string"
-          },
-          "conditionValue": {
-            "description": "Condition value"
-          },
-          "isInverse": {
-            "description": "Whether to invert the condition",
-            "type": "boolean"
-          },
-          "operator": {
-            "description": "Comparison operator",
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "conditionType",
-          "operator",
-          "conditionValue",
-          "isInverse"
-        ],
-        "type": "object"
-      },
-      "CreateCategoryRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/CreateCategoryRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "conditions": {
-            "description": "Visibility conditions",
-            "items": {
-              "$ref": "#/components/schemas/CreateCategoryCondition"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "icon": {
-            "description": "Icon identifier",
-            "maxLength": 50,
-            "type": "string"
-          },
-          "parentId": {
-            "description": "Parent category ID",
-            "type": "string"
-          },
-          "slug": {
-            "description": "Category slug",
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "sortOrder": {
-            "description": "Display order",
-            "format": "int64",
-            "type": "integer"
-          },
-          "translations": {
-            "description": "Localized translations",
-            "items": {
-              "$ref": "#/components/schemas/CreateCategoryTranslation"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "slug",
-          "sortOrder"
-        ],
-        "type": "object"
-      },
-      "CreateCategoryResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/CreateCategoryResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "id": {
-            "description": "Created category ID",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "type": "object"
-      },
-      "CreateCategoryTranslation": {
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "description": "Localized description",
-            "type": "string"
-          },
-          "language": {
-            "description": "Language code (en, am)",
-            "maxLength": 5,
-            "minLength": 2,
-            "type": "string"
-          },
-          "name": {
-            "description": "Localized name",
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "language",
-          "name"
         ],
         "type": "object"
       },
@@ -2459,10 +2457,6 @@
             "readOnly": true,
             "type": "string"
           },
-          "categoryId": {
-            "description": "Parent category ID",
-            "type": "string"
-          },
           "conditions": {
             "description": "Visibility conditions",
             "items": {
@@ -2478,6 +2472,16 @@
             "maxLength": 50,
             "type": "string"
           },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Guide slug",
             "maxLength": 100,
@@ -2488,6 +2492,16 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "translations": {
             "description": "Localized translations",
@@ -2501,7 +2515,8 @@
           }
         },
         "required": [
-          "categoryId",
+          "sectorIds",
+          "tagIds",
           "slug",
           "sortOrder"
         ],
@@ -2768,6 +2783,94 @@
         ],
         "type": "object"
       },
+      "CreateSectorRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateSectorRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether sector is active",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Parent sector ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Sector slug",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
+        ],
+        "type": "object"
+      },
+      "CreateSectorResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateSectorResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created sector ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
       "CreateStepCondition": {
         "additionalProperties": false,
         "properties": {
@@ -2966,6 +3069,100 @@
         ],
         "type": "object"
       },
+      "CreateTagRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateTagRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether tag is active",
+            "type": "boolean"
+          },
+          "isMultiSelect": {
+            "description": "Whether multiple tags from this group can be selected together",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "group",
+          "isMultiSelect",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
+        ],
+        "type": "object"
+      },
+      "CreateTagResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateTagResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created tag ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
       "CreateTemplateGroupOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -3066,10 +3263,6 @@
             "readOnly": true,
             "type": "string"
           },
-          "category": {
-            "description": "Notification category",
-            "type": "string"
-          },
           "defaultContent": {
             "additionalProperties": {},
             "description": "Multi-channel content",
@@ -3099,6 +3292,10 @@
             "format": "int32",
             "type": "integer"
           },
+          "templateGroup": {
+            "description": "Template group",
+            "type": "string"
+          },
           "variablesSchema": {
             "additionalProperties": {},
             "description": "Template variable schema",
@@ -3108,7 +3305,7 @@
         "required": [
           "name",
           "notificationType",
-          "category",
+          "templateGroup",
           "priority",
           "defaultContent"
         ],
@@ -3351,28 +3548,6 @@
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
               "https://example.com/schemas/DeleteCampaignTemplateTranslationResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "message": {
-            "description": "Success message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "type": "object"
-      },
-      "DeleteCategoryResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/DeleteCategoryResponseBody.json"
             ],
             "format": "uri",
             "readOnly": true,
@@ -3664,6 +3839,28 @@
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
               "https://example.com/schemas/DeleteTemplateResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeleteThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteThreadResponseBody.json"
             ],
             "format": "uri",
             "readOnly": true,
@@ -4000,6 +4197,20 @@
             "minLength": 1,
             "type": "string"
           },
+          "region": {
+            "description": "Target region for document taxonomy",
+            "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs for document taxonomy",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "sizeBytes": {
             "description": "Uploaded object size in bytes",
             "format": "int64",
@@ -4010,10 +4221,24 @@
             "description": "Optional original filename",
             "type": "string"
           },
+          "stage": {
+            "description": "Target business stage for document taxonomy",
+            "type": "string"
+          },
           "storageKey": {
             "description": "Uploaded object key",
             "minLength": 1,
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs for document taxonomy",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           }
         },
         "required": [
@@ -4128,33 +4353,6 @@
         },
         "required": [
           "category"
-        ],
-        "type": "object"
-      },
-      "GetCategoryTreeResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/GetCategoryTreeResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "categories": {
-            "items": {
-              "$ref": "#/components/schemas/CategoryNodeDTO"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "categories"
         ],
         "type": "object"
       },
@@ -4319,6 +4517,25 @@
         "required": [
           "guide"
         ],
+        "type": "object"
+      },
+      "GetMySubscriptionResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetMySubscriptionResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SubscriptionResponse",
+            "description": "Current subscription, null if none"
+          }
+        },
         "type": "object"
       },
       "GetOAuthProvidersResponse": {
@@ -4589,10 +4806,6 @@
       "GuideCardDTO": {
         "additionalProperties": false,
         "properties": {
-          "categoryId": {
-            "description": "Parent category ID",
-            "type": "string"
-          },
           "description": {
             "description": "Localized description",
             "type": "string"
@@ -4609,34 +4822,24 @@
             "description": "Localized guide name",
             "type": "string"
           },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Guide slug",
             "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "slug",
-          "name",
-          "categoryId"
-        ],
-        "type": "object"
-      },
-      "GuideCategoryTreeAdminResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/GuideCategoryTreeAdminResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
           },
-          "categories": {
+          "tagIds": {
+            "description": "Target tag IDs",
             "items": {
-              "$ref": "#/components/schemas/AdminCategoryDTO"
+              "type": "string"
             },
             "type": [
               "array",
@@ -4645,7 +4848,11 @@
           }
         },
         "required": [
-          "categories"
+          "id",
+          "slug",
+          "name",
+          "sectorIds",
+          "tagIds"
         ],
         "type": "object"
       },
@@ -4764,10 +4971,6 @@
             "description": "Action URL",
             "type": "string"
           },
-          "category": {
-            "description": "Notification category",
-            "type": "string"
-          },
           "expiresAt": {
             "description": "Expiration time",
             "format": "date-time",
@@ -4792,7 +4995,6 @@
         },
         "required": [
           "id",
-          "category",
           "isRead",
           "isArchived",
           "notification"
@@ -4898,6 +5100,112 @@
           "chunksProcessedCount",
           "chunksFailedCount",
           "eventSequence"
+        ],
+        "type": "object"
+      },
+      "InitiatePaymentRequestBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/InitiatePaymentRequestBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "email": {
+            "description": "Customer email",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "Customer first name",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Customer last name",
+            "type": "string"
+          },
+          "period": {
+            "description": "Billing period (monthly or yearly)",
+            "examples": [
+              "monthly"
+            ],
+            "type": "string"
+          },
+          "phone": {
+            "description": "Customer phone number (optional)",
+            "type": "string"
+          },
+          "planName": {
+            "description": "Plan name (Basic or Pro)",
+            "examples": [
+              "Pro"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "planName",
+          "period",
+          "email",
+          "firstName",
+          "lastName"
+        ],
+        "type": "object"
+      },
+      "InitiatePaymentResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/InitiatePaymentResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "amount": {
+            "description": "Amount in minor units",
+            "format": "int64",
+            "type": "integer"
+          },
+          "checkoutUrl": {
+            "description": "Chapa checkout URL",
+            "type": "string"
+          },
+          "currency": {
+            "description": "Currency code",
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "Checkout URL expiration (Unix timestamp)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "period": {
+            "description": "Billing period",
+            "type": "string"
+          },
+          "planName": {
+            "description": "Plan name",
+            "type": "string"
+          },
+          "txRef": {
+            "description": "Transaction reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "txRef",
+          "checkoutUrl",
+          "amount",
+          "currency",
+          "planName",
+          "period",
+          "expiresAt"
         ],
         "type": "object"
       },
@@ -5669,6 +5977,33 @@
         ],
         "type": "object"
       },
+      "ListGuidesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListGuidesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "guides": {
+            "items": {
+              "$ref": "#/components/schemas/GuideCardDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "guides"
+        ],
+        "type": "object"
+      },
       "ListHistoryResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -5905,6 +6240,34 @@
         ],
         "type": "object"
       },
+      "ListPlansResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListPlansResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Available subscription plans",
+            "items": {
+              "$ref": "#/components/schemas/PlanResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
       "ListPostReportsResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -6013,6 +6376,58 @@
         ],
         "type": "object"
       },
+      "ListSectorsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListSectorsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Sector list",
+            "items": {
+              "$ref": "#/components/schemas/SectorResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Items per page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
       "ListStatusByAccountOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -6078,6 +6493,58 @@
         "required": [
           "projections",
           "total"
+        ],
+        "type": "object"
+      },
+      "ListTagsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListTagsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Tag list",
+            "items": {
+              "$ref": "#/components/schemas/TagResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Items per page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
         ],
         "type": "object"
       },
@@ -6415,28 +6882,6 @@
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
               "https://example.com/schemas/MarkAsReadResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "message": {
-            "description": "Success message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "type": "object"
-      },
-      "MarkCategoryAsReadResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/MarkCategoryAsReadResponseBody.json"
             ],
             "format": "uri",
             "readOnly": true,
@@ -6994,6 +7439,45 @@
         ],
         "type": "object"
       },
+      "PlanResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "Amount in minor units",
+            "format": "int64",
+            "type": "integer"
+          },
+          "currency": {
+            "description": "Currency code",
+            "type": "string"
+          },
+          "id": {
+            "description": "Plan ID",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether plan is available",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Plan name",
+            "type": "string"
+          },
+          "period": {
+            "description": "Billing period",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "period",
+          "amount",
+          "currency",
+          "isActive"
+        ],
+        "type": "object"
+      },
       "PostContentDTO": {
         "additionalProperties": false,
         "properties": {
@@ -7530,28 +8014,6 @@
         ],
         "type": "object"
       },
-      "RemoveCategoryConditionResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/RemoveCategoryConditionResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "message": {
-            "description": "Success message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "type": "object"
-      },
       "RemoveGuideConditionResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -8073,53 +8535,95 @@
         ],
         "type": "object"
       },
-      "SetCategoryTranslationsRequest": {
+      "SectorRef": {
         "additionalProperties": false,
         "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/SetCategoryTranslationsRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
+          "id": {
+            "description": "Sector identifier",
             "type": "string"
           },
-          "translations": {
-            "description": "Full set of translations",
-            "items": {
-              "$ref": "#/components/schemas/UpdateCategoryTranslation"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
+          "slug": {
+            "description": "Sector slug",
+            "type": "string"
           }
         },
         "required": [
-          "translations"
+          "id",
+          "slug"
         ],
         "type": "object"
       },
-      "SetCategoryTranslationsResponseBody": {
+      "SectorResponse": {
         "additionalProperties": false,
         "properties": {
           "$schema": {
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
-              "https://example.com/schemas/SetCategoryTranslationsResponseBody.json"
+              "https://example.com/schemas/SectorResponse.json"
             ],
             "format": "uri",
             "readOnly": true,
             "type": "string"
           },
-          "message": {
-            "description": "Success message",
+          "createdAt": {
+            "description": "Created timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "type": "string"
+          },
+          "id": {
+            "description": "Sector ID",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether sector is active",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Parent sector ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Sector slug",
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "format": "date-time",
             "type": "string"
           }
         },
         "required": [
-          "message"
+          "id",
+          "slug",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
         ],
         "type": "object"
       },
@@ -8391,6 +8895,171 @@
         ],
         "type": "object"
       },
+      "SubscriptionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "description": "Amount in minor units",
+            "format": "int64",
+            "type": "integer"
+          },
+          "currency": {
+            "description": "Currency code",
+            "type": "string"
+          },
+          "currentPeriodEnd": {
+            "description": "Period end",
+            "format": "date-time",
+            "type": "string"
+          },
+          "currentPeriodStart": {
+            "description": "Period start",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "Subscription ID",
+            "type": "string"
+          },
+          "planName": {
+            "description": "Plan name",
+            "type": "string"
+          },
+          "planPeriod": {
+            "description": "Billing period",
+            "type": "string"
+          },
+          "renewalCount": {
+            "description": "Number of renewals",
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "description": "Subscription status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "planName",
+          "planPeriod",
+          "amount",
+          "currency",
+          "status",
+          "currentPeriodStart",
+          "currentPeriodEnd",
+          "renewalCount"
+        ],
+        "type": "object"
+      },
+      "TagRef": {
+        "additionalProperties": false,
+        "properties": {
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "id": {
+            "description": "Tag identifier",
+            "type": "string"
+          },
+          "isMultiSelect": {
+            "description": "Whether the tag allows multiple selections",
+            "type": "boolean"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "group",
+          "isMultiSelect"
+        ],
+        "type": "object"
+      },
+      "TagResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/TagResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Created timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "type": "string"
+          },
+          "id": {
+            "description": "Tag ID",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether tag is active",
+            "type": "boolean"
+          },
+          "isMultiSelect": {
+            "description": "Whether multiple tags from this group can be selected together",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "group",
+          "isMultiSelect",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
+        ],
+        "type": "object"
+      },
       "TemplateDetailResponse": {
         "additionalProperties": false,
         "properties": {
@@ -8401,10 +9070,6 @@
             ],
             "format": "uri",
             "readOnly": true,
-            "type": "string"
-          },
-          "category": {
-            "description": "Notification category",
             "type": "string"
           },
           "defaultContent": {
@@ -8442,6 +9107,10 @@
             "format": "int32",
             "type": "integer"
           },
+          "templateGroup": {
+            "description": "Template group",
+            "type": "string"
+          },
           "translations": {
             "description": "Template translations",
             "items": {
@@ -8462,7 +9131,7 @@
           "id",
           "name",
           "notificationType",
-          "category",
+          "templateGroup",
           "priority",
           "isSystemManaged",
           "defaultContent"
@@ -8748,10 +9417,6 @@
       "TemplateSummaryResponse": {
         "additionalProperties": false,
         "properties": {
-          "category": {
-            "description": "Notification category",
-            "type": "string"
-          },
           "id": {
             "description": "Template ID",
             "type": "string"
@@ -8767,13 +9432,17 @@
           "notificationType": {
             "description": "Notification type",
             "type": "string"
+          },
+          "templateGroup": {
+            "description": "Template group",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "name",
           "notificationType",
-          "category",
+          "templateGroup",
           "isSystemManaged"
         ],
         "type": "object"
@@ -8853,14 +9522,6 @@
             "description": "Author last name",
             "type": "string"
           },
-          "categoryId": {
-            "description": "Category ID",
-            "type": "string"
-          },
-          "categoryName": {
-            "description": "Category name",
-            "type": "string"
-          },
           "createdAt": {
             "description": "Created timestamp",
             "type": "string"
@@ -8878,6 +9539,16 @@
             "format": "int64",
             "type": "integer"
           },
+          "sectorIds": {
+            "description": "Sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Thread slug",
             "type": "string"
@@ -8885,6 +9556,16 @@
           "status": {
             "description": "Thread status",
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "title": {
             "description": "Thread title",
@@ -8904,7 +9585,8 @@
           "id",
           "title",
           "slug",
-          "categoryId",
+          "sectorIds",
+          "tagIds",
           "authorId",
           "authorFirstName",
           "authorLastName",
@@ -8932,10 +9614,6 @@
           },
           "authorUsername": {
             "description": "Author username",
-            "type": "string"
-          },
-          "categoryId": {
-            "description": "Category ID",
             "type": "string"
           },
           "createdAt": {
@@ -8969,6 +9647,16 @@
             "format": "int64",
             "type": "integer"
           },
+          "sectorIds": {
+            "description": "Sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "shareCount": {
             "description": "Share count",
             "format": "int64",
@@ -8981,6 +9669,16 @@
           "status": {
             "description": "Thread status",
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "title": {
             "description": "Thread title",
@@ -9001,7 +9699,8 @@
           "id",
           "title",
           "slug",
-          "categoryId",
+          "sectorIds",
+          "tagIds",
           "authorId",
           "authorDisplayName",
           "isPinned",
@@ -9238,6 +9937,93 @@
         ],
         "type": "object"
       },
+      "UpdateBusinessProfileRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateBusinessProfileRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "bannerUrl": {
+            "description": "Banner URL",
+            "type": "string"
+          },
+          "companyEmail": {
+            "description": "Company email",
+            "type": "string"
+          },
+          "companyName": {
+            "description": "Company name",
+            "type": "string"
+          },
+          "companyPhoneNumber": {
+            "description": "Company phone",
+            "type": "string"
+          },
+          "description": {
+            "description": "Business description",
+            "type": "string"
+          },
+          "logoUrl": {
+            "description": "Logo URL",
+            "type": "string"
+          },
+          "physicalAddress": {
+            "description": "Physical address",
+            "type": "string"
+          },
+          "region": {
+            "description": "Business region",
+            "type": "string"
+          },
+          "registrationDate": {
+            "description": "Registration date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "registrationNumber": {
+            "description": "Business registration number",
+            "type": "string"
+          },
+          "sectorSlug": {
+            "description": "Sector slug",
+            "type": "string"
+          },
+          "socialLinks": {
+            "additionalProperties": {},
+            "description": "Social media links",
+            "type": "object"
+          },
+          "stage": {
+            "description": "Business lifecycle stage",
+            "type": "string"
+          },
+          "tagSlugs": {
+            "description": "Tag slugs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "taxIdentificationNumber": {
+            "description": "TIN",
+            "type": "string"
+          },
+          "tradeLicenseNumber": {
+            "description": "Trade license number",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "UpdateCampaignRequest": {
         "additionalProperties": false,
         "properties": {
@@ -9259,10 +10045,38 @@
             "maxLength": 200,
             "type": "string"
           },
+          "region": {
+            "description": "Target region",
+            "type": "string"
+          },
           "scheduledFor": {
             "description": "Scheduled sending time",
             "format": "date-time",
             "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "stage": {
+            "description": "Target business stage",
+            "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "targetSegment": {
             "additionalProperties": {},
@@ -9384,137 +10198,6 @@
         },
         "required": [
           "message"
-        ],
-        "type": "object"
-      },
-      "UpdateCategoryCondition": {
-        "additionalProperties": false,
-        "properties": {
-          "conditionType": {
-            "description": "Condition type",
-            "minLength": 1,
-            "type": "string"
-          },
-          "conditionValue": {
-            "description": "Condition value"
-          },
-          "isInverse": {
-            "description": "Whether to invert the condition",
-            "type": "boolean"
-          },
-          "operator": {
-            "description": "Comparison operator",
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "conditionType",
-          "operator",
-          "conditionValue",
-          "isInverse"
-        ],
-        "type": "object"
-      },
-      "UpdateCategoryRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/UpdateCategoryRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "conditions": {
-            "description": "Visibility conditions",
-            "items": {
-              "$ref": "#/components/schemas/UpdateCategoryCondition"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
-          "icon": {
-            "description": "Icon identifier",
-            "maxLength": 50,
-            "type": "string"
-          },
-          "parentId": {
-            "description": "Parent category ID",
-            "type": "string"
-          },
-          "slug": {
-            "description": "Category slug",
-            "maxLength": 100,
-            "type": "string"
-          },
-          "sortOrder": {
-            "description": "Display order",
-            "format": "int64",
-            "type": "integer"
-          },
-          "translations": {
-            "description": "Localized translations",
-            "items": {
-              "$ref": "#/components/schemas/UpdateCategoryTranslation"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          }
-        },
-        "type": "object"
-      },
-      "UpdateCategoryResponseBody": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/UpdateCategoryResponseBody.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "message": {
-            "description": "Success message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "type": "object"
-      },
-      "UpdateCategoryTranslation": {
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "description": "Localized description",
-            "type": "string"
-          },
-          "language": {
-            "description": "Language code (en, am)",
-            "maxLength": 5,
-            "minLength": 2,
-            "type": "string"
-          },
-          "name": {
-            "description": "Localized name",
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "language",
-          "name"
         ],
         "type": "object"
       },
@@ -9696,10 +10379,6 @@
             "readOnly": true,
             "type": "string"
           },
-          "categoryId": {
-            "description": "Parent category ID",
-            "type": "string"
-          },
           "conditions": {
             "description": "Visibility conditions",
             "items": {
@@ -9715,6 +10394,16 @@
             "maxLength": 50,
             "type": "string"
           },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Guide slug",
             "maxLength": 100,
@@ -9724,6 +10413,16 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "translations": {
             "description": "Localized translations",
@@ -10036,6 +10735,84 @@
         ],
         "type": "object"
       },
+      "UpdateSectorRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateSectorRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether sector is active",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Parent sector ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Sector slug",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateSectorResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateSectorResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "UpdateStepCondition": {
         "additionalProperties": false,
         "properties": {
@@ -10222,6 +10999,88 @@
         ],
         "type": "object"
       },
+      "UpdateTagRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateTagRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether tag is active",
+            "type": "boolean"
+          },
+          "isMultiSelect": {
+            "description": "Whether multiple tags from this group can be selected together",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateTagResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateTagResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "UpdateTemplateGroupRequest": {
         "additionalProperties": false,
         "properties": {
@@ -10389,6 +11248,28 @@
         },
         "required": [
           "report"
+        ],
+        "type": "object"
+      },
+      "UpdateThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateThreadResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       },
@@ -10819,6 +11700,91 @@
         },
         "required": [
           "message"
+        ],
+        "type": "object"
+      },
+      "VerifyPaymentRequestBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/VerifyPaymentRequestBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "txRef": {
+            "description": "Transaction reference to verify",
+            "examples": [
+              "tx_abc123_Pro_monthly_20260510120000"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "txRef"
+        ],
+        "type": "object"
+      },
+      "VerifyPaymentResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/VerifyPaymentResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "amount": {
+            "description": "Amount in minor units",
+            "format": "int64",
+            "type": "integer"
+          },
+          "chapaRef": {
+            "description": "Chapa internal reference",
+            "type": "string"
+          },
+          "currency": {
+            "description": "Currency code",
+            "type": "string"
+          },
+          "paymentMethod": {
+            "description": "Payment method used",
+            "type": "string"
+          },
+          "planName": {
+            "description": "Plan name",
+            "type": "string"
+          },
+          "planPeriod": {
+            "description": "Billing period",
+            "type": "string"
+          },
+          "status": {
+            "description": "Payment status",
+            "type": "string"
+          },
+          "txRef": {
+            "description": "Transaction reference",
+            "type": "string"
+          },
+          "verifiedAt": {
+            "description": "Verification timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "txRef",
+          "status",
+          "amount",
+          "currency",
+          "planName",
+          "planPeriod"
         ],
         "type": "object"
       }
@@ -12300,16 +13266,6 @@
             }
           },
           {
-            "description": "Category ID filter (UUID)",
-            "explode": false,
-            "in": "query",
-            "name": "categoryId",
-            "schema": {
-              "description": "Category ID filter (UUID)",
-              "type": "string"
-            }
-          },
-          {
             "description": "Language locale (en, am)",
             "explode": false,
             "in": "query",
@@ -12395,385 +13351,6 @@
         "summary": "Create guide",
         "tags": [
           "Admin - Guides"
-        ]
-      }
-    },
-    "/api/v1/admin/guides/categories": {
-      "post": {
-        "description": "Creates a new guide category with optional translations and conditions.",
-        "operationId": "createCategory",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCategoryRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateCategoryResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Create category",
-        "tags": [
-          "Admin - Categories"
-        ]
-      }
-    },
-    "/api/v1/admin/guides/categories/conditions/{condId}": {
-      "delete": {
-        "description": "Removes a visibility condition from a category.",
-        "operationId": "removeCategoryCondition",
-        "parameters": [
-          {
-            "description": "Condition ID",
-            "in": "path",
-            "name": "condId",
-            "required": true,
-            "schema": {
-              "description": "Condition ID",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RemoveCategoryConditionResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Remove category condition",
-        "tags": [
-          "Admin - Categories"
-        ]
-      }
-    },
-    "/api/v1/admin/guides/categories/tree": {
-      "get": {
-        "description": "Retrieves guide categories tree for admin management.",
-        "operationId": "getCategoryTreeAdmin",
-        "parameters": [
-          {
-            "description": "Include inactive categories",
-            "explode": false,
-            "in": "query",
-            "name": "includeInactive",
-            "schema": {
-              "description": "Include inactive categories",
-              "type": "boolean"
-            }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GuideCategoryTreeAdminResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Get admin guide category tree",
-        "tags": [
-          "Admin - Categories"
-        ]
-      }
-    },
-    "/api/v1/admin/guides/categories/{id}": {
-      "delete": {
-        "description": "Deletes a guide category.",
-        "operationId": "deleteCategory",
-        "parameters": [
-          {
-            "description": "Category ID",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "Category ID",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteCategoryResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Delete category",
-        "tags": [
-          "Admin - Categories"
-        ]
-      },
-      "put": {
-        "description": "Updates an existing guide category.",
-        "operationId": "updateCategory",
-        "parameters": [
-          {
-            "description": "Category ID",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "Category ID",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCategoryRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateCategoryResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Update category",
-        "tags": [
-          "Admin - Categories"
-        ]
-      }
-    },
-    "/api/v1/admin/guides/categories/{id}/conditions": {
-      "post": {
-        "description": "Adds a visibility condition to a category.",
-        "operationId": "addCategoryCondition",
-        "parameters": [
-          {
-            "description": "Category ID",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "Category ID",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddCategoryConditionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AddCategoryConditionResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Add category condition",
-        "tags": [
-          "Admin - Categories"
-        ]
-      }
-    },
-    "/api/v1/admin/guides/categories/{id}/translations": {
-      "put": {
-        "description": "Replaces all translations for a category.",
-        "operationId": "setCategoryTranslations",
-        "parameters": [
-          {
-            "description": "Category ID",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "Category ID",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetCategoryTranslationsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetCategoryTranslationsResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Set category translations",
-        "tags": [
-          "Admin - Categories"
         ]
       }
     },
@@ -14929,7 +15506,7 @@
               },
               "schema": {
                 "properties": {
-                  "description,omitempty": {
+                  "description": {
                     "description": "Template description",
                     "type": "string"
                   },
@@ -14953,7 +15530,7 @@
                   "file",
                   "language",
                   "title",
-                  "description,omitempty"
+                  "description"
                 ],
                 "type": "object"
               }
@@ -15107,22 +15684,22 @@
           "content": {
             "multipart/form-data": {
               "encoding": {
-                "description,omitempty": {
+                "description": {
                   "contentType": "text/plain"
                 },
                 "file": {
                   "contentType": "application/octet-stream"
                 },
-                "isActive,omitempty": {
+                "isActive": {
                   "contentType": "text/plain"
                 },
-                "title,omitempty": {
+                "title": {
                   "contentType": "text/plain"
                 }
               },
               "schema": {
                 "properties": {
-                  "description,omitempty": {
+                  "description": {
                     "description": "Template description",
                     "type": "string"
                   },
@@ -15133,20 +15710,20 @@
                     "format": "binary",
                     "type": "string"
                   },
-                  "isActive,omitempty": {
+                  "isActive": {
                     "description": "Active flag (true/false)",
                     "type": "string"
                   },
-                  "title,omitempty": {
+                  "title": {
                     "description": "Template title",
                     "type": "string"
                   }
                 },
                 "required": [
                   "file",
-                  "title,omitempty",
-                  "description,omitempty",
-                  "isActive,omitempty"
+                  "title",
+                  "description",
+                  "isActive"
                 ],
                 "type": "object"
               }
@@ -16150,12 +16727,12 @@
         "operationId": "listTemplates",
         "parameters": [
           {
-            "description": "Filter by category",
+            "description": "Filter by template group",
             "explode": false,
             "in": "query",
-            "name": "category",
+            "name": "templateGroup",
             "schema": {
-              "description": "Filter by category",
+              "description": "Filter by template group",
               "type": "string"
             }
           },
@@ -16595,6 +17172,534 @@
         "summary": "Update translation",
         "tags": [
           "Admin - Notifications"
+        ]
+      }
+    },
+    "/api/v1/admin/sectors": {
+      "get": {
+        "operationId": "listSectors",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSectorsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List sectors",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "post": {
+        "operationId": "createSector",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSectorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSectorResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/admin/sectors/{id}": {
+      "delete": {
+        "operationId": "deleteSector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSectorResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "get": {
+        "operationId": "getSector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "put": {
+        "operationId": "updateSector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSectorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSectorResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/admin/tags": {
+      "get": {
+        "operationId": "listTags",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTagsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List tags",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "post": {
+        "operationId": "createTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTagRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTagResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create tag",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/admin/tags/{id}": {
+      "delete": {
+        "operationId": "deleteTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateTagResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete tag",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "get": {
+        "operationId": "getTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get tag",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "put": {
+        "operationId": "updateTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTagRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateTagResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update tag",
+        "tags": [
+          "Admin - Taxonomy"
         ]
       }
     },
@@ -18778,87 +19883,6 @@
         ]
       }
     },
-    "/api/v1/community/categories/{id}/threads": {
-      "get": {
-        "description": "Lists discussion threads in a category.",
-        "operationId": "listCommunityThreads",
-        "parameters": [
-          {
-            "description": "Category ID",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "description": "Category ID",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Page number",
-            "explode": false,
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "description": "Page number",
-              "format": "int64",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Page size",
-            "explode": false,
-            "in": "query",
-            "name": "pageSize",
-            "schema": {
-              "description": "Page size",
-              "format": "int64",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Search term",
-            "explode": false,
-            "in": "query",
-            "name": "search",
-            "schema": {
-              "description": "Search term",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListThreadsResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "List threads by category",
-        "tags": [
-          "Community"
-        ]
-      }
-    },
     "/api/v1/community/follows/categories": {
       "get": {
         "description": "Lists categories followed by the current user.",
@@ -19144,19 +20168,9 @@
     },
     "/api/v1/community/threads": {
       "get": {
-        "description": "Lists discussion threads across categories, including sub-threads.",
-        "operationId": "listAllCommunityThreads",
+        "description": "Lists discussion threads filtered by user's business profile taxonomy.",
+        "operationId": "listCommunityThreads",
         "parameters": [
-          {
-            "description": "Category ID",
-            "explode": false,
-            "in": "query",
-            "name": "categoryId",
-            "schema": {
-              "description": "Category ID",
-              "type": "string"
-            }
-          },
           {
             "description": "Search term",
             "explode": false,
@@ -19232,9 +20246,6 @@
                 "attachmentIds": {
                   "contentType": "text/plain"
                 },
-                "categoryId": {
-                  "contentType": "text/plain"
-                },
                 "description": {
                   "contentType": "text/plain"
                 },
@@ -19244,7 +20255,13 @@
                 "parentThreadId": {
                   "contentType": "text/plain"
                 },
+                "sectorIds": {
+                  "contentType": "text/plain"
+                },
                 "slug": {
+                  "contentType": "text/plain"
+                },
+                "tagIds": {
                   "contentType": "text/plain"
                 },
                 "title": {
@@ -19255,10 +20272,6 @@
                 "properties": {
                   "attachmentIds": {
                     "description": "Pre-uploaded attachment IDs (comma-separated)",
-                    "type": "string"
-                  },
-                  "categoryId": {
-                    "description": "Category ID",
                     "type": "string"
                   },
                   "description": {
@@ -19273,8 +20286,16 @@
                     "description": "Parent thread ID for sub-threads",
                     "type": "string"
                   },
+                  "sectorIds": {
+                    "description": "Sector IDs (comma-separated)",
+                    "type": "string"
+                  },
                   "slug": {
                     "description": "Thread slug",
+                    "type": "string"
+                  },
+                  "tagIds": {
+                    "description": "Tag IDs (comma-separated)",
                     "type": "string"
                   },
                   "title": {
@@ -19283,7 +20304,6 @@
                   }
                 },
                 "required": [
-                  "categoryId",
                   "title",
                   "slug",
                   "description",
@@ -19327,9 +20347,80 @@
         ]
       }
     },
+    "/api/v1/community/threads/all": {
+      "get": {
+        "description": "Lists all discussion threads without taxonomy filtering.",
+        "operationId": "listAllCommunityThreads",
+        "parameters": [
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListThreadsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List all discussion threads",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
     "/api/v1/community/threads/search": {
       "get": {
-        "description": "Searches threads by keyword and category.",
+        "description": "Searches threads by keyword, filtered by user's business profile taxonomy.",
         "operationId": "searchCommunityThreads",
         "parameters": [
           {
@@ -19339,16 +20430,6 @@
             "name": "keyword",
             "schema": {
               "description": "Search keyword",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Category ID",
-            "explode": false,
-            "in": "query",
-            "name": "categoryId",
-            "schema": {
-              "description": "Category ID",
               "type": "string"
             }
           },
@@ -19409,6 +20490,53 @@
       }
     },
     "/api/v1/community/threads/{id}": {
+      "delete": {
+        "description": "Deletes a thread (author only, no replies beyond the initial post).",
+        "operationId": "deleteCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete discussion thread",
+        "tags": [
+          "Community"
+        ]
+      },
       "get": {
         "description": "Retrieves thread details.",
         "operationId": "getCommunityThread",
@@ -19452,6 +20580,108 @@
           }
         ],
         "summary": "Get discussion thread",
+        "tags": [
+          "Community"
+        ]
+      },
+      "patch": {
+        "description": "Updates a thread's metadata (author only, active threads only).",
+        "operationId": "updateCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "description": {
+                  "contentType": "text/plain"
+                },
+                "isPinned": {
+                  "contentType": "text/plain"
+                },
+                "sectorIds": {
+                  "contentType": "text/plain"
+                },
+                "status": {
+                  "contentType": "text/plain"
+                },
+                "tagIds": {
+                  "contentType": "text/plain"
+                },
+                "title": {
+                  "contentType": "text/plain"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "Thread description",
+                    "type": "string"
+                  },
+                  "isPinned": {
+                    "description": "Pinned flag (true/false)",
+                    "type": "string"
+                  },
+                  "sectorIds": {
+                    "description": "Sector IDs (comma-separated)",
+                    "type": "string"
+                  },
+                  "status": {
+                    "description": "Thread status",
+                    "type": "string"
+                  },
+                  "tagIds": {
+                    "description": "Tag IDs (comma-separated)",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Thread title",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update discussion thread",
         "tags": [
           "Community"
         ]
@@ -20154,6 +21384,77 @@
         ]
       }
     },
+    "/api/v1/guides": {
+      "get": {
+        "description": "Lists guides filtered by the user's business profile taxonomy (sector, tags, region, stage).",
+        "operationId": "listGuides",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Language locale (en, am)",
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "description": "Language locale (en, am)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListGuidesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List guides",
+        "tags": [
+          "Guides"
+        ]
+      }
+    },
     "/api/v1/guides/bookmarks": {
       "get": {
         "description": "Lists all bookmarks for the user.",
@@ -20210,50 +21511,6 @@
           }
         ],
         "summary": "List bookmarks",
-        "tags": [
-          "Guides"
-        ]
-      }
-    },
-    "/api/v1/guides/categories/tree": {
-      "get": {
-        "description": "Retrieves the hierarchical category tree for guides with localized names.",
-        "operationId": "getCategoryTree",
-        "parameters": [
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCategoryTreeResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "summary": "Get guide category tree",
         "tags": [
           "Guides"
         ]
@@ -21143,18 +22400,18 @@
         ]
       }
     },
-    "/api/v1/library/templates/{slug}": {
+    "/api/v1/library/templates/{groupId}": {
       "get": {
         "description": "Gets a template group with its language variants.",
         "operationId": "LibraryGetTemplateGroup",
         "parameters": [
           {
-            "description": "Template group slug",
+            "description": "Template group ID",
             "in": "path",
-            "name": "slug",
+            "name": "groupId",
             "required": true,
             "schema": {
-              "description": "Template group slug",
+              "description": "Template group ID",
               "type": "string"
             }
           },
@@ -21197,18 +22454,18 @@
         ]
       }
     },
-    "/api/v1/library/templates/{slug}/download": {
+    "/api/v1/library/templates/{groupId}/download": {
       "get": {
         "description": "Generates a presigned download URL for a template.",
         "operationId": "LibraryDownloadTemplate",
         "parameters": [
           {
-            "description": "Template group slug",
+            "description": "Template group ID",
             "in": "path",
-            "name": "slug",
+            "name": "groupId",
             "required": true,
             "schema": {
-              "description": "Template group slug",
+              "description": "Template group ID",
               "type": "string"
             }
           },
@@ -21248,6 +22505,43 @@
         "summary": "Download template",
         "tags": [
           "Library"
+        ]
+      }
+    },
+    "/api/v1/me/subscription": {
+      "get": {
+        "description": "Returns the current account's active subscription.",
+        "operationId": "getMySubscription",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMySubscriptionResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get my subscription",
+        "tags": [
+          "Payments"
         ]
       }
     },
@@ -21561,16 +22855,6 @@
         "operationId": "listInbox",
         "parameters": [
           {
-            "description": "Filter by notification category",
-            "explode": false,
-            "in": "query",
-            "name": "category",
-            "schema": {
-              "description": "Filter by notification category",
-              "type": "string"
-            }
-          },
-          {
             "description": "Page number",
             "explode": false,
             "in": "query",
@@ -21621,55 +22905,6 @@
           }
         ],
         "summary": "List inbox",
-        "tags": [
-          "Notifications"
-        ]
-      }
-    },
-    "/api/v1/notifications/inbox/category/{category}/read": {
-      "post": {
-        "description": "Marks all inbox notifications in a category as read.",
-        "operationId": "markCategoryAsRead",
-        "parameters": [
-          {
-            "description": "Notification category",
-            "in": "path",
-            "name": "category",
-            "required": true,
-            "schema": {
-              "description": "Notification category",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MarkCategoryAsReadResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Mark category as read",
         "tags": [
           "Notifications"
         ]
@@ -22198,6 +23433,132 @@
         ]
       }
     },
+    "/api/v1/payments/initiate": {
+      "post": {
+        "description": "Starts a new payment transaction and returns a Chapa checkout URL.",
+        "operationId": "initiatePayment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitiatePaymentRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiatePaymentResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Initiate payment",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/payments/plans": {
+      "get": {
+        "description": "Returns all available subscription plans.",
+        "operationId": "listPlans",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPlansResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List subscription plans",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/payments/verify": {
+      "post": {
+        "description": "Verifies the status of a payment by transaction reference.",
+        "operationId": "verifyPayment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPaymentRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyPaymentResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Verify payment",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
     "/api/v1/permissions": {
       "get": {
         "description": "Returns permissions with optional filtering by module and code.",
@@ -22498,6 +23859,246 @@
         ]
       }
     },
+    "/api/v1/taxonomy/sectors": {
+      "get": {
+        "description": "Lists all available sectors.",
+        "operationId": "listTaxonomySectors",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSectorsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List sectors",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/sectors/{id}": {
+      "get": {
+        "description": "Retrieves a single sector by ID.",
+        "operationId": "getTaxonomySector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get sector",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/tags": {
+      "get": {
+        "description": "Lists all available tags.",
+        "operationId": "listTaxonomyTags",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTagsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List tags",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/tags/{id}": {
+      "get": {
+        "description": "Retrieves a single tag by ID.",
+        "operationId": "getTaxonomyTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get tag",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
     "/api/v1/users/avatar": {
       "post": {
         "description": "Uploads and sets the authenticated user's avatar image",
@@ -22557,6 +24158,133 @@
         "summary": "Upload user avatar",
         "tags": [
           "Users"
+        ]
+      }
+    },
+    "/api/v1/users/business-profile": {
+      "get": {
+        "description": "Retrieves the authenticated user's business profile.",
+        "operationId": "getBusinessProfile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get business profile",
+        "tags": [
+          "Business Profile"
+        ]
+      },
+      "post": {
+        "description": "Creates a business profile for the authenticated user. Accepts slugs for sector and tags, which are resolved server-side. Auto-fills company name, email, and phone from account data if omitted.",
+        "operationId": "createBusinessProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBusinessProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create business profile",
+        "tags": [
+          "Business Profile"
+        ]
+      },
+      "put": {
+        "description": "Updates the authenticated user's business profile. Accepts slugs for sector and tags, which are resolved server-side.",
+        "operationId": "updateBusinessProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBusinessProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update business profile",
+        "tags": [
+          "Business Profile"
         ]
       }
     },

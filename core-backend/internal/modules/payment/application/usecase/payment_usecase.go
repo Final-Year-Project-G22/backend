@@ -68,7 +68,7 @@ func (u *paymentUseCase) GetMySubscription(ctx context.Context, accountID uuid.U
 }
 
 // InitiatePayment starts a new payment transaction.
-func (u *paymentUseCase) InitiatePayment(ctx context.Context, accountID uuid.UUID, planName, period string) (*paymentuc.InitiatePaymentResult, error) {
+func (u *paymentUseCase) InitiatePayment(ctx context.Context, accountID uuid.UUID, email, firstName, lastName, phone, planName, period string) (*paymentuc.InitiatePaymentResult, error) {
 	// 1. Validate plan exists and is active
 	plan, err := u.planRepo.FindActiveByNameAndPeriod(ctx, planName, period)
 	if err != nil {
@@ -125,11 +125,15 @@ func (u *paymentUseCase) InitiatePayment(ctx context.Context, accountID uuid.UUI
 	chapaReq := &chapa.InitRequest{
 		Amount:      plan.Amount,
 		Currency:    plan.Currency,
+		Email:       email,
+		FirstName:   firstName,
+		LastName:    lastName,
+		Phone:       phone,
 		TxRef:       txRef,
 		CallbackURL: u.cfg.Chapa.CallbackURL,
 		ReturnURL:   u.cfg.Chapa.ReturnURL,
 		Customization: map[string]interface{}{
-			"title":       "Adisu Serategna Subscription",
+			"title":       "Adisu Pro",
 			"description": fmt.Sprintf("%s %s plan", plan.Name, plan.Period),
 		},
 	}

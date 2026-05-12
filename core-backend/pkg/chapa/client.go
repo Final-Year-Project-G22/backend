@@ -143,14 +143,14 @@ func parseError(statusCode int, body []byte) *Error {
 		RawResponse: body,
 	}
 
-	// Try to parse Chapa's error format
 	var chapaErr struct {
 		Message string `json:"message"`
+		Status  string `json:"status"`
 	}
 	if json.Unmarshal(body, &chapaErr) == nil && chapaErr.Message != "" {
 		err.Message = chapaErr.Message
 	} else {
-		err.Message = fmt.Sprintf("chapa API returned HTTP %d", statusCode)
+		err.Message = fmt.Sprintf("chapa API returned HTTP %d: %s", statusCode, string(body))
 	}
 
 	return err
