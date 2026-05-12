@@ -17,6 +17,9 @@ type GuideViewUseCase interface {
 	GetPersonalizedGuide(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*PersonalizedGuide, error)
 	GetCurrentStep(ctx context.Context, accountID, userID uuid.UUID, guideSlug string, locale constants.Locale) (*GetCurrentStepResult, error)
 
+	GetInProgressGuides(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*GuideWithProgress, error)
+	GetCompletionStats(ctx context.Context, accountID, userID uuid.UUID) (*CompletionStats, error)
+
 	StartStep(ctx context.Context, accountID, userID, stepID uuid.UUID) error
 	CompleteStep(ctx context.Context, accountID, userID, stepID uuid.UUID, input CompleteStepInput) error
 	MarkStepIncomplete(ctx context.Context, accountID, userID, stepID uuid.UUID) error
@@ -27,6 +30,23 @@ type GuideViewUseCase interface {
 	UpdateBookmarkNote(ctx context.Context, accountID, userID, stepID uuid.UUID, note *string) error
 	RemoveBookmark(ctx context.Context, accountID, userID, stepID uuid.UUID) error
 	ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions) ([]*BookmarkWithStep, error)
+}
+
+type GuideWithProgress struct {
+	ID             uuid.UUID `json:"id"`
+	Slug           string    `json:"slug"`
+	Name           string    `json:"name"`
+	Icon           *string   `json:"icon,omitempty"`
+	CompletedSteps int       `json:"completedSteps"`
+	TotalSteps     int       `json:"totalSteps"`
+}
+
+type CompletionStats struct {
+	CompletedGuides     int    `json:"completedGuides"`
+	InProgressGuides    int    `json:"inProgressGuides"`
+	TotalStepsCompleted int    `json:"totalStepsCompleted"`
+	TotalStepsAll       int    `json:"totalStepsAll"`
+	Period              string `json:"period"`
 }
 
 type CategoryNode struct {

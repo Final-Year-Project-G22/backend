@@ -47,6 +47,68 @@ type SearchGuidesResponseBody struct {
 	Guides []*GuideCardDTO `json:"guides"`
 }
 
+type GuideWithProgressDTO struct {
+	ID             uuid.UUID `json:"id" doc:"Guide ID"`
+	Slug           string    `json:"slug" doc:"Guide slug"`
+	Name           string    `json:"name" doc:"Localized guide name"`
+	Icon           *string   `json:"icon,omitempty" doc:"Icon identifier"`
+	CompletedSteps int       `json:"completedSteps" doc:"Completed steps count"`
+	TotalSteps     int       `json:"totalSteps" doc:"Total steps count"`
+}
+
+type GetInProgressGuidesInput struct {
+	Locale constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+}
+
+type GetInProgressGuidesOutput struct {
+	Body GetInProgressGuidesResponseBody
+}
+
+type GetInProgressGuidesResponseBody struct {
+	Guides []*GuideWithProgressDTO `json:"guides"`
+}
+
+type CompletionStatsDTO struct {
+	CompletedGuides     int    `json:"completedGuides" doc:"Number of fully completed guides"`
+	InProgressGuides    int    `json:"inProgressGuides" doc:"Number of guides in progress"`
+	TotalStepsCompleted int    `json:"totalStepsCompleted" doc:"Total steps completed across all guides"`
+	TotalStepsAll       int    `json:"totalStepsAll" doc:"Total steps across all guides"`
+	Period              string `json:"period" doc:"Stats period (e.g. monthly)"`
+}
+
+type GetCompletionStatsInput struct{}
+
+type GetCompletionStatsOutput struct {
+	Body CompletionStatsDTO
+}
+
+func ToGuideWithProgressDTO(g *usecase.GuideWithProgress) *GuideWithProgressDTO {
+	if g == nil {
+		return nil
+	}
+	return &GuideWithProgressDTO{
+		ID:             g.ID,
+		Slug:           g.Slug,
+		Name:           g.Name,
+		Icon:           g.Icon,
+		CompletedSteps: g.CompletedSteps,
+		TotalSteps:     g.TotalSteps,
+	}
+}
+
+func ToCompletionStatsDTO(s *usecase.CompletionStats) *CompletionStatsDTO {
+	if s == nil {
+		return nil
+	}
+	return &CompletionStatsDTO{
+		CompletedGuides:     s.CompletedGuides,
+		InProgressGuides:    s.InProgressGuides,
+		TotalStepsCompleted: s.TotalStepsCompleted,
+		TotalStepsAll:       s.TotalStepsAll,
+		Period:              s.Period,
+	}
+}
+
 type GetRecentlyViewedInput struct {
 	Page     int              `query:"page" doc:"Page number"`
 	PageSize int              `query:"pageSize" doc:"Items per page"`

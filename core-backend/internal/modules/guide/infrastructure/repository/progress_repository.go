@@ -241,6 +241,107 @@ func (r *progressRepository) RemoveBookmark(ctx context.Context, accountID, user
 	return nil
 }
 
+func (r *progressRepository) ListGuidesInProgress(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*entity.Guide, []int, []int, error) {
+	progressGuideIDs := r.getDB(ctx).
+		Model(&entity.UserGuideProgress{}).
+		Select("gs.guide_id").
+		Joins("JOIN guide_steps gs ON gs.id = user_guide_progresses.step_id").
+		Where("user_guide_progresses.account_id = ? AND user_guide_progresses.user_id = ? AND gs.deleted_at IS NULL", accountID, userID)
+
+	var allGuides []*entity.Guide
+	if err := r.getDB(ctx).
+		Model(&entity.Guide{}).
+		Where("id IN (?)", progressGuideIDs).
+		Preload("Translations", "language = ?", locale).
+		Order("updated_at DESC").
+		Find(&allGuides).Error; err != nil {
+		r.logger.Error("Failed to list guides in progress", core.Error(err))
+		return nil, nil, nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	guides := make([]*entity.Guide, 0, len(allGuides))
+	completedCounts := make([]int, 0, len(allGuides))
+	totalCounts := make([]int, 0, len(allGuides))
+
+	for _, g := range allGuides {
+		progress, err := r.ListProgressByGuide(ctx, accountID, userID, g.ID, query.QueryOptions{PageSize: 200})
+		if err != nil {
+			r.logger.Error("Failed to get progress for guide", core.Error(err))
+			continue
+		}
+
+		completed := 0
+		for _, p := range progress {
+			if p.Status == entity.ProgressStatusCompleted {
+				completed++
+			}
+		}
+
+		var totalSteps int64
+		if err := r.getDB(ctx).
+			Model(&entity.GuideStep{}).
+			Where("guide_id = ? AND deleted_at IS NULL", g.ID).
+			Count(&totalSteps).Error; err != nil {
+			r.logger.Error("Failed to count steps for guide", core.Error(err))
+			continue
+		}
+
+		if completed < int(totalSteps) {
+			if len(g.Translations) == 0 {
+				var fallback entity.Guide
+				if err := r.getDB(ctx).Preload("Translations", "language = ?", constants.LocaleEnglish).
+					Where("id = ?", g.ID).First(&fallback).Error; err == nil {
+					g.Translations = fallback.Translations
+				}
+			}
+			guides = append(guides, g)
+			completedCounts = append(completedCounts, completed)
+			totalCounts = append(totalCounts, int(totalSteps))
+		}
+	}
+
+	return guides, completedCounts, totalCounts, nil
+}
+
+func (r *progressRepository) GetProgressStats(ctx context.Context, accountID, userID uuid.UUID) (completedGuides, inProgressGuides, totalStepsCompleted, totalStepsAll int, err error) {
+	type statsRow struct {
+		GuideID        uuid.UUID
+		TotalSteps     int
+		CompletedSteps int
+	}
+	var rows []statsRow
+	if err := r.getDB(ctx).Raw(`
+		SELECT g.id as guide_id,
+		       COALESCE(tc.total, 0) as total_steps,
+		       COALESCE(cc.cnt, 0) as completed_steps
+		FROM guides g
+		JOIN (SELECT guide_id, COUNT(*) as total FROM guide_steps WHERE deleted_at IS NULL GROUP BY guide_id) tc ON tc.guide_id = g.id
+		LEFT JOIN (SELECT gs.guide_id, COUNT(DISTINCT ugp.step_id) as cnt
+		           FROM user_guide_progresses ugp
+		           JOIN guide_steps gs ON gs.id = ugp.step_id
+		           WHERE ugp.account_id = ? AND ugp.user_id = ? AND ugp.status = 'COMPLETED' AND gs.deleted_at IS NULL
+		           GROUP BY gs.guide_id) cc ON cc.guide_id = g.id
+		WHERE g.id IN (SELECT DISTINCT gs2.guide_id
+		               FROM user_guide_progresses ugp2
+		               JOIN guide_steps gs2 ON gs2.id = ugp2.step_id
+		               WHERE ugp2.account_id = ? AND ugp2.user_id = ? AND gs2.deleted_at IS NULL)
+	`, accountID, userID, accountID, userID).Scan(&rows).Error; err != nil {
+		r.logger.Error("Failed to get progress stats", core.Error(err))
+		return 0, 0, 0, 0, errors.InternalError("errors.databaseError", err)
+	}
+
+	for _, row := range rows {
+		totalStepsAll += row.TotalSteps
+		totalStepsCompleted += row.CompletedSteps
+		if row.CompletedSteps >= row.TotalSteps {
+			completedGuides++
+		} else if row.CompletedSteps > 0 {
+			inProgressGuides++
+		}
+	}
+	return completedGuides, inProgressGuides, totalStepsCompleted, totalStepsAll, nil
+}
+
 func (r *progressRepository) UpsertRecentView(ctx context.Context, accountID, userID, guideID uuid.UUID) error {
 	if err := r.getDB(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "account_id"}, {Name: "user_id"}, {Name: "guide_id"}},

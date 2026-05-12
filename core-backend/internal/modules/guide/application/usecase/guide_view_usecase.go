@@ -94,6 +94,43 @@ func (s *guideViewUsecase) SearchGuides(ctx context.Context, accountID, userID u
 	return cards, nil
 }
 
+func (s *guideViewUsecase) GetInProgressGuides(ctx context.Context, accountID, userID uuid.UUID, locale constants.Locale) ([]*usecase.GuideWithProgress, error) {
+	guides, completedCounts, totalCounts, err := s.progressRepo.ListGuidesInProgress(ctx, accountID, userID, locale)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*usecase.GuideWithProgress, 0, len(guides))
+	for i, g := range guides {
+		name := g.Slug
+		if len(g.Translations) > 0 {
+			name = g.Translations[0].Name
+		}
+		result = append(result, &usecase.GuideWithProgress{
+			ID:             g.ID,
+			Slug:           g.Slug,
+			Name:           name,
+			Icon:           g.Icon,
+			CompletedSteps: completedCounts[i],
+			TotalSteps:     totalCounts[i],
+		})
+	}
+	return result, nil
+}
+
+func (s *guideViewUsecase) GetCompletionStats(ctx context.Context, accountID, userID uuid.UUID) (*usecase.CompletionStats, error) {
+	completedGuides, inProgressGuides, totalStepsCompleted, totalStepsAll, err := s.progressRepo.GetProgressStats(ctx, accountID, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &usecase.CompletionStats{
+		CompletedGuides:     completedGuides,
+		InProgressGuides:    inProgressGuides,
+		TotalStepsCompleted: totalStepsCompleted,
+		TotalStepsAll:       totalStepsAll,
+		Period:              "monthly",
+	}, nil
+}
+
 func (s *guideViewUsecase) GetRecentlyViewed(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*usecase.GuideCard, error) {
 	if q.PageSize < 1 {
 		q.PageSize = 5
