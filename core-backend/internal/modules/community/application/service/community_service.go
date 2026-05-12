@@ -100,7 +100,10 @@ func (s *communityService) ReplyToThread(ctx context.Context, accountID, threadI
 		}
 	}
 
-	_ = s.followUsecase.FollowThread(ctx, accountID, threadID)
+	isOwner, err := s.threadRepo.IsAuthor(ctx, threadID, accountID)
+	if err == nil && !isOwner {
+		_ = s.followUsecase.FollowThread(ctx, accountID, threadID)
+	}
 
 	s.wsHub.PublishToThread(threadID, ws.NewPostCreatedEvent(threadID.String(), post.ID.String()))
 
