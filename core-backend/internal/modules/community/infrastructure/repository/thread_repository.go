@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	communityerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/error"
 	communityrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/dbtypes"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -55,15 +56,15 @@ func (r *discussionThreadRepository) ListByTaxonomy(ctx context.Context, sectorI
 	var threads []*entity.DiscussionThread
 	db := r.getDB(ctx)
 
-	// Apply sector filter: thread.sector_ids overlaps with user's sector_ids
-	if len(sectorIDs) > 0 {
-		db = db.Where("sector_ids && ?", sectorIDs)
+	// Apply taxonomy filter: match threads that overlap with either sector OR tag
+	switch {
+	case len(sectorIDs) > 0 && len(tagIDs) > 0:
+		db = db.Where("(sector_ids && ? OR tag_ids && ?)", dbtypes.UUIDArray(sectorIDs), dbtypes.UUIDArray(tagIDs))
+	case len(sectorIDs) > 0:
+		db = db.Where("sector_ids && ?", dbtypes.UUIDArray(sectorIDs))
+	case len(tagIDs) > 0:
+		db = db.Where("tag_ids && ?", dbtypes.UUIDArray(tagIDs))
 	}
-	// Apply tag filter: thread.tag_ids overlaps with user's tag_ids
-	if len(tagIDs) > 0 {
-		db = db.Where("tag_ids && ?", tagIDs)
-	}
-	// If both are empty, return all threads (no restriction)
 
 	if q.Search != "" {
 		search := "%" + q.Search + "%"
@@ -88,12 +89,14 @@ func (r *discussionThreadRepository) Search(ctx context.Context, keyword string,
 	}
 	db := r.getDB(ctx)
 
-	// Apply taxonomy filters
-	if len(sectorIDs) > 0 {
-		db = db.Where("sector_ids && ?", sectorIDs)
-	}
-	if len(tagIDs) > 0 {
-		db = db.Where("tag_ids && ?", tagIDs)
+	// Apply taxonomy filter: match threads that overlap with either sector OR tag
+	switch {
+	case len(sectorIDs) > 0 && len(tagIDs) > 0:
+		db = db.Where("(sector_ids && ? OR tag_ids && ?)", dbtypes.UUIDArray(sectorIDs), dbtypes.UUIDArray(tagIDs))
+	case len(sectorIDs) > 0:
+		db = db.Where("sector_ids && ?", dbtypes.UUIDArray(sectorIDs))
+	case len(tagIDs) > 0:
+		db = db.Where("tag_ids && ?", dbtypes.UUIDArray(tagIDs))
 	}
 
 	if searchTerm != "" {
