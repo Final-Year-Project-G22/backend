@@ -16,6 +16,8 @@ import (
 	libraryroutes "github.com/Final-Year-Project-G22/backend/core/internal/modules/library/delivery/routes"
 	notificationhandler "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/handler"
 	notificationroutes "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/routes"
+	paymenthandler "github.com/Final-Year-Project-G22/backend/core/internal/modules/payment/delivery/handler"
+	paymentroutes "github.com/Final-Year-Project-G22/backend/core/internal/modules/payment/delivery/routes"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humagin"
 	"github.com/gin-gonic/gin"
@@ -91,6 +93,13 @@ func main() {
 	guideroutes.RegisterRoutes(api, guideroutes.RouteDependencies{
 		GuideViewHandler:        &guidehandler.GuideViewHandler{},
 		GuideAdminHandler:       &guidehandler.GuideAdminHandler{},
+		AuthMiddleware:          noOpMiddleware,
+		AccountStatusMiddleware: noOpMiddleware,
+	})
+
+	paymentroutes.RegisterPaymentRoutes(api, engine, paymentroutes.RouteDependencies{
+		PaymentHandler:          &paymenthandler.PaymentHandler{},
+		WebhookHandler:          &paymenthandler.WebhookHandler{},
 		AuthMiddleware:          noOpMiddleware,
 		AccountStatusMiddleware: noOpMiddleware,
 	})

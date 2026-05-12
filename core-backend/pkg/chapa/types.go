@@ -1,6 +1,9 @@
 package chapa
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // InitRequest is the payload for POST /v1/transaction/initialize.
 type InitRequest struct {
@@ -37,15 +40,15 @@ type VerifyResponse struct {
 
 // VerifyData holds the transaction details from Chapa.
 type VerifyData struct {
-	TxRef         string    `json:"tx_ref"`
-	Reference     string    `json:"reference"`
-	Status        string    `json:"status"` // "success", "pending", "failed"
-	Amount        string    `json:"amount"` // Chapa returns as string
-	Charge        string    `json:"charge"`
-	Currency      string    `json:"currency"`
-	PaymentMethod string    `json:"payment_method"` // "telebirr", "cbebirr", etc.
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	TxRef         string      `json:"tx_ref"`
+	Reference     string      `json:"reference"`
+	Status        string      `json:"status"` // "success", "pending", "failed"
+	Amount        json.Number `json:"amount"` // Chapa returns as string or number
+	Charge        json.Number `json:"charge"`
+	Currency      string      `json:"currency"`
+	PaymentMethod string      `json:"payment_method"` // "telebirr", "cbebirr", etc.
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
 }
 
 // WebhookEvent represents a webhook payload sent by Chapa.
@@ -56,8 +59,8 @@ type WebhookEvent struct {
 	Email         *string                 `json:"email"`
 	Mobile        string                  `json:"mobile"`
 	Currency      string                  `json:"currency"`
-	Amount        string                  `json:"amount"`
-	Charge        string                  `json:"charge"`
+	Amount        json.Number             `json:"amount"`
+	Charge        json.Number             `json:"charge"`
 	Status        string                  `json:"status"`
 	Mode          string                  `json:"mode"`
 	Reference     string                  `json:"reference"`

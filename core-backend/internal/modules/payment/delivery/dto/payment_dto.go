@@ -54,8 +54,12 @@ type InitiatePaymentInput struct {
 }
 
 type InitiatePaymentRequestBody struct {
-	PlanName string `json:"planName" doc:"Plan name (Basic or Pro)" example:"Pro"`
-	Period   string `json:"period" doc:"Billing period (monthly or yearly)" example:"monthly"`
+	PlanName  string `json:"planName" doc:"Plan name (Basic or Pro)" example:"Pro"`
+	Period    string `json:"period" doc:"Billing period (monthly or yearly)" example:"monthly"`
+	Email     string `json:"email" doc:"Customer email"`
+	FirstName string `json:"firstName" doc:"Customer first name"`
+	LastName  string `json:"lastName" doc:"Customer last name"`
+	Phone     string `json:"phone,omitempty" doc:"Customer phone number (optional)"`
 }
 
 type InitiatePaymentOutput struct {
