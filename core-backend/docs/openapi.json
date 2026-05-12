@@ -494,6 +494,15 @@
               "null"
             ]
           },
+          "sectorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "type": "string"
           },
@@ -509,12 +518,23 @@
               "array",
               "null"
             ]
+          },
+          "tagIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           }
         },
         "required": [
           "id",
           "slug",
           "name",
+          "sectorIds",
+          "tagIds",
           "sectorIds",
           "tagIds",
           "sortOrder"
@@ -548,12 +568,30 @@
               "null"
             ]
           },
+          "sectorIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "type": "string"
           },
           "sortOrder": {
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "tagIds": {
             "items": {
@@ -576,6 +614,8 @@
         },
         "required": [
           "id",
+          "sectorIds",
+          "tagIds",
           "sectorIds",
           "tagIds",
           "slug",
@@ -1374,10 +1414,24 @@
             "description": "Target region",
             "type": "string"
           },
+          "region": {
+            "description": "Target region",
+            "type": "string"
+          },
           "scheduledFor": {
             "description": "Scheduled sending time",
             "format": "date-time",
             "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "sectorIds": {
             "description": "Target sector IDs",
@@ -1398,9 +1452,23 @@
             "description": "Target business stage",
             "type": "string"
           },
+          "stage": {
+            "description": "Target business stage",
+            "type": "string"
+          },
           "status": {
             "description": "Campaign status",
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "tagIds": {
             "description": "Target tag IDs",
@@ -1425,6 +1493,8 @@
           "campaignTemplateId",
           "createdBy",
           "status",
+          "sectorIds",
+          "tagIds",
           "sectorIds",
           "tagIds",
           "createdAt"
@@ -2280,10 +2350,38 @@
             "description": "Target region",
             "type": "string"
           },
+          "region": {
+            "description": "Target region",
+            "type": "string"
+          },
           "scheduledFor": {
             "description": "Scheduled sending time",
             "format": "date-time",
             "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "stage": {
+            "description": "Target business stage",
+            "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "sectorIds": {
             "description": "Target sector IDs",
@@ -2528,6 +2626,16 @@
               "null"
             ]
           },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Guide slug",
             "maxLength": 100,
@@ -2538,6 +2646,16 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "tagIds": {
             "description": "Target tag IDs",
@@ -2561,6 +2679,8 @@
           }
         },
         "required": [
+          "sectorIds",
+          "tagIds",
           "sectorIds",
           "tagIds",
           "slug",
@@ -2826,6 +2946,94 @@
         },
         "required": [
           "role"
+        ],
+        "type": "object"
+      },
+      "CreateSectorRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateSectorRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether sector is active",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Parent sector ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Sector slug",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
+        ],
+        "type": "object"
+      },
+      "CreateSectorResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateSectorResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created sector ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
         ],
         "type": "object"
       },
@@ -3209,6 +3417,100 @@
         ],
         "type": "object"
       },
+      "CreateTagRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateTagRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether tag is active",
+            "type": "boolean"
+          },
+          "isMultiSelect": {
+            "description": "Whether multiple tags from this group can be selected together",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "group",
+          "isMultiSelect",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
+        ],
+        "type": "object"
+      },
+      "CreateTagResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateTagResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Created tag ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
       "CreateTemplateGroupOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -3342,6 +3644,10 @@
             "description": "Template group",
             "type": "string"
           },
+          "templateGroup": {
+            "description": "Template group",
+            "type": "string"
+          },
           "variablesSchema": {
             "additionalProperties": {},
             "description": "Template variable schema",
@@ -3351,6 +3657,7 @@
         "required": [
           "name",
           "notificationType",
+          "templateGroup",
           "templateGroup",
           "priority",
           "defaultContent"
@@ -3922,6 +4229,28 @@
         ],
         "type": "object"
       },
+      "DeleteThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteThreadResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "DeleteTranslationResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -4257,6 +4586,20 @@
               "null"
             ]
           },
+          "region": {
+            "description": "Target region for document taxonomy",
+            "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs for document taxonomy",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "sizeBytes": {
             "description": "Uploaded object size in bytes",
             "format": "int64",
@@ -4271,10 +4614,24 @@
             "description": "Target business stage for document taxonomy",
             "type": "string"
           },
+          "stage": {
+            "description": "Target business stage for document taxonomy",
+            "type": "string"
+          },
           "storageKey": {
             "description": "Uploaded object key",
             "minLength": 1,
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs for document taxonomy",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "tagIds": {
             "description": "Target tag IDs for document taxonomy",
@@ -4907,11 +5264,26 @@
           },
           "slug": {
             "description": "Guide slug",
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "slug": {
+            "description": "Guide slug",
             "type": "string"
           },
           "tagIds": {
             "description": "Target tag IDs",
+          "tagIds": {
+            "description": "Target tag IDs",
             "items": {
+              "type": "string"
               "type": "string"
             },
             "type": [
@@ -4921,6 +5293,11 @@
           }
         },
         "required": [
+          "id",
+          "slug",
+          "name",
+          "sectorIds",
+          "tagIds"
           "id",
           "slug",
           "name",
@@ -6116,6 +6493,33 @@
         ],
         "type": "object"
       },
+      "ListGuidesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListGuidesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "guides": {
+            "items": {
+              "$ref": "#/components/schemas/GuideCardDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "guides"
+        ],
+        "type": "object"
+      },
       "ListHistoryResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -6540,6 +6944,58 @@
         ],
         "type": "object"
       },
+      "ListSectorsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListSectorsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Sector list",
+            "items": {
+              "$ref": "#/components/schemas/SectorResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Items per page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
       "ListStatusByAccountOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -6605,6 +7061,58 @@
         "required": [
           "projections",
           "total"
+        ],
+        "type": "object"
+      },
+      "ListTagsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListTagsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Tag list",
+            "items": {
+              "$ref": "#/components/schemas/TagResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Items per page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
         ],
         "type": "object"
       },
@@ -7038,6 +7546,28 @@
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
               "https://example.com/schemas/MarkStepIncompleteResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "MarkThreadReadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/MarkThreadReadResponseBody.json"
             ],
             "format": "uri",
             "readOnly": true,
@@ -8647,24 +9177,6 @@
         ],
         "type": "object"
       },
-      "SectorRef": {
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "description": "Sector identifier",
-            "type": "string"
-          },
-          "slug": {
-            "description": "Sector slug",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "slug"
-        ],
-        "type": "object"
-      },
       "SectorResponse": {
         "additionalProperties": false,
         "properties": {
@@ -8730,6 +9242,12 @@
           }
         },
         "required": [
+          "id",
+          "slug",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
           "id",
           "slug",
           "sortOrder",
@@ -9007,91 +9525,6 @@
         ],
         "type": "object"
       },
-      "SubscriptionResponse": {
-        "additionalProperties": false,
-        "properties": {
-          "amount": {
-            "description": "Amount in minor units",
-            "format": "int64",
-            "type": "integer"
-          },
-          "currency": {
-            "description": "Currency code",
-            "type": "string"
-          },
-          "currentPeriodEnd": {
-            "description": "Period end",
-            "format": "date-time",
-            "type": "string"
-          },
-          "currentPeriodStart": {
-            "description": "Period start",
-            "format": "date-time",
-            "type": "string"
-          },
-          "id": {
-            "description": "Subscription ID",
-            "type": "string"
-          },
-          "planName": {
-            "description": "Plan name",
-            "type": "string"
-          },
-          "planPeriod": {
-            "description": "Billing period",
-            "type": "string"
-          },
-          "renewalCount": {
-            "description": "Number of renewals",
-            "format": "int64",
-            "type": "integer"
-          },
-          "status": {
-            "description": "Subscription status",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "planName",
-          "planPeriod",
-          "amount",
-          "currency",
-          "status",
-          "currentPeriodStart",
-          "currentPeriodEnd",
-          "renewalCount"
-        ],
-        "type": "object"
-      },
-      "TagRef": {
-        "additionalProperties": false,
-        "properties": {
-          "group": {
-            "description": "Tag group",
-            "type": "string"
-          },
-          "id": {
-            "description": "Tag identifier",
-            "type": "string"
-          },
-          "isMultiSelect": {
-            "description": "Whether the tag allows multiple selections",
-            "type": "boolean"
-          },
-          "slug": {
-            "description": "Tag slug",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "slug",
-          "group",
-          "isMultiSelect"
-        ],
-        "type": "object"
-      },
       "TagResponse": {
         "additionalProperties": false,
         "properties": {
@@ -9099,11 +9532,90 @@
             "description": "A URL to the JSON Schema for this object.",
             "examples": [
               "https://example.com/schemas/TagResponse.json"
+              "https://example.com/schemas/TagResponse.json"
             ],
             "format": "uri",
             "readOnly": true,
             "type": "string"
           },
+          "createdAt": {
+            "description": "Created timestamp",
+            "format": "date-time",
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "type": "string"
+          },
+          "id": {
+            "description": "Tag ID",
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether tag is active",
+            "type": "boolean"
+          },
+          "isMultiSelect": {
+            "description": "Whether multiple tags from this group can be selected together",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "description": "Updated timestamp",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "group",
+          "isMultiSelect",
+          "sortOrder",
+          "isActive",
+          "nameEn",
+          "nameAm"
+        ],
+        "type": "object"
+      },
+      "TemplateDetailResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/TemplateDetailResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
           "createdAt": {
             "description": "Created timestamp",
             "format": "date-time",
@@ -9223,6 +9735,10 @@
             "description": "Template group",
             "type": "string"
           },
+          "templateGroup": {
+            "description": "Template group",
+            "type": "string"
+          },
           "translations": {
             "description": "Template translations",
             "items": {
@@ -9243,6 +9759,7 @@
           "id",
           "name",
           "notificationType",
+          "templateGroup",
           "templateGroup",
           "priority",
           "isSystemManaged",
@@ -9548,12 +10065,17 @@
           "templateGroup": {
             "description": "Template group",
             "type": "string"
+          },
+          "templateGroup": {
+            "description": "Template group",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "name",
           "notificationType",
+          "templateGroup",
           "templateGroup",
           "isSystemManaged"
         ],
@@ -9661,6 +10183,16 @@
               "null"
             ]
           },
+          "sectorIds": {
+            "description": "Sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Thread slug",
             "type": "string"
@@ -9668,6 +10200,16 @@
           "status": {
             "description": "Thread status",
             "type": "string"
+          },
+          "tagIds": {
+            "description": "Tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "tagIds": {
             "description": "Tag IDs",
@@ -9697,6 +10239,8 @@
           "id",
           "title",
           "slug",
+          "sectorIds",
+          "tagIds",
           "sectorIds",
           "tagIds",
           "authorId",
@@ -9741,6 +10285,10 @@
             "description": "Thread ID",
             "type": "string"
           },
+          "isFollowed": {
+            "description": "Whether current user follows this thread",
+            "type": "boolean"
+          },
           "isPinned": {
             "description": "Pinned flag",
             "type": "boolean"
@@ -9758,6 +10306,16 @@
             "description": "Reply count",
             "format": "int64",
             "type": "integer"
+          },
+          "sectorIds": {
+            "description": "Sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "sectorIds": {
             "description": "Sector IDs",
@@ -9792,9 +10350,24 @@
               "null"
             ]
           },
+          "tagIds": {
+            "description": "Tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "title": {
             "description": "Thread title",
             "type": "string"
+          },
+          "unreadCount": {
+            "description": "Number of unread posts/replies",
+            "format": "int64",
+            "type": "integer"
           },
           "updatedAt": {
             "description": "Updated timestamp",
@@ -9813,9 +10386,13 @@
           "slug",
           "sectorIds",
           "tagIds",
+          "sectorIds",
+          "tagIds",
           "authorId",
           "authorDisplayName",
           "isPinned",
+          "isFollowed",
+          "unreadCount",
           "status",
           "viewCount",
           "shareCount",
@@ -10161,10 +10738,38 @@
             "description": "Target region",
             "type": "string"
           },
+          "region": {
+            "description": "Target region",
+            "type": "string"
+          },
           "scheduledFor": {
             "description": "Scheduled sending time",
             "format": "date-time",
             "type": "string"
+          },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "stage": {
+            "description": "Target business stage",
+            "type": "string"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "sectorIds": {
             "description": "Target sector IDs",
@@ -10516,6 +11121,16 @@
               "null"
             ]
           },
+          "sectorIds": {
+            "description": "Target sector IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
           "slug": {
             "description": "Guide slug",
             "maxLength": 100,
@@ -10525,6 +11140,16 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          },
+          "tagIds": {
+            "description": "Target tag IDs",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "tagIds": {
             "description": "Target tag IDs",
@@ -10925,6 +11550,84 @@
         ],
         "type": "object"
       },
+      "UpdateSectorRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateSectorRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether sector is active",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Parent sector ID",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Sector slug",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateSectorResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateSectorResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "UpdateStepCondition": {
         "additionalProperties": false,
         "properties": {
@@ -11193,6 +11896,88 @@
         ],
         "type": "object"
       },
+      "UpdateTagRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateTagRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "descAm": {
+            "description": "Amharic description",
+            "type": "string"
+          },
+          "descEn": {
+            "description": "English description",
+            "type": "string"
+          },
+          "group": {
+            "description": "Tag group",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "isActive": {
+            "description": "Whether tag is active",
+            "type": "boolean"
+          },
+          "isMultiSelect": {
+            "description": "Whether multiple tags from this group can be selected together",
+            "type": "boolean"
+          },
+          "nameAm": {
+            "description": "Amharic name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "nameEn": {
+            "description": "English name",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "slug": {
+            "description": "Tag slug",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "sortOrder": {
+            "description": "Display order",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateTagResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateTagResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "UpdateTemplateGroupRequest": {
         "additionalProperties": false,
         "properties": {
@@ -11360,6 +12145,28 @@
         },
         "required": [
           "report"
+        ],
+        "type": "object"
+      },
+      "UpdateThreadResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateThreadResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
         ],
         "type": "object"
       },
@@ -15619,6 +16426,7 @@
               "schema": {
                 "properties": {
                   "description": {
+                  "description": {
                     "description": "Template description",
                     "type": "string"
                   },
@@ -15642,6 +16450,7 @@
                   "file",
                   "language",
                   "title",
+                  "description"
                   "description"
                 ],
                 "type": "object"
@@ -15797,20 +16606,24 @@
             "multipart/form-data": {
               "encoding": {
                 "description": {
+                "description": {
                   "contentType": "text/plain"
                 },
                 "file": {
                   "contentType": "application/octet-stream"
                 },
                 "isActive": {
+                "isActive": {
                   "contentType": "text/plain"
                 },
+                "title": {
                 "title": {
                   "contentType": "text/plain"
                 }
               },
               "schema": {
                 "properties": {
+                  "description": {
                   "description": {
                     "description": "Template description",
                     "type": "string"
@@ -15823,9 +16636,11 @@
                     "type": "string"
                   },
                   "isActive": {
+                  "isActive": {
                     "description": "Active flag (true/false)",
                     "type": "string"
                   },
+                  "title": {
                   "title": {
                     "description": "Template title",
                     "type": "string"
@@ -15833,6 +16648,9 @@
                 },
                 "required": [
                   "file",
+                  "title",
+                  "description",
+                  "isActive"
                   "title",
                   "description",
                   "isActive"
@@ -16840,10 +17658,13 @@
         "parameters": [
           {
             "description": "Filter by template group",
+            "description": "Filter by template group",
             "explode": false,
             "in": "query",
             "name": "templateGroup",
+            "name": "templateGroup",
             "schema": {
+              "description": "Filter by template group",
               "description": "Filter by template group",
               "type": "string"
             }
@@ -17284,6 +18105,534 @@
         "summary": "Update translation",
         "tags": [
           "Admin - Notifications"
+        ]
+      }
+    },
+    "/api/v1/admin/sectors": {
+      "get": {
+        "operationId": "listSectors",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSectorsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List sectors",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "post": {
+        "operationId": "createSector",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSectorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSectorResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/admin/sectors/{id}": {
+      "delete": {
+        "operationId": "deleteSector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSectorResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "get": {
+        "operationId": "getSector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "put": {
+        "operationId": "updateSector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSectorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateSectorResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update sector",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/admin/tags": {
+      "get": {
+        "operationId": "listTags",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTagsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List tags",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "post": {
+        "operationId": "createTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTagRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTagResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create tag",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/admin/tags/{id}": {
+      "delete": {
+        "operationId": "deleteTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateTagResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete tag",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "get": {
+        "operationId": "getTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get tag",
+        "tags": [
+          "Admin - Taxonomy"
+        ]
+      },
+      "put": {
+        "operationId": "updateTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTagRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateTagResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update tag",
+        "tags": [
+          "Admin - Taxonomy"
         ]
       }
     },
@@ -20282,6 +21631,8 @@
       "get": {
         "description": "Lists discussion threads filtered by user's business profile taxonomy.",
         "operationId": "listCommunityThreads",
+        "description": "Lists discussion threads filtered by user's business profile taxonomy.",
+        "operationId": "listCommunityThreads",
         "parameters": [
           {
             "description": "Search term",
@@ -20370,7 +21721,13 @@
                 "sectorIds": {
                   "contentType": "text/plain"
                 },
+                "sectorIds": {
+                  "contentType": "text/plain"
+                },
                 "slug": {
+                  "contentType": "text/plain"
+                },
+                "tagIds": {
                   "contentType": "text/plain"
                 },
                 "tagIds": {
@@ -20402,8 +21759,16 @@
                     "description": "Sector IDs (comma-separated)",
                     "type": "string"
                   },
+                  "sectorIds": {
+                    "description": "Sector IDs (comma-separated)",
+                    "type": "string"
+                  },
                   "slug": {
                     "description": "Thread slug",
+                    "type": "string"
+                  },
+                  "tagIds": {
+                    "description": "Tag IDs (comma-separated)",
                     "type": "string"
                   },
                   "tagIds": {
@@ -20418,7 +21783,6 @@
                 "required": [
                   "title",
                   "slug",
-                  "description",
                   "initialPostContent"
                 ],
                 "type": "object"
@@ -20460,26 +21824,96 @@
       }
     },
     "/api/v1/community/threads/all": {
+    "/api/v1/community/threads/all": {
       "get": {
+        "description": "Lists all discussion threads without taxonomy filtering.",
+        "operationId": "listAllCommunityThreads",
         "description": "Lists all discussion threads without taxonomy filtering.",
         "operationId": "listAllCommunityThreads",
         "parameters": [
           {
             "description": "Search term",
+            "description": "Search term",
             "explode": false,
             "in": "query",
             "name": "search",
+            "name": "search",
             "schema": {
+              "description": "Search term",
               "description": "Search term",
               "type": "string"
             }
           },
           {
             "description": "Page number",
+            "description": "Page number",
             "explode": false,
             "in": "query",
             "name": "page",
+            "name": "page",
             "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Page size",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListThreadsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List all discussion threads",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/search": {
+      "get": {
+        "description": "Searches threads by keyword, filtered by user's business profile taxonomy.",
+        "operationId": "searchCommunityThreads",
+        "parameters": [
+          {
+            "description": "Search keyword",
+            "explode": false,
+            "in": "query",
+            "name": "keyword",
+            "schema": {
+              "description": "Search keyword",
               "description": "Page number",
               "format": "int64",
               "type": "integer"
@@ -20649,6 +22083,53 @@
           "Community"
         ]
       },
+      "delete": {
+        "description": "Deletes a thread (author only, no replies beyond the initial post).",
+        "operationId": "deleteCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete discussion thread",
+        "tags": [
+          "Community"
+        ]
+      },
       "get": {
         "description": "Retrieves thread details.",
         "operationId": "getCommunityThread",
@@ -20692,6 +22173,108 @@
           }
         ],
         "summary": "Get discussion thread",
+        "tags": [
+          "Community"
+        ]
+      },
+      "patch": {
+        "description": "Updates a thread's metadata (author only, active threads only).",
+        "operationId": "updateCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "description": {
+                  "contentType": "text/plain"
+                },
+                "isPinned": {
+                  "contentType": "text/plain"
+                },
+                "sectorIds": {
+                  "contentType": "text/plain"
+                },
+                "status": {
+                  "contentType": "text/plain"
+                },
+                "tagIds": {
+                  "contentType": "text/plain"
+                },
+                "title": {
+                  "contentType": "text/plain"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "Thread description",
+                    "type": "string"
+                  },
+                  "isPinned": {
+                    "description": "Pinned flag (true/false)",
+                    "type": "string"
+                  },
+                  "sectorIds": {
+                    "description": "Sector IDs (comma-separated)",
+                    "type": "string"
+                  },
+                  "status": {
+                    "description": "Thread status",
+                    "type": "string"
+                  },
+                  "tagIds": {
+                    "description": "Tag IDs (comma-separated)",
+                    "type": "string"
+                  },
+                  "title": {
+                    "description": "Thread title",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateThreadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update discussion thread",
         "tags": [
           "Community"
         ]
@@ -21319,6 +22902,55 @@
         ]
       }
     },
+    "/api/v1/community/threads/{id}/read": {
+      "post": {
+        "description": "Marks a thread as read for the current user.",
+        "operationId": "markThreadRead",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkThreadReadResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Mark thread as read",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
     "/api/v1/community/threads/{id}/reports": {
       "post": {
         "description": "Reports a discussion thread.",
@@ -21623,92 +23255,6 @@
           }
         ],
         "summary": "List bookmarks",
-        "tags": [
-          "Guides"
-        ]
-      }
-    },
-    "/api/v1/guides/completion-stats": {
-      "get": {
-        "description": "Returns aggregate completion statistics for dashboard.",
-        "operationId": "getCompletionStats",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CompletionStatsDTO"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Get completion statistics",
-        "tags": [
-          "Guides"
-        ]
-      }
-    },
-    "/api/v1/guides/in-progress": {
-      "get": {
-        "description": "Retrieves guides the user has started but not completed, with progress data.",
-        "operationId": "getInProgressGuides",
-        "parameters": [
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetInProgressGuidesResponseBody"
-                }
-              }
-            },
-            "description": "OK"
-          },
-          "default": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                }
-              }
-            },
-            "description": "Error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "summary": "Get in-progress guides",
         "tags": [
           "Guides"
         ]
@@ -22599,16 +24145,20 @@
       }
     },
     "/api/v1/library/templates/{groupId}": {
+    "/api/v1/library/templates/{groupId}": {
       "get": {
         "description": "Gets a template group with its language variants.",
         "operationId": "LibraryGetTemplateGroup",
         "parameters": [
           {
             "description": "Template group ID",
+            "description": "Template group ID",
             "in": "path",
+            "name": "groupId",
             "name": "groupId",
             "required": true,
             "schema": {
+              "description": "Template group ID",
               "description": "Template group ID",
               "type": "string"
             }
@@ -22653,16 +24203,20 @@
       }
     },
     "/api/v1/library/templates/{groupId}/download": {
+    "/api/v1/library/templates/{groupId}/download": {
       "get": {
         "description": "Generates a presigned download URL for a template.",
         "operationId": "LibraryDownloadTemplate",
         "parameters": [
           {
             "description": "Template group ID",
+            "description": "Template group ID",
             "in": "path",
+            "name": "groupId",
             "name": "groupId",
             "required": true,
             "schema": {
+              "description": "Template group ID",
               "description": "Template group ID",
               "type": "string"
             }
@@ -24054,6 +25608,246 @@
         "summary": "Update role",
         "tags": [
           "Roles"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/sectors": {
+      "get": {
+        "description": "Lists all available sectors.",
+        "operationId": "listTaxonomySectors",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSectorsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List sectors",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/sectors/{id}": {
+      "get": {
+        "description": "Retrieves a single sector by ID.",
+        "operationId": "getTaxonomySector",
+        "parameters": [
+          {
+            "description": "Sector ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Sector ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get sector",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/tags": {
+      "get": {
+        "description": "Lists all available tags.",
+        "operationId": "listTaxonomyTags",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Search term",
+            "explode": false,
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "description": "Search term",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTagsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List tags",
+        "tags": [
+          "Taxonomy"
+        ]
+      }
+    },
+    "/api/v1/taxonomy/tags/{id}": {
+      "get": {
+        "description": "Retrieves a single tag by ID.",
+        "operationId": "getTaxonomyTag",
+        "parameters": [
+          {
+            "description": "Tag ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Tag ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get tag",
+        "tags": [
+          "Taxonomy"
         ]
       }
     },

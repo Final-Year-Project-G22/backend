@@ -100,3 +100,39 @@ func (r *discussionPostRepository) IsAuthor(ctx context.Context, postID, account
 	}
 	return count > 0, nil
 }
+
+func (r *discussionPostRepository) CountUnreadByThreadIDs(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	result := make(map[uuid.UUID]int, len(threadIDs))
+	for _, id := range threadIDs {
+		result[id] = 0
+	}
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	var rows []struct {
+		ThreadID    uuid.UUID `gorm:"column:thread_id"`
+		UnreadCount int       `gorm:"column:unread_count"`
+	}
+
+	if err := r.getDB(ctx).Raw(`
+		SELECT
+			d.thread_id,
+			COUNT(*) as unread_count
+		FROM discussion_posts d
+		LEFT JOIN user_thread_settings u
+			ON u.thread_id = d.thread_id AND u.account_id = ?
+		WHERE d.thread_id IN ?
+			AND d.author_account_id != ?
+			AND (u.last_read_at IS NULL OR d.created_at > u.last_read_at)
+		GROUP BY d.thread_id
+	`, accountID, threadIDs, accountID).Scan(&rows).Error; err != nil {
+		r.logger.Error("Failed to count unread posts", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+
+	for _, row := range rows {
+		result[row.ThreadID] = row.UnreadCount
+	}
+	return result, nil
+}

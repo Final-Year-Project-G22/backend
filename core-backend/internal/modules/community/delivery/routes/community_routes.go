@@ -193,6 +193,17 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.CommunityHandler.HandleUnfollowThread)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "markThreadRead",
+		Method:      "POST",
+		Path:        communityBase + "/threads/{id}/read",
+		Summary:     "Mark thread as read",
+		Description: "Marks a thread as read for the current user.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleMarkThreadRead)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "followCommunityCategory",
 		Method:      "POST",
 		Path:        communityBase + "/categories/{id}/follow",

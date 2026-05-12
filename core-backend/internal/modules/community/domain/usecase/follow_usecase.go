@@ -15,4 +15,7 @@ type CommunityFollowUsecase interface {
 	UnfollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
 	ListFollowedThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserThreadSettings, error)
 	ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error)
+	ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
+	ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error)
+	MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error
 }

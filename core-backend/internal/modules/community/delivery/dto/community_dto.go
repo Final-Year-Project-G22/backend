@@ -37,6 +37,8 @@ type ThreadDTO struct {
 	AuthorDisplay  string              `json:"authorDisplayName" doc:"Author display name"`
 	AuthorAvatar   *string             `json:"authorAvatarUrl,omitempty" doc:"Author avatar URL"`
 	IsPinned       bool                `json:"isPinned" doc:"Pinned flag"`
+	IsFollowed     bool                `json:"isFollowed" doc:"Whether current user follows this thread"`
+	UnreadCount    int                 `json:"unreadCount" doc:"Number of unread posts/replies"`
 	Status         entity.ThreadStatus `json:"status" doc:"Thread status"`
 	ViewCount      int                 `json:"viewCount" doc:"View count"`
 	ShareCount     int                 `json:"shareCount" doc:"Share count"`
@@ -161,7 +163,7 @@ type CreateThreadFormData struct {
 	ParentThreadID     string `form:"parentThreadId" doc:"Parent thread ID for sub-threads" required:"false"`
 	Title              string `form:"title" doc:"Thread title"`
 	Slug               string `form:"slug" doc:"Thread slug"`
-	Description        string `form:"description" doc:"Thread description"`
+	Description        string `form:"description" doc:"Thread description" required:"false"`
 	InitialPostContent string `form:"initialPostContent" doc:"Initial post content"`
 	AttachmentIds      string `form:"attachmentIds" doc:"Pre-uploaded attachment IDs (comma-separated)" required:"false"`
 }
@@ -322,6 +324,18 @@ type FollowResponseBody struct {
 	Message string `json:"message" doc:"Success message"`
 }
 
+type MarkThreadReadInput struct {
+	ThreadID uuid.UUID `path:"id" doc:"Thread ID"`
+}
+
+type MarkThreadReadOutput struct {
+	Body MarkThreadReadResponseBody
+}
+
+type MarkThreadReadResponseBody struct {
+	Message string `json:"message" doc:"Success message"`
+}
+
 type ListFollowedThreadsInput struct {
 	Page     int    `query:"page" doc:"Page number"`
 	PageSize int    `query:"pageSize" doc:"Page size"`
@@ -457,7 +471,7 @@ func ToCategoryDTO(category *entity.CommunityCategory) *CategoryDTO {
 	}
 }
 
-func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta) *ThreadDTO {
+func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFollowed bool, unreadCount int) *ThreadDTO {
 	if thread == nil {
 		return nil
 	}
@@ -485,6 +499,8 @@ func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta) *Threa
 		AuthorDisplay:  displayName,
 		AuthorAvatar:   authorAvatarURL,
 		IsPinned:       thread.IsPinned,
+		IsFollowed:     isFollowed,
+		UnreadCount:    unreadCount,
 		Status:         thread.Status,
 		ViewCount:      thread.ViewCount,
 		ShareCount:     thread.ShareCount,

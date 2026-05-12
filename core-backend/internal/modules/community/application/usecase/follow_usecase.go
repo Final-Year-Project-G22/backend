@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	communityerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/error"
@@ -15,6 +16,7 @@ import (
 type communityFollowUsecase struct {
 	catRepo              repository.CommunityCategoryRepository
 	threadRepo           repository.DiscussionThreadRepository
+	postRepo             repository.DiscussionPostRepository
 	threadSettingsRepo   repository.UserThreadSettingsRepository
 	categorySettingsRepo repository.UserCategorySettingsRepository
 	blockRepo            repository.ThreadBlockedUserRepository
@@ -23,6 +25,7 @@ type communityFollowUsecase struct {
 func NewCommunityFollowUsecase(
 	catRepo repository.CommunityCategoryRepository,
 	threadRepo repository.DiscussionThreadRepository,
+	postRepo repository.DiscussionPostRepository,
 	threadSettingsRepo repository.UserThreadSettingsRepository,
 	categorySettingsRepo repository.UserCategorySettingsRepository,
 	blockRepo repository.ThreadBlockedUserRepository,
@@ -30,6 +33,7 @@ func NewCommunityFollowUsecase(
 	return &communityFollowUsecase{
 		catRepo:              catRepo,
 		threadRepo:           threadRepo,
+		postRepo:             postRepo,
 		threadSettingsRepo:   threadSettingsRepo,
 		categorySettingsRepo: categorySettingsRepo,
 		blockRepo:            blockRepo,
@@ -83,6 +87,18 @@ func (u *communityFollowUsecase) ListFollowedThreads(ctx context.Context, accoun
 
 func (u *communityFollowUsecase) ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error) {
 	return u.categorySettingsRepo.ListFollowed(ctx, accountID, q)
+}
+
+func (u *communityFollowUsecase) ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	return u.threadSettingsRepo.ListFollowStatus(ctx, accountID, threadIDs)
+}
+
+func (u *communityFollowUsecase) ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	return u.postRepo.CountUnreadByThreadIDs(ctx, accountID, threadIDs)
+}
+
+func (u *communityFollowUsecase) MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error {
+	return u.threadSettingsRepo.UpdateLastRead(ctx, accountID, threadID, time.Now().UTC())
 }
 
 func (u *communityFollowUsecase) ensureCategoryActive(ctx context.Context, categoryID uuid.UUID) error {

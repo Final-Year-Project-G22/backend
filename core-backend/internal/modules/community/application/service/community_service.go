@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
@@ -22,6 +23,10 @@ type CommunityService interface {
 	UnfollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
 	ListFollowedThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserThreadSettings, error)
 	ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error)
+	ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
+	ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error)
+	MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error
+	RecordThreadView(ctx context.Context, accountID, threadID uuid.UUID) error
 	ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error)
 	ReportPost(ctx context.Context, reporterID uuid.UUID, input usecase.ReportPostInput) (*entity.ContentReport, error)
 	ReportUser(ctx context.Context, reporterID uuid.UUID, input usecase.ReportUserInput) (*entity.ContentReport, error)
@@ -34,6 +39,7 @@ type communityService struct {
 	blockUsecase      usecase.ThreadBlockUsecase
 	followUsecase     usecase.CommunityFollowUsecase
 	reportUsecase     usecase.ContentReportUsecase
+	threadRepo        repository.DiscussionThreadRepository
 }
 
 func NewCommunityService(
@@ -43,6 +49,7 @@ func NewCommunityService(
 	blockUsecase usecase.ThreadBlockUsecase,
 	followUsecase usecase.CommunityFollowUsecase,
 	reportUsecase usecase.ContentReportUsecase,
+	threadRepo repository.DiscussionThreadRepository,
 ) CommunityService {
 	return &communityService{
 		threadUsecase:     threadUsecase,
@@ -51,6 +58,7 @@ func NewCommunityService(
 		blockUsecase:      blockUsecase,
 		followUsecase:     followUsecase,
 		reportUsecase:     reportUsecase,
+		threadRepo:        threadRepo,
 	}
 }
 
@@ -164,6 +172,22 @@ func (s *communityService) ListFollowedThreads(ctx context.Context, accountID uu
 
 func (s *communityService) ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error) {
 	return s.followUsecase.ListFollowedCategories(ctx, accountID, q)
+}
+
+func (s *communityService) ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	return s.followUsecase.ListThreadFollowStatus(ctx, accountID, threadIDs)
+}
+
+func (s *communityService) ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	return s.followUsecase.ListThreadUnreadCounts(ctx, accountID, threadIDs)
+}
+
+func (s *communityService) MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error {
+	return s.followUsecase.MarkThreadRead(ctx, accountID, threadID)
+}
+
+func (s *communityService) RecordThreadView(ctx context.Context, accountID, threadID uuid.UUID) error {
+	return s.threadRepo.IncrementViews(ctx, threadID)
 }
 
 func (s *communityService) ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error) {
