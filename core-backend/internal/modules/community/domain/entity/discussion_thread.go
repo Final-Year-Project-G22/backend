@@ -3,14 +3,15 @@ package entity
 import (
 	"time"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/dbtypes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/model"
 	"github.com/google/uuid"
 )
 
 type DiscussionThread struct {
 	model.BaseModel `gorm:"embedded"`
-	SectorIDs       []uuid.UUID          `gorm:"type:uuid[];index:idx_discussion_threads_sector_ids,using:gin"`
-	TagIDs          []uuid.UUID          `gorm:"type:uuid[];index:idx_discussion_threads_tag_ids,using:gin"`
+	SectorIDs       dbtypes.UUIDArray    `gorm:"type:uuid[];index:idx_discussion_threads_sector_ids,using:gin"`
+	TagIDs          dbtypes.UUIDArray    `gorm:"type:uuid[];index:idx_discussion_threads_tag_ids,using:gin"`
 	ParentThreadID  *uuid.UUID           `gorm:"type:uuid;index:idx_threads_parent;uniqueIndex:idx_threads_slug_per_parent,priority:1"`
 	ParentThread    *DiscussionThread    `gorm:"foreignKey:ParentThreadID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	SubThreads      []DiscussionThread   `gorm:"foreignKey:ParentThreadID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`

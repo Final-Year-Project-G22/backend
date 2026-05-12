@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -53,13 +54,12 @@ func (h *TaxonomyHandler) HandleListTags(ctx context.Context, input *dto.ListTag
 		q.PageSize = input.PageSize
 	}
 	q.Search = input.Search
-	q.SortBy = []string{"sort_order"}
-	q.SortOrder = []string{"asc"}
+	q.Preload = []string{"Translations"}
 
 	result := h.tagRepo.FindAll(ctx, q)
 	items := make([]dto.TagResponse, 0, len(result.Data))
-	for _, t := range result.Data {
-		items = append(items, tagToResponse(t))
+	for _, tag := range result.Data {
+		items = append(items, tagToResponse(tag))
 	}
 	return &dto.ListTagsOutput{Body: dto.ListTagsResponseBody{
 		Data:       items,
@@ -71,17 +71,19 @@ func (h *TaxonomyHandler) HandleListTags(ctx context.Context, input *dto.ListTag
 }
 
 func (h *TaxonomyHandler) HandleGetSector(ctx context.Context, input *dto.GetSectorInput) (*dto.GetSectorOutput, error) {
-	sector, err := h.sectorRepo.GetByID(ctx, input.ID)
-	if err != nil {
+	var sector entity.Sector
+	if err := h.sectorRepo.GetDB().WithContext(ctx).
+		Preload("Translations").First(&sector, "id = ?", input.ID).Error; err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.GetSectorOutput{Body: sectorToResponse(sector)}, nil
+	return &dto.GetSectorOutput{Body: sectorToResponse(&sector)}, nil
 }
 
 func (h *TaxonomyHandler) HandleGetTag(ctx context.Context, input *dto.GetTagInput) (*dto.GetTagOutput, error) {
-	tag, err := h.tagRepo.GetByID(ctx, input.ID)
-	if err != nil {
+	var tag entity.Tag
+	if err := h.tagRepo.GetDB().WithContext(ctx).
+		Preload("Translations").First(&tag, "id = ?", input.ID).Error; err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.GetTagOutput{Body: tagToResponse(tag)}, nil
+	return &dto.GetTagOutput{Body: tagToResponse(&tag)}, nil
 }
