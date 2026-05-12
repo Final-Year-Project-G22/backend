@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/dbtypes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -15,7 +16,7 @@ type Sector struct {
 	Slug         string              `gorm:"type:varchar(100);uniqueIndex;not null"`
 	ParentID     *uuid.UUID          `gorm:"type:uuid;index"`
 	Parent       *Sector             `gorm:"foreignKey:ParentID"`
-	AncestorIDs  []uuid.UUID         `gorm:"type:uuid[];index:idx_sectors_ancestor_ids,using:gin"`
+	AncestorIDs  dbtypes.UUIDArray   `gorm:"type:uuid[];index:idx_sectors_ancestor_ids,using:gin"`
 	Translations []SectorTranslation `gorm:"foreignKey:SectorID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 

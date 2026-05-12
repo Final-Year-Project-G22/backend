@@ -128,6 +128,31 @@ func (r *userThreadSettingsRepository) UpdateLastRead(ctx context.Context, accou
 	return nil
 }
 
+func (r *userThreadSettingsRepository) ListFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	result := make(map[uuid.UUID]bool, len(threadIDs))
+	for _, id := range threadIDs {
+		result[id] = false
+	}
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	var rows []struct {
+		ThreadID uuid.UUID `gorm:"column:thread_id"`
+	}
+	if err := r.getDB(ctx).
+		Model(&entity.UserThreadSettings{}).
+		Where("account_id = ? AND thread_id IN ? AND is_following = ?", accountID, threadIDs, true).
+		Pluck("thread_id", &rows).Error; err != nil {
+		r.logger.Error("Failed to list thread follow status", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	for _, row := range rows {
+		result[row.ThreadID] = true
+	}
+	return result, nil
+}
+
 func (r *userThreadSettingsRepository) Delete(ctx context.Context, accountID, threadID uuid.UUID) error {
 	result := r.getDB(ctx).Where("account_id = ? AND thread_id = ?", accountID, threadID).Delete(&entity.UserThreadSettings{})
 	if result.Error != nil {
