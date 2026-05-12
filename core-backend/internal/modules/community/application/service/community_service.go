@@ -25,6 +25,7 @@ type CommunityService interface {
 	ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error)
 	ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
 	ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error)
+	ListThreadSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
 	MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error
 	RecordThreadView(ctx context.Context, accountID, threadID uuid.UUID) error
 	ReportThread(ctx context.Context, reporterID uuid.UUID, input usecase.ReportThreadInput) (*entity.ContentReport, error)
@@ -180,6 +181,10 @@ func (s *communityService) ListThreadFollowStatus(ctx context.Context, accountID
 
 func (s *communityService) ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error) {
 	return s.followUsecase.ListThreadUnreadCounts(ctx, accountID, threadIDs)
+}
+
+func (s *communityService) ListThreadSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	return s.followUsecase.ListThreadSolutionStatus(ctx, threadIDs)
 }
 
 func (s *communityService) MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error {

@@ -136,3 +136,27 @@ func (r *discussionPostRepository) CountUnreadByThreadIDs(ctx context.Context, a
 	}
 	return result, nil
 }
+
+func (r *discussionPostRepository) ListSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	result := make(map[uuid.UUID]bool, len(threadIDs))
+	for _, id := range threadIDs {
+		result[id] = false
+	}
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	var rows []struct {
+		ThreadID uuid.UUID `gorm:"column:thread_id"`
+	}
+	if err := r.getDB(ctx).Model(&entity.DiscussionPost{}).
+		Where("thread_id IN ? AND is_solution = ?", threadIDs, true).
+		Pluck("thread_id", &rows).Error; err != nil {
+		r.logger.Error("Failed to list solution status", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	for _, row := range rows {
+		result[row.ThreadID] = true
+	}
+	return result, nil
+}
