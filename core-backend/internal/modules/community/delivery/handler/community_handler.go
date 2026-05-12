@@ -89,12 +89,16 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	solutionStatus, err := h.communityService.ListThreadSolutionStatus(ctx, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 
 	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
 		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID]))
+		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
 	}
 
 	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
@@ -121,12 +125,16 @@ func (h *CommunityHandler) HandleListAllThreads(ctx context.Context, input *dto.
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	solutionStatus, err := h.communityService.ListThreadSolutionStatus(ctx, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 
 	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
 		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID]))
+		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
 	}
 
 	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
@@ -153,12 +161,16 @@ func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.S
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	solutionStatus, err := h.communityService.ListThreadSolutionStatus(ctx, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 
 	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
 		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID]))
+		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
 	}
 	return &dto.SearchThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
 }
@@ -178,8 +190,12 @@ func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetTh
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	solutionStatus, err := h.communityService.ListThreadSolutionStatus(ctx, []uuid.UUID{thread.ID})
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 	authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, make(map[uuid.UUID]*dto.AuthorMeta))
-	return &dto.GetThreadOutput{Body: dto.GetThreadResponseBody{Thread: dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID])}}, nil
+	return &dto.GetThreadOutput{Body: dto.GetThreadResponseBody{Thread: dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID])}}, nil
 }
 
 func (h *CommunityHandler) HandleListPosts(ctx context.Context, input *dto.ListPostsInput) (*dto.ListPostsOutput, error) {
@@ -386,12 +402,16 @@ func (h *CommunityHandler) HandleListFollowedThreads(ctx context.Context, input 
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	solutionStatus, err := h.communityService.ListThreadSolutionStatus(ctx, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 
 	items := make([]*dto.ThreadDTO, 0, len(settings))
 	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	for _, setting := range settings {
 		authorMeta := h.resolveAuthorMeta(ctx, setting.Thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(&setting.Thread, authorMeta, true, unreadCounts[setting.Thread.ID]))
+		items = append(items, dto.ToThreadDTO(&setting.Thread, authorMeta, true, unreadCounts[setting.Thread.ID], solutionStatus[setting.Thread.ID]))
 	}
 	return &dto.ListFollowedThreadsOutput{Body: dto.ListFollowedThreadsResponseBody{Threads: items}}, nil
 }

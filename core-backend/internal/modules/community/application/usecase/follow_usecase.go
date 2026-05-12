@@ -101,6 +101,10 @@ func (u *communityFollowUsecase) MarkThreadRead(ctx context.Context, accountID, 
 	return u.threadSettingsRepo.UpdateLastRead(ctx, accountID, threadID, time.Now().UTC())
 }
 
+func (u *communityFollowUsecase) ListThreadSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	return u.postRepo.ListSolutionStatus(ctx, threadIDs)
+}
+
 func (u *communityFollowUsecase) ensureCategoryActive(ctx context.Context, categoryID uuid.UUID) error {
 	category, err := u.catRepo.GetByID(ctx, categoryID)
 	if err != nil {
