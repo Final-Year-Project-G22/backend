@@ -41,14 +41,37 @@ func NewGuideAdminUsecase(
 	}
 }
 
-func (u *guideAdminUsecase) ListGuides(ctx context.Context, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.Guide], error) {
+func (u *guideAdminUsecase) ListGuides(ctx context.Context, q query.QueryOptions, locale constants.Locale) (sharedRepo.PaginatedResult[entity.Guide], error) {
 	if q.Preload == nil {
-		q.Preload = []string{"Translations"}
+		if locale != "" {
+			q.Preload = []string{"Translations"}
+		}
 	}
-	return u.guideRepo.FindAll(ctx, q), nil
+	result := u.guideRepo.FindAll(ctx, q)
+
+	if locale != "" && len(result.Data) > 0 {
+		for i, guide := range result.Data {
+			var filtered []entity.GuideTranslation
+			for _, t := range guide.Translations {
+				if t.Language == string(locale) {
+					filtered = append(filtered, t)
+				}
+			}
+			if len(filtered) == 0 {
+				for _, t := range guide.Translations {
+					if t.Language == string(constants.LocaleEnglish) {
+						filtered = append(filtered, t)
+					}
+				}
+			}
+			result.Data[i].Translations = filtered
+		}
+	}
+
+	return result, nil
 }
 
-func (u *guideAdminUsecase) ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions) (sharedRepo.PaginatedResult[entity.GuideStep], error) {
+func (u *guideAdminUsecase) ListGuideSteps(ctx context.Context, guideID uuid.UUID, q query.QueryOptions, locale constants.Locale) (sharedRepo.PaginatedResult[entity.GuideStep], error) {
 	if q.Filters == nil {
 		q.Filters = make(map[string]interface{})
 	}
@@ -56,7 +79,28 @@ func (u *guideAdminUsecase) ListGuideSteps(ctx context.Context, guideID uuid.UUI
 	if q.Preload == nil {
 		q.Preload = []string{"Translations"}
 	}
-	return u.stepRepo.FindAll(ctx, q), nil
+	result := u.stepRepo.FindAll(ctx, q)
+
+	if locale != "" && len(result.Data) > 0 {
+		for i, step := range result.Data {
+			var filtered []entity.GuideStepTranslation
+			for _, t := range step.Translations {
+				if t.Language == string(locale) {
+					filtered = append(filtered, t)
+				}
+			}
+			if len(filtered) == 0 {
+				for _, t := range step.Translations {
+					if t.Language == string(constants.LocaleEnglish) {
+						filtered = append(filtered, t)
+					}
+				}
+			}
+			result.Data[i].Translations = filtered
+		}
+	}
+
+	return result, nil
 }
 
 func (u *guideAdminUsecase) GetGuideDetail(ctx context.Context, guideID uuid.UUID, locale constants.Locale) (*entity.Guide, error) {
@@ -109,7 +153,7 @@ func (u *guideAdminUsecase) CreateGuide(ctx context.Context, input usecase.Creat
 		if err := u.guideRepo.Create(txCtx, guide); err != nil {
 			return err
 		}
-		if err := u.setGuideTranslations(txCtx, guide.ID, input.Translations); err != nil {
+		if err := u.setGuideTranslations(txCtx, guide.ID, input.Translations, false); err != nil {
 			return err
 		}
 		return u.setGuideConditions(txCtx, guide.ID, input.Conditions)
@@ -145,7 +189,7 @@ func (u *guideAdminUsecase) UpdateGuide(ctx context.Context, id uuid.UUID, input
 			return err
 		}
 		if input.Translations != nil {
-			if err := u.setGuideTranslations(txCtx, id, input.Translations); err != nil {
+			if err := u.setGuideTranslations(txCtx, id, input.Translations, input.TranslationsMerge); err != nil {
 				return err
 			}
 		}
@@ -180,9 +224,9 @@ func (u *guideAdminUsecase) RemoveGuideCondition(ctx context.Context, condID uui
 	})
 }
 
-func (u *guideAdminUsecase) SetGuideTranslations(ctx context.Context, guideID uuid.UUID, translations []usecase.TranslationInput) error {
+func (u *guideAdminUsecase) SetGuideTranslations(ctx context.Context, guideID uuid.UUID, translations []usecase.TranslationInput, merge bool) error {
 	return u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		return u.setGuideTranslations(txCtx, guideID, translations)
+		return u.setGuideTranslations(txCtx, guideID, translations, merge)
 	})
 }
 
@@ -212,7 +256,7 @@ func (u *guideAdminUsecase) CreateStep(ctx context.Context, input usecase.Create
 		if err := u.stepRepo.Create(txCtx, step); err != nil {
 			return err
 		}
-		if err := u.setStepTranslations(txCtx, step.ID, input.Translations); err != nil {
+		if err := u.setStepTranslations(txCtx, step.ID, input.Translations, false); err != nil {
 			return err
 		}
 		if err := u.setStepConditions(txCtx, step.ID, input.Conditions); err != nil {
@@ -263,7 +307,7 @@ func (u *guideAdminUsecase) UpdateStep(ctx context.Context, id uuid.UUID, input 
 			return err
 		}
 		if input.Translations != nil {
-			if err := u.setStepTranslations(txCtx, id, input.Translations); err != nil {
+			if err := u.setStepTranslations(txCtx, id, input.Translations, input.TranslationsMerge); err != nil {
 				return err
 			}
 		}
@@ -368,9 +412,9 @@ func (u *guideAdminUsecase) RemoveStepDependency(ctx context.Context, depID uuid
 	})
 }
 
-func (u *guideAdminUsecase) SetStepTranslations(ctx context.Context, stepID uuid.UUID, translations []usecase.StepTranslationInput) error {
+func (u *guideAdminUsecase) SetStepTranslations(ctx context.Context, stepID uuid.UUID, translations []usecase.StepTranslationInput, merge bool) error {
 	return u.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		return u.setStepTranslations(txCtx, stepID, translations)
+		return u.setStepTranslations(txCtx, stepID, translations, merge)
 	})
 }
 
@@ -384,7 +428,7 @@ func (u *guideAdminUsecase) RevertStepToVersion(ctx context.Context, stepID uuid
 	return guideerror.ErrVersionRestoreNotSupported
 }
 
-func (u *guideAdminUsecase) setGuideTranslations(ctx context.Context, guideID uuid.UUID, translations []usecase.TranslationInput) error {
+func (u *guideAdminUsecase) setGuideTranslations(ctx context.Context, guideID uuid.UUID, translations []usecase.TranslationInput, merge bool) error {
 	current, err := u.guideRepo.GetTranslations(ctx, guideID)
 	if err != nil {
 		return err
@@ -404,17 +448,19 @@ func (u *guideAdminUsecase) setGuideTranslations(ctx context.Context, guideID uu
 			return err
 		}
 	}
-	for _, existing := range current {
-		if _, ok := incoming[existing.Language]; !ok {
-			if err := u.guideRepo.DeleteTranslation(ctx, guideID, existing.Language); err != nil {
-				return err
+	if !merge {
+		for _, existing := range current {
+			if _, ok := incoming[existing.Language]; !ok {
+				if err := u.guideRepo.DeleteTranslation(ctx, guideID, existing.Language); err != nil {
+					return err
+				}
 			}
 		}
 	}
 	return nil
 }
 
-func (u *guideAdminUsecase) setStepTranslations(ctx context.Context, stepID uuid.UUID, translations []usecase.StepTranslationInput) error {
+func (u *guideAdminUsecase) setStepTranslations(ctx context.Context, stepID uuid.UUID, translations []usecase.StepTranslationInput, merge bool) error {
 	current, err := u.stepRepo.GetTranslations(ctx, stepID)
 	if err != nil {
 		return err
@@ -435,10 +481,12 @@ func (u *guideAdminUsecase) setStepTranslations(ctx context.Context, stepID uuid
 			return err
 		}
 	}
-	for _, existing := range current {
-		if _, ok := incoming[existing.Language]; !ok {
-			if err := u.stepRepo.DeleteTranslation(ctx, stepID, existing.Language); err != nil {
-				return err
+	if !merge {
+		for _, existing := range current {
+			if _, ok := incoming[existing.Language]; !ok {
+				if err := u.stepRepo.DeleteTranslation(ctx, stepID, existing.Language); err != nil {
+					return err
+				}
 			}
 		}
 	}

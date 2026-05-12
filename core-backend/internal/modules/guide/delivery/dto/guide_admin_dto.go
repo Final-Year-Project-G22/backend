@@ -180,13 +180,14 @@ type CreateGuideResponseBody struct {
 }
 
 type UpdateGuideRequest struct {
-	SectorIDs    []uuid.UUID              `json:"sectorIds,omitempty" doc:"Target sector IDs"`
-	TagIDs       []uuid.UUID              `json:"tagIds,omitempty" doc:"Target tag IDs"`
-	Slug         *string                  `json:"slug,omitempty" doc:"Guide slug" maxLength:"100"`
-	Icon         *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
-	SortOrder    *int                     `json:"sortOrder,omitempty" doc:"Display order"`
-	Translations []UpdateGuideTranslation `json:"translations,omitempty" doc:"Localized translations"`
-	Conditions   []UpdateGuideCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+	SectorIDs       []uuid.UUID              `json:"sectorIds,omitempty" doc:"Target sector IDs"`
+	TagIDs          []uuid.UUID              `json:"tagIds,omitempty" doc:"Target tag IDs"`
+	Slug            *string                  `json:"slug,omitempty" doc:"Guide slug" maxLength:"100"`
+	Icon            *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	SortOrder       *int                     `json:"sortOrder,omitempty" doc:"Display order"`
+	Translations    []UpdateGuideTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	TranslationMode *string                  `json:"translationMode,omitempty" doc:"Translation mode: 'merge' to upsert without deleting, anything else or absent for full replacement" enum:"merge,replace"`
+	Conditions      []UpdateGuideCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
 }
 
 type UpdateGuideTranslation struct {
@@ -264,8 +265,9 @@ type SetGuideTranslationsRequest struct {
 }
 
 type SetGuideTranslationsInput struct {
-	ID   uuid.UUID `path:"id" doc:"Guide ID"`
-	Body SetGuideTranslationsRequest
+	ID              uuid.UUID `path:"id" doc:"Guide ID"`
+	TranslationMode string    `query:"translationMode" doc:"Translation mode: 'merge' to upsert without deleting, absent for full replacement" enum:"merge,replace"`
+	Body            SetGuideTranslationsRequest
 }
 
 type SetGuideTranslationsOutput struct {
@@ -336,6 +338,7 @@ type UpdateStepRequest struct {
 	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
 	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
 	Translations    []UpdateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	TranslationMode *string                 `json:"translationMode,omitempty" doc:"Translation mode: 'merge' to upsert without deleting, anything else or absent for full replacement" enum:"merge,replace"`
 	Conditions      []UpdateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
 	Dependencies    []UpdateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
 }
@@ -468,8 +471,9 @@ type SetStepTranslationsRequest struct {
 }
 
 type SetStepTranslationsInput struct {
-	ID   uuid.UUID `path:"id" doc:"Step ID"`
-	Body SetStepTranslationsRequest
+	ID              uuid.UUID `path:"id" doc:"Step ID"`
+	TranslationMode string    `query:"translationMode" doc:"Translation mode: 'merge' to upsert without deleting, absent for full replacement" enum:"merge,replace"`
+	Body            SetStepTranslationsRequest
 }
 
 type SetStepTranslationsOutput struct {
@@ -735,14 +739,16 @@ func ToUpdateGuideInput(body UpdateGuideRequest) usecase.UpdateGuideInput {
 			IsInverse:      c.IsInverse,
 		})
 	}
+	merge := body.TranslationMode != nil && *body.TranslationMode == "merge"
 	return usecase.UpdateGuideInput{
-		SectorIDs:    body.SectorIDs,
-		TagIDs:       body.TagIDs,
-		Slug:         body.Slug,
-		Icon:         body.Icon,
-		SortOrder:    body.SortOrder,
-		Translations: translations,
-		Conditions:   conditions,
+		SectorIDs:         body.SectorIDs,
+		TagIDs:            body.TagIDs,
+		Slug:              body.Slug,
+		Icon:              body.Icon,
+		SortOrder:         body.SortOrder,
+		Translations:      translations,
+		TranslationsMerge: merge,
+		Conditions:        conditions,
 	}
 }
 
@@ -815,19 +821,21 @@ func ToUpdateStepInput(body UpdateStepRequest) usecase.UpdateStepInput {
 			DependencyType: d.DependencyType,
 		})
 	}
+	merge := body.TranslationMode != nil && *body.TranslationMode == "merge"
 	return usecase.UpdateStepInput{
-		Slug:            body.Slug,
-		StepType:        body.StepType,
-		SortOrder:       body.SortOrder,
-		IsOptional:      body.IsOptional,
-		EstimatedTime:   body.EstimatedTime,
-		DifficultyLevel: body.DifficultyLevel,
-		FeeEstimate:     body.FeeEstimate,
-		EffectiveDate:   body.EffectiveDate,
-		ExpiryDate:      body.ExpiryDate,
-		Translations:    translations,
-		Conditions:      conditions,
-		Dependencies:    dependencies,
+		Slug:              body.Slug,
+		StepType:          body.StepType,
+		SortOrder:         body.SortOrder,
+		IsOptional:        body.IsOptional,
+		EstimatedTime:     body.EstimatedTime,
+		DifficultyLevel:   body.DifficultyLevel,
+		FeeEstimate:       body.FeeEstimate,
+		EffectiveDate:     body.EffectiveDate,
+		ExpiryDate:        body.ExpiryDate,
+		Translations:      translations,
+		TranslationsMerge: merge,
+		Conditions:        conditions,
+		Dependencies:      dependencies,
 	}
 }
 

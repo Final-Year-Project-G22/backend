@@ -30,13 +30,14 @@ type CreateGuideInput struct {
 }
 
 type UpdateGuideInput struct {
-	SectorIDs    []uuid.UUID        `json:"sectorIds,omitempty"`
-	TagIDs       []uuid.UUID        `json:"tagIds,omitempty"`
-	Slug         *string            `json:"slug,omitempty"`
-	Icon         *string            `json:"icon,omitempty"`
-	SortOrder    *int               `json:"sortOrder,omitempty"`
-	Translations []TranslationInput `json:"translations,omitempty"`
-	Conditions   []ConditionInput   `json:"conditions,omitempty"`
+	SectorIDs         []uuid.UUID        `json:"sectorIds,omitempty"`
+	TagIDs            []uuid.UUID        `json:"tagIds,omitempty"`
+	Slug              *string            `json:"slug,omitempty"`
+	Icon              *string            `json:"icon,omitempty"`
+	SortOrder         *int               `json:"sortOrder,omitempty"`
+	Translations      []TranslationInput `json:"translations,omitempty"`
+	TranslationsMerge bool               `json:"translationsMerge,omitempty"`
+	Conditions        []ConditionInput   `json:"conditions,omitempty"`
 }
 
 type CreateStepInput struct {
@@ -56,18 +57,19 @@ type CreateStepInput struct {
 }
 
 type UpdateStepInput struct {
-	Slug            *string                `json:"slug,omitempty"`
-	StepType        *entity.StepType       `json:"stepType,omitempty"`
-	SortOrder       *int                   `json:"sortOrder,omitempty"`
-	IsOptional      *bool                  `json:"isOptional,omitempty"`
-	EstimatedTime   *int                   `json:"estimatedTime,omitempty"`
-	DifficultyLevel *int                   `json:"difficultyLevel,omitempty"`
-	FeeEstimate     *int                   `json:"feeEstimate,omitempty"`
-	EffectiveDate   *time.Time             `json:"effectiveDate,omitempty"`
-	ExpiryDate      *time.Time             `json:"expiryDate,omitempty"`
-	Translations    []StepTranslationInput `json:"translations,omitempty"`
-	Conditions      []ConditionInput       `json:"conditions,omitempty"`
-	Dependencies    []DependencyInput      `json:"dependencies,omitempty"`
+	Slug              *string                `json:"slug,omitempty"`
+	StepType          *entity.StepType       `json:"stepType,omitempty"`
+	SortOrder         *int                   `json:"sortOrder,omitempty"`
+	IsOptional        *bool                  `json:"isOptional,omitempty"`
+	EstimatedTime     *int                   `json:"estimatedTime,omitempty"`
+	DifficultyLevel   *int                   `json:"difficultyLevel,omitempty"`
+	FeeEstimate       *int                   `json:"feeEstimate,omitempty"`
+	EffectiveDate     *time.Time             `json:"effectiveDate,omitempty"`
+	ExpiryDate        *time.Time             `json:"expiryDate,omitempty"`
+	Translations      []StepTranslationInput `json:"translations,omitempty"`
+	TranslationsMerge bool                   `json:"translationsMerge,omitempty"`
+	Conditions        []ConditionInput       `json:"conditions,omitempty"`
+	Dependencies      []DependencyInput      `json:"dependencies,omitempty"`
 }
 
 type ConditionInput struct {
