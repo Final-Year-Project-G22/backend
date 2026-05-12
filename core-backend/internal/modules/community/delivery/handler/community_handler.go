@@ -263,6 +263,8 @@ func (h *CommunityHandler) HandleUpdateThread(ctx context.Context, input *dto.Up
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
+	h.communityService.NotifyThreadUpdated(ctx, input.ID)
+
 	return &dto.UpdateThreadOutput{Body: dto.UpdateThreadResponseBody{Message: "Thread updated"}}, nil
 }
 
