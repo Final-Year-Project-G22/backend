@@ -7,12 +7,14 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
+	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type BusinessProfileHandler struct {
@@ -48,6 +50,9 @@ func (h *BusinessProfileHandler) HandleGetBusinessProfile(ctx context.Context, _
 
 	profile, err := h.profileUsecase.GetBusinessProfileByAccount(ctx, accountID)
 	if err != nil {
+		if err == iamerror.ErrBusinessProfileNotFound {
+			return nil, apperrors.NotFoundErrorWithKey("iam.errors.businessProfileNotFound")
+		}
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
@@ -128,6 +133,9 @@ func (h *BusinessProfileHandler) HandleCreateBusinessProfile(ctx context.Context
 		Stage:                   input.Body.Stage,
 	})
 	if err != nil {
+		if err == iamerror.ErrBusinessProfileAlreadyExists {
+			return nil, apperrors.ConflictError("iam.errors.businessProfileAlreadyExists")
+		}
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
@@ -180,6 +188,9 @@ func (h *BusinessProfileHandler) HandleUpdateBusinessProfile(ctx context.Context
 		Stage:                   input.Body.Stage,
 	})
 	if err != nil {
+		if err == iamerror.ErrBusinessProfileNotFound {
+			return nil, apperrors.NotFoundErrorWithKey("iam.errors.businessProfileNotFound")
+		}
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
@@ -193,16 +204,24 @@ func (h *BusinessProfileHandler) resolveSectorSlug(ctx context.Context, slug str
 		return nil, nil
 	}
 
-	sectors, err := h.sectorRepo.Find(ctx, query.QueryOptions{
-		Filters: map[string]interface{}{"slug": slug},
-	})
+	// Query only the sector ID. Avoid scanning all columns (including ancestor_ids),
+	// which can fail on some drivers when mapped into []uuid.UUID.
+	var sector entity.Sector
+	err := h.sectorRepo.GetDB().WithContext(ctx).
+		Model(&entity.Sector{}).
+		Select("id").
+		Where("slug = ?", slug).
+		First(&sector).Error
 	if err != nil {
-		return nil, err
+		if err == gorm.ErrRecordNotFound {
+			return nil, apperrors.BadRequestError("iam.errors.invalidSectorSlug")
+		}
+		return nil, apperrors.InternalError("errors.databaseError", err)
 	}
-	if len(sectors) == 0 {
+	if sector.ID == uuid.Nil {
 		return nil, apperrors.BadRequestError("iam.errors.invalidSectorSlug")
 	}
-	return &sectors[0].ID, nil
+	return &sector.ID, nil
 }
 
 // resolveTagSlugs looks up tags by slugs and returns their IDs.
