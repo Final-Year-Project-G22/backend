@@ -1988,6 +1988,52 @@
         ],
         "type": "object"
       },
+      "CompletionStatsDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CompletionStatsDTO.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "completedGuides": {
+            "description": "Number of fully completed guides",
+            "format": "int64",
+            "type": "integer"
+          },
+          "inProgressGuides": {
+            "description": "Number of guides in progress",
+            "format": "int64",
+            "type": "integer"
+          },
+          "period": {
+            "description": "Stats period (e.g. monthly)",
+            "type": "string"
+          },
+          "totalStepsAll": {
+            "description": "Total steps across all guides",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalStepsCompleted": {
+            "description": "Total steps completed across all guides",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "completedGuides",
+          "inProgressGuides",
+          "totalStepsCompleted",
+          "totalStepsAll",
+          "period"
+        ],
+        "type": "object"
+      },
       "ContentDTO": {
         "additionalProperties": false,
         "properties": {
@@ -4519,6 +4565,33 @@
         ],
         "type": "object"
       },
+      "GetInProgressGuidesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetInProgressGuidesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "guides": {
+            "items": {
+              "$ref": "#/components/schemas/GuideWithProgressDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "guides"
+        ],
+        "type": "object"
+      },
       "GetMySubscriptionResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -4885,6 +4958,45 @@
           "completedSteps",
           "skippedSteps",
           "inProgressSteps"
+        ],
+        "type": "object"
+      },
+      "GuideWithProgressDTO": {
+        "additionalProperties": false,
+        "properties": {
+          "completedSteps": {
+            "description": "Completed steps count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "icon": {
+            "description": "Icon identifier",
+            "type": "string"
+          },
+          "id": {
+            "description": "Guide ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Localized guide name",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Guide slug",
+            "type": "string"
+          },
+          "totalSteps": {
+            "description": "Total steps count",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "completedSteps",
+          "totalSteps"
         ],
         "type": "object"
       },
@@ -21511,6 +21623,92 @@
           }
         ],
         "summary": "List bookmarks",
+        "tags": [
+          "Guides"
+        ]
+      }
+    },
+    "/api/v1/guides/completion-stats": {
+      "get": {
+        "description": "Returns aggregate completion statistics for dashboard.",
+        "operationId": "getCompletionStats",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletionStatsDTO"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get completion statistics",
+        "tags": [
+          "Guides"
+        ]
+      }
+    },
+    "/api/v1/guides/in-progress": {
+      "get": {
+        "description": "Retrieves guides the user has started but not completed, with progress data.",
+        "operationId": "getInProgressGuides",
+        "parameters": [
+          {
+            "description": "Language locale (en, am)",
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "description": "Language locale (en, am)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInProgressGuidesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get in-progress guides",
         "tags": [
           "Guides"
         ]

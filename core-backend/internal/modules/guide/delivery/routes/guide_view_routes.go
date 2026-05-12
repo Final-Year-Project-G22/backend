@@ -30,6 +30,28 @@ func RegisterGuideViewRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.GuideViewHandler.HandleSearchGuides)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "getInProgressGuides",
+		Method:      "GET",
+		Path:        guideBase + "/in-progress",
+		Summary:     "Get in-progress guides",
+		Description: "Retrieves guides the user has started but not completed, with progress data.",
+		Tags:        []string{"Guides"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideViewHandler.HandleGetInProgressGuides)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "getCompletionStats",
+		Method:      "GET",
+		Path:        guideBase + "/completion-stats",
+		Summary:     "Get completion statistics",
+		Description: "Returns aggregate completion statistics for dashboard.",
+		Tags:        []string{"Guides"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideViewHandler.HandleGetCompletionStats)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "getRecentlyViewed",
 		Method:      "GET",
 		Path:        guideBase + "/recent",
