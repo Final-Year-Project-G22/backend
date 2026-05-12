@@ -24,7 +24,7 @@ func NewGuideAdminHandler(guideAdminUC usecase.GuideManagementUseCase, journeyAd
 
 func (h *GuideAdminHandler) HandleListGuides(ctx context.Context, input *dto.ListGuidesAdminInput) (*dto.ListGuidesAdminOutput, error) {
 	q := dto.ToAdminQueryOptions(input.AdminPaginationQuery)
-	result, err := h.guideAdminUC.ListGuides(ctx, q)
+	result, err := h.guideAdminUC.ListGuides(ctx, q, input.Locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -53,7 +53,7 @@ func (h *GuideAdminHandler) HandleGetGuideAdmin(ctx context.Context, input *dto.
 
 func (h *GuideAdminHandler) HandleListGuideStepsAdmin(ctx context.Context, input *dto.ListGuideStepsAdminInput) (*dto.ListGuideStepsAdminOutput, error) {
 	q := dto.ToAdminQueryOptions(input.AdminPaginationQuery)
-	result, err := h.guideAdminUC.ListGuideSteps(ctx, input.ID, q)
+	result, err := h.guideAdminUC.ListGuideSteps(ctx, input.ID, q, input.Locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -124,7 +124,8 @@ func (h *GuideAdminHandler) HandleSetGuideTranslations(ctx context.Context, inpu
 			Description: t.Description,
 		})
 	}
-	if err := h.guideAdminUC.SetGuideTranslations(ctx, input.ID, translations); err != nil {
+	merge := input.TranslationMode == "merge"
+	if err := h.guideAdminUC.SetGuideTranslations(ctx, input.ID, translations, merge); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.SetGuideTranslationsOutput{Body: dto.SetGuideTranslationsResponseBody{Message: "Translations updated"}}, nil
@@ -207,7 +208,8 @@ func (h *GuideAdminHandler) HandleSetStepTranslations(ctx context.Context, input
 			DetailedContent: t.DetailedContent,
 		})
 	}
-	if err := h.guideAdminUC.SetStepTranslations(ctx, input.ID, translations); err != nil {
+	merge := input.TranslationMode == "merge"
+	if err := h.guideAdminUC.SetStepTranslations(ctx, input.ID, translations, merge); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.SetStepTranslationsOutput{Body: dto.SetStepTranslationsResponseBody{Message: "Translations updated"}}, nil
