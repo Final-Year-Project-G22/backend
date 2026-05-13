@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai_tool/domain/port"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/handler"
@@ -260,6 +261,22 @@ var Module = fx.Module("iam",
 
 	// OAuth Service
 	fx.Provide(iamoauth.NewOAuthService),
+
+	// AI tool handlers
+	fx.Provide(
+		fx.Annotate(
+			NewListSectorsTool,
+			fx.As(new(port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			NewListTagsTool,
+			fx.As(new(port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
 
 	// Delivery Layer - Handler
 	fx.Provide(handler.NewAuthHandler),
