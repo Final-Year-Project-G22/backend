@@ -43,35 +43,37 @@ type UpdateGuideInput struct {
 }
 
 type CreateStepInput struct {
-	GuideID         uuid.UUID              `json:"guideId"`
-	Slug            string                 `json:"slug"`
-	StepType        entity.StepType        `json:"stepType"`
-	SortOrder       int                    `json:"sortOrder"`
-	IsOptional      bool                   `json:"isOptional"`
-	EstimatedTime   *int                   `json:"estimatedTime,omitempty"`
-	DifficultyLevel *int                   `json:"difficultyLevel,omitempty"`
-	FeeEstimate     *int                   `json:"feeEstimate,omitempty"`
-	EffectiveDate   *time.Time             `json:"effectiveDate,omitempty"`
-	ExpiryDate      *time.Time             `json:"expiryDate,omitempty"`
-	Translations    []StepTranslationInput `json:"translations,omitempty"`
-	Conditions      []ConditionInput       `json:"conditions,omitempty"`
-	Dependencies    []DependencyInput      `json:"dependencies,omitempty"`
+	GuideID           uuid.UUID               `json:"guideId"`
+	Slug              string                  `json:"slug"`
+	StepType          entity.StepType         `json:"stepType"`
+	SortOrder         int                     `json:"sortOrder"`
+	IsOptional        bool                    `json:"isOptional"`
+	EstimatedTime     *int                    `json:"estimatedTime,omitempty"`
+	DifficultyLevel   *int                    `json:"difficultyLevel,omitempty"`
+	FeeEstimate       *int                    `json:"feeEstimate,omitempty"`
+	EffectiveDate     *time.Time              `json:"effectiveDate,omitempty"`
+	ExpiryDate        *time.Time              `json:"expiryDate,omitempty"`
+	Translations      []StepTranslationInput  `json:"translations,omitempty"`
+	RequiredDocuments []RequiredDocumentInput `json:"requiredDocuments,omitempty"`
+	Conditions        []ConditionInput        `json:"conditions,omitempty"`
+	Dependencies      []DependencyInput       `json:"dependencies,omitempty"`
 }
 
 type UpdateStepInput struct {
-	Slug              *string                `json:"slug,omitempty"`
-	StepType          *entity.StepType       `json:"stepType,omitempty"`
-	SortOrder         *int                   `json:"sortOrder,omitempty"`
-	IsOptional        *bool                  `json:"isOptional,omitempty"`
-	EstimatedTime     *int                   `json:"estimatedTime,omitempty"`
-	DifficultyLevel   *int                   `json:"difficultyLevel,omitempty"`
-	FeeEstimate       *int                   `json:"feeEstimate,omitempty"`
-	EffectiveDate     *time.Time             `json:"effectiveDate,omitempty"`
-	ExpiryDate        *time.Time             `json:"expiryDate,omitempty"`
-	Translations      []StepTranslationInput `json:"translations,omitempty"`
-	TranslationsMerge bool                   `json:"translationsMerge,omitempty"`
-	Conditions        []ConditionInput       `json:"conditions,omitempty"`
-	Dependencies      []DependencyInput      `json:"dependencies,omitempty"`
+	Slug              *string                 `json:"slug,omitempty"`
+	StepType          *entity.StepType        `json:"stepType,omitempty"`
+	SortOrder         *int                    `json:"sortOrder,omitempty"`
+	IsOptional        *bool                   `json:"isOptional,omitempty"`
+	EstimatedTime     *int                    `json:"estimatedTime,omitempty"`
+	DifficultyLevel   *int                    `json:"difficultyLevel,omitempty"`
+	FeeEstimate       *int                    `json:"feeEstimate,omitempty"`
+	EffectiveDate     *time.Time              `json:"effectiveDate,omitempty"`
+	ExpiryDate        *time.Time              `json:"expiryDate,omitempty"`
+	Translations      []StepTranslationInput  `json:"translations,omitempty"`
+	TranslationsMerge bool                    `json:"translationsMerge,omitempty"`
+	RequiredDocuments []RequiredDocumentInput `json:"requiredDocuments,omitempty"`
+	Conditions        []ConditionInput        `json:"conditions,omitempty"`
+	Dependencies      []DependencyInput       `json:"dependencies,omitempty"`
 }
 
 type ConditionInput struct {
@@ -79,6 +81,11 @@ type ConditionInput struct {
 	Operator       string      `json:"operator"`
 	ConditionValue interface{} `json:"conditionValue"`
 	IsInverse      bool        `json:"isInverse"`
+}
+
+type RequiredDocumentInput struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
 }
 
 type TranslationInput struct {
