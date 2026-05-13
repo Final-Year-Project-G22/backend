@@ -73,6 +73,11 @@ type IngestionStatusProjectionResponse struct {
 	ChunksProcessedCount int        `json:"chunksProcessedCount" doc:"Number of chunks processed"`
 	ChunksFailedCount    int        `json:"chunksFailedCount" doc:"Number of chunks failed"`
 	EventSequence        int64      `json:"eventSequence" doc:"Monotonic event sequence number"`
+	// Document metadata enriched from ingestion_documents table
+	SourceFilename   *string     `json:"sourceFilename,omitempty" doc:"Original source filename"`
+	DeclaredLanguage *string     `json:"declaredLanguage,omitempty" doc:"Declared language hint (en/am)"`
+	SectorIDs        []uuid.UUID `json:"sectorIds,omitempty" doc:"Associated sector IDs"`
+	TagIDs           []uuid.UUID `json:"tagIds,omitempty" doc:"Associated tag IDs"`
 }
 
 type GetStatusByDocumentInput struct {

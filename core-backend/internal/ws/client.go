@@ -110,6 +110,6 @@ func (c *Client) Send(data []byte) {
 func (c *Client) Close() {
 	c.closeOnce.Do(func() {
 		close(c.done)
-		c.conn.Close()
+		_ = c.conn.Close()
 	})
 }
