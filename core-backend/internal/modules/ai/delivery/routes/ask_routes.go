@@ -73,6 +73,7 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 									SourceType: c.SourceType,
 									Title:      c.Title,
 									Score:      c.Score,
+									Excerpt:    c.Excerpt,
 								})
 							}
 

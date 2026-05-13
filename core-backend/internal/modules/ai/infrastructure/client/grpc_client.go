@@ -134,6 +134,11 @@ func (c *InferenceGRPCClient) Ask(ctx context.Context, req port.AskRequest) (por
 			t := citation.GetTitle()
 			title = &t
 		}
+		var excerpt *string
+		if citation.Excerpt != nil {
+			e := citation.GetExcerpt()
+			excerpt = &e
+		}
 
 		citations = append(citations, port.Citation{
 			DocumentID: documentID,
@@ -141,6 +146,7 @@ func (c *InferenceGRPCClient) Ask(ctx context.Context, req port.AskRequest) (por
 			SourceType: citation.GetSourceType(),
 			Title:      title,
 			Score:      citation.GetScore(),
+			Excerpt:    excerpt,
 		})
 	}
 
@@ -313,11 +319,23 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 				for _, cit := range citations.GetCitations() {
 					docID, _ := uuid.Parse(cit.GetDocumentId())
 					chunkID, _ := uuid.Parse(cit.GetChunkId())
+					var title *string
+					if cit.Title != nil {
+						t := cit.GetTitle()
+						title = &t
+					}
+					var excerpt *string
+					if cit.Excerpt != nil {
+						e := cit.GetExcerpt()
+						excerpt = &e
+					}
 					out.Citations = append(out.Citations, port.Citation{
 						DocumentID: docID,
 						ChunkID:    chunkID,
 						SourceType: cit.GetSourceType(),
+						Title:      title,
 						Score:      cit.GetScore(),
+						Excerpt:    excerpt,
 					})
 				}
 			}

@@ -29,6 +29,7 @@ type Citation struct {
 	SourceType string
 	Title      *string
 	Score      float64
+	Excerpt    *string
 }
 
 type Usage struct {

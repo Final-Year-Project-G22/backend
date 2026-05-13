@@ -48,6 +48,7 @@ func (h *AskHandler) HandleAsk(ctx context.Context, input *dto.AskInput) (*dto.A
 			SourceType: c.SourceType,
 			Title:      c.Title,
 			Score:      c.Score,
+			Excerpt:    c.Excerpt,
 		})
 	}
 
@@ -171,6 +172,7 @@ func (h *AskHandler) HandleGetConversation(ctx context.Context, input *dto.GetCo
 				SourceType: c.SourceType,
 				Title:      c.Title,
 				Score:      c.Score,
+				Excerpt:    c.Excerpt,
 			})
 		}
 		var usage *dto.UsageDTO
