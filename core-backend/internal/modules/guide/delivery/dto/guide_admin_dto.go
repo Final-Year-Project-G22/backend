@@ -149,6 +149,7 @@ type CreateGuideRequest struct {
 	TagIDs       []uuid.UUID              `json:"tagIds" doc:"Target tag IDs"`
 	Slug         string                   `json:"slug" doc:"Guide slug" minLength:"1" maxLength:"100"`
 	Icon         *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	ImageURL     *string                  `json:"imageUrl,omitempty" doc:"Guide cover image URL" maxLength:"500"`
 	SortOrder    int                      `json:"sortOrder" doc:"Display order"`
 	Translations []CreateGuideTranslation `json:"translations,omitempty" doc:"Localized translations"`
 	Conditions   []CreateGuideCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
@@ -184,6 +185,7 @@ type UpdateGuideRequest struct {
 	TagIDs          []uuid.UUID              `json:"tagIds,omitempty" doc:"Target tag IDs"`
 	Slug            *string                  `json:"slug,omitempty" doc:"Guide slug" maxLength:"100"`
 	Icon            *string                  `json:"icon,omitempty" doc:"Icon identifier" maxLength:"50"`
+	ImageURL        *string                  `json:"imageUrl,omitempty" doc:"Guide cover image URL" maxLength:"500"`
 	SortOrder       *int                     `json:"sortOrder,omitempty" doc:"Display order"`
 	Translations    []UpdateGuideTranslation `json:"translations,omitempty" doc:"Localized translations"`
 	TranslationMode *string                  `json:"translationMode,omitempty" doc:"Translation mode: 'merge' to upsert without deleting, anything else or absent for full replacement" enum:"merge,replace"`
@@ -638,6 +640,7 @@ type AdminGuideCardDTO struct {
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Icon        *string     `json:"icon,omitempty"`
+	ImageURL    *string     `json:"imageUrl,omitempty"`
 	SectorIDs   []uuid.UUID `json:"sectorIds"`
 	TagIDs      []uuid.UUID `json:"tagIds"`
 	SortOrder   int         `json:"sortOrder"`
@@ -663,6 +666,7 @@ type AdminGuideDetailDTO struct {
 	TagIDs       []uuid.UUID           `json:"tagIds"`
 	Slug         string                `json:"slug"`
 	Icon         *string               `json:"icon,omitempty"`
+	ImageURL     *string               `json:"imageUrl,omitempty"`
 	SortOrder    int                   `json:"sortOrder"`
 	Translations []AdminTranslationDTO `json:"translations"`
 	Conditions   []AdminConditionDTO   `json:"conditions"`
@@ -715,6 +719,7 @@ func ToCreateGuideInput(body CreateGuideRequest) usecase.CreateGuideInput {
 		TagIDs:       body.TagIDs,
 		Slug:         body.Slug,
 		Icon:         body.Icon,
+		ImageURL:     body.ImageURL,
 		SortOrder:    body.SortOrder,
 		Translations: translations,
 		Conditions:   conditions,
@@ -745,6 +750,7 @@ func ToUpdateGuideInput(body UpdateGuideRequest) usecase.UpdateGuideInput {
 		TagIDs:            body.TagIDs,
 		Slug:              body.Slug,
 		Icon:              body.Icon,
+		ImageURL:          body.ImageURL,
 		SortOrder:         body.SortOrder,
 		Translations:      translations,
 		TranslationsMerge: merge,
@@ -876,6 +882,7 @@ func ToAdminGuideCardDTO(guide *entity.Guide) AdminGuideCardDTO {
 		Name:        name,
 		Description: description,
 		Icon:        guide.Icon,
+		ImageURL:    guide.ImageURL,
 		SectorIDs:   guide.SectorIDs,
 		TagIDs:      guide.TagIDs,
 		SortOrder:   guide.SortOrder,
@@ -909,6 +916,7 @@ func ToAdminGuideDetailDTO(guide *entity.Guide) AdminGuideDetailDTO {
 		TagIDs:       guide.TagIDs,
 		Slug:         guide.Slug,
 		Icon:         guide.Icon,
+		ImageURL:     guide.ImageURL,
 		SortOrder:    guide.SortOrder,
 		Translations: translations,
 		Conditions:   conditions,
