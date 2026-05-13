@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
 import time
 import uuid
-from datetime import UTC, datetime
 from typing import Any
 
 from ai.inference.v1 import service_pb2, service_pb2_grpc  # type: ignore
@@ -47,11 +47,10 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
             return service_pb2.AskResponse()  # type: ignore
 
         try:
-            # Parse request fields
             try:
                 request_id = uuid.UUID(request.request_id)
                 user_id = uuid.UUID(request.user_id)
-                _account_id = uuid.UUID(request.account_id)  # currently unused in domain
+                account_id = uuid.UUID(request.account_id)
 
                 session_id = None
                 if request.session_id:
@@ -66,6 +65,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
             domain_req = AskAICommand(
                 user_id=user_id,
+                account_id=account_id,
                 prompt=request.query,
                 language=language,
                 conversation_id=session_id,
@@ -73,10 +73,8 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 vector_top_k=request.top_k if request.top_k > 0 else 5,
             )
 
-            # Execute use case
             response = await self._ask_ai_usecase.execute(domain_req)
 
-            # Map citations
             citations: list[Any] = [
                 service_pb2.Citation(  # type: ignore
                     document_id=str(hit.document_id),
@@ -89,7 +87,6 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 for hit in response.retrieved_hits
             ]
 
-            # Map usage
             usage = None
             if response.ai_message.token_usage:
                 usage = service_pb2.Usage(  # type: ignore
@@ -98,7 +95,6 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                     total_tokens=response.ai_message.token_usage.total_tokens,
                 )
 
-            # Return response
             return service_pb2.AskResponse(  # type: ignore
                 request_id=str(request_id),
                 session_id=str(response.conversation.id),
@@ -130,8 +126,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
         return service_pb2.AskResponse()  # type: ignore
 
-    async def AskStream(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802
-        # context arg required by gRPC streaming signature
+    async def AskStream(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802, PLR0912
         if not await self._ensure_ask_enabled(context):
             return
 
@@ -139,7 +134,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
         try:
             user_id = uuid.UUID(request.user_id)
-            _account_id = uuid.UUID(request.account_id)
+            account_id = uuid.UUID(request.account_id)
 
             session_id = None
             if request.session_id:
@@ -151,6 +146,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
             command = AskAICommand(
                 user_id=user_id,
+                account_id=account_id,
                 prompt=request.query,
                 language=language,
                 conversation_id=session_id,
@@ -158,49 +154,47 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 vector_top_k=request.top_k if request.top_k > 0 else 5,
             )
 
-            now = datetime.now(UTC)
-            conversation = await self._ask_ai_usecase._resolve_conversation(command, now)
-            user_message = await self._ask_ai_usecase._persist_user_message(
-                command, conversation, now
-            )
-
-            query_embedding = await self._ask_ai_usecase._embedding_port.embed_query(command.prompt)
-            user_message = await self._ask_ai_usecase._update_user_message_embedding(
-                user_message,
-                query_embedding,
-                now,
-            )
-
-            vector_hits, bm25_hits = await self._ask_ai_usecase._retrieve_context(
-                command, query_embedding
-            )
-            merged_hits = self._ask_ai_usecase._merge_and_dedupe_hits(vector_hits, bm25_hits)
-
-            prompt = self._ask_ai_usecase._build_prompt(
-                command.prompt, merged_hits, command.language
-            )
-
+            ai_message = None
+            merged_hits = None
+            conversation = None
             llm_port = self._ask_ai_usecase._llm_port
-            full_response_parts = []
-            async for chunk in llm_port.generate_stream(prompt):
-                full_response_parts.append(chunk)
-                yield service_pb2.AskStreamChunk(text=service_pb2.TextChunk(text=chunk))
 
-            full_response = "".join(full_response_parts)
-            ai_message = await self._ask_ai_usecase._persist_ai_message(
+            async for event in self._ask_ai_usecase.execute_stream_with_tools(
                 command,
-                conversation,
-                full_response,
-                now,
-                retrieved_hits=merged_hits,
-            )
+                yield_tool_use=True,
+            ):
+                if event.is_text and event.text:
+                    yield service_pb2.AskStreamChunk(text=service_pb2.TextChunk(text=event.text))
 
-            cache_key = self._ask_ai_usecase._build_cache_key(command, conversation.id)
-            await self._ask_ai_usecase._cache_response(cache_key, full_response)
-            await self._ask_ai_usecase._publish_query_event(command, conversation, ai_message)
+                if event.is_tool_use and event.tool_uses:
+                    for tc in event.tool_uses:
+                        yield service_pb2.AskStreamChunk(
+                            tool_use=service_pb2.ToolUseChunk(
+                                tool=tc.name,
+                                arguments_json=json.dumps(tc.arguments),
+                            )
+                        )
+
+                if event.is_tool_result and event.tool_result:
+                    result_summary = json.dumps(event.tool_result_data, default=str)[:500]
+                    yield service_pb2.AskStreamChunk(
+                        tool_result=service_pb2.ToolResultChunk(
+                            tool=event.tool_result.name,
+                            result_summary=result_summary,
+                        )
+                    )
+
+                if event.is_done:
+                    ai_message = event.ai_message
+                    merged_hits = event.merged_hits
+                    conversation = event.done
+
+            if ai_message is None or conversation is None:
+                logger.error("execute_stream_with_tools finished without done event")
+                return
 
             citations = [
-                service_pb2.Citation(
+                service_pb2.Citation(  # type: ignore
                     document_id=str(hit.document_id),
                     chunk_id=str(hit.chunk_id),
                     source_type="chunk",
@@ -208,7 +202,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                     title=getattr(hit, "document_title", None) or f"Chunk {hit.chunk_index}",
                     excerpt=hit.chunk_text[:300],
                 )
-                for hit in merged_hits
+                for hit in (merged_hits or [])
             ]
 
             yield service_pb2.AskStreamChunk(
@@ -217,7 +211,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
             usage = None
             if ai_message.token_usage:
-                usage = service_pb2.Usage(
+                usage = service_pb2.Usage(  # type: ignore
                     prompt_tokens=ai_message.token_usage.prompt_tokens,
                     completion_tokens=ai_message.token_usage.completion_tokens,
                     total_tokens=ai_message.token_usage.total_tokens,
@@ -238,25 +232,16 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
         except QuotaExceededError as e:
             logger.warning("Quota exceeded in AskStream: %s", e)
             yield service_pb2.AskStreamChunk(
-                error=service_pb2.ErrorChunk(
-                    code="RESOURCE_EXHAUSTED",
-                    message=str(e),
-                )
+                error=service_pb2.ErrorChunk(code="RESOURCE_EXHAUSTED", message=str(e))
             )
         except ValidationError as e:
             detail = _validation_error_detail(e)
             logger.info("AskStream validation failed: %s", detail)
             yield service_pb2.AskStreamChunk(
-                error=service_pb2.ErrorChunk(
-                    code="INVALID_ARGUMENT",
-                    message=detail,
-                )
+                error=service_pb2.ErrorChunk(code="INVALID_ARGUMENT", message=detail)
             )
         except Exception:
             logger.exception("Error in AskStream")
             yield service_pb2.AskStreamChunk(
-                error=service_pb2.ErrorChunk(
-                    code="INTERNAL",
-                    message="Internal server error",
-                )
+                error=service_pb2.ErrorChunk(code="INTERNAL", message="Internal server error")
             )

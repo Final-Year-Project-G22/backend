@@ -55,6 +55,8 @@ message AskStreamChunk {
     CitationsChunk citations = 2;
     DoneChunk done = 3;
     ErrorChunk error = 4;
+    ToolUseChunk tool_use = 5;
+    ToolResultChunk tool_result = 6;
   }
 }
 
@@ -78,4 +80,14 @@ message DoneChunk {
 message ErrorChunk {
   string code = 1;
   string message = 2;
+}
+
+message ToolUseChunk {
+  string tool = 1;
+  string arguments_json = 2;
+}
+
+message ToolResultChunk {
+  string tool = 1;
+  string result_summary = 2;
 }

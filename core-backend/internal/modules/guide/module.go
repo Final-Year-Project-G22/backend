@@ -2,6 +2,7 @@ package guide
 
 import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai_tool/domain/port"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/application/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/handler"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/routes"
@@ -59,6 +60,22 @@ var Module = fx.Module(
 		fx.Annotate(
 			appusecase.NewJourneyManagementUsecase,
 			fx.As(new(usecase.JourneyManagementUseCase)),
+		),
+	),
+
+	// AI tool handlers
+	fx.Provide(
+		fx.Annotate(
+			NewSearchGuidesTool,
+			fx.As(new(port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			NewGuideDetailTool,
+			fx.As(new(port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
 		),
 	),
 

@@ -23,6 +23,8 @@ class _GrpcStubLoader:
     _document_pb2_grpc: ModuleType | None = None
     _user_pb2: ModuleType | None = None
     _user_pb2_grpc: ModuleType | None = None
+    _ai_tool_pb2: ModuleType | None = None
+    _ai_tool_pb2_grpc: ModuleType | None = None
 
     @classmethod
     def _load(cls, module_name: str) -> ModuleType | None:
@@ -32,7 +34,8 @@ class _GrpcStubLoader:
             return None
 
         # Import the real core module and patch its __path__ so Python
-        # can discover grpc-stub subpackages (core.user, core.document).
+        # can discover grpc-stub subpackages (core.user, core.document,
+        # core.ai_tool).
         # Without this, core has no way to find core.user.v1.service_pb2
         # because the project's core/ is a regular package that shadows
         # the grpc_stubs/core/ namespace portion.
@@ -49,7 +52,7 @@ class _GrpcStubLoader:
             _core_mod.__path__[:] = _original_path
             # Reset cached child modules so the patched path doesn't leak
             for _key in list(sys.modules):
-                if _key.startswith(("core.user.", "core.document.")):
+                if _key.startswith(("core.user.", "core.document.", "core.ai_tool.")):
                     del sys.modules[_key]
 
     @classmethod
@@ -75,6 +78,18 @@ class _GrpcStubLoader:
         if cls._user_pb2_grpc is None:
             cls._user_pb2_grpc = cls._load("core.user.v1.service_pb2_grpc")
         return cls._user_pb2_grpc
+
+    @classmethod
+    def ai_tool_pb2(cls) -> ModuleType | None:
+        if cls._ai_tool_pb2 is None:
+            cls._ai_tool_pb2 = cls._load("core.ai_tool.v1.tool_service_pb2")
+        return cls._ai_tool_pb2
+
+    @classmethod
+    def ai_tool_pb2_grpc(cls) -> ModuleType | None:
+        if cls._ai_tool_pb2_grpc is None:
+            cls._ai_tool_pb2_grpc = cls._load("core.ai_tool.v1.tool_service_pb2_grpc")
+        return cls._ai_tool_pb2_grpc
 
 
 def get_document_fetch_stub(channel: Any) -> Any | None:
@@ -130,3 +145,65 @@ def build_get_user_request(user_id: str) -> Any:
         if callable(ctor):
             return ctor(user_id=user_id)
     return type("GetUserProfileRequest", (), {"user_id": user_id})()
+
+
+def get_ai_tool_stub(channel: Any) -> Any | None:
+    grpc_mod = _GrpcStubLoader.ai_tool_pb2_grpc()
+    if grpc_mod is None:
+        return None
+    ctor: Any = getattr(grpc_mod, "AIToolServiceStub", None)
+    if not callable(ctor):
+        return None
+    return ctor(channel)
+
+
+def build_list_tools_request() -> Any:
+    pb2 = _GrpcStubLoader.ai_tool_pb2()
+    if pb2 is not None:
+        ctor: Any = getattr(pb2, "ListToolsRequest", None)
+        if callable(ctor):
+            return ctor()
+    return type("ListToolsRequest", (), {})()
+
+
+def build_execute_tool_request(
+    tool: str,
+    arguments_json: str,
+    account_id: str,
+    user_id: str,
+) -> Any:
+    pb2 = _GrpcStubLoader.ai_tool_pb2()
+    if pb2 is not None:
+        ctor: Any = getattr(pb2, "ExecuteToolRequest", None)
+        if callable(ctor):
+            return ctor(
+                tool=tool,
+                arguments_json=arguments_json,
+                account_id=account_id,
+                user_id=user_id,
+            )
+    return type(
+        "ExecuteToolRequest",
+        (),
+        {
+            "tool": tool,
+            "arguments_json": arguments_json,
+            "account_id": account_id,
+            "user_id": user_id,
+        },
+    )()
+
+
+def build_ai_tool_response(response: Any) -> Any:
+    if response is not None and hasattr(response, "success"):
+        return response
+    pb2 = _GrpcStubLoader.ai_tool_pb2()
+    if pb2 is not None:
+        ctor: Any = getattr(pb2, "ExecuteToolResponse", None)
+        if callable(ctor):
+            return ctor(
+                success=getattr(response, "success", False),
+                result_json=getattr(response, "result_json", ""),
+                error_message=getattr(response, "error_message", ""),
+            )
+    return response
