@@ -12,6 +12,7 @@ type RouteDependencies struct {
 	NotificationHandler     *handler.NotificationHandler
 	WebhookHandler          *handler.WebhookHandler
 	SSEHandler              *handler.SSEHandler
+	InboxSSEHandler         *handler.InboxSSEHandler
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 }
