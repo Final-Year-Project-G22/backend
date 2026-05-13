@@ -3,22 +3,30 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"mime"
+	"path/filepath"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/dto"
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
+	"github.com/google/uuid"
 )
 
 type GuideAdminHandler struct {
 	guideAdminUC   usecase.GuideManagementUseCase
 	journeyAdminUC usecase.JourneyManagementUseCase
+	storage        storage.Storage
 }
 
-func NewGuideAdminHandler(guideAdminUC usecase.GuideManagementUseCase, journeyAdminUC usecase.JourneyManagementUseCase) *GuideAdminHandler {
+func NewGuideAdminHandler(guideAdminUC usecase.GuideManagementUseCase, journeyAdminUC usecase.JourneyManagementUseCase, st storage.Storage) *GuideAdminHandler {
 	return &GuideAdminHandler{
 		guideAdminUC:   guideAdminUC,
 		journeyAdminUC: journeyAdminUC,
+		storage:        st,
 	}
 }
 
@@ -115,6 +123,54 @@ func (h *GuideAdminHandler) HandleRemoveGuideCondition(ctx context.Context, inpu
 	return &dto.RemoveGuideConditionOutput{Body: dto.RemoveGuideConditionResponseBody{Message: "Condition removed"}}, nil
 }
 
+func (h *GuideAdminHandler) HandleUploadGuideImage(ctx context.Context, input *dto.UploadGuideImageInput) (*dto.UploadGuideImageOutput, error) {
+	formData := input.RawBody.Data()
+	if formData == nil || !formData.File.IsSet || formData.File.File == nil {
+		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("guide.errors.invalidFile"))
+	}
+
+	file := formData.File.File
+	defer func() { _ = file.Close() }()
+
+	const maxSize = 10 * 1024 * 1024
+	limitedReader := io.LimitReader(file, int64(maxSize)+1)
+	fileBytes, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, apperrors.InternalError("guide.errors.readFileFailed", err))
+	}
+	if len(fileBytes) > maxSize {
+		return nil, apperrors.ToHumaError(ctx, apperrors.PayloadTooLargeError("guide.errors.fileTooLarge"))
+	}
+
+	ext := filepath.Ext(formData.File.Filename)
+	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	key := fmt.Sprintf("guides/images/%s%s", uuid.New().String(), ext)
+	uploaded, err := h.storage.Upload(ctx, storage.UploadOptions{
+		Key:         key,
+		Content:     fileBytes,
+		ContentType: contentType,
+	})
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, apperrors.InternalError("guide.errors.uploadFailed", err))
+	}
+
+	imageURL := uploaded.URL
+	if imageURL == "" {
+		imageURL = fmt.Sprintf("/api/v1/files/%s", key)
+	}
+
+	guideID := input.ID
+	if err := h.guideAdminUC.UpdateGuide(ctx, guideID, usecase.UpdateGuideInput{ImageURL: &imageURL}); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.UploadGuideImageOutput{Body: dto.UploadGuideImageResponseBody{ImageURL: imageURL}}, nil
+}
+
 func (h *GuideAdminHandler) HandleSetGuideTranslations(ctx context.Context, input *dto.SetGuideTranslationsInput) (*dto.SetGuideTranslationsOutput, error) {
 	translations := make([]usecase.TranslationInput, 0, len(input.Body.Translations))
 	for _, t := range input.Body.Translations {
@@ -202,10 +258,11 @@ func (h *GuideAdminHandler) HandleSetStepTranslations(ctx context.Context, input
 	translations := make([]usecase.StepTranslationInput, 0, len(input.Body.Translations))
 	for _, t := range input.Body.Translations {
 		translations = append(translations, usecase.StepTranslationInput{
-			Language:        t.Language,
-			Title:           t.Title,
-			Description:     t.Description,
-			DetailedContent: t.DetailedContent,
+			Language:          t.Language,
+			Title:             t.Title,
+			Description:       t.Description,
+			DetailedContent:   t.DetailedContent,
+			RequiredDocuments: t.RequiredDocuments,
 		})
 	}
 	merge := input.TranslationMode == "merge"

@@ -250,11 +250,6 @@ func (u *guideAdminUsecase) CreateStep(ctx context.Context, input usecase.Create
 			DifficultyLevel: input.DifficultyLevel,
 			FeeEstimate:     input.FeeEstimate,
 		}
-		if input.RequiredDocuments != nil {
-			docsJSON, _ := json.Marshal(input.RequiredDocuments)
-			docsData := datatypes.JSON(docsJSON)
-			step.RequiredDocuments = &docsData
-		}
 		if input.EffectiveDate != nil {
 			step.EffectiveDate = *input.EffectiveDate
 		}
@@ -318,11 +313,6 @@ func (u *guideAdminUsecase) UpdateStep(ctx context.Context, id uuid.UUID, input 
 			if err := u.setStepTranslations(txCtx, id, input.Translations, input.TranslationsMerge); err != nil {
 				return err
 			}
-		}
-		if input.RequiredDocuments != nil {
-			docsJSON, _ := json.Marshal(input.RequiredDocuments)
-			docsData := datatypes.JSON(docsJSON)
-			step.RequiredDocuments = &docsData
 		}
 		if input.Conditions != nil {
 			if err := u.setStepConditions(txCtx, id, input.Conditions); err != nil {
@@ -484,13 +474,19 @@ func (u *guideAdminUsecase) setStepTranslations(ctx context.Context, stepID uuid
 			continue
 		}
 		incoming[t.Language] = t
-		if err := u.stepRepo.UpsertTranslation(ctx, &entity.GuideStepTranslation{
+		trans := &entity.GuideStepTranslation{
 			GuideStepID:     stepID,
 			Language:        t.Language,
 			Title:           t.Title,
 			Description:     t.Description,
 			DetailedContent: toJSONMap(t.DetailedContent),
-		}); err != nil {
+		}
+		if rd, err := toJSON(t.RequiredDocuments); err != nil {
+			return err
+		} else {
+			trans.RequiredDocuments = rd
+		}
+		if err := u.stepRepo.UpsertTranslation(ctx, trans); err != nil {
 			return err
 		}
 	}
@@ -601,6 +597,18 @@ func (u *guideAdminUsecase) removeStepDependencies(ctx context.Context, stepID u
 		}
 	}
 	return nil
+}
+
+func toJSON(value interface{}) (*datatypes.JSON, error) {
+	if value == nil {
+		return nil, nil
+	}
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	js := datatypes.JSON(raw)
+	return &js, nil
 }
 
 func toJSONMap(value interface{}) datatypes.JSONMap {
