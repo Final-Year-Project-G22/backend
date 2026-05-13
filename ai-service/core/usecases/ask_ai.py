@@ -5,10 +5,10 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from core.domain.enums import MessageType
+from core.domain.enums import DocumentSource, MessageType
 from core.domain.exceptions import AIServiceError
 from core.domain.models import AIChatMessage, AIConversationSession
-from core.domain.value_objects import SearchFilters, SearchHit
+from core.domain.value_objects import ResponseSource, SearchFilters, SearchHit
 from core.ports.cache import CachePort
 from core.ports.conversation_repository import ConversationRepositoryPort
 from core.ports.embedding import EmbeddingPort
@@ -220,14 +220,26 @@ class AskAIUseCase:
         cache_hit: bool = False,
     ) -> AIChatMessage:
         message_order = await self._next_message_order(conversation.id)
+        hits = retrieved_hits or []
         ai_message = AIChatMessage(
             user_id=command.user_id,
             conversation_id=conversation.id,
             message_type=MessageType.AI_RESPONSE,
             llm_response=llm_response,
             query_language=command.language,
-            retrieved_chunk_ids=[h.chunk_id for h in (retrieved_hits or [])],
-            context_chunks=retrieved_hits,
+            retrieved_chunk_ids=[h.chunk_id for h in hits],
+            context_chunks=hits,
+            response_sources=[
+                ResponseSource(
+                    source=DocumentSource(h.source.value),
+                    document_id=h.document_id,
+                    chunk_id=h.chunk_id,
+                    title=getattr(h, "document_title", None) or f"Chunk {h.chunk_index}",
+                    excerpt=h.chunk_text[:300],
+                    score=h.score,
+                )
+                for h in hits
+            ],
             message_order=message_order,
             cache_hit=cache_hit,
             created_at=now,

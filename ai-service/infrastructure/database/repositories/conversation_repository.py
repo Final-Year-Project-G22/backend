@@ -36,12 +36,12 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         try:
             self._session.add(model)
             await self._session.flush()
+            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to create conversation session",
                 details={"session_id": str(session.id)},
             ) from exc
-
         return to_domain_session(model)
 
     async def update_session(self, session: AIConversationSession) -> AIConversationSession:
@@ -55,6 +55,7 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
 
             self._apply_session_domain_values(model, session)
             await self._session.flush()
+            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update conversation session",
@@ -118,6 +119,7 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
             model.deleted_at = deleted_at
             model.updated_at = deleted_at
             await self._session.flush()
+            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to soft-delete conversation session",
@@ -131,15 +133,12 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         try:
             self._session.add(model)
             await self._session.flush()
+            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to add chat message",
-                details={
-                    "message_id": str(message.id),
-                    "conversation_id": str(message.conversation_id),
-                },
+                details={"message_id": str(message.id)},
             ) from exc
-
         return to_domain_message(model)
 
     async def update_message(self, message: AIChatMessage) -> AIChatMessage:
@@ -152,6 +151,7 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
                 )
             self._apply_message_domain_values(model, message)
             await self._session.flush()
+            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update chat message",

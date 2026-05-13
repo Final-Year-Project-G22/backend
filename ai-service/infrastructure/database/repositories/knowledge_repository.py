@@ -302,6 +302,7 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
                 sa_models.KnowledgeDocument.source,
                 sa_models.DocumentChunk.language,
                 sa_models.DocumentChunk.metadata_.label("metadata"),
+                sa_models.KnowledgeDocument.title.label("document_title"),
             )
             .join(
                 sa_models.KnowledgeDocument,
@@ -349,6 +350,7 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
                 sa_models.KnowledgeDocument.source,
                 sa_models.DocumentChunk.language,
                 sa_models.DocumentChunk.metadata_.label("metadata"),
+                sa_models.KnowledgeDocument.title.label("document_title"),
             )
             .join(
                 sa_models.KnowledgeDocument,
@@ -478,6 +480,7 @@ class SqlAlchemyKnowledgeRepository(KnowledgeRepositoryPort):
             source=DocumentSource(row["source"]),
             language=Language(row["language"]),
             metadata=dict(metadata_value),
+            document_title=row.get("document_title", ""),
         )
 
 

@@ -68,6 +68,7 @@ class SearchHit(BaseModel):
     source: DocumentSource
     language: Language
     metadata: dict[str, Any] = Field(default_factory=dict)
+    document_title: str = Field(default="", max_length=500)
 
 
 class UsageSnapshot(BaseModel):
