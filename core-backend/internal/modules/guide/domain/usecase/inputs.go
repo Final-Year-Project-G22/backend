@@ -24,6 +24,7 @@ type CreateGuideInput struct {
 	TagIDs       []uuid.UUID        `json:"tagIds"`
 	Slug         string             `json:"slug"`
 	Icon         *string            `json:"icon,omitempty"`
+	ImageURL     *string            `json:"imageUrl,omitempty"`
 	SortOrder    int                `json:"sortOrder"`
 	Translations []TranslationInput `json:"translations,omitempty"`
 	Conditions   []ConditionInput   `json:"conditions,omitempty"`
@@ -34,6 +35,7 @@ type UpdateGuideInput struct {
 	TagIDs            []uuid.UUID        `json:"tagIds,omitempty"`
 	Slug              *string            `json:"slug,omitempty"`
 	Icon              *string            `json:"icon,omitempty"`
+	ImageURL          *string            `json:"imageUrl,omitempty"`
 	SortOrder         *int               `json:"sortOrder,omitempty"`
 	Translations      []TranslationInput `json:"translations,omitempty"`
 	TranslationsMerge bool               `json:"translationsMerge,omitempty"`
