@@ -227,7 +227,7 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 			return fmt.Errorf("failed to create email delivery log: %w", err)
 		}
 
-		if isMuted {
+		if isMuted || item.Channel != entity.ChannelInApp {
 			return uc.queueRepo.MarkDelivered(txCtx, item.ID)
 		}
 
