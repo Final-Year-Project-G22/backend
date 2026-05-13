@@ -194,6 +194,27 @@ func (r *accountRepository) FindBySegment(ctx context.Context, segment map[strin
 			if t, ok := value.(string); ok {
 				db = db.Where("created_at <= ?", t)
 			}
+		case "sector_ids":
+			if ids, ok := value.([]uuid.UUID); ok && len(ids) > 0 {
+				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
+					Where("bp.sector_id IN ?", ids)
+			}
+		case "tag_ids":
+			if ids, ok := value.([]uuid.UUID); ok && len(ids) > 0 {
+				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
+					Joins("JOIN business_profile_tags bpt ON bpt.business_profile_id = bp.id").
+					Where("bpt.tag_id IN ?", ids)
+			}
+		case "region":
+			if s, ok := value.(string); ok && s != "" {
+				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
+					Where("bp.region = ?", s)
+			}
+		case "stage":
+			if s, ok := value.(string); ok && s != "" {
+				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
+					Where("bp.stage = ?", s)
+			}
 		}
 	}
 
