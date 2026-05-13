@@ -12,7 +12,7 @@ type UserThreadSettings struct {
 	AccountID       uuid.UUID        `gorm:"type:uuid;not null;uniqueIndex:idx_user_thread_settings_account_thread,priority:1;index:idx_user_thread_settings_account"`
 	ThreadID        uuid.UUID        `gorm:"type:uuid;not null;uniqueIndex:idx_user_thread_settings_account_thread,priority:2;index:idx_user_thread_settings_thread"`
 	Thread          DiscussionThread `gorm:"foreignKey:ThreadID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	IsFollowing     bool             `gorm:"not null;default:true"`
+	IsFollowing     bool             `gorm:"not null;default:false"`
 	IsMuted         bool             `gorm:"not null;default:false"`
 	LastReadAt      *time.Time       `gorm:"type:timestamptz"`
 }
