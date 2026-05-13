@@ -20,6 +20,8 @@ type notificationDeliveryUsecase struct {
 	inboxRepo       repository.UserNotificationInboxRepository
 	deliveryLogRepo repository.EmailDeliveryLogRepository
 	emailProvider   repository.EmailProvider
+	deviceRepo      repository.UserDeviceRepository
+	pushProvider    repository.PushProvider
 	transactor      sharedrepo.Transactor
 	logger          core.Logger
 	cfg             *core.Config
@@ -31,6 +33,8 @@ func NewNotificationDeliveryUsecase(
 	inboxRepo repository.UserNotificationInboxRepository,
 	deliveryLogRepo repository.EmailDeliveryLogRepository,
 	emailProvider repository.EmailProvider,
+	deviceRepo repository.UserDeviceRepository,
+	pushProvider repository.PushProvider,
 	transactor sharedrepo.Transactor,
 	logger core.Logger,
 	cfg *core.Config,
@@ -41,6 +45,8 @@ func NewNotificationDeliveryUsecase(
 		inboxRepo:       inboxRepo,
 		deliveryLogRepo: deliveryLogRepo,
 		emailProvider:   emailProvider,
+		deviceRepo:      deviceRepo,
+		pushProvider:    pushProvider,
 		transactor:      transactor,
 		logger:          logger,
 		cfg:             cfg,
@@ -77,6 +83,8 @@ func (uc *notificationDeliveryUsecase) DeliverItem(ctx context.Context, queueID 
 		return uc.deliverInApp(ctx, item)
 	case entity.ChannelEmail:
 		return uc.deliverEmail(ctx, item)
+	case entity.ChannelPush:
+		return uc.deliverPush(ctx, item)
 	default:
 		return nil
 	}
@@ -176,6 +184,57 @@ func (uc *notificationDeliveryUsecase) deliverEmail(ctx context.Context, item *e
 
 func (uc *notificationDeliveryUsecase) deliverInApp(ctx context.Context, item *entity.NotificationQueue) error {
 	return uc.HandleDeliveryResult(ctx, item.ID, true, nil)
+}
+
+func (uc *notificationDeliveryUsecase) deliverPush(ctx context.Context, item *entity.NotificationQueue) error {
+	title, _ := item.Payload["title"].(string)
+	body, _ := item.Payload["body"].(string)
+
+	devices, err := uc.deviceRepo.ListByAccount(ctx, item.AccountID)
+	if err != nil {
+		msg := err.Error()
+		return uc.HandleDeliveryResult(ctx, item.ID, false, &msg)
+	}
+
+	seen := make(map[string]bool)
+	for _, dev := range devices {
+		if dev.PushToken == nil || *dev.PushToken == "" || seen[*dev.PushToken] {
+			continue
+		}
+		seen[*dev.PushToken] = true
+		data := map[string]string{
+			"notificationType": string(item.NotificationType),
+			"queueID":          item.ID.String(),
+		}
+		if err := uc.pushProvider.Send(ctx, *dev.PushToken, title, body, data); err != nil {
+			uc.logger.Error("Push send failed", core.String("token", *dev.PushToken), core.Error(err))
+		}
+	}
+
+	return uc.createHistoryForPush(ctx, item)
+}
+
+func (uc *notificationDeliveryUsecase) createHistoryForPush(ctx context.Context, item *entity.NotificationQueue) error {
+	return uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+		title, _ := item.Payload["title"].(string)
+		content, _ := item.Payload["body"].(string)
+		now := time.Now().UTC()
+
+		history := &entity.NotificationHistory{
+			AccountID:        item.AccountID,
+			NotificationType: item.NotificationType,
+			Channel:          item.Channel,
+			Title:            title,
+			Content:          content,
+			SentAt:           now,
+			DeliveredAt:      &now,
+			DeliveryStatus:   entity.DeliveryStatusDelivered,
+		}
+		if err := uc.historyRepo.Create(txCtx, history); err != nil {
+			return fmt.Errorf("failed to create history entry: %w", err)
+		}
+		return uc.queueRepo.MarkDelivered(txCtx, item.ID)
+	})
 }
 
 func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx context.Context, item *entity.NotificationQueue, providerMsgID, to, subject string) error {

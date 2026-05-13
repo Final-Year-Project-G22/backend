@@ -14,6 +14,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	emailProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/email"
+	pushProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/push"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/gin-gonic/gin"
@@ -61,6 +62,11 @@ var Module = fx.Module(
 		}
 		return nil
 	}, fx.As(new(repository.EmailProvider)))),
+
+	// --- Push Provider ---
+	fx.Provide(fx.Annotate(func(logger core.Logger) repository.PushProvider {
+		return pushProvider.NewNoopProvider(logger)
+	}, fx.As(new(repository.PushProvider)))),
 
 	// --- IAM global preference reader (default: enabled) ---
 	fx.Provide(fx.Annotate(func() appusecase.IAMGlobalPreferenceReader {
