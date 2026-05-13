@@ -16,17 +16,15 @@ type CreateTemplateInput struct {
 	DefaultContent   map[string]interface{}      `json:"defaultContent"`
 	VariablesSchema  *map[string]interface{}     `json:"variablesSchema,omitempty"`
 	DefaultTTL       *int                        `json:"defaultTtl,omitempty"`
-	EnablePushMirror bool                        `json:"enablePushMirror"`
 }
 
 type UpdateTemplateInput struct {
-	Name             *string                      `json:"name,omitempty"`
-	Description      *string                      `json:"description,omitempty"`
-	Priority         *entity.NotificationPriority `json:"priority,omitempty"`
-	DefaultContent   *map[string]interface{}      `json:"defaultContent,omitempty"`
-	VariablesSchema  *map[string]interface{}      `json:"variablesSchema,omitempty"`
-	DefaultTTL       *int                         `json:"defaultTtl,omitempty"`
-	EnablePushMirror *bool                        `json:"enablePushMirror,omitempty"`
+	Name            *string                      `json:"name,omitempty"`
+	Description     *string                      `json:"description,omitempty"`
+	Priority        *entity.NotificationPriority `json:"priority,omitempty"`
+	DefaultContent  *map[string]interface{}      `json:"defaultContent,omitempty"`
+	VariablesSchema *map[string]interface{}      `json:"variablesSchema,omitempty"`
+	DefaultTTL      *int                         `json:"defaultTtl,omitempty"`
 }
 
 type CreateTemplateTranslationInput struct {
