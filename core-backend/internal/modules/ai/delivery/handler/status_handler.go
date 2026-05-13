@@ -27,8 +27,8 @@ func (h *StatusHandler) enrichProjectionWithDocument(ctx context.Context, resp *
 	}
 	resp.SourceFilename = doc.SourceFilename
 	resp.DeclaredLanguage = doc.DeclaredLanguage
-	resp.SectorIDs = doc.SectorIDs
-	resp.TagIDs = doc.TagIDs
+	resp.SectorIDs = []uuid.UUID(doc.SectorIDs)
+	resp.TagIDs = []uuid.UUID(doc.TagIDs)
 }
 
 func mapProjectionToResponse(p *entity.IngestionStatusProjection) dto.IngestionStatusProjectionResponse {

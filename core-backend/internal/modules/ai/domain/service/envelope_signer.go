@@ -12,6 +12,7 @@ import (
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	aievent "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/event"
+	"gorm.io/datatypes"
 )
 
 type EnvelopeSigner interface {
@@ -44,8 +45,6 @@ func (s *envelopeSigner) SignEnvelope(_ context.Context, envelope map[string]any
 	}
 
 	sig := []byte(hex.EncodeToString(mac.Sum(nil)))
-	// TODO: remove after debugging HMAC mismatch
-	fmt.Printf("[SIGNER] canonical=%s\n[SIGNER] signature=%s\n", string(canonical), string(sig))
 	return sig, keyID, nil
 }
 
@@ -77,8 +76,18 @@ func canonicalJSON(value any) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// writeCanonicalJSON recursively writes canonical JSON that matches Python's
+// json.dumps(..., ensure_ascii=True, sort_keys=True). All non-ASCII characters
+// are escaped as \uXXXX to ensure cross-platform HMAC signature compatibility.
 func writeCanonicalJSON(buf *bytes.Buffer, value any) error {
 	switch v := value.(type) {
+	case string:
+		writeCanonicalString(buf, v)
+		return nil
+	case datatypes.JSONMap:
+		// JSONMap has a custom MarshalJSON that bypasses our ensure_ascii
+		// string handling. Convert to map[string]any for recursive processing.
+		return writeCanonicalJSON(buf, map[string]any(v))
 	case map[string]any:
 		keys := make([]string, 0, len(v))
 		for k := range v {
@@ -90,8 +99,7 @@ func writeCanonicalJSON(buf *bytes.Buffer, value any) error {
 			if i > 0 {
 				buf.WriteByte(',')
 			}
-			keyBytes, _ := json.Marshal(k)
-			buf.Write(keyBytes)
+			writeCanonicalString(buf, k)
 			buf.WriteByte(':')
 			if err := writeCanonicalJSON(buf, v[k]); err != nil {
 				return err
@@ -111,6 +119,20 @@ func writeCanonicalJSON(buf *bytes.Buffer, value any) error {
 		}
 		buf.WriteByte(']')
 		return nil
+	case nil:
+		buf.WriteString("null")
+		return nil
+	case bool:
+		if v {
+			buf.WriteString("true")
+		} else {
+			buf.WriteString("false")
+		}
+		return nil
+	case float64:
+		encoded, _ := json.Marshal(v)
+		buf.Write(encoded)
+		return nil
 	default:
 		encoded, err := json.Marshal(v)
 		if err != nil {
@@ -119,4 +141,32 @@ func writeCanonicalJSON(buf *bytes.Buffer, value any) error {
 		buf.Write(encoded)
 		return nil
 	}
+}
+
+// writeCanonicalString writes a JSON string matching Python's ensure_ascii=True.
+// Non-ASCII characters are escaped as \uXXXX to ensure cross-platform consistency.
+func writeCanonicalString(buf *bytes.Buffer, s string) {
+	buf.WriteByte('"')
+	for _, r := range s {
+		switch {
+		case r == '"':
+			buf.WriteString(`\"`)
+		case r == '\\':
+			buf.WriteString(`\\`)
+		case r == '\n':
+			buf.WriteString(`\n`)
+		case r == '\r':
+			buf.WriteString(`\r`)
+		case r == '\t':
+			buf.WriteString(`\t`)
+		case r < 0x20:
+			fmt.Fprintf(buf, `\u%04x`, r)
+		case r > 0x7e:
+			// Match Python's ensure_ascii=True: escape all non-ASCII
+			fmt.Fprintf(buf, `\u%04x`, r)
+		default:
+			buf.WriteRune(r)
+		}
+	}
+	buf.WriteByte('"')
 }

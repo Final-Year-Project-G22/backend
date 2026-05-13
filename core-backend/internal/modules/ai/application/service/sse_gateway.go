@@ -100,7 +100,7 @@ func (s *SSEGateway) StreamStatusByAccount(ctx context.Context, accountID uuid.U
 		}
 	}
 
-	pollInterval := 500 * time.Millisecond
+	pollInterval := 3000 * time.Millisecond
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 
@@ -116,12 +116,15 @@ func (s *SSEGateway) StreamStatusByAccount(ctx context.Context, accountID uuid.U
 			}
 
 			maxUpdated := lastUpdatedAt
-			formattedProjections := make([]map[string]any, len(projections))
-			for i, p := range projections {
+			formattedProjections := make([]map[string]any, 0, len(projections))
+			for _, p := range projections {
+				if !p.UpdatedAt.After(lastUpdatedAt) {
+					continue
+				}
 				if p.UpdatedAt.After(maxUpdated) {
 					maxUpdated = p.UpdatedAt
 				}
-				formattedProjections[i] = map[string]any{
+				formattedProjections = append(formattedProjections, map[string]any{
 					"documentId":           p.DocumentID,
 					"accountId":            p.AccountID,
 					"userId":               p.UserID,
@@ -134,10 +137,10 @@ func (s *SSEGateway) StreamStatusByAccount(ctx context.Context, accountID uuid.U
 					"chunksProcessedCount": p.ChunksProcessedCount,
 					"chunksFailedCount":    p.ChunksFailedCount,
 					"eventSequence":        p.LastEventSequence,
-				}
+				})
 			}
 
-			if !maxUpdated.After(lastUpdatedAt) {
+			if len(formattedProjections) == 0 {
 				continue
 			}
 
