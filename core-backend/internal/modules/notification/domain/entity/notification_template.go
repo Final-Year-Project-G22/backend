@@ -16,6 +16,7 @@ type NotificationTemplate struct {
 	DefaultContent   datatypes.JSONMap                 `gorm:"type:jsonb;not null"`
 	VariablesSchema  *datatypes.JSONMap                `gorm:"type:jsonb"`
 	DefaultTTL       *int                              `gorm:"type:integer"`
+	EnablePushMirror bool                              `gorm:"not null;default:false"`
 	Translations     []NotificationTemplateTranslation `gorm:"foreignKey:TemplateID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 

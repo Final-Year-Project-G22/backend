@@ -20,6 +20,7 @@ type CreateTemplateRequest struct {
 	DefaultContent   map[string]interface{}      `json:"defaultContent" doc:"Multi-channel content"`
 	VariablesSchema  *map[string]interface{}     `json:"variablesSchema,omitempty" doc:"Template variable schema"`
 	DefaultTTL       *int                        `json:"defaultTtl,omitempty" doc:"Default TTL in seconds"`
+	EnablePushMirror bool                        `json:"enablePushMirror" doc:"Enable automatic push mirroring from in-app content"`
 }
 
 type CreateTemplateInput struct {
@@ -52,6 +53,7 @@ type TemplateDetailResponse struct {
 	TemplateGroup    string                      `json:"templateGroup" doc:"Template group"`
 	Priority         entity.NotificationPriority `json:"priority" doc:"Default priority"`
 	IsSystemManaged  bool                        `json:"isSystemManaged" doc:"Whether template is system-managed"`
+	EnablePushMirror bool                        `json:"enablePushMirror" doc:"Whether push mirroring is enabled"`
 	DefaultContent   map[string]interface{}      `json:"defaultContent" doc:"Multi-channel content"`
 	VariablesSchema  map[string]interface{}      `json:"variablesSchema,omitempty" doc:"Template variable schema"`
 	DefaultTTL       *int                        `json:"defaultTtl,omitempty" doc:"Default TTL in seconds"`
@@ -84,17 +86,19 @@ type TemplateSummaryResponse struct {
 	NotificationType entity.NotificationType `json:"notificationType" doc:"Notification type"`
 	TemplateGroup    string                  `json:"templateGroup" doc:"Template group"`
 	IsSystemManaged  bool                    `json:"isSystemManaged" doc:"Whether template is system-managed"`
+	EnablePushMirror bool                    `json:"enablePushMirror" doc:"Whether push mirroring is enabled"`
 }
 
 // --- Update Template ---
 
 type UpdateTemplateRequest struct {
-	Name            *string                      `json:"name,omitempty" doc:"Template name" maxLength:"200"`
-	Description     *string                      `json:"description,omitempty" doc:"Template description"`
-	Priority        *entity.NotificationPriority `json:"priority,omitempty" doc:"Default priority"`
-	DefaultContent  *map[string]interface{}      `json:"defaultContent,omitempty" doc:"Multi-channel content"`
-	VariablesSchema *map[string]interface{}      `json:"variablesSchema,omitempty" doc:"Template variable schema"`
-	DefaultTTL      *int                         `json:"defaultTtl,omitempty" doc:"Default TTL in seconds"`
+	Name             *string                      `json:"name,omitempty" doc:"Template name" maxLength:"200"`
+	Description      *string                      `json:"description,omitempty" doc:"Template description"`
+	Priority         *entity.NotificationPriority `json:"priority,omitempty" doc:"Default priority"`
+	DefaultContent   *map[string]interface{}      `json:"defaultContent,omitempty" doc:"Multi-channel content"`
+	VariablesSchema  *map[string]interface{}      `json:"variablesSchema,omitempty" doc:"Template variable schema"`
+	DefaultTTL       *int                         `json:"defaultTtl,omitempty" doc:"Default TTL in seconds"`
+	EnablePushMirror *bool                        `json:"enablePushMirror,omitempty" doc:"Enable automatic push mirroring from in-app content"`
 }
 
 type UpdateTemplateInput struct {
@@ -224,17 +228,19 @@ func ToCreateTemplateInput(body CreateTemplateRequest) usecase.CreateTemplateInp
 		DefaultContent:   body.DefaultContent,
 		VariablesSchema:  body.VariablesSchema,
 		DefaultTTL:       body.DefaultTTL,
+		EnablePushMirror: body.EnablePushMirror,
 	}
 }
 
 func ToUpdateTemplateInput(body UpdateTemplateRequest) usecase.UpdateTemplateInput {
 	return usecase.UpdateTemplateInput{
-		Name:            body.Name,
-		Description:     body.Description,
-		Priority:        body.Priority,
-		DefaultContent:  body.DefaultContent,
-		VariablesSchema: body.VariablesSchema,
-		DefaultTTL:      body.DefaultTTL,
+		Name:             body.Name,
+		Description:      body.Description,
+		Priority:         body.Priority,
+		DefaultContent:   body.DefaultContent,
+		VariablesSchema:  body.VariablesSchema,
+		DefaultTTL:       body.DefaultTTL,
+		EnablePushMirror: body.EnablePushMirror,
 	}
 }
 
@@ -273,6 +279,7 @@ func ToTemplateDetailResponse(tmpl *entity.NotificationTemplate, translations []
 		TemplateGroup:    tmpl.TemplateGroup,
 		Priority:         tmpl.Priority,
 		IsSystemManaged:  tmpl.IsSystemManaged,
+		EnablePushMirror: tmpl.EnablePushMirror,
 		DefaultContent:   tmpl.DefaultContent,
 		DefaultTTL:       tmpl.DefaultTTL,
 	}

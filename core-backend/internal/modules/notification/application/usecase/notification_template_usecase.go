@@ -56,6 +56,7 @@ func (uc *notificationTemplateUsecase) CreateTemplate(ctx context.Context, input
 		DefaultContent:   datatypes.JSONMap(input.DefaultContent),
 		VariablesSchema:  variablesSchema,
 		DefaultTTL:       input.DefaultTTL,
+		EnablePushMirror: input.EnablePushMirror,
 	}
 
 	if err := uc.repo.Create(ctx, tmpl); err != nil {
@@ -109,6 +110,9 @@ func (uc *notificationTemplateUsecase) UpdateTemplate(ctx context.Context, id uu
 		}
 		if input.DefaultTTL != nil {
 			updates["default_ttl"] = *input.DefaultTTL
+		}
+		if input.EnablePushMirror != nil {
+			updates["enable_push_mirror"] = *input.EnablePushMirror
 		}
 
 		if len(updates) == 0 {
