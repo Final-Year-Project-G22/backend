@@ -24,6 +24,7 @@ type CitationDTO struct {
 	SourceType string    `json:"sourceType"`
 	Title      *string   `json:"title,omitempty"`
 	Score      float64   `json:"score"`
+	Excerpt    *string   `json:"excerpt,omitempty"`
 }
 
 type UsageDTO struct {

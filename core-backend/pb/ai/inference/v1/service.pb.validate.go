@@ -188,6 +188,10 @@ func (m *Citation) validate(all bool) error {
 		// no validation rules for Title
 	}
 
+	if m.Excerpt != nil {
+		// no validation rules for Excerpt
+	}
+
 	if len(errors) > 0 {
 		return CitationMultiError(errors)
 	}
