@@ -137,16 +137,19 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
         content = message.user_query or message.llm_response or ""
 
         citations = []
-        if message.retrieved_chunk_ids:
-            chunk_ids = message.retrieved_chunk_ids
-            citations.extend(
-                service_pb2.Citation(
-                    chunk_id=str(cid),
-                    document_id="",
-                    source_type="chunk",
-                )
-                for cid in chunk_ids
-            )
+        if message.response_sources:
+            for src in message.response_sources:
+                kwargs: dict[str, Any] = {
+                    "chunk_id": str(src.chunk_id) if src.chunk_id else "",
+                    "document_id": str(src.document_id),
+                    "source_type": src.source.value,
+                    "score": src.score or 0.0,
+                }
+                if src.title:
+                    kwargs["title"] = src.title
+                if src.excerpt:
+                    kwargs["excerpt"] = src.excerpt
+                citations.append(service_pb2.Citation(**kwargs))
 
         usage = None
         if message.token_usage:

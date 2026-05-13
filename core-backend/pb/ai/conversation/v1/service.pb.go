@@ -545,6 +545,7 @@ type Citation struct {
 	SourceType    string                 `protobuf:"bytes,3,opt,name=source_type,json=sourceType,proto3" json:"source_type,omitempty"`
 	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
 	Score         float64                `protobuf:"fixed64,5,opt,name=score,proto3" json:"score,omitempty"`
+	Excerpt       *string                `protobuf:"bytes,6,opt,name=excerpt,proto3,oneof" json:"excerpt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -612,6 +613,13 @@ func (x *Citation) GetScore() float64 {
 		return x.Score
 	}
 	return 0
+}
+
+func (x *Citation) GetExcerpt() string {
+	if x != nil && x.Excerpt != nil {
+		return *x.Excerpt
+	}
+	return ""
 }
 
 type Usage struct {
@@ -833,7 +841,7 @@ const file_ai_conversation_v1_service_proto_rawDesc = "" +
 	"\tcitations\x18\x04 \x03(\v2\x1c.ai.conversation.v1.CitationR\tcitations\x12/\n" +
 	"\x05usage\x18\x05 \x01(\v2\x19.ai.conversation.v1.UsageR\x05usage\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x06 \x01(\tR\tcreatedAt\"\xa7\x01\n" +
+	"created_at\x18\x06 \x01(\tR\tcreatedAt\"\xd2\x01\n" +
 	"\bCitation\x12#\n" +
 	"\bchunk_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\achunkId\x12)\n" +
 	"\vdocument_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
@@ -841,7 +849,10 @@ const file_ai_conversation_v1_service_proto_rawDesc = "" +
 	"\vsource_type\x18\x03 \x01(\tR\n" +
 	"sourceType\x12\x14\n" +
 	"\x05title\x18\x04 \x01(\tR\x05title\x12\x14\n" +
-	"\x05score\x18\x05 \x01(\x01R\x05score\"|\n" +
+	"\x05score\x18\x05 \x01(\x01R\x05score\x12\x1d\n" +
+	"\aexcerpt\x18\x06 \x01(\tH\x00R\aexcerpt\x88\x01\x01B\n" +
+	"\n" +
+	"\b_excerpt\"|\n" +
 	"\x05Usage\x12#\n" +
 	"\rprompt_tokens\x18\x01 \x01(\x05R\fpromptTokens\x12+\n" +
 	"\x11completion_tokens\x18\x02 \x01(\x05R\x10completionTokens\x12!\n" +
@@ -910,6 +921,7 @@ func file_ai_conversation_v1_service_proto_init() {
 	if File_ai_conversation_v1_service_proto != nil {
 		return
 	}
+	file_ai_conversation_v1_service_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

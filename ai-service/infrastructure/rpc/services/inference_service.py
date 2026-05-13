@@ -83,7 +83,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                     chunk_id=str(hit.chunk_id),
                     source_type="chunk",
                     score=hit.score,
-                    title=f"Chunk {hit.chunk_index}",
+                    title=getattr(hit, "document_title", None) or f"Chunk {hit.chunk_index}",
                     excerpt=hit.chunk_text[:300],
                 )
                 for hit in response.retrieved_hits
@@ -203,7 +203,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                     chunk_id=str(hit.chunk_id),
                     source_type="chunk",
                     score=hit.score,
-                    title=f"Chunk {hit.chunk_index}",
+                    title=getattr(hit, "document_title", None) or f"Chunk {hit.chunk_index}",
                     excerpt=hit.chunk_text[:300],
                 )
                 for hit in merged_hits
