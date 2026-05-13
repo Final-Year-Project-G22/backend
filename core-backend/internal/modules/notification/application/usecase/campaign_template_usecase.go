@@ -34,9 +34,10 @@ func NewCampaignTemplateUsecase(
 
 func (uc *campaignTemplateUsecase) Create(ctx context.Context, input usecase.CreateCampaignTemplateInput) (*entity.CampaignTemplate, error) {
 	tmpl := &entity.CampaignTemplate{
-		Name:           input.Name,
-		Description:    input.Description,
-		DefaultContent: datatypes.JSONMap(input.DefaultContent),
+		Name:             input.Name,
+		Description:      input.Description,
+		DefaultContent:   datatypes.JSONMap(input.DefaultContent),
+		EnablePushMirror: input.EnablePushMirror,
 	}
 	if err := uc.repo.Create(ctx, tmpl); err != nil {
 		return nil, err
@@ -72,6 +73,9 @@ func (uc *campaignTemplateUsecase) Update(ctx context.Context, id uuid.UUID, inp
 	}
 	if input.DefaultContent != nil {
 		updates["default_content"] = datatypes.JSONMap(*input.DefaultContent)
+	}
+	if input.EnablePushMirror != nil {
+		updates["enable_push_mirror"] = *input.EnablePushMirror
 	}
 
 	if len(updates) == 0 {

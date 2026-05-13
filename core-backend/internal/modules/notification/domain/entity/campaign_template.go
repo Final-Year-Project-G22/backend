@@ -6,11 +6,12 @@ import (
 )
 
 type CampaignTemplate struct {
-	model.BaseModel `gorm:"embedded"`
-	Name            string                        `gorm:"type:varchar(200);not null;uniqueIndex"`
-	Description     *string                       `gorm:"type:text"`
-	DefaultContent  datatypes.JSONMap             `gorm:"type:jsonb;not null"`
-	Translations    []CampaignTemplateTranslation `gorm:"foreignKey:CampaignTemplateID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	model.BaseModel  `gorm:"embedded"`
+	Name             string                        `gorm:"type:varchar(200);not null;uniqueIndex"`
+	Description      *string                       `gorm:"type:text"`
+	DefaultContent   datatypes.JSONMap             `gorm:"type:jsonb;not null"`
+	EnablePushMirror bool                          `gorm:"not null;default:false"`
+	Translations     []CampaignTemplateTranslation `gorm:"foreignKey:CampaignTemplateID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (CampaignTemplate) TableName() string {

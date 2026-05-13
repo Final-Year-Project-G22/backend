@@ -22,15 +22,17 @@ type CampaignTemplateUsecase interface {
 }
 
 type CreateCampaignTemplateInput struct {
-	Name           string                 `json:"name"`
-	Description    *string                `json:"description,omitempty"`
-	DefaultContent map[string]interface{} `json:"defaultContent"`
+	Name             string                 `json:"name"`
+	Description      *string                `json:"description,omitempty"`
+	DefaultContent   map[string]interface{} `json:"defaultContent"`
+	EnablePushMirror bool                   `json:"enablePushMirror"`
 }
 
 type UpdateCampaignTemplateInput struct {
-	Name           *string                 `json:"name,omitempty"`
-	Description    *string                 `json:"description,omitempty"`
-	DefaultContent *map[string]interface{} `json:"defaultContent,omitempty"`
+	Name             *string                 `json:"name,omitempty"`
+	Description      *string                 `json:"description,omitempty"`
+	DefaultContent   *map[string]interface{} `json:"defaultContent,omitempty"`
+	EnablePushMirror *bool                   `json:"enablePushMirror,omitempty"`
 }
 
 type CreateCampaignTemplateTranslationInput struct {
