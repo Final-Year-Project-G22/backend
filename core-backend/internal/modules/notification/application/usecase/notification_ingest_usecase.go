@@ -68,6 +68,7 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	if len(channels) == 0 {
 		return nil
 	}
+	channels = uc.expandChannels(tmpl, channels)
 
 	isMuted, err := uc.resolveMuted(ctx, input.AccountID, input.Metadata)
 	if err != nil {
@@ -103,6 +104,20 @@ func (uc *notificationIngestUsecase) resolveChannels(tmpl *entity.NotificationTe
 		return nil
 	}
 	return uc.channelsFromTemplate(tmpl)
+}
+
+func (uc *notificationIngestUsecase) expandChannels(tmpl *entity.NotificationTemplate, channels []entity.Channel) []entity.Channel {
+	if !tmpl.EnablePushMirror {
+		return channels
+	}
+	expanded := make([]entity.Channel, 0, len(channels)+1)
+	for _, ch := range channels {
+		expanded = append(expanded, ch)
+		if ch == entity.ChannelInApp {
+			expanded = append(expanded, entity.ChannelPush)
+		}
+	}
+	return expanded
 }
 
 func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input usecase.SendNotificationInput) error {
@@ -151,6 +166,8 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 			return err
 		}
 
+		channels = uc.expandChannels(tmpl, channels)
+
 		for _, channel := range channels {
 			if !uc.hasChannelContent(tmpl, channel) {
 				continue
@@ -183,19 +200,33 @@ func (uc *notificationIngestUsecase) enqueue(
 	isMuted bool,
 ) error {
 	contentMap := map[string]interface{}(tmpl.DefaultContent)
-	rendered, err := uc.renderer.RenderMultiChannel(contentMap, variables, []entity.Channel{channel})
+
+	renderChannel := channel
+	if channel == entity.ChannelPush {
+		renderChannel = entity.ChannelInApp
+	}
+
+	rendered, err := uc.renderer.RenderMultiChannel(contentMap, variables, []entity.Channel{renderChannel})
 	if err != nil {
 		return fmt.Errorf("failed to render content for channel %s: %w", channel, err)
 	}
 
-	payload, ok := rendered[string(channel)]
+	payload, ok := rendered[string(renderChannel)]
 	if !ok {
-		return fmt.Errorf("no rendered content for channel %s", channel)
+		return fmt.Errorf("no rendered content for channel %s", renderChannel)
 	}
 
 	payloadMap, ok := payload.(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("unexpected payload type for channel %s", channel)
+	}
+
+	if channel == entity.ChannelPush {
+		if body, ok := payloadMap["content"]; ok {
+			payloadMap["body"] = body
+		}
+		delete(payloadMap, "content")
+		delete(payloadMap, "to")
 	}
 
 	if isMuted {
