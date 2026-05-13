@@ -136,9 +136,8 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, func(ctx context.Context, input *dto.GetConversationInput) (*dto.GetConversationOutput, error) {
-		sessionID := getSessionIDFromContext(ctx)
 		accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
-		return deps.AskHandler.HandleGetConversation(ctx, input, sessionID, accountID)
+		return deps.AskHandler.HandleGetConversation(ctx, input, input.SessionID, accountID)
 	})
 
 	huma.Register(api, huma.Operation{
@@ -151,9 +150,8 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, func(ctx context.Context, input *dto.ArchiveConversationInput) (*dto.ArchiveConversationOutput, error) {
-		sessionID := getSessionIDFromContext(ctx)
 		accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
-		return deps.AskHandler.HandleArchiveConversation(ctx, input, sessionID, accountID)
+		return deps.AskHandler.HandleArchiveConversation(ctx, input, input.SessionID, accountID)
 	})
 }
 
