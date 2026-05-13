@@ -129,6 +129,7 @@ type Citation struct {
 	SourceType    string                 `protobuf:"bytes,3,opt,name=source_type,json=sourceType,proto3" json:"source_type,omitempty"`
 	Title         *string                `protobuf:"bytes,4,opt,name=title,proto3,oneof" json:"title,omitempty"`
 	Score         float64                `protobuf:"fixed64,5,opt,name=score,proto3" json:"score,omitempty"`
+	Excerpt       *string                `protobuf:"bytes,6,opt,name=excerpt,proto3,oneof" json:"excerpt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -196,6 +197,13 @@ func (x *Citation) GetScore() float64 {
 		return x.Score
 	}
 	return 0
+}
+
+func (x *Citation) GetExcerpt() string {
+	if x != nil && x.Excerpt != nil {
+		return *x.Excerpt
+	}
+	return ""
 }
 
 type Usage struct {
@@ -723,7 +731,7 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\x05top_k\x18\a \x01(\x05B\t\xbaH\x06\x1a\x04\x18\x14(\x01R\x04topK\x12\x19\n" +
 	"\x05title\x18\b \x01(\tH\x01R\x05title\x88\x01\x01B\r\n" +
 	"\v_session_idB\b\n" +
-	"\x06_title\"\xb6\x01\n" +
+	"\x06_title\"\xe1\x01\n" +
 	"\bCitation\x12)\n" +
 	"\vdocument_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
 	"documentId\x12#\n" +
@@ -731,8 +739,11 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\vsource_type\x18\x03 \x01(\tR\n" +
 	"sourceType\x12\x19\n" +
 	"\x05title\x18\x04 \x01(\tH\x00R\x05title\x88\x01\x01\x12\x14\n" +
-	"\x05score\x18\x05 \x01(\x01R\x05scoreB\b\n" +
-	"\x06_title\"|\n" +
+	"\x05score\x18\x05 \x01(\x01R\x05score\x12\x1d\n" +
+	"\aexcerpt\x18\x06 \x01(\tH\x01R\aexcerpt\x88\x01\x01B\b\n" +
+	"\x06_titleB\n" +
+	"\n" +
+	"\b_excerpt\"|\n" +
 	"\x05Usage\x12#\n" +
 	"\rprompt_tokens\x18\x01 \x01(\x05R\fpromptTokens\x12+\n" +
 	"\x11completion_tokens\x18\x02 \x01(\x05R\x10completionTokens\x12!\n" +

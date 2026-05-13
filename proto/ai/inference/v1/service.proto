@@ -28,6 +28,7 @@ message Citation {
   string source_type = 3;
   optional string title = 4;
   double score = 5;
+  optional string excerpt = 6;
 }
 
 message Usage {
