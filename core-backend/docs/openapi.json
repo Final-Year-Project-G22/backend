@@ -663,15 +663,6 @@
           "isOptional": {
             "type": "boolean"
           },
-          "requiredDocuments": {
-            "items": {
-              "$ref": "#/components/schemas/AdminStepDocumentDTO"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
-          },
           "slug": {
             "type": "string"
           },
@@ -840,21 +831,6 @@
         ],
         "type": "object"
       },
-      "AdminStepDocumentDTO": {
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "type": "object"
-      },
       "AdminStepTranslationDTO": {
         "additionalProperties": false,
         "properties": {
@@ -865,6 +841,7 @@
           "language": {
             "type": "string"
           },
+          "requiredDocuments": {},
           "title": {
             "type": "string"
           }
@@ -3207,25 +3184,6 @@
         ],
         "type": "object"
       },
-      "CreateStepDocument": {
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "description": "Document description",
-            "type": "string"
-          },
-          "name": {
-            "description": "Document name",
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "type": "object"
-      },
       "CreateStepRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3290,16 +3248,6 @@
           "isOptional": {
             "description": "Whether step can be skipped",
             "type": "boolean"
-          },
-          "requiredDocuments": {
-            "description": "Required documents for this step",
-            "items": {
-              "$ref": "#/components/schemas/CreateStepDocument"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
           },
           "slug": {
             "description": "Step slug",
@@ -3373,6 +3321,9 @@
             "maxLength": 5,
             "minLength": 2,
             "type": "string"
+          },
+          "requiredDocuments": {
+            "description": "Required documents as JSON array"
           },
           "title": {
             "description": "Localized title",
@@ -11759,25 +11710,6 @@
         ],
         "type": "object"
       },
-      "UpdateStepDocument": {
-        "additionalProperties": false,
-        "properties": {
-          "description": {
-            "description": "Document description",
-            "type": "string"
-          },
-          "name": {
-            "description": "Document name",
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "type": "object"
-      },
       "UpdateStepRequest": {
         "additionalProperties": false,
         "properties": {
@@ -11838,16 +11770,6 @@
           "isOptional": {
             "description": "Whether step can be skipped",
             "type": "boolean"
-          },
-          "requiredDocuments": {
-            "description": "Required documents for this step",
-            "items": {
-              "$ref": "#/components/schemas/UpdateStepDocument"
-            },
-            "type": [
-              "array",
-              "null"
-            ]
           },
           "slug": {
             "description": "Step slug",
@@ -11921,6 +11843,9 @@
             "maxLength": 5,
             "minLength": 2,
             "type": "string"
+          },
+          "requiredDocuments": {
+            "description": "Required documents as JSON array"
           },
           "title": {
             "description": "Localized title",
@@ -12515,6 +12440,28 @@
             "type": "string"
           },
           "imageUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "imageUrl"
+        ],
+        "type": "object"
+      },
+      "UploadGuideImageResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UploadGuideImageResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "imageUrl": {
+            "description": "Uploaded image URL",
             "type": "string"
           }
         },
@@ -15388,6 +15335,80 @@
           }
         ],
         "summary": "Add guide condition",
+        "tags": [
+          "Admin - Guides"
+        ]
+      }
+    },
+    "/api/v1/admin/guides/{id}/image": {
+      "post": {
+        "description": "Uploads and sets the cover image for a guide.",
+        "operationId": "uploadGuideImage",
+        "parameters": [
+          {
+            "description": "Guide ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Guide ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadGuideImageResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Upload guide image",
         "tags": [
           "Admin - Guides"
         ]

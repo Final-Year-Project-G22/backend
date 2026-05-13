@@ -1,4 +1,4 @@
-h1:CrkLGYyqqyCze0l9mG2RKxRQy6/wh4nCxB/CgXLQpDs=
+h1:NUvTh1Rxjq1BRdFGKDE8jLBHxmiuFj05USjnNu8oIIg=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -28,3 +28,4 @@ h1:CrkLGYyqqyCze0l9mG2RKxRQy6/wh4nCxB/CgXLQpDs=
 20260511132249_paymentModuleEntities.sql h1:uoUi5T4JxqwwZeyElbmQx+swVQnDVUECvOL/8xkv4Rc=
 20260512150000_seed_payment_plans.sql h1:DYJINnkujC68WcDoj2LPU0vLnxdgtBUhiSS7Kj9DHjE=
 20260513103128_addGuideImageUrl.sql h1:nmRoiDCfCrWpmLkM87Y/2eJ2YyRHxjjFNbuedblIc88=
+20260513113730_guideStepRequiredDocuments.sql h1:w8oSvdEs4Cs7ticXcV8uRDKTWTpp2f4OXlg0IVoL8kA=
