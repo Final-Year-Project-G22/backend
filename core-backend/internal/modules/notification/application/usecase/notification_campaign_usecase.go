@@ -55,10 +55,6 @@ func (uc *notificationCampaignUsecase) CreateCampaign(ctx context.Context, creat
 		return nil, notiferror.ErrCampaignTemplateNotFound
 	}
 
-	if input.CampaignType == entity.CampaignTypeSegmented && input.TargetSegment == nil {
-		return nil, fmt.Errorf("target segment required for segmented campaign")
-	}
-
 	var targetSegment *datatypes.JSONMap
 	if input.TargetSegment != nil {
 		ts := datatypes.JSONMap(*input.TargetSegment)
@@ -183,9 +179,18 @@ func (uc *notificationCampaignUsecase) ScheduleCampaign(ctx context.Context, inp
 		return notiferror.ErrCampaignTemplateNotFound
 	}
 
-	var segment map[string]interface{}
-	if campaign.TargetSegment != nil {
-		segment = *campaign.TargetSegment
+	segment := make(map[string]interface{})
+	if len(campaign.SectorIDs) > 0 {
+		segment["sector_ids"] = campaign.SectorIDs
+	}
+	if len(campaign.TagIDs) > 0 {
+		segment["tag_ids"] = campaign.TagIDs
+	}
+	if campaign.Region != nil {
+		segment["region"] = *campaign.Region
+	}
+	if campaign.Stage != nil {
+		segment["stage"] = *campaign.Stage
 	}
 
 	accountIDs, err := uc.campaignProc.ResolveSegment(ctx, campaign.CampaignType, segment)
