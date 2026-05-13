@@ -2,18 +2,11 @@ package routes
 
 import (
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/gin-gonic/gin"
 )
 
 const notifBase = "/api/v1/notifications"
 
 func RegisterNotificationRoutes(api huma.API, deps RouteDependencies) {
-	// --- Inbox SSE (Gin route for streaming) ---
-	engine, ok := api.(interface{ Engine() *gin.Engine })
-	if ok {
-		engine.Engine().GET(notifBase+"/inbox/events", deps.InboxSSEHandler.HandleInboxEvents)
-	}
-
 	// --- Inbox ---
 	huma.Register(api, huma.Operation{
 		OperationID: "listInbox",

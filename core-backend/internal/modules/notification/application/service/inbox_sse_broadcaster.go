@@ -14,6 +14,7 @@ type InboxEvent struct {
 	Type             string                  `json:"type"`
 	AccountID        uuid.UUID               `json:"accountId"`
 	NotificationType entity.NotificationType `json:"notificationType"`
+	UnreadCount      int64                   `json:"unreadCount"`
 	Timestamp        time.Time               `json:"timestamp"`
 }
 

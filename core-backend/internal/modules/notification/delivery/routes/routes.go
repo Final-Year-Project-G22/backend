@@ -23,4 +23,7 @@ func RegisterRoutes(api huma.API, engine *gin.Engine, deps RouteDependencies) {
 	RegisterNotificationRoutes(api, deps)
 	RegisterWebhookRoutes(engine, deps)
 	RegisterSSERoutes(engine, deps)
+
+	engine.OPTIONS(notifBase+"/inbox/events", deps.InboxSSEHandler.HandleInboxEvents)
+	engine.GET(notifBase+"/inbox/events", deps.InboxSSEHandler.HandleInboxEvents)
 }
