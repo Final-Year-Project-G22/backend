@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/dbtypes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/model"
 	"github.com/google/uuid"
 )
@@ -30,8 +31,8 @@ type IngestionDocument struct {
 	Status           IngestionDocumentStatus `gorm:"type:varchar(32);not null;default:'queued';index:idx_ingestion_documents_status"`
 	LastError        *string                 `gorm:"type:text"`
 	EventID          uuid.UUID               `gorm:"type:uuid;not null;uniqueIndex:idx_ingestion_documents_event_id"`
-	SectorIDs        []uuid.UUID             `gorm:"type:uuid[];index:idx_ingestion_documents_sector_ids,using:gin"`
-	TagIDs           []uuid.UUID             `gorm:"type:uuid[];index:idx_ingestion_documents_tag_ids,using:gin"`
+	SectorIDs        dbtypes.UUIDArray       `gorm:"type:uuid[];index:idx_ingestion_documents_sector_ids,using:gin"`
+	TagIDs           dbtypes.UUIDArray       `gorm:"type:uuid[];index:idx_ingestion_documents_tag_ids,using:gin"`
 	Region           *string                 `gorm:"type:varchar(50)"`
 	Stage            *string                 `gorm:"type:varchar(50)"`
 }

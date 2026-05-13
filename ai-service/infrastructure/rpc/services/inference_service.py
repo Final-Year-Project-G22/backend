@@ -176,7 +176,9 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
             )
             merged_hits = self._ask_ai_usecase._merge_and_dedupe_hits(vector_hits, bm25_hits)
 
-            prompt = self._ask_ai_usecase._build_prompt(command.prompt, merged_hits)
+            prompt = self._ask_ai_usecase._build_prompt(
+                command.prompt, merged_hits, command.language
+            )
 
             llm_port = self._ask_ai_usecase._llm_port
             full_response_parts = []
