@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
@@ -282,20 +283,26 @@ type SetGuideTranslationsResponseBody struct {
 
 // --- Step ---
 
+type CreateStepDocument struct {
+	Name        string  `json:"name" doc:"Document name" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Document description"`
+}
+
 type CreateStepRequest struct {
-	GuideID         uuid.UUID               `json:"guideId" doc:"Parent guide ID"`
-	Slug            string                  `json:"slug" doc:"Step slug" minLength:"1" maxLength:"100"`
-	StepType        entity.StepType         `json:"stepType" doc:"Step type"`
-	SortOrder       int                     `json:"sortOrder" doc:"Display order"`
-	IsOptional      bool                    `json:"isOptional" doc:"Whether step can be skipped"`
-	EstimatedTime   *int                    `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
-	DifficultyLevel *int                    `json:"difficultyLevel,omitempty" doc:"Difficulty level (1-5)"`
-	FeeEstimate     *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
-	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
-	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
-	Translations    []CreateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
-	Conditions      []CreateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
-	Dependencies    []CreateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
+	GuideID           uuid.UUID               `json:"guideId" doc:"Parent guide ID"`
+	Slug              string                  `json:"slug" doc:"Step slug" minLength:"1" maxLength:"100"`
+	StepType          entity.StepType         `json:"stepType" doc:"Step type"`
+	SortOrder         int                     `json:"sortOrder" doc:"Display order"`
+	IsOptional        bool                    `json:"isOptional" doc:"Whether step can be skipped"`
+	EstimatedTime     *int                    `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
+	DifficultyLevel   *int                    `json:"difficultyLevel,omitempty" doc:"Difficulty level (1-5)"`
+	FeeEstimate       *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
+	EffectiveDate     *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
+	ExpiryDate        *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
+	Translations      []CreateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	RequiredDocuments []CreateStepDocument    `json:"requiredDocuments,omitempty" doc:"Required documents for this step"`
+	Conditions        []CreateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+	Dependencies      []CreateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
 }
 
 type CreateStepTranslation struct {
@@ -329,20 +336,26 @@ type CreateStepResponseBody struct {
 	ID uuid.UUID `json:"id" doc:"Created step ID"`
 }
 
+type UpdateStepDocument struct {
+	Name        string  `json:"name" doc:"Document name" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Document description"`
+}
+
 type UpdateStepRequest struct {
-	Slug            *string                 `json:"slug,omitempty" doc:"Step slug" maxLength:"100"`
-	StepType        *entity.StepType        `json:"stepType,omitempty" doc:"Step type"`
-	SortOrder       *int                    `json:"sortOrder,omitempty" doc:"Display order"`
-	IsOptional      *bool                   `json:"isOptional,omitempty" doc:"Whether step can be skipped"`
-	EstimatedTime   *int                    `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
-	DifficultyLevel *int                    `json:"difficultyLevel,omitempty" doc:"Difficulty level (1-5)"`
-	FeeEstimate     *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
-	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
-	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
-	Translations    []UpdateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
-	TranslationMode *string                 `json:"translationMode,omitempty" doc:"Translation mode: 'merge' to upsert without deleting, anything else or absent for full replacement" enum:"merge,replace"`
-	Conditions      []UpdateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
-	Dependencies    []UpdateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
+	Slug              *string                 `json:"slug,omitempty" doc:"Step slug" maxLength:"100"`
+	StepType          *entity.StepType        `json:"stepType,omitempty" doc:"Step type"`
+	SortOrder         *int                    `json:"sortOrder,omitempty" doc:"Display order"`
+	IsOptional        *bool                   `json:"isOptional,omitempty" doc:"Whether step can be skipped"`
+	EstimatedTime     *int                    `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
+	DifficultyLevel   *int                    `json:"difficultyLevel,omitempty" doc:"Difficulty level (1-5)"`
+	FeeEstimate       *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
+	EffectiveDate     *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
+	ExpiryDate        *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
+	Translations      []UpdateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
+	TranslationMode   *string                 `json:"translationMode,omitempty" doc:"Translation mode: 'merge' to upsert without deleting, anything else or absent for full replacement" enum:"merge,replace"`
+	RequiredDocuments []UpdateStepDocument    `json:"requiredDocuments,omitempty" doc:"Required documents for this step"`
+	Conditions        []UpdateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
+	Dependencies      []UpdateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
 }
 
 type UpdateStepTranslation struct {
@@ -680,18 +693,24 @@ type AdminStepTranslationDTO struct {
 }
 
 type AdminGuideStepDTO struct {
-	ID              uuid.UUID                 `json:"id"`
-	GuideID         uuid.UUID                 `json:"guideId"`
-	Slug            string                    `json:"slug"`
-	StepType        entity.StepType           `json:"stepType"`
-	SortOrder       int                       `json:"sortOrder"`
-	IsOptional      bool                      `json:"isOptional"`
-	EstimatedTime   *int                      `json:"estimatedTime,omitempty"`
-	DifficultyLevel *int                      `json:"difficultyLevel,omitempty"`
-	FeeEstimate     *int                      `json:"feeEstimate,omitempty"`
-	EffectiveDate   time.Time                 `json:"effectiveDate"`
-	ExpiryDate      *time.Time                `json:"expiryDate,omitempty"`
-	Translations    []AdminStepTranslationDTO `json:"translations"`
+	ID                uuid.UUID                 `json:"id"`
+	GuideID           uuid.UUID                 `json:"guideId"`
+	Slug              string                    `json:"slug"`
+	StepType          entity.StepType           `json:"stepType"`
+	SortOrder         int                       `json:"sortOrder"`
+	IsOptional        bool                      `json:"isOptional"`
+	EstimatedTime     *int                      `json:"estimatedTime,omitempty"`
+	DifficultyLevel   *int                      `json:"difficultyLevel,omitempty"`
+	FeeEstimate       *int                      `json:"feeEstimate,omitempty"`
+	EffectiveDate     time.Time                 `json:"effectiveDate"`
+	ExpiryDate        *time.Time                `json:"expiryDate,omitempty"`
+	RequiredDocuments []AdminStepDocumentDTO    `json:"requiredDocuments,omitempty"`
+	Translations      []AdminStepTranslationDTO `json:"translations"`
+}
+
+type AdminStepDocumentDTO struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
 }
 
 // --- Mappers ---
@@ -784,20 +803,28 @@ func ToCreateStepInput(body CreateStepRequest) usecase.CreateStepInput {
 			DependencyType: d.DependencyType,
 		})
 	}
+	requiredDocs := make([]usecase.RequiredDocumentInput, 0, len(body.RequiredDocuments))
+	for _, d := range body.RequiredDocuments {
+		requiredDocs = append(requiredDocs, usecase.RequiredDocumentInput{
+			Name:        d.Name,
+			Description: d.Description,
+		})
+	}
 	return usecase.CreateStepInput{
-		GuideID:         body.GuideID,
-		Slug:            body.Slug,
-		StepType:        body.StepType,
-		SortOrder:       body.SortOrder,
-		IsOptional:      body.IsOptional,
-		EstimatedTime:   body.EstimatedTime,
-		DifficultyLevel: body.DifficultyLevel,
-		FeeEstimate:     body.FeeEstimate,
-		EffectiveDate:   body.EffectiveDate,
-		ExpiryDate:      body.ExpiryDate,
-		Translations:    translations,
-		Conditions:      conditions,
-		Dependencies:    dependencies,
+		GuideID:           body.GuideID,
+		Slug:              body.Slug,
+		StepType:          body.StepType,
+		SortOrder:         body.SortOrder,
+		IsOptional:        body.IsOptional,
+		EstimatedTime:     body.EstimatedTime,
+		DifficultyLevel:   body.DifficultyLevel,
+		FeeEstimate:       body.FeeEstimate,
+		EffectiveDate:     body.EffectiveDate,
+		ExpiryDate:        body.ExpiryDate,
+		Translations:      translations,
+		RequiredDocuments: requiredDocs,
+		Conditions:        conditions,
+		Dependencies:      dependencies,
 	}
 }
 
@@ -827,6 +854,13 @@ func ToUpdateStepInput(body UpdateStepRequest) usecase.UpdateStepInput {
 			DependencyType: d.DependencyType,
 		})
 	}
+	requiredDocs := make([]usecase.RequiredDocumentInput, 0, len(body.RequiredDocuments))
+	for _, d := range body.RequiredDocuments {
+		requiredDocs = append(requiredDocs, usecase.RequiredDocumentInput{
+			Name:        d.Name,
+			Description: d.Description,
+		})
+	}
 	merge := body.TranslationMode != nil && *body.TranslationMode == "merge"
 	return usecase.UpdateStepInput{
 		Slug:              body.Slug,
@@ -840,6 +874,7 @@ func ToUpdateStepInput(body UpdateStepRequest) usecase.UpdateStepInput {
 		ExpiryDate:        body.ExpiryDate,
 		Translations:      translations,
 		TranslationsMerge: merge,
+		RequiredDocuments: requiredDocs,
 		Conditions:        conditions,
 		Dependencies:      dependencies,
 	}
@@ -933,18 +968,28 @@ func ToAdminGuideStepDTO(step *entity.GuideStep) AdminGuideStepDTO {
 			DetailedContent: tr.DetailedContent,
 		})
 	}
+
+	var requiredDocs []AdminStepDocumentDTO
+	if step.RequiredDocuments != nil && len(*step.RequiredDocuments) > 0 {
+		_ = json.Unmarshal([]byte(*step.RequiredDocuments), &requiredDocs)
+	}
+	if requiredDocs == nil {
+		requiredDocs = []AdminStepDocumentDTO{}
+	}
+
 	return AdminGuideStepDTO{
-		ID:              step.ID,
-		GuideID:         step.GuideID,
-		Slug:            step.Slug,
-		StepType:        step.StepType,
-		SortOrder:       step.SortOrder,
-		IsOptional:      step.IsOptional,
-		EstimatedTime:   step.EstimatedTime,
-		DifficultyLevel: step.DifficultyLevel,
-		FeeEstimate:     step.FeeEstimate,
-		EffectiveDate:   step.EffectiveDate,
-		ExpiryDate:      step.ExpiryDate,
-		Translations:    translations,
+		ID:                step.ID,
+		GuideID:           step.GuideID,
+		Slug:              step.Slug,
+		StepType:          step.StepType,
+		SortOrder:         step.SortOrder,
+		IsOptional:        step.IsOptional,
+		EstimatedTime:     step.EstimatedTime,
+		DifficultyLevel:   step.DifficultyLevel,
+		FeeEstimate:       step.FeeEstimate,
+		EffectiveDate:     step.EffectiveDate,
+		ExpiryDate:        step.ExpiryDate,
+		RequiredDocuments: requiredDocs,
+		Translations:      translations,
 	}
 }
