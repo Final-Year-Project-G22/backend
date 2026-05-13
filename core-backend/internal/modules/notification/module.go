@@ -47,6 +47,7 @@ var Module = fx.Module(
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
 	fx.Provide(appservice.NewCampaignSSEBroadcaster),
+	fx.Provide(appservice.NewInboxSSEBroadcaster),
 	fx.Provide(appservice.NewDeliveryWorker),
 	fx.Provide(appservice.NewCampaignProcessor),
 	fx.Provide(appservice.NewCampaignScheduler),
@@ -97,6 +98,7 @@ var Module = fx.Module(
 	fx.Provide(handler.NewNotificationHandler),
 	fx.Provide(handler.NewWebhookHandler),
 	fx.Provide(handler.NewSSEHandler),
+	fx.Provide(handler.NewInboxSSEHandler),
 
 	// --- Routes ---
 	fx.Invoke(func(
@@ -107,6 +109,7 @@ var Module = fx.Module(
 		notificationHandler *handler.NotificationHandler,
 		webhookHandler *handler.WebhookHandler,
 		sseHandler *handler.SSEHandler,
+		inboxSSEHandler *handler.InboxSSEHandler,
 		tokenService token.TokenService,
 		authService service.AuthService,
 	) {
@@ -118,6 +121,7 @@ var Module = fx.Module(
 			NotificationHandler:     notificationHandler,
 			WebhookHandler:          webhookHandler,
 			SSEHandler:              sseHandler,
+			InboxSSEHandler:         inboxSSEHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 		})
@@ -170,6 +174,21 @@ var Module = fx.Module(
 
 	// --- Campaign SSE Broadcaster ---
 	fx.Invoke(func(lc fx.Lifecycle, broadcaster *appservice.CampaignSSEBroadcaster) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				broadcaster.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
+
+	// --- Inbox SSE Broadcaster ---
+	fx.Invoke(func(lc fx.Lifecycle, broadcaster *appservice.InboxSSEBroadcaster) {
 		ctx, cancel := context.WithCancel(context.Background())
 		lc.Append(fx.Hook{
 			OnStart: func(context.Context) error {
