@@ -43,9 +43,7 @@ func NewGuideAdminUsecase(
 
 func (u *guideAdminUsecase) ListGuides(ctx context.Context, q query.QueryOptions, locale constants.Locale) (sharedRepo.PaginatedResult[entity.Guide], error) {
 	if q.Preload == nil {
-		if locale != "" {
-			q.Preload = []string{"Translations"}
-		}
+		q.Preload = []string{"Translations"}
 	}
 	result := u.guideRepo.FindAll(ctx, q)
 
