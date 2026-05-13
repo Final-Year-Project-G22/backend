@@ -15,7 +15,7 @@ type Sector struct {
 	Slug         string              `gorm:"type:varchar(100);uniqueIndex;not null"`
 	ParentID     *uuid.UUID          `gorm:"type:uuid;index"`
 	Parent       *Sector             `gorm:"foreignKey:ParentID"`
-	AncestorIDs  UUIDArray           `gorm:"type:uuid[];index:idx_sectors_ancestor_ids,using:gin"`
+	AncestorIDs  model.UUIDArray     `gorm:"type:uuid[];index:idx_sectors_ancestor_ids,using:gin"`
 	Translations []SectorTranslation `gorm:"foreignKey:SectorID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
