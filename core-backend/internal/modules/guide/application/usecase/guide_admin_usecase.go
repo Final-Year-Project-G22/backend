@@ -146,6 +146,7 @@ func (u *guideAdminUsecase) CreateGuide(ctx context.Context, input usecase.Creat
 			TagIDs:    input.TagIDs,
 			Slug:      input.Slug,
 			Icon:      input.Icon,
+			ImageURL:  input.ImageURL,
 			SortOrder: input.SortOrder,
 		}
 		if err := u.guideRepo.Create(txCtx, guide); err != nil {
@@ -179,6 +180,9 @@ func (u *guideAdminUsecase) UpdateGuide(ctx context.Context, id uuid.UUID, input
 		}
 		if input.Icon != nil {
 			guide.Icon = input.Icon
+		}
+		if input.ImageURL != nil {
+			guide.ImageURL = input.ImageURL
 		}
 		if input.SortOrder != nil {
 			guide.SortOrder = *input.SortOrder

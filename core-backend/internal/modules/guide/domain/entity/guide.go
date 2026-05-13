@@ -8,6 +8,7 @@ type Guide struct {
 	TagIDs          model.UUIDArray    `gorm:"type:uuid[];index:idx_guides_tag_ids,using:gin"`
 	Slug            string             `gorm:"type:varchar(200);not null;uniqueIndex:idx_guides_slug"`
 	Icon            *string            `gorm:"type:varchar(100)"`
+	ImageURL        *string            `gorm:"type:varchar(500)"`
 	SortOrder       int                `gorm:"not null;default:0"`
 	Conditions      []GuideCondition   `gorm:"foreignKey:GuideID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Steps           []GuideStep        `gorm:"foreignKey:GuideID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
