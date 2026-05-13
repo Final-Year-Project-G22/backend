@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
@@ -22,6 +23,7 @@ type notificationDeliveryUsecase struct {
 	emailProvider   repository.EmailProvider
 	deviceRepo      repository.UserDeviceRepository
 	pushProvider    repository.PushProvider
+	sseBroadcaster  *service.InboxSSEBroadcaster
 	transactor      sharedrepo.Transactor
 	logger          core.Logger
 	cfg             *core.Config
@@ -35,6 +37,7 @@ func NewNotificationDeliveryUsecase(
 	emailProvider repository.EmailProvider,
 	deviceRepo repository.UserDeviceRepository,
 	pushProvider repository.PushProvider,
+	sseBroadcaster *service.InboxSSEBroadcaster,
 	transactor sharedrepo.Transactor,
 	logger core.Logger,
 	cfg *core.Config,
@@ -47,6 +50,7 @@ func NewNotificationDeliveryUsecase(
 		emailProvider:   emailProvider,
 		deviceRepo:      deviceRepo,
 		pushProvider:    pushProvider,
+		sseBroadcaster:  sseBroadcaster,
 		transactor:      transactor,
 		logger:          logger,
 		cfg:             cfg,
@@ -238,7 +242,7 @@ func (uc *notificationDeliveryUsecase) createHistoryForPush(ctx context.Context,
 }
 
 func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx context.Context, item *entity.NotificationQueue, providerMsgID, to, subject string) error {
-	return uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+	err := uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		title, _ := item.Payload["title"].(string)
 		content, _ := item.Payload["content"].(string)
 		actionUrlStr, _ := item.Payload["actionUrl"].(string)
@@ -304,10 +308,21 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 
 		return uc.queueRepo.MarkDelivered(txCtx, item.ID)
 	})
+	if err != nil {
+		return err
+	}
+
+	uc.sseBroadcaster.Publish(service.InboxEvent{
+		Type:             "inbox_new",
+		AccountID:        item.AccountID,
+		NotificationType: item.NotificationType,
+		Timestamp:        time.Now().UTC(),
+	})
+	return nil
 }
 
 func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context, item *entity.NotificationQueue) error {
-	return uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
+	err := uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		title, _ := item.Payload["title"].(string)
 		content, _ := item.Payload["content"].(string)
 		actionUrlStr, _ := item.Payload["actionUrl"].(string)
@@ -354,6 +369,17 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	uc.sseBroadcaster.Publish(service.InboxEvent{
+		Type:             "inbox_new",
+		AccountID:        item.AccountID,
+		NotificationType: item.NotificationType,
+		Timestamp:        time.Now().UTC(),
+	})
+	return nil
 }
 
 func retryBackoff(retryCount int) time.Duration {
