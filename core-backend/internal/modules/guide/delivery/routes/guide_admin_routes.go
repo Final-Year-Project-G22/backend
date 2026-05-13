@@ -100,6 +100,16 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.GuideAdminHandler.HandleSetGuideTranslations)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "uploadGuideImage",
+		Method:      "POST",
+		Path:        adminGuideBase + "/{id}/image",
+		Summary:     "Upload guide image",
+		Description: "Uploads and sets the cover image for a guide.",
+		Tags:        []string{"Admin - Guides"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideAdminHandler.HandleUploadGuideImage)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "createStep",
 		Method:      "POST",
 		Path:        adminGuideBase + "/steps",
