@@ -107,6 +107,7 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 func (h *CommunityHandler) HandleListAllThreads(ctx context.Context, input *dto.ListThreadsInput) (*dto.ListThreadsOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	opts := dto.ToQueryOptions(input.Page, input.PageSize)
+	opts.Search = input.Search
 
 	threads, err := h.threadUsecase.ListAllThreads(ctx, opts)
 	if err != nil {
