@@ -52,7 +52,7 @@ func (p *CampaignProcessor) ProcessCampaign(ctx context.Context, campaign *entit
 		return fmt.Errorf("failed to resolve campaign recipients: %w", err)
 	}
 
-	channels := p.resolveChannels(tmpl.DefaultContent)
+	channels := p.resolveChannels(tmpl)
 
 	for _, accountID := range accountIDs {
 		if err := p.enqueueForRecipient(ctx, campaign, tmpl, accountID, channels); err != nil {
@@ -102,7 +102,8 @@ func (p *CampaignProcessor) resolveRecipients(ctx context.Context, campaign *ent
 	return accountIDs, nil
 }
 
-func (p *CampaignProcessor) resolveChannels(content datatypes.JSONMap) []entity.Channel {
+func (p *CampaignProcessor) resolveChannels(tmpl *entity.CampaignTemplate) []entity.Channel {
+	content := tmpl.DefaultContent
 	var channels []entity.Channel
 	if content == nil {
 		return channels
@@ -114,7 +115,17 @@ func (p *CampaignProcessor) resolveChannels(content datatypes.JSONMap) []entity.
 			channels = append(channels, ch)
 		}
 	}
-	return channels
+	if !tmpl.EnablePushMirror {
+		return channels
+	}
+	expanded := make([]entity.Channel, 0, len(channels)+1)
+	for _, ch := range channels {
+		expanded = append(expanded, ch)
+		if ch == entity.ChannelInApp {
+			expanded = append(expanded, entity.ChannelPush)
+		}
+	}
+	return expanded
 }
 
 func isChannelContentValid(ch entity.Channel, content map[string]interface{}) bool {
@@ -166,16 +177,37 @@ func (p *CampaignProcessor) enqueueForRecipient(
 	// 4. For each channel, create queue entry
 	for _, ch := range channels {
 		channelContent, hasChannel := rendered[string(ch)]
-		if !hasChannel {
-			continue
-		}
 
-		channelMap, ok := channelContent.(map[string]interface{})
-		if !ok {
-			p.logger.Warn("Channel content is not a map, skipping",
-				core.String("channel", string(ch)),
-				core.String("accountID", accountID.String()),
-			)
+		var channelMap map[string]interface{}
+
+		switch {
+		case !hasChannel && ch == entity.ChannelPush:
+			inAppContent, hasInApp := rendered[string(entity.ChannelInApp)]
+			if !hasInApp {
+				continue
+			}
+			inAppMap, ok := inAppContent.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			channelMap = map[string]interface{}{
+				"title": inAppMap["title"],
+				"body":  inAppMap["body"],
+			}
+			if actionUrl, ok := inAppMap["actionUrl"].(string); ok && actionUrl != "" {
+				channelMap["actionUrl"] = actionUrl
+			}
+		case hasChannel:
+			var ok bool
+			channelMap, ok = channelContent.(map[string]interface{})
+			if !ok {
+				p.logger.Warn("Channel content is not a map, skipping",
+					core.String("channel", string(ch)),
+					core.String("accountID", accountID.String()),
+				)
+				continue
+			}
+		default:
 			continue
 		}
 

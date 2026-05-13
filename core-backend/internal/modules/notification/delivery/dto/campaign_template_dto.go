@@ -11,9 +11,10 @@ import (
 // --- Create Campaign Template ---
 
 type CreateCampaignTemplateRequest struct {
-	Name           string                 `json:"name" doc:"Template name" minLength:"1" maxLength:"200"`
-	Description    *string                `json:"description,omitempty" doc:"Template description"`
-	DefaultContent map[string]interface{} `json:"defaultContent" doc:"Multi-channel content (in_app, email, push, sms)"`
+	Name             string                 `json:"name" doc:"Template name" minLength:"1" maxLength:"200"`
+	Description      *string                `json:"description,omitempty" doc:"Template description"`
+	DefaultContent   map[string]interface{} `json:"defaultContent" doc:"Multi-channel content (in_app, email, push, sms)"`
+	EnablePushMirror bool                   `json:"enablePushMirror" doc:"Enable automatic push mirroring from in-app content"`
 }
 
 type CreateCampaignTemplateInput struct {
@@ -60,9 +61,10 @@ type ListCampaignTemplatesResponseBody struct {
 // --- Update Campaign Template ---
 
 type UpdateCampaignTemplateRequest struct {
-	Name           *string                 `json:"name,omitempty" doc:"Template name" maxLength:"200"`
-	Description    *string                 `json:"description,omitempty" doc:"Template description"`
-	DefaultContent *map[string]interface{} `json:"defaultContent,omitempty" doc:"Multi-channel content"`
+	Name             *string                 `json:"name,omitempty" doc:"Template name" maxLength:"200"`
+	Description      *string                 `json:"description,omitempty" doc:"Template description"`
+	DefaultContent   *map[string]interface{} `json:"defaultContent,omitempty" doc:"Multi-channel content"`
+	EnablePushMirror *bool                   `json:"enablePushMirror,omitempty" doc:"Enable automatic push mirroring from in-app content"`
 }
 
 type UpdateCampaignTemplateInput struct {
@@ -150,12 +152,13 @@ type DeleteCampaignTemplateTranslationResponseBody struct {
 // --- Response Types ---
 
 type CampaignTemplateDetailResponse struct {
-	ID             uuid.UUID                             `json:"id" doc:"Template ID"`
-	Name           string                                `json:"name" doc:"Template name"`
-	Description    *string                               `json:"description,omitempty" doc:"Template description"`
-	DefaultContent map[string]interface{}                `json:"defaultContent" doc:"Multi-channel content"`
-	Translations   []CampaignTemplateTranslationResponse `json:"translations,omitempty" doc:"Template translations"`
-	CreatedAt      time.Time                             `json:"createdAt" doc:"Creation time"`
+	ID               uuid.UUID                             `json:"id" doc:"Template ID"`
+	Name             string                                `json:"name" doc:"Template name"`
+	Description      *string                               `json:"description,omitempty" doc:"Template description"`
+	DefaultContent   map[string]interface{}                `json:"defaultContent" doc:"Multi-channel content"`
+	EnablePushMirror bool                                  `json:"enablePushMirror" doc:"Whether push mirroring is enabled"`
+	Translations     []CampaignTemplateTranslationResponse `json:"translations,omitempty" doc:"Template translations"`
+	CreatedAt        time.Time                             `json:"createdAt" doc:"Creation time"`
 }
 
 type CampaignTemplateSummaryResponse struct {
@@ -175,17 +178,19 @@ type CampaignTemplateTranslationResponse struct {
 
 func ToCreateCampaignTemplateInput(body CreateCampaignTemplateRequest) usecase.CreateCampaignTemplateInput {
 	return usecase.CreateCampaignTemplateInput{
-		Name:           body.Name,
-		Description:    body.Description,
-		DefaultContent: body.DefaultContent,
+		Name:             body.Name,
+		Description:      body.Description,
+		DefaultContent:   body.DefaultContent,
+		EnablePushMirror: body.EnablePushMirror,
 	}
 }
 
 func ToUpdateCampaignTemplateInput(body UpdateCampaignTemplateRequest) usecase.UpdateCampaignTemplateInput {
 	return usecase.UpdateCampaignTemplateInput{
-		Name:           body.Name,
-		Description:    body.Description,
-		DefaultContent: body.DefaultContent,
+		Name:             body.Name,
+		Description:      body.Description,
+		DefaultContent:   body.DefaultContent,
+		EnablePushMirror: body.EnablePushMirror,
 	}
 }
 
@@ -204,11 +209,12 @@ func ToUpdateCampaignTranslationInput(body UpdateCampaignTemplateTranslationRequ
 
 func ToCampaignTemplateDetailResponse(tmpl *entity.CampaignTemplate, translations []*entity.CampaignTemplateTranslation) CampaignTemplateDetailResponse {
 	resp := CampaignTemplateDetailResponse{
-		ID:             tmpl.ID,
-		Name:           tmpl.Name,
-		Description:    tmpl.Description,
-		DefaultContent: tmpl.DefaultContent,
-		CreatedAt:      *tmpl.CreatedAt,
+		ID:               tmpl.ID,
+		Name:             tmpl.Name,
+		Description:      tmpl.Description,
+		DefaultContent:   tmpl.DefaultContent,
+		EnablePushMirror: tmpl.EnablePushMirror,
+		CreatedAt:        *tmpl.CreatedAt,
 	}
 	if len(translations) > 0 {
 		resp.Translations = make([]CampaignTemplateTranslationResponse, 0, len(translations))
