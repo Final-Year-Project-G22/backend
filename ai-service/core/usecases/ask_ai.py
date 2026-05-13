@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from core.domain.enums import DocumentSource, MessageType
+from core.domain.enums import DocumentSource, Language, MessageType
 from core.domain.exceptions import AIServiceError
 from core.domain.models import AIChatMessage, AIConversationSession
 from core.domain.value_objects import ResponseSource, SearchFilters, SearchHit
@@ -72,7 +72,7 @@ class AskAIUseCase:
         vector_hits, bm25_hits = await self._retrieve_context(command, query_embedding)
         merged_hits = self._merge_and_dedupe_hits(vector_hits, bm25_hits)
 
-        prompt = self._build_prompt(command.prompt, merged_hits)
+        prompt = self._build_prompt(command.prompt, merged_hits, command.language)
         llm_response = await self._llm_port.generate(
             prompt,
             max_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
@@ -195,18 +195,22 @@ class AskAIUseCase:
 
         return merged[:DEFAULT_MAX_CONTEXT_HITS]
 
-    def _build_prompt(self, user_query: str, context_hits: list[SearchHit]) -> str:
+    def _build_prompt(
+        self, user_query: str, context_hits: list[SearchHit], language: Language = Language.ENGLISH
+    ) -> str:
         context_parts: list[str] = []
         for i, hit in enumerate(context_hits, 1):
             context_parts.append(f"[{i}] {hit.chunk_text}")
-
         context_block = "\n\n".join(context_parts) if context_parts else "No context available."
 
+        lang_instruction = (
+            f"\n\nAnswer in {language.value.upper()}." if language != Language.ENGLISH else ""
+        )
         return (
             f"Context:\n{context_block}\n\n"
             f"Question: {user_query}\n\n"
             f"Answer based on the context above. If the context doesn't contain "
-            f"relevant information, say so clearly."
+            f"relevant information, say so clearly.{lang_instruction}"
         )
 
     async def _persist_ai_message(

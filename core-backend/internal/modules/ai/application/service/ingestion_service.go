@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/entity"
 	aievent "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/event"
 	airepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/dbtypes"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/model"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
@@ -205,8 +206,8 @@ func (s *IngestionService) FinalizeUpload(ctx context.Context, in FinalizeUpload
 			SchemaVersion:    aievent.EnvelopeSchemaVersion,
 			Status:           entity.IngestionDocumentStatusQueued,
 			EventID:          eventID,
-			SectorIDs:        in.SectorIDs,
-			TagIDs:           in.TagIDs,
+			SectorIDs:        dbtypes.UUIDArray(in.SectorIDs),
+			TagIDs:           dbtypes.UUIDArray(in.TagIDs),
 			Region:           sanitizeNullableString(in.Region),
 			Stage:            sanitizeNullableString(in.Stage),
 		}
