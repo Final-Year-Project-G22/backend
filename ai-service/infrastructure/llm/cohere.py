@@ -7,7 +7,7 @@ from typing import Any
 import httpx
 
 from core.domain.exceptions import LLMError
-from core.ports.llm import LLMPort
+from core.ports.llm import LLMChunk, LLMPort, LLMResult, ToolCall, ToolDefinition
 
 _CHAT_URL = "https://api.cohere.com/v2/chat"
 
@@ -36,15 +36,20 @@ class CohereLLMAdapter(LLMPort):
         self,
         prompt: str,
         *,
+        system_prompt: str | None = None,
+        tools: list[ToolDefinition] | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.2,
-    ) -> str:
-        payload: dict[str, Any] = {
-            "model": self._model,
-            "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-        }
+    ) -> LLMResult:
+        payload = _build_payload(
+            model=self._model,
+            prompt=prompt,
+            system_prompt=system_prompt,
+            tools=tools,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=False,
+        )
         try:
             response = await self._http.post(
                 _CHAT_URL,
@@ -63,29 +68,27 @@ class CohereLLMAdapter(LLMPort):
             ) from exc
 
         data = response.json()
-        text = _extract_text(data)
-        if text is None:
-            raise LLMError(
-                "cohere generation response missing content",
-                details={"provider": self.provider},
-            )
-        return text
+        return _parse_response(data, provider=self.provider)
 
     def generate_stream(
         self,
         prompt: str,
         *,
+        system_prompt: str | None = None,
+        tools: list[ToolDefinition] | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.2,
-    ) -> AsyncIterator[str]:
-        async def _stream() -> AsyncIterator[str]:
-            payload: dict[str, Any] = {
-                "model": self._model,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "stream": True,
-            }
+    ) -> AsyncIterator[LLMChunk]:
+        async def _stream() -> AsyncIterator[LLMChunk]:
+            payload = _build_payload(
+                model=self._model,
+                prompt=prompt,
+                system_prompt=system_prompt,
+                tools=tools,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+            )
             try:
                 async with self._http.stream(
                     "POST",
@@ -111,9 +114,9 @@ class CohereLLMAdapter(LLMPort):
                             data = json.loads(chunk)
                         except json.JSONDecodeError:
                             continue
-                        text = _extract_stream_text(data)
-                        if text:
-                            yield text
+                        parsed = _parse_stream_chunk(data)
+                        if parsed:
+                            yield parsed
             except httpx.HTTPError as exc:
                 raise LLMError(
                     "cohere streaming generation failed",
@@ -123,34 +126,128 @@ class CohereLLMAdapter(LLMPort):
         return _stream()
 
 
-def _extract_text(data: dict[str, Any]) -> str | None:
+def _build_payload(
+    *,
+    model: str,
+    prompt: str,
+    system_prompt: str | None,
+    tools: list[ToolDefinition] | None,
+    max_tokens: int,
+    temperature: float,
+    stream: bool,
+) -> dict[str, Any]:
+    messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
+    if system_prompt:
+        messages.insert(0, {"role": "system", "content": system_prompt})
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+    }
+    if stream:
+        payload["stream"] = True
+    if tools:
+        payload["tools"] = [
+            {
+                "type": "function",
+                "function": {
+                    "name": t.name,
+                    "description": t.description,
+                    "parameters": json.loads(t.parameter_schema_json)
+                    if t.parameter_schema_json
+                    else {"type": "object", "properties": {}},
+                },
+            }
+            for t in tools
+        ]
+    return payload
+
+
+def _parse_response(data: dict[str, Any], *, provider: str) -> LLMResult:
     message: object = data.get("message")
     if not isinstance(message, dict):
-        return None
-    content: object = message.get("content")  # type: ignore[reportUnknownMemberType]
-    if not isinstance(content, list) or not content:
-        return None
-    first: object = content[0]  # type: ignore[reportUnknownVariableType]
-    if not isinstance(first, dict):
-        return None
-    result: object = first.get("text")  # type: ignore[reportUnknownMemberType]
-    return result if isinstance(result, str) else None  # type: ignore[reportUnknownVariableType]
+        raise LLMError(
+            "cohere response missing message",
+            details={"provider": provider},
+        )
+
+    content: object = message.get("content")
+    text = ""
+    if isinstance(content, list) and content:
+        first = content[0]
+        if isinstance(first, dict):
+            t = first.get("text")
+            if isinstance(t, str):
+                text = t
+
+    tool_calls = _parse_tool_calls(message.get("tool_calls"))
+    return LLMResult(text=text, tool_calls=tool_calls)
 
 
-def _extract_stream_text(data: dict[str, Any]) -> str | None:
-    if data.get("type") != "content-delta":
+def _parse_tool_calls(raw: object) -> list[ToolCall] | None:
+    if not isinstance(raw, list) or not raw:
         return None
-    delta: object = data.get("delta")
-    if not isinstance(delta, dict):
-        return None
-    msg: object = delta.get("message")  # type: ignore[reportUnknownMemberType]
-    if not isinstance(msg, dict):
-        return None
-    content: object = msg.get("content")  # type: ignore[reportUnknownMemberType]
-    if not isinstance(content, dict):
-        return None
-    text: object = content.get("text")  # type: ignore[reportUnknownMemberType]
-    return text if isinstance(text, str) else None  # type: ignore[reportUnknownVariableType]
+    result: list[ToolCall] = []
+    for tc in raw:
+        if not isinstance(tc, dict):
+            continue
+        func: object = tc.get("function")
+        if not isinstance(func, dict):
+            continue
+        name = func.get("name", "")
+        if not isinstance(name, str) or not name:
+            continue
+        args_raw = func.get("arguments")
+        if isinstance(args_raw, str):
+            try:
+                args = json.loads(args_raw)
+            except json.JSONDecodeError:
+                args = {}
+        elif isinstance(args_raw, dict):
+            args = args_raw
+        else:
+            args = {}
+        result.append(ToolCall(name=name, arguments=args))
+    return result or None
+
+
+def _parse_stream_chunk(data: dict[str, Any]) -> LLMChunk | None:  # noqa: PLR0912
+    event_type = data.get("type")
+    if event_type == "content-delta":
+        delta: object = data.get("delta")
+        if isinstance(delta, dict):
+            msg: object = delta.get("message")
+            if isinstance(msg, dict):
+                content: object = msg.get("content")
+                if isinstance(content, dict):
+                    text = content.get("text")
+                    if isinstance(text, str):
+                        return LLMChunk(text=text)
+    if event_type == "tool-calls-chunk":
+        tool_calls_raw = data.get("tool_call_delta", {}).get("tool_calls")
+        if isinstance(tool_calls_raw, list) and tool_calls_raw:
+            for tc in tool_calls_raw:
+                if not isinstance(tc, dict):
+                    continue
+                func: object = tc.get("function")
+                if not isinstance(func, dict):
+                    continue
+                name = func.get("name", "")
+                if isinstance(name, str) and name:
+                    args_str = func.get("arguments", "{}")
+                    if isinstance(args_str, str):
+                        try:
+                            args = json.loads(args_str)
+                        except json.JSONDecodeError:
+                            args = {}
+                    elif isinstance(args_str, dict):
+                        args = args_str
+                    else:
+                        args = {}
+                    return LLMChunk(tool_call=ToolCall(name=name, arguments=args))
+    return None
 
 
 __all__ = ["CohereLLMAdapter"]

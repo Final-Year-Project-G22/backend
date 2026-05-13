@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	aitoolserver "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai_tool/infrastructure/server"
+	coreaitoolv1 "github.com/Final-Year-Project-G22/backend/core/pb/core/ai_tool/v1"
 	coredocumentv1 "github.com/Final-Year-Project-G22/backend/core/pb/core/document/v1"
 	coreuserv1 "github.com/Final-Year-Project-G22/backend/core/pb/core/user/v1"
 	"go.uber.org/fx"
@@ -25,6 +27,7 @@ func registerGrpcServer(
 	log core.Logger,
 	userService *UserProfileService,
 	docService *DocumentFetchService,
+	aiToolService *aitoolserver.AIToolService,
 ) {
 	var (
 		server   *grpc.Server
@@ -44,6 +47,7 @@ func registerGrpcServer(
 			server = grpc.NewServer()
 			coreuserv1.RegisterCoreUserServiceServer(server, userService)
 			coredocumentv1.RegisterDocumentFetchServiceServer(server, docService)
+			coreaitoolv1.RegisterAIToolServiceServer(server, aiToolService)
 
 			go func() {
 				if serveErr := server.Serve(listener); serveErr != nil && !errors.Is(serveErr, grpc.ErrServerStopped) {

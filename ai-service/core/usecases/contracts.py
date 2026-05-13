@@ -47,6 +47,7 @@ class AskAICommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     user_id: uuid.UUID
+    account_id: uuid.UUID = Field(default_factory=lambda: uuid.UUID(int=0))
     prompt: str = Field(min_length=1, max_length=MAX_PROMPT_LENGTH)
     language: Language = Language.ENGLISH
     conversation_id: uuid.UUID | None = None

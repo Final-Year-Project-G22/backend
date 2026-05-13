@@ -5,7 +5,7 @@ from typing import Any, cast
 from dependency_injector import containers, providers
 
 import grpc as grpc_lib
-from app.config import Settings
+from app.config import AI_PERSONA_SYSTEM_PROMPT, AI_RESTRICTIONS, Settings
 from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
 from core.ports.core_service import CoreServicePort
@@ -29,7 +29,7 @@ from infrastructure.database.repositories import (
 from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.parsers.registry import ParserRegistry
-from infrastructure.rpc import CoreServiceGrpcAdapter, CoreUserGrpcClient
+from infrastructure.rpc import AIToolGrpcClient, CoreServiceGrpcAdapter, CoreUserGrpcClient
 from workers.tasks import IngestionRequestedTaskHandler
 
 
@@ -52,6 +52,11 @@ class Container(containers.DeclarativeContainer):
 
     core_grpc_client = providers.Singleton(
         CoreUserGrpcClient,
+        endpoint=config.provided.CORE_GRPC_ENDPOINT,
+    )
+
+    ai_tool_client = providers.Singleton(
+        AIToolGrpcClient,
         endpoint=config.provided.CORE_GRPC_ENDPOINT,
     )
 
@@ -160,6 +165,9 @@ class Container(containers.DeclarativeContainer):
         knowledge_repository=knowledge_repository,
         embedding_port=embedding_port,
         llm_port=llm_port,
+        ai_tool_client=ai_tool_client,
+        persona_prompt=providers.Object(AI_PERSONA_SYSTEM_PROMPT),
+        restrictions=providers.Object(AI_RESTRICTIONS),
         cache=cache_port,
         event_bus=event_bus_port,
     )

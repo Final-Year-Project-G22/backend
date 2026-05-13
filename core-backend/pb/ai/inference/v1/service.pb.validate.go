@@ -736,6 +736,88 @@ func (m *AskStreamChunk) validate(all bool) error {
 			}
 		}
 
+	case *AskStreamChunk_ToolUse:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetToolUse()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "ToolUse",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "ToolUse",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetToolUse()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "ToolUse",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AskStreamChunk_ToolResult:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetToolResult()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "ToolResult",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "ToolResult",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetToolResult()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "ToolResult",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
 	default:
 		_ = v // ensures v is used
 	}
@@ -1293,3 +1375,210 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ErrorChunkValidationError{}
+
+// Validate checks the field values on ToolUseChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ToolUseChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ToolUseChunk with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ToolUseChunkMultiError, or
+// nil if none found.
+func (m *ToolUseChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ToolUseChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Tool
+
+	// no validation rules for ArgumentsJson
+
+	if len(errors) > 0 {
+		return ToolUseChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// ToolUseChunkMultiError is an error wrapping multiple validation errors
+// returned by ToolUseChunk.ValidateAll() if the designated constraints aren't met.
+type ToolUseChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ToolUseChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ToolUseChunkMultiError) AllErrors() []error { return m }
+
+// ToolUseChunkValidationError is the validation error returned by
+// ToolUseChunk.Validate if the designated constraints aren't met.
+type ToolUseChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ToolUseChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ToolUseChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ToolUseChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ToolUseChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ToolUseChunkValidationError) ErrorName() string { return "ToolUseChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ToolUseChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sToolUseChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ToolUseChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ToolUseChunkValidationError{}
+
+// Validate checks the field values on ToolResultChunk with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ToolResultChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ToolResultChunk with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ToolResultChunkMultiError, or nil if none found.
+func (m *ToolResultChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ToolResultChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Tool
+
+	// no validation rules for ResultSummary
+
+	if len(errors) > 0 {
+		return ToolResultChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// ToolResultChunkMultiError is an error wrapping multiple validation errors
+// returned by ToolResultChunk.ValidateAll() if the designated constraints
+// aren't met.
+type ToolResultChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ToolResultChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ToolResultChunkMultiError) AllErrors() []error { return m }
+
+// ToolResultChunkValidationError is the validation error returned by
+// ToolResultChunk.Validate if the designated constraints aren't met.
+type ToolResultChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ToolResultChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ToolResultChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ToolResultChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ToolResultChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ToolResultChunkValidationError) ErrorName() string { return "ToolResultChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ToolResultChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sToolResultChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ToolResultChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ToolResultChunkValidationError{}

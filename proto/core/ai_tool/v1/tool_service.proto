@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package core.ai_tool.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/Final-Year-Project-G22/backend/core-backend/pb";
+
+service AIToolService {
+  rpc ListTools(ListToolsRequest) returns (ListToolsResponse);
+  rpc ExecuteTool(ExecuteToolRequest) returns (ExecuteToolResponse);
+}
+
+message ToolDefinition {
+  string name = 1 [(buf.validate.field).string = {min_len: 1}];
+  string description = 2;
+  string parameter_schema_json = 3;
+}
+
+message ListToolsRequest {}
+
+message ListToolsResponse {
+  repeated ToolDefinition tools = 1;
+}
+
+message ExecuteToolRequest {
+  string tool = 1 [(buf.validate.field).string = {min_len: 1}];
+  string arguments_json = 2;
+  string account_id = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+  string user_id = 4 [(buf.validate.field).string = {
+    min_len: 1,
+    uuid: true,
+  }];
+}
+
+message ExecuteToolResponse {
+  bool success = 1;
+  string result_json = 2;
+  string error_message = 3;
+}

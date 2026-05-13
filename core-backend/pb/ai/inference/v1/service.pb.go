@@ -382,6 +382,8 @@ type AskStreamChunk struct {
 	//	*AskStreamChunk_Citations
 	//	*AskStreamChunk_Done
 	//	*AskStreamChunk_Error
+	//	*AskStreamChunk_ToolUse
+	//	*AskStreamChunk_ToolResult
 	Chunk         isAskStreamChunk_Chunk `protobuf_oneof:"chunk"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -460,6 +462,24 @@ func (x *AskStreamChunk) GetError() *ErrorChunk {
 	return nil
 }
 
+func (x *AskStreamChunk) GetToolUse() *ToolUseChunk {
+	if x != nil {
+		if x, ok := x.Chunk.(*AskStreamChunk_ToolUse); ok {
+			return x.ToolUse
+		}
+	}
+	return nil
+}
+
+func (x *AskStreamChunk) GetToolResult() *ToolResultChunk {
+	if x != nil {
+		if x, ok := x.Chunk.(*AskStreamChunk_ToolResult); ok {
+			return x.ToolResult
+		}
+	}
+	return nil
+}
+
 type isAskStreamChunk_Chunk interface {
 	isAskStreamChunk_Chunk()
 }
@@ -480,6 +500,14 @@ type AskStreamChunk_Error struct {
 	Error *ErrorChunk `protobuf:"bytes,4,opt,name=error,proto3,oneof"`
 }
 
+type AskStreamChunk_ToolUse struct {
+	ToolUse *ToolUseChunk `protobuf:"bytes,5,opt,name=tool_use,json=toolUse,proto3,oneof"`
+}
+
+type AskStreamChunk_ToolResult struct {
+	ToolResult *ToolResultChunk `protobuf:"bytes,6,opt,name=tool_result,json=toolResult,proto3,oneof"`
+}
+
 func (*AskStreamChunk_Text) isAskStreamChunk_Chunk() {}
 
 func (*AskStreamChunk_Citations) isAskStreamChunk_Chunk() {}
@@ -487,6 +515,10 @@ func (*AskStreamChunk_Citations) isAskStreamChunk_Chunk() {}
 func (*AskStreamChunk_Done) isAskStreamChunk_Chunk() {}
 
 func (*AskStreamChunk_Error) isAskStreamChunk_Chunk() {}
+
+func (*AskStreamChunk_ToolUse) isAskStreamChunk_Chunk() {}
+
+func (*AskStreamChunk_ToolResult) isAskStreamChunk_Chunk() {}
 
 type TextChunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -712,6 +744,110 @@ func (x *ErrorChunk) GetMessage() string {
 	return ""
 }
 
+type ToolUseChunk struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tool          string                 `protobuf:"bytes,1,opt,name=tool,proto3" json:"tool,omitempty"`
+	ArgumentsJson string                 `protobuf:"bytes,2,opt,name=arguments_json,json=argumentsJson,proto3" json:"arguments_json,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToolUseChunk) Reset() {
+	*x = ToolUseChunk{}
+	mi := &file_ai_inference_v1_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToolUseChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToolUseChunk) ProtoMessage() {}
+
+func (x *ToolUseChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_inference_v1_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToolUseChunk.ProtoReflect.Descriptor instead.
+func (*ToolUseChunk) Descriptor() ([]byte, []int) {
+	return file_ai_inference_v1_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ToolUseChunk) GetTool() string {
+	if x != nil {
+		return x.Tool
+	}
+	return ""
+}
+
+func (x *ToolUseChunk) GetArgumentsJson() string {
+	if x != nil {
+		return x.ArgumentsJson
+	}
+	return ""
+}
+
+type ToolResultChunk struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tool          string                 `protobuf:"bytes,1,opt,name=tool,proto3" json:"tool,omitempty"`
+	ResultSummary string                 `protobuf:"bytes,2,opt,name=result_summary,json=resultSummary,proto3" json:"result_summary,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToolResultChunk) Reset() {
+	*x = ToolResultChunk{}
+	mi := &file_ai_inference_v1_service_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToolResultChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToolResultChunk) ProtoMessage() {}
+
+func (x *ToolResultChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_inference_v1_service_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToolResultChunk.ProtoReflect.Descriptor instead.
+func (*ToolResultChunk) Descriptor() ([]byte, []int) {
+	return file_ai_inference_v1_service_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ToolResultChunk) GetTool() string {
+	if x != nil {
+		return x.Tool
+	}
+	return ""
+}
+
+func (x *ToolResultChunk) GetResultSummary() string {
+	if x != nil {
+		return x.ResultSummary
+	}
+	return ""
+}
+
 var File_ai_inference_v1_service_proto protoreflect.FileDescriptor
 
 const file_ai_inference_v1_service_proto_rawDesc = "" +
@@ -760,12 +896,15 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\n" +
 	"latency_ms\x18\a \x01(\x05R\tlatencyMs\x12,\n" +
 	"\x12session_created_at\x18\b \x01(\tR\x10sessionCreatedAt\x12,\n" +
-	"\x12session_updated_at\x18\t \x01(\tR\x10sessionUpdatedAt\"\xf3\x01\n" +
+	"\x12session_updated_at\x18\t \x01(\tR\x10sessionUpdatedAt\"\xf4\x02\n" +
 	"\x0eAskStreamChunk\x120\n" +
 	"\x04text\x18\x01 \x01(\v2\x1a.ai.inference.v1.TextChunkH\x00R\x04text\x12?\n" +
 	"\tcitations\x18\x02 \x01(\v2\x1f.ai.inference.v1.CitationsChunkH\x00R\tcitations\x120\n" +
 	"\x04done\x18\x03 \x01(\v2\x1a.ai.inference.v1.DoneChunkH\x00R\x04done\x123\n" +
-	"\x05error\x18\x04 \x01(\v2\x1b.ai.inference.v1.ErrorChunkH\x00R\x05errorB\a\n" +
+	"\x05error\x18\x04 \x01(\v2\x1b.ai.inference.v1.ErrorChunkH\x00R\x05error\x12:\n" +
+	"\btool_use\x18\x05 \x01(\v2\x1d.ai.inference.v1.ToolUseChunkH\x00R\atoolUse\x12C\n" +
+	"\vtool_result\x18\x06 \x01(\v2 .ai.inference.v1.ToolResultChunkH\x00R\n" +
+	"toolResultB\a\n" +
 	"\x05chunk\"\x1f\n" +
 	"\tTextChunk\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\"I\n" +
@@ -783,7 +922,13 @@ const file_ai_inference_v1_service_proto_rawDesc = "" +
 	"\n" +
 	"ErrorChunk\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xa3\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"I\n" +
+	"\fToolUseChunk\x12\x12\n" +
+	"\x04tool\x18\x01 \x01(\tR\x04tool\x12%\n" +
+	"\x0earguments_json\x18\x02 \x01(\tR\rargumentsJson\"L\n" +
+	"\x0fToolResultChunk\x12\x12\n" +
+	"\x04tool\x18\x01 \x01(\tR\x04tool\x12%\n" +
+	"\x0eresult_summary\x18\x02 \x01(\tR\rresultSummary2\xa3\x01\n" +
 	"\x12AIInferenceService\x12@\n" +
 	"\x03Ask\x12\x1b.ai.inference.v1.AskRequest\x1a\x1c.ai.inference.v1.AskResponse\x12K\n" +
 	"\tAskStream\x12\x1b.ai.inference.v1.AskRequest\x1a\x1f.ai.inference.v1.AskStreamChunk0\x01B;Z9github.com/Final-Year-Project-G22/backend/core-backend/pbb\x06proto3"
@@ -800,17 +945,19 @@ func file_ai_inference_v1_service_proto_rawDescGZIP() []byte {
 	return file_ai_inference_v1_service_proto_rawDescData
 }
 
-var file_ai_inference_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_ai_inference_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_ai_inference_v1_service_proto_goTypes = []any{
-	(*AskRequest)(nil),     // 0: ai.inference.v1.AskRequest
-	(*Citation)(nil),       // 1: ai.inference.v1.Citation
-	(*Usage)(nil),          // 2: ai.inference.v1.Usage
-	(*AskResponse)(nil),    // 3: ai.inference.v1.AskResponse
-	(*AskStreamChunk)(nil), // 4: ai.inference.v1.AskStreamChunk
-	(*TextChunk)(nil),      // 5: ai.inference.v1.TextChunk
-	(*CitationsChunk)(nil), // 6: ai.inference.v1.CitationsChunk
-	(*DoneChunk)(nil),      // 7: ai.inference.v1.DoneChunk
-	(*ErrorChunk)(nil),     // 8: ai.inference.v1.ErrorChunk
+	(*AskRequest)(nil),      // 0: ai.inference.v1.AskRequest
+	(*Citation)(nil),        // 1: ai.inference.v1.Citation
+	(*Usage)(nil),           // 2: ai.inference.v1.Usage
+	(*AskResponse)(nil),     // 3: ai.inference.v1.AskResponse
+	(*AskStreamChunk)(nil),  // 4: ai.inference.v1.AskStreamChunk
+	(*TextChunk)(nil),       // 5: ai.inference.v1.TextChunk
+	(*CitationsChunk)(nil),  // 6: ai.inference.v1.CitationsChunk
+	(*DoneChunk)(nil),       // 7: ai.inference.v1.DoneChunk
+	(*ErrorChunk)(nil),      // 8: ai.inference.v1.ErrorChunk
+	(*ToolUseChunk)(nil),    // 9: ai.inference.v1.ToolUseChunk
+	(*ToolResultChunk)(nil), // 10: ai.inference.v1.ToolResultChunk
 }
 var file_ai_inference_v1_service_proto_depIdxs = []int32{
 	1,  // 0: ai.inference.v1.AskResponse.citations:type_name -> ai.inference.v1.Citation
@@ -819,17 +966,19 @@ var file_ai_inference_v1_service_proto_depIdxs = []int32{
 	6,  // 3: ai.inference.v1.AskStreamChunk.citations:type_name -> ai.inference.v1.CitationsChunk
 	7,  // 4: ai.inference.v1.AskStreamChunk.done:type_name -> ai.inference.v1.DoneChunk
 	8,  // 5: ai.inference.v1.AskStreamChunk.error:type_name -> ai.inference.v1.ErrorChunk
-	1,  // 6: ai.inference.v1.CitationsChunk.citations:type_name -> ai.inference.v1.Citation
-	2,  // 7: ai.inference.v1.DoneChunk.usage:type_name -> ai.inference.v1.Usage
-	0,  // 8: ai.inference.v1.AIInferenceService.Ask:input_type -> ai.inference.v1.AskRequest
-	0,  // 9: ai.inference.v1.AIInferenceService.AskStream:input_type -> ai.inference.v1.AskRequest
-	3,  // 10: ai.inference.v1.AIInferenceService.Ask:output_type -> ai.inference.v1.AskResponse
-	4,  // 11: ai.inference.v1.AIInferenceService.AskStream:output_type -> ai.inference.v1.AskStreamChunk
-	10, // [10:12] is the sub-list for method output_type
-	8,  // [8:10] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	9,  // 6: ai.inference.v1.AskStreamChunk.tool_use:type_name -> ai.inference.v1.ToolUseChunk
+	10, // 7: ai.inference.v1.AskStreamChunk.tool_result:type_name -> ai.inference.v1.ToolResultChunk
+	1,  // 8: ai.inference.v1.CitationsChunk.citations:type_name -> ai.inference.v1.Citation
+	2,  // 9: ai.inference.v1.DoneChunk.usage:type_name -> ai.inference.v1.Usage
+	0,  // 10: ai.inference.v1.AIInferenceService.Ask:input_type -> ai.inference.v1.AskRequest
+	0,  // 11: ai.inference.v1.AIInferenceService.AskStream:input_type -> ai.inference.v1.AskRequest
+	3,  // 12: ai.inference.v1.AIInferenceService.Ask:output_type -> ai.inference.v1.AskResponse
+	4,  // 13: ai.inference.v1.AIInferenceService.AskStream:output_type -> ai.inference.v1.AskStreamChunk
+	12, // [12:14] is the sub-list for method output_type
+	10, // [10:12] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_ai_inference_v1_service_proto_init() }
@@ -844,6 +993,8 @@ func file_ai_inference_v1_service_proto_init() {
 		(*AskStreamChunk_Citations)(nil),
 		(*AskStreamChunk_Done)(nil),
 		(*AskStreamChunk_Error)(nil),
+		(*AskStreamChunk_ToolUse)(nil),
+		(*AskStreamChunk_ToolResult)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -851,7 +1002,7 @@ func file_ai_inference_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_inference_v1_service_proto_rawDesc), len(file_ai_inference_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
