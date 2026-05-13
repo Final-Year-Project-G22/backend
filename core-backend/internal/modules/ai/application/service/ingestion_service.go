@@ -292,19 +292,77 @@ func (s *IngestionService) DeleteDocument(ctx context.Context, documentID uuid.U
 		return apperrors.UnauthorizedError("ingestion.errors.unauthorized")
 	}
 
+	// 1. Fetch the document to get storage key and verify ownership.
+	doc, err := s.documentRepo.GetByID(ctx, documentID)
+	if err != nil {
+		return err
+	}
+	if doc.AccountID != accountID {
+		return apperrors.ForbiddenError("ingestion.errors.forbidden")
+	}
+
+	// 2. Delete the file from object storage.
+	// Best-effort: continue cleanup even if storage removal fails.
+	if err := s.storage.Delete(ctx, doc.StorageKey); err != nil {
+		_ = err
+	}
+
+	// 3. Publish lifecycle removed event via outbox.
+	eventID := uuid.New()
+	payload := datatypes.JSONMap{
+		"document_id":            documentID.String(),
+		"storage_key":            doc.StorageKey,
+		"payload_schema_version": aievent.LifecycleRemovedPayloadSchemaVersion,
+	}
+	outbox := &entity.IngestionOutbox{
+		EventID:        eventID,
+		EventType:      aievent.DocumentLifecycleRemovedV1,
+		SchemaVersion:  aievent.EnvelopeSchemaVersion,
+		Producer:       aievent.ProducerCoreBackend,
+		KeyID:          "pending-signature",
+		IdempotencyKey: "lifecycle-removed-" + documentID.String(),
+		AggregateID:    documentID,
+		AccountID:      doc.AccountID,
+		UserID:         doc.UserID,
+		BatchID:        nil,
+		ReplayCount:    0,
+		Payload: datatypes.JSONMap{
+			"lifecycle_removed": payload,
+		},
+		Status:       entity.OutboxStatusPending,
+		AttemptCount: 0,
+	}
+	if err := s.outboxRepo.Create(ctx, outbox); err != nil {
+		return err
+	}
+
+	// 4. Soft-delete the document record.
 	if err := s.documentRepo.SoftDelete(ctx, documentID, accountID); err != nil {
-		// If the document is already soft-deleted, treat it as success and
-		// still delete the projection (idempotent delete).
 		if appErr, ok := err.(*apperrors.AppError); !ok || appErr.GetCode() != apperrors.ErrCodeNotFound {
 			return err
 		}
 	}
 
+	// 5. Hard-delete the status projection.
 	if err := s.projectionRepo.DeleteByDocumentID(ctx, documentID); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *IngestionService) GetDocument(ctx context.Context, documentID uuid.UUID, accountID uuid.UUID) (*entity.IngestionDocument, error) {
+	if documentID == uuid.Nil || accountID == uuid.Nil {
+		return nil, apperrors.UnauthorizedError("ingestion.errors.unauthorized")
+	}
+	doc, err := s.documentRepo.GetByID(ctx, documentID)
+	if err != nil {
+		return nil, err
+	}
+	if doc.AccountID != accountID {
+		return nil, apperrors.ForbiddenError("ingestion.errors.forbidden")
+	}
+	return doc, nil
 }
 
 func sanitizeNullableString(v *string) *string {
