@@ -312,10 +312,12 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 		return err
 	}
 
+	unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
 	uc.sseBroadcaster.Publish(service.InboxEvent{
-		Type:             "inbox_new",
+		Type:             "notification_new",
 		AccountID:        item.AccountID,
 		NotificationType: item.NotificationType,
+		UnreadCount:      unreadCount,
 		Timestamp:        time.Now().UTC(),
 	})
 	return nil
@@ -373,10 +375,12 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 		return err
 	}
 
+	unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
 	uc.sseBroadcaster.Publish(service.InboxEvent{
-		Type:             "inbox_new",
+		Type:             "notification_new",
 		AccountID:        item.AccountID,
 		NotificationType: item.NotificationType,
+		UnreadCount:      unreadCount,
 		Timestamp:        time.Now().UTC(),
 	})
 	return nil

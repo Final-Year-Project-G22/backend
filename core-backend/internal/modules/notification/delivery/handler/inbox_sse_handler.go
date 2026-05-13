@@ -30,11 +30,23 @@ func NewInboxSSEHandler(broadcaster *service.InboxSSEBroadcaster, tokenService t
 }
 
 func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
+	c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+	if c.Request.Method == "OPTIONS" {
+		c.Status(200)
+		return
+	}
+
 	accountID, err := h.authenticate(c)
 	if err != nil {
+		h.logger.Error("Inbox SSE auth failed", core.Error(err))
 		c.Status(401)
 		return
 	}
+
+	h.logger.Info("Inbox SSE client connected", core.String("accountID", accountID.String()))
 
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
@@ -42,10 +54,14 @@ func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
 	c.Header("X-Accel-Buffering", "no")
 
 	ch := h.broadcaster.Subscribe(accountID)
-	defer h.broadcaster.Unsubscribe(accountID, ch)
+	defer func() {
+		h.broadcaster.Unsubscribe(accountID, ch)
+		h.logger.Info("Inbox SSE client disconnected", core.String("accountID", accountID.String()))
+	}()
 
 	flusher, ok := c.Writer.(interface{ Flush() })
 	if !ok {
+		h.logger.Error("ResponseWriter doesn't support flushing")
 		c.Status(500)
 		return
 	}
@@ -55,9 +71,10 @@ func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
 		case event := <-ch:
 			data, err := json.Marshal(event)
 			if err != nil {
+				h.logger.Error("Failed to marshal SSE event", core.Error(err))
 				continue
 			}
-			_, _ = fmt.Fprintf(c.Writer, "event: inbox_new\ndata: %s\n\n", data)
+			_, _ = fmt.Fprintf(c.Writer, "event: notification_new\ndata: %s\n\n", data)
 			flusher.Flush()
 		case <-c.Request.Context().Done():
 			return
