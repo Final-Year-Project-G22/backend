@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -249,6 +250,11 @@ func (u *guideAdminUsecase) CreateStep(ctx context.Context, input usecase.Create
 			DifficultyLevel: input.DifficultyLevel,
 			FeeEstimate:     input.FeeEstimate,
 		}
+		if input.RequiredDocuments != nil {
+			docsJSON, _ := json.Marshal(input.RequiredDocuments)
+			docsData := datatypes.JSON(docsJSON)
+			step.RequiredDocuments = &docsData
+		}
 		if input.EffectiveDate != nil {
 			step.EffectiveDate = *input.EffectiveDate
 		}
@@ -312,6 +318,11 @@ func (u *guideAdminUsecase) UpdateStep(ctx context.Context, id uuid.UUID, input 
 			if err := u.setStepTranslations(txCtx, id, input.Translations, input.TranslationsMerge); err != nil {
 				return err
 			}
+		}
+		if input.RequiredDocuments != nil {
+			docsJSON, _ := json.Marshal(input.RequiredDocuments)
+			docsData := datatypes.JSON(docsJSON)
+			step.RequiredDocuments = &docsData
 		}
 		if input.Conditions != nil {
 			if err := u.setStepConditions(txCtx, id, input.Conditions); err != nil {
