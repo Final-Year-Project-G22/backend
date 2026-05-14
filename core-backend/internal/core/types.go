@@ -25,6 +25,7 @@ type Config struct {
 	Email     email.Config    `mapstructure:"email"`
 	Resend    ResendConfig    `mapstructure:"resend"`
 	Chapa     ChapaConfig     `mapstructure:"chapa"`
+	FCM       FCMConfig       `mapstructure:"fcm"`
 }
 
 type ResendConfig struct {
@@ -33,6 +34,10 @@ type ResendConfig struct {
 	WebhookSecret string `mapstructure:"webhook_secret"`
 	FromEmail     string `mapstructure:"from_email"`
 	FromName      string `mapstructure:"from_name"`
+}
+
+type FCMConfig struct {
+	CredentialsFile string `mapstructure:"credentials_file"`
 }
 
 type ChapaConfig struct {
