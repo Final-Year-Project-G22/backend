@@ -53,6 +53,9 @@ func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("X-Accel-Buffering", "no")
 
+	// Flush the headers to establish the connection
+	c.Writer.Flush()
+
 	ch := h.broadcaster.Subscribe(accountID)
 	defer func() {
 		h.broadcaster.Unsubscribe(accountID, ch)

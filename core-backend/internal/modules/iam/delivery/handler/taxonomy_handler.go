@@ -20,7 +20,7 @@ func NewTaxonomyHandler(sectorRepo repository.SectorRepository, tagRepo reposito
 }
 
 func (h *TaxonomyHandler) HandleListSectors(ctx context.Context, input *dto.ListSectorsInput) (*dto.ListSectorsOutput, error) {
-	q := query.QueryOptions{}
+	q := query.QueryOptions{Preload: []string{"Translations"}}
 	if input.Page > 0 {
 		q.Page = input.Page
 	}

@@ -64,6 +64,10 @@ func (uc *notificationDeliveryUsecase) ProcessQueue(ctx context.Context, batchSi
 	}
 	for _, item := range items {
 		if err := uc.DeliverItem(ctx, item.ID); err != nil {
+			uc.logger.Error("Failed to deliver queue item",
+				core.String("queueID", item.ID.String()),
+				core.Error(err),
+			)
 			continue
 		}
 	}
@@ -312,14 +316,16 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 		return err
 	}
 
-	unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
-	uc.sseBroadcaster.Publish(service.InboxEvent{
-		Type:             "notification_new",
-		AccountID:        item.AccountID,
-		NotificationType: item.NotificationType,
-		UnreadCount:      unreadCount,
-		Timestamp:        time.Now().UTC(),
-	})
+	if item.Channel == entity.ChannelInApp {
+		unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
+		uc.sseBroadcaster.Publish(service.InboxEvent{
+			Type:             "notification_new",
+			AccountID:        item.AccountID,
+			NotificationType: item.NotificationType,
+			UnreadCount:      unreadCount,
+			Timestamp:        time.Now().UTC(),
+		})
+	}
 	return nil
 }
 
