@@ -14,6 +14,7 @@ import (
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/datatypes"
 )
 
@@ -70,8 +71,8 @@ func (uc *notificationCampaignUsecase) CreateCampaign(ctx context.Context, creat
 		ScheduledFor:       input.ScheduledFor,
 		Status:             entity.CampaignStatusDraft,
 		CreatedBy:          createdBy,
-		SectorIDs:          input.SectorIDs,
-		TagIDs:             input.TagIDs,
+		SectorIDs:          uuidSliceToStrings(input.SectorIDs),
+		TagIDs:             uuidSliceToStrings(input.TagIDs),
 		Region:             input.Region,
 		Stage:              input.Stage,
 	}
@@ -144,10 +145,10 @@ func (uc *notificationCampaignUsecase) UpdateCampaign(ctx context.Context, id uu
 		updates["scheduled_for"] = input.ScheduledFor
 	}
 	if input.SectorIDs != nil {
-		updates["sector_ids"] = input.SectorIDs
+		updates["sector_ids"] = uuidSliceToStrings(input.SectorIDs)
 	}
 	if input.TagIDs != nil {
-		updates["tag_ids"] = input.TagIDs
+		updates["tag_ids"] = uuidSliceToStrings(input.TagIDs)
 	}
 	if input.Region != nil {
 		updates["region"] = input.Region
@@ -213,14 +214,12 @@ func (uc *notificationCampaignUsecase) ScheduleCampaign(ctx context.Context, inp
 	}
 
 	err = uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		if err := uc.campaignRepo.UpdateByID(txCtx, campaign.ID, map[string]interface{}{
+		updates := map[string]interface{}{
 			"target_segment": resolvedMap,
 			"status":         entity.CampaignStatusScheduled,
 			"scheduled_for":  scheduledFor,
-		}); err != nil {
-			return err
 		}
-		return nil
+		return uc.campaignRepo.UpdateByID(txCtx, campaign.ID, updates)
 	})
 	if err != nil {
 		return err
@@ -289,4 +288,15 @@ func (uc *notificationCampaignUsecase) processCampaign(ctx context.Context, camp
 	}
 	uc.publishSSEEvent(campaign.ID, entity.CampaignStatusCompleted)
 	return nil
+}
+
+func uuidSliceToStrings(ids []uuid.UUID) pq.StringArray {
+	if ids == nil {
+		return nil
+	}
+	strs := make(pq.StringArray, len(ids))
+	for i, id := range ids {
+		strs[i] = id.String()
+	}
+	return strs
 }

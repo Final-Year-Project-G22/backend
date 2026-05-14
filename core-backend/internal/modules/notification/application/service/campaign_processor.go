@@ -83,14 +83,29 @@ func (p *CampaignProcessor) ResolveSegment(ctx context.Context, campaignType ent
 }
 
 func (p *CampaignProcessor) resolveRecipients(ctx context.Context, campaign *entity.NotificationCampaign) ([]uuid.UUID, error) {
-	var segment map[string]interface{}
+	// If the campaign already has resolved account IDs (stored during scheduling), use those directly.
 	if campaign.TargetSegment != nil {
-		segment = *campaign.TargetSegment
+		segment := *campaign.TargetSegment
+		if resolvedRaw, ok := segment["resolvedAccountIDs"]; ok {
+			if resolvedList, ok := resolvedRaw.([]interface{}); ok {
+				accountIDs := make([]uuid.UUID, 0, len(resolvedList))
+				for _, r := range resolvedList {
+					if idStr, ok := r.(string); ok {
+						id, err := uuid.Parse(idStr)
+						if err == nil {
+							accountIDs = append(accountIDs, id)
+						}
+					}
+				}
+				return accountIDs, nil
+			}
+			return nil, fmt.Errorf("invalid resolvedAccountIDs format")
+		}
 	}
 
-	accountIDs, err := p.ResolveSegment(ctx, campaign.CampaignType, segment)
+	accountIDs, err := p.ResolveSegment(ctx, campaign.CampaignType, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to resolve campaign segment: %w", err)
 	}
 
 	if len(accountIDs) == 0 {

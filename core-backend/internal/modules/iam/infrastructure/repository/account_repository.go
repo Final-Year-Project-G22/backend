@@ -11,6 +11,7 @@ import (
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -180,7 +181,18 @@ func (r *accountRepository) MarkEmailVerifiedAndActivate(ctx context.Context, id
 
 func (r *accountRepository) FindBySegment(ctx context.Context, segment map[string]interface{}) ([]*entity.Account, error) {
 	var accounts []*entity.Account
-	db := r.getDB(ctx).Select("id")
+	db := r.getDB(ctx).Select("accounts.id")
+
+	needsBPJoin := false
+	for key := range segment {
+		switch key {
+		case "sector_ids", "tag_ids", "region", "stage":
+			needsBPJoin = true
+		}
+	}
+	if needsBPJoin {
+		db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id")
+	}
 
 	for key, value := range segment {
 		switch key {
@@ -195,25 +207,21 @@ func (r *accountRepository) FindBySegment(ctx context.Context, segment map[strin
 				db = db.Where("created_at <= ?", t)
 			}
 		case "sector_ids":
-			if ids, ok := value.([]uuid.UUID); ok && len(ids) > 0 {
-				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
-					Where("bp.sector_id IN ?", ids)
+			if ids, ok := value.(pq.StringArray); ok && len(ids) > 0 {
+				db = db.Where("bp.sector_id IN ?", []string(ids))
 			}
 		case "tag_ids":
-			if ids, ok := value.([]uuid.UUID); ok && len(ids) > 0 {
-				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
-					Joins("JOIN business_profile_tags bpt ON bpt.business_profile_id = bp.id").
-					Where("bpt.tag_id IN ?", ids)
+			if ids, ok := value.(pq.StringArray); ok && len(ids) > 0 {
+				db = db.Joins("JOIN business_profile_tags bpt ON bpt.business_profile_id = bp.id").
+					Where("bpt.tag_id IN ?", []string(ids))
 			}
 		case "region":
 			if s, ok := value.(string); ok && s != "" {
-				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
-					Where("bp.region = ?", s)
+				db = db.Where("bp.region = ?", s)
 			}
 		case "stage":
 			if s, ok := value.(string); ok && s != "" {
-				db = db.Joins("JOIN business_profiles bp ON bp.account_id = accounts.id").
-					Where("bp.stage = ?", s)
+				db = db.Where("bp.stage = ?", s)
 			}
 		}
 	}
