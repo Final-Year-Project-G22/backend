@@ -466,6 +466,14 @@ func ToUpdateCampaignInput(body UpdateCampaignRequest) usecase.UpdateCampaignInp
 }
 
 func ToCampaignDetailResponse(detail *usecase.CampaignDetail) CampaignDetailResponse {
+	sectorIDs := make([]uuid.UUID, len(detail.Campaign.SectorIDs))
+	for i, s := range detail.Campaign.SectorIDs {
+		sectorIDs[i] = uuid.MustParse(s)
+	}
+	tagIDs := make([]uuid.UUID, len(detail.Campaign.TagIDs))
+	for i, t := range detail.Campaign.TagIDs {
+		tagIDs[i] = uuid.MustParse(t)
+	}
 	resp := CampaignDetailResponse{
 		ID:                 detail.Campaign.ID,
 		Name:               detail.Campaign.Name,
@@ -475,8 +483,8 @@ func ToCampaignDetailResponse(detail *usecase.CampaignDetail) CampaignDetailResp
 		ScheduledFor:       detail.Campaign.ScheduledFor,
 		SentAt:             detail.Campaign.SentAt,
 		Status:             detail.Campaign.Status,
-		SectorIDs:          detail.Campaign.SectorIDs,
-		TagIDs:             detail.Campaign.TagIDs,
+		SectorIDs:          sectorIDs,
+		TagIDs:             tagIDs,
 		Region:             detail.Campaign.Region,
 		Stage:              detail.Campaign.Stage,
 		CreatedAt:          *detail.Campaign.CreatedAt,
