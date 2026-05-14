@@ -65,7 +65,18 @@ var Module = fx.Module(
 	}, fx.As(new(repository.EmailProvider)))),
 
 	// --- Push Provider ---
-	fx.Provide(fx.Annotate(func(logger core.Logger) repository.PushProvider {
+	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.PushProvider {
+		if cfg.FCM.CredentialsFile != "" {
+			provider, err := pushProvider.NewFCMProvider(cfg.FCM, logger)
+			if err != nil {
+				logger.Warn("Failed to initialize FCM provider, falling back to noop",
+					core.String("credentialsFile", cfg.FCM.CredentialsFile),
+					core.Error(err),
+				)
+				return pushProvider.NewNoopProvider(logger)
+			}
+			return provider
+		}
 		return pushProvider.NewNoopProvider(logger)
 	}, fx.As(new(repository.PushProvider)))),
 
