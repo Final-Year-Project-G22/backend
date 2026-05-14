@@ -119,28 +119,39 @@ func (p *CampaignProcessor) resolveRecipients(ctx context.Context, campaign *ent
 
 func (p *CampaignProcessor) resolveChannels(tmpl *entity.CampaignTemplate) []entity.Channel {
 	content := tmpl.DefaultContent
-	var channels []entity.Channel
 	if content == nil {
-		return channels
+		return nil
 	}
+
+	channelsMap := make(map[entity.Channel]bool)
+
 	for key := range content {
 		ch := entity.Channel(key)
+
 		switch ch {
 		case entity.ChannelEmail, entity.ChannelInApp, entity.ChannelPush, entity.ChannelSMS:
-			channels = append(channels, ch)
+			channelsMap[ch] = true
 		}
 	}
-	if !tmpl.EnablePushMirror {
-		return channels
+
+	channels := make([]entity.Channel, 0, len(channelsMap))
+	for ch := range channelsMap {
+		channels = append(channels, ch)
 	}
-	expanded := make([]entity.Channel, 0, len(channels)+1)
-	for _, ch := range channels {
-		expanded = append(expanded, ch)
-		if ch == entity.ChannelInApp {
-			expanded = append(expanded, entity.ChannelPush)
+
+	// 👇 ONLY derive push if enabled AND in_app exists AND push not explicit
+	if tmpl.EnablePushMirror {
+		if channelsMap[entity.ChannelInApp] && !channelsMap[entity.ChannelPush] {
+			channels = append(channels, entity.ChannelPush)
 		}
 	}
-	return expanded
+
+	p.logger.Info("Resolved channels",
+		core.Any("channels", channels),
+		core.Any("enablePushMirror", tmpl.EnablePushMirror),
+	)
+
+	return channels
 }
 
 func isChannelContentValid(ch entity.Channel, content map[string]interface{}) bool {
@@ -221,6 +232,23 @@ func (p *CampaignProcessor) enqueueForRecipient(
 					core.String("accountID", accountID.String()),
 				)
 				continue
+			}
+			if ch == entity.ChannelPush && !isChannelContentValid(ch, channelMap) {
+				inAppContent, hasInApp := rendered[string(entity.ChannelInApp)]
+				if !hasInApp {
+					continue
+				}
+				inAppMap, ok := inAppContent.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				channelMap = map[string]interface{}{
+					"title": inAppMap["title"],
+					"body":  inAppMap["body"],
+				}
+				if actionUrl, ok := inAppMap["actionUrl"].(string); ok && actionUrl != "" {
+					channelMap["actionUrl"] = actionUrl
+				}
 			}
 		default:
 			continue

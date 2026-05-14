@@ -106,6 +106,11 @@ func NewConfig() (*Config, error) {
 		return nil, fmt.Errorf("error binding env chapa.base_url: %w", err)
 	}
 
+	err = v.BindEnv("fcm.credentials_file", "FCM_CREDENTIALS_FILE")
+	if err != nil {
+		return nil, fmt.Errorf("error binding env fcm.credentials_file: %w", err)
+	}
+
 	// 4. Set defaults
 	v.SetDefault("app.environment", "development")
 	v.SetDefault("app.port", 4000)
