@@ -144,7 +144,7 @@ CREATE INDEX IF NOT EXISTS "idx_discussion_posts_author" ON "discussion_posts" (
 CREATE INDEX IF NOT EXISTS "idx_discussion_posts_parent" ON "discussion_posts" ("parent_post_id");
 CREATE INDEX IF NOT EXISTS "idx_discussion_posts_thread" ON "discussion_posts" ("thread_id");
 CREATE INDEX IF NOT EXISTS "idx_discussion_posts_deleted_at" ON "discussion_posts" ("deleted_at");
-CREATE TABLE "user_thread_settings" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"account_id" uuid NOT NULL,"thread_id" uuid NOT NULL,"is_following" boolean NOT NULL DEFAULT true,"is_muted" boolean NOT NULL DEFAULT false,"last_read_at" timestamptz,PRIMARY KEY ("id"));
+CREATE TABLE "user_thread_settings" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"account_id" uuid NOT NULL,"thread_id" uuid NOT NULL,"is_following" boolean NOT NULL DEFAULT false,"is_muted" boolean NOT NULL DEFAULT false,"last_read_at" timestamptz,PRIMARY KEY ("id"));
 CREATE INDEX IF NOT EXISTS "idx_user_thread_settings_thread" ON "user_thread_settings" ("thread_id");
 CREATE INDEX IF NOT EXISTS "idx_user_thread_settings_account" ON "user_thread_settings" ("account_id");
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_user_thread_settings_account_thread" ON "user_thread_settings" ("account_id","thread_id");
@@ -218,7 +218,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "idx_notification_outbox_idempotency" ON "noti
 CREATE INDEX IF NOT EXISTS "idx_notification_outbox_account" ON "notification_outbox" ("account_id");
 CREATE INDEX IF NOT EXISTS "idx_notification_outbox_source" ON "notification_outbox" ("source_module");
 CREATE INDEX IF NOT EXISTS "idx_notification_outbox_deleted_at" ON "notification_outbox" ("deleted_at");
-CREATE TABLE "campaign_templates" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"name" varchar(200) NOT NULL,"description" text,"default_content" JSONB NOT NULL,PRIMARY KEY ("id"));
+CREATE TABLE "campaign_templates" ("id" uuid DEFAULT gen_random_uuid(),"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"deleted_at" timestamptz,"name" varchar(200) NOT NULL,"description" text,"default_content" JSONB NOT NULL,"enable_push_mirror" boolean NOT NULL DEFAULT false,PRIMARY KEY ("id"));
 CREATE UNIQUE INDEX IF NOT EXISTS "idx_campaign_templates_name" ON "campaign_templates" ("name");
 CREATE INDEX IF NOT EXISTS "idx_campaign_templates_deleted_at" ON "campaign_templates" ("deleted_at");
 CREATE TABLE "campaign_template_translations" ("id" uuid DEFAULT gen_random_uuid(),"campaign_template_id" uuid NOT NULL,"language" varchar(10) NOT NULL,"content" JSONB NOT NULL,"created_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,"updated_at" timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY ("id"));

@@ -1,4 +1,4 @@
-h1:NUvTh1Rxjq1BRdFGKDE8jLBHxmiuFj05USjnNu8oIIg=
+h1:IJFV0G35Mjj1t3vPvS9AwKaozRy9UsqfNoZcWRvEGMc=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -29,3 +29,4 @@ h1:NUvTh1Rxjq1BRdFGKDE8jLBHxmiuFj05USjnNu8oIIg=
 20260512150000_seed_payment_plans.sql h1:DYJINnkujC68WcDoj2LPU0vLnxdgtBUhiSS7Kj9DHjE=
 20260513103128_addGuideImageUrl.sql h1:nmRoiDCfCrWpmLkM87Y/2eJ2YyRHxjjFNbuedblIc88=
 20260513113730_guideStepRequiredDocuments.sql h1:w8oSvdEs4Cs7ticXcV8uRDKTWTpp2f4OXlg0IVoL8kA=
+20260514152110_add_enable_push_mirror_and_update_isFollow_default.sql h1:dyqooPzXYPpwv92jX5otKA45NpzKnILToRzjYXPVVlM=
