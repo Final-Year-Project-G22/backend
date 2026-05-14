@@ -99,21 +99,35 @@ func (uc *notificationDeliveryUsecase) DeliverItem(ctx context.Context, queueID 
 }
 
 func (uc *notificationDeliveryUsecase) HandleDeliveryResult(ctx context.Context, queueID uuid.UUID, success bool, errMsg *string) error {
+	item, err := uc.queueRepo.GetByID(ctx, queueID)
+	if err != nil {
+		return err
+	}
+
 	if success {
-		item, err := uc.queueRepo.GetByID(ctx, queueID)
-		if err != nil {
-			return err
-		}
 		if err := uc.createHistoryAndInbox(ctx, item); err != nil {
 			msg := err.Error()
 			return uc.queueRepo.MarkFailed(ctx, queueID, msg)
 		}
-		return uc.queueRepo.MarkDelivered(ctx, queueID)
-	}
+		if err := uc.queueRepo.MarkDelivered(ctx, queueID); err != nil {
+			return err
+		}
 
-	item, err := uc.queueRepo.GetByID(ctx, queueID)
-	if err != nil {
-		return err
+		// Publish SSE event after everything is committed
+		if item.Channel == entity.ChannelInApp {
+			isMuted, _ := item.Payload["_isMuted"].(bool)
+			if !isMuted {
+				unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
+				uc.sseBroadcaster.Publish(service.InboxEvent{
+					Type:             "notification_new",
+					AccountID:        item.AccountID,
+					NotificationType: item.NotificationType,
+					UnreadCount:      unreadCount,
+					Timestamp:        time.Now().UTC(),
+				})
+			}
+		}
+		return nil
 	}
 
 	if item.RetryCount < item.MaxRetries {
@@ -294,20 +308,22 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 			return fmt.Errorf("failed to create email delivery log: %w", err)
 		}
 
-		if isMuted || item.Channel != entity.ChannelInApp {
+		if isMuted {
 			return uc.queueRepo.MarkDelivered(txCtx, item.ID)
 		}
 
-		inbox := &entity.UserNotificationInbox{
-			AccountID:             item.AccountID,
-			NotificationHistoryID: history.ID,
-			ActionUrl:             actionUrl,
-			IsRead:                false,
-			IsArchived:            false,
-		}
+		if item.Channel == entity.ChannelInApp {
+			inbox := &entity.UserNotificationInbox{
+				AccountID:             item.AccountID,
+				NotificationHistoryID: history.ID,
+				ActionUrl:             actionUrl,
+				IsRead:                false,
+				IsArchived:            false,
+			}
 
-		if err := uc.inboxRepo.Create(txCtx, inbox); err != nil {
-			return fmt.Errorf("failed to create inbox entry: %w", err)
+			if err := uc.inboxRepo.Create(txCtx, inbox); err != nil {
+				return fmt.Errorf("failed to create inbox entry: %w", err)
+			}
 		}
 
 		return uc.queueRepo.MarkDelivered(txCtx, item.ID)
@@ -317,14 +333,17 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 	}
 
 	if item.Channel == entity.ChannelInApp {
-		unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
-		uc.sseBroadcaster.Publish(service.InboxEvent{
-			Type:             "notification_new",
-			AccountID:        item.AccountID,
-			NotificationType: item.NotificationType,
-			UnreadCount:      unreadCount,
-			Timestamp:        time.Now().UTC(),
-		})
+		isMuted, _ := item.Payload["_isMuted"].(bool)
+		if !isMuted {
+			unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
+			uc.sseBroadcaster.Publish(service.InboxEvent{
+				Type:             "notification_new",
+				AccountID:        item.AccountID,
+				NotificationType: item.NotificationType,
+				UnreadCount:      unreadCount,
+				Timestamp:        time.Now().UTC(),
+			})
+		}
 	}
 	return nil
 }
@@ -381,14 +400,6 @@ func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context
 		return err
 	}
 
-	unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
-	uc.sseBroadcaster.Publish(service.InboxEvent{
-		Type:             "notification_new",
-		AccountID:        item.AccountID,
-		NotificationType: item.NotificationType,
-		UnreadCount:      unreadCount,
-		Timestamp:        time.Now().UTC(),
-	})
 	return nil
 }
 
