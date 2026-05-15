@@ -22,7 +22,9 @@ func (h *GuideViewHandler) HandleListGuides(ctx context.Context, input *dto.List
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	cards, err := h.guideViewUC.ListGuides(ctx, accountID, userID, q, input.Locale)
+	sectorIDs := dto.ParseCSVToUUIDs(input.SectorIDs)
+	tagIDs := dto.ParseCSVToUUIDs(input.TagIDs)
+	cards, err := h.guideViewUC.ListGuides(ctx, accountID, userID, q, input.Locale, sectorIDs, tagIDs)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

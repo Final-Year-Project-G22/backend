@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"strings"
+
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
@@ -9,9 +11,11 @@ import (
 )
 
 type ListGuidesInput struct {
-	Page     int              `query:"page" doc:"Page number"`
-	PageSize int              `query:"pageSize" doc:"Items per page"`
-	Locale   constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	Page      int              `query:"page" doc:"Page number"`
+	PageSize  int              `query:"pageSize" doc:"Items per page"`
+	Locale    constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	SectorIDs string           `query:"sectorIds" doc:"Comma-separated sector IDs"`
+	TagIDs    string           `query:"tagIds" doc:"Comma-separated tag IDs"`
 }
 
 type ListGuidesOutput struct {
@@ -386,4 +390,23 @@ func ToQueryOptions(page, pageSize int) query.QueryOptions {
 		opts.PageSize = pageSize
 	}
 	return opts
+}
+
+func ParseCSVToUUIDs(csv string) []uuid.UUID {
+	if strings.TrimSpace(csv) == "" {
+		return nil
+	}
+	parts := strings.Split(csv, ",")
+	result := make([]uuid.UUID, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			if id, err := uuid.Parse(trimmed); err == nil {
+				result = append(result, id)
+			}
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
