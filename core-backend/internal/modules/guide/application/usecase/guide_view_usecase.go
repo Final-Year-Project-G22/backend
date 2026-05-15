@@ -50,23 +50,25 @@ func NewGuideViewUsecase(
 	}
 }
 
-func (s *guideViewUsecase) ListGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*usecase.GuideCard, error) {
-	// Fetch user's business profile for taxonomy filtering
-	profile, err := s.profileRepo.GetByAccountID(ctx, accountID)
-	if err != nil {
-		s.logger.Error("Failed to get business profile for guide filtering", core.Error(err))
-		// If profile not found, return all guides (no restriction)
-	}
-
-	var sectorIDs, tagIDs []uuid.UUID
-	if profile != nil {
-		// Build sector filter: include profile's sector and its ancestors
-		if profile.SectorID != nil {
-			sectorIDs = append(sectorIDs, *profile.SectorID)
+func (s *guideViewUsecase) ListGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale, sectorIDs, tagIDs []uuid.UUID) ([]*usecase.GuideCard, error) {
+	// If explicit taxonomy filters are provided, use them directly
+	if len(sectorIDs) == 0 && len(tagIDs) == 0 {
+		// Fetch user's business profile for taxonomy filtering
+		profile, err := s.profileRepo.GetByAccountID(ctx, accountID)
+		if err != nil {
+			s.logger.Error("Failed to get business profile for guide filtering", core.Error(err))
+			// If profile not found, return all guides (no restriction)
 		}
-		// TODO: include ancestor sectors from sector repository when subtree lookup is available
-		for _, tag := range profile.Tags {
-			tagIDs = append(tagIDs, tag.ID)
+
+		if profile != nil {
+			// Build sector filter: include profile's sector and its ancestors
+			if profile.SectorID != nil {
+				sectorIDs = append(sectorIDs, *profile.SectorID)
+			}
+			// TODO: include ancestor sectors from sector repository when subtree lookup is available
+			for _, tag := range profile.Tags {
+				tagIDs = append(tagIDs, tag.ID)
+			}
 		}
 	}
 

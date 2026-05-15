@@ -9,6 +9,7 @@ import (
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	guiderepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/dbtypes"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -79,11 +80,11 @@ func (r *guideRepository) ListByTaxonomy(ctx context.Context, sectorIDs []uuid.U
 
 	// Apply sector filter: guide.sector_ids overlaps with user's sector_ids (or subtree)
 	if len(sectorIDs) > 0 {
-		db = db.Where("sector_ids && ?", sectorIDs)
+		db = db.Where("sector_ids && ?", dbtypes.UUIDArray(sectorIDs))
 	}
 	// Apply tag filter: guide.tag_ids overlaps with user's tag_ids
 	if len(tagIDs) > 0 {
-		db = db.Where("tag_ids && ?", tagIDs)
+		db = db.Where("tag_ids && ?", dbtypes.UUIDArray(tagIDs))
 	}
 	// If both are empty, return all guides (no restriction)
 
