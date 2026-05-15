@@ -35,12 +35,23 @@ func RegisterLibraryRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.ViewHandler.HandleGetTemplateGroup)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "LibraryPreviewTemplate",
+		Method:      "GET",
+		Path:        base + "/templates/{groupId}/preview",
+		Summary:     "Preview template",
+		Description: "Generates a short-lived presigned URL for previewing a template.",
+		Tags:        []string{"Library"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
+	}, deps.ViewHandler.HandlePreviewTemplate)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "LibraryDownloadTemplate",
 		Method:      "GET",
 		Path:        base + "/templates/{groupId}/download",
 		Summary:     "Download template",
 		Description: "Generates a presigned download URL for a template.",
 		Tags:        []string{"Library"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware},
 	}, deps.ViewHandler.HandleDownloadTemplate)
 
 	huma.Register(api, huma.Operation{

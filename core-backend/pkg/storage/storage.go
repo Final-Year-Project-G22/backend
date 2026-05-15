@@ -62,6 +62,10 @@ type Storage interface {
 	// Returns empty string if the storage provider doesn't support presigned URLs.
 	GetPresignedURL(ctx context.Context, key string, expiry time.Duration) (string, error)
 
+	// GetPresignedURLLocal generates a file URL for local development.
+	// Tries the presign API first; falls back to the direct filer URL when unavailable.
+	GetPresignedURLLocal(ctx context.Context, key string, expiry time.Duration) (string, error)
+
 	// List returns a list of files matching the specified options.
 	// Supports pagination through ListOptions.
 	List(ctx context.Context, opts ListOptions) ([]FileInfo, error)

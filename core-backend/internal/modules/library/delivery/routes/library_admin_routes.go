@@ -166,11 +166,22 @@ func RegisterLibraryAdminRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.AdminHandler.HandleListTemplatesByGroup)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "LibraryCreateTemplateUploadIntent",
+		Method:      "POST",
+		Path:        adminBase + "/template-groups/{groupId}/templates/upload-intent",
+		Summary:     "Create template upload intent",
+		Description: "Generates a direct upload URL for a template file.",
+		Tags:        []string{"Admin - Library"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
+	}, deps.AdminHandler.HandleCreateTemplateUploadIntent)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "LibraryCreateTemplate",
 		Method:      "POST",
 		Path:        adminBase + "/template-groups/{groupId}/templates",
 		Summary:     "Create template",
-		Description: "Uploads a file and creates a template language variant.",
+		Description: "Creates a template language variant from a previously uploaded file.",
 		Tags:        []string{"Admin - Library"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},

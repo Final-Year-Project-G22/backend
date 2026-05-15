@@ -7,8 +7,10 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
@@ -142,6 +144,7 @@ func (h *LibraryAdminHandler) HandleCreateTemplateGroup(ctx context.Context, inp
 		RequiresAuth:    input.Body.RequiresAuth,
 		SortOrder:       input.Body.SortOrder,
 		DefaultLanguage: input.Body.DefaultLanguage,
+		ThumbnailURL:    input.Body.ThumbnailURL,
 	})
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -171,6 +174,7 @@ func (h *LibraryAdminHandler) HandleUpdateTemplateGroup(ctx context.Context, inp
 		SortOrder:       input.Body.SortOrder,
 		DefaultLanguage: input.Body.DefaultLanguage,
 		IsActive:        input.Body.IsActive,
+		ThumbnailURL:    input.Body.ThumbnailURL,
 	}
 	group, err := h.svc.UpdateTemplateGroup(ctx, input.GroupID, ucInput)
 	if err != nil {
@@ -198,51 +202,71 @@ func (h *LibraryAdminHandler) HandleListAllTemplateGroups(ctx context.Context, i
 		}
 		categoryID = &id
 	}
-	groups, err := h.adminUC.ListAllTemplateGroups(ctx, categoryID, q)
+	groups, total, err := h.adminUC.ListAllTemplateGroups(ctx, categoryID, q)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	resp := make([]dto.TemplateGroupSummaryResponse, len(groups))
+	data := make([]dto.TemplateGroupSummaryResponse, len(groups))
 	for i, g := range groups {
-		resp[i] = dto.ToTemplateGroupSummaryResponse(g)
+		data[i] = dto.ToTemplateGroupSummaryResponse(g)
 	}
-	return &dto.ListAllTemplateGroupsOutput{Body: resp}, nil
+	pageSize := q.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
+	return &dto.ListAllTemplateGroupsOutput{Body: dto.ListAllTemplateGroupsResponseBody{
+		Data:       data,
+		Total:      total,
+		Page:       q.Page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
+	}}, nil
 }
 
 // --- Templates ---
 
-func (h *LibraryAdminHandler) HandleCreateTemplate(ctx context.Context, input *dto.LibraryCreateTemplateInput) (*dto.LibraryCreateTemplateOutput, error) {
-	formData := input.RawBody.Data()
-	if formData == nil || !formData.File.IsSet {
-		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("library.errors.invalidFile"))
-	}
-
-	file := formData.File.File
-	if file == nil {
-		return nil, apperrors.ToHumaError(ctx, apperrors.BadRequestError("library.errors.invalidFile"))
-	}
-	defer func() { _ = file.Close() }()
-
-	limitedReader := io.LimitReader(file, maxUploadSize+1)
-	fileBytes, err := io.ReadAll(limitedReader)
+func (h *LibraryAdminHandler) HandleCreateTemplateUploadIntent(ctx context.Context, input *dto.LibraryCreateUploadIntentInput) (*dto.LibraryCreateUploadIntentOutput, error) {
+	out, err := h.svc.CreateUploadIntent(ctx, usecase.CreateTemplateUploadIntentInput{
+		GroupID:     input.GroupID,
+		Language:    input.Body.Language,
+		Title:       input.Body.Title,
+		Description: input.Body.Description,
+		FileName:    input.Body.FileName,
+		ContentType: input.Body.ContentType,
+		FileSize:    input.Body.FileSize,
+	})
 	if err != nil {
-		return nil, apperrors.ToHumaError(ctx, apperrors.InternalError("library.errors.readFileFailed", err))
+		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	if int64(len(fileBytes)) > maxUploadSize {
-		return nil, apperrors.ToHumaError(ctx, apperrors.PayloadTooLargeError("library.errors.fileTooLarge"))
-	}
+	return &dto.LibraryCreateUploadIntentOutput{Body: struct {
+		UploadURL string            `json:"uploadUrl" doc:"Direct upload URL"`
+		Method    string            `json:"method" doc:"HTTP method for upload"`
+		Headers   map[string]string `json:"headers,omitempty" doc:"Required upload headers"`
+		FileKey   string            `json:"fileKey" doc:"Storage key for the file"`
+		ExpiresAt string            `json:"expiresAt" doc:"Upload URL expiry time"`
+	}{
+		UploadURL: out.UploadURL,
+		Method:    out.Method,
+		Headers:   out.Headers,
+		FileKey:   out.FileKey,
+		ExpiresAt: out.ExpiresAt,
+	}}, nil
+}
 
+func (h *LibraryAdminHandler) HandleCreateTemplate(ctx context.Context, input *dto.LibraryCreateTemplateInput) (*dto.LibraryCreateTemplateOutput, error) {
 	var desc *string
-	if formData.Description != "" {
-		desc = &formData.Description
+	if input.Body.Description != nil && *input.Body.Description != "" {
+		desc = input.Body.Description
 	}
 	tmpl, err := h.svc.CreateTemplate(ctx, usecase.CreateTemplateInput{
 		GroupID:     input.GroupID,
-		Language:    formData.Language,
-		Title:       formData.Title,
+		Language:    input.Body.Language,
+		Title:       input.Body.Title,
 		Description: desc,
-		FileBytes:   fileBytes,
-		Filename:    formData.File.Filename,
+		FileKey:     input.Body.FileKey,
+		FileSize:    input.Body.FileSize,
+		ContentType: input.Body.ContentType,
 	})
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -396,11 +420,28 @@ func (h *LibraryAdminHandler) HandleGetDownloadLogs(ctx context.Context, input *
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+
+	total := int64(0)
+	if len(logs) > 0 {
+		var allLogs []*entity.LibraryTemplateDownload
+		allLogs, err = h.adminUC.GetDownloadLogs(ctx, nil, query.QueryOptions{Page: 1, PageSize: 100000})
+		if err == nil {
+			total = int64(len(allLogs))
+		}
+	}
+
 	data := make([]dto.DownloadLogResponse, len(logs))
 	for i, l := range logs {
-		data[i] = dto.ToDownloadLogResponse(l)
+		tmplTitle := ""
+		groupName := ""
+		if tmpl, err := h.adminUC.GetTemplate(ctx, l.TemplateID); err == nil && tmpl != nil {
+			tmplTitle = tmpl.Title
+		}
+		if grp, err := h.adminUC.GetTemplateGroup(ctx, l.GroupID); err == nil && grp != nil {
+			groupName = grp.Name
+		}
+		data[i] = dto.ToDownloadLogResponse(l, tmplTitle, groupName)
 	}
-	total := int64(len(logs))
 	pageSize := q.PageSize
 	if pageSize <= 0 {
 		pageSize = 20

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/usecase"
@@ -16,6 +17,7 @@ import (
 type LibraryService interface {
 	CreateTemplateGroup(ctx context.Context, accountID uuid.UUID, input usecase.CreateTemplateGroupInput) (*entity.LibraryTemplateGroup, error)
 	UpdateTemplateGroup(ctx context.Context, id uuid.UUID, input usecase.UpdateTemplateGroupInput) (*entity.LibraryTemplateGroup, error)
+	CreateUploadIntent(ctx context.Context, input usecase.CreateTemplateUploadIntentInput) (*usecase.CreateTemplateUploadIntentOutput, error)
 	CreateTemplate(ctx context.Context, input usecase.CreateTemplateInput) (*entity.LibraryTemplate, error)
 	UpdateTemplate(ctx context.Context, id uuid.UUID, input usecase.UpdateTemplateInput) (*entity.LibraryTemplate, error)
 }
@@ -39,6 +41,25 @@ func NewLibraryService(
 }
 
 func (s *libraryService) CreateTemplateGroup(ctx context.Context, accountID uuid.UUID, input usecase.CreateTemplateGroupInput) (*entity.LibraryTemplateGroup, error) {
+	if input.ThumbnailURL != nil {
+		group, err := s.adminUC.CreateTemplateGroup(ctx, accountID, usecase.CreateTemplateGroupInput{
+			Name:            input.Name,
+			Description:     input.Description,
+			Slug:            input.Slug,
+			CategoryID:      input.CategoryID,
+			Format:          input.Format,
+			TierAccess:      input.TierAccess,
+			RequiresAuth:    input.RequiresAuth,
+			SortOrder:       input.SortOrder,
+			DefaultLanguage: input.DefaultLanguage,
+			ThumbnailURL:    input.ThumbnailURL,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return group, nil
+	}
+
 	group, err := s.adminUC.CreateTemplateGroup(ctx, accountID, input)
 	if err != nil {
 		return nil, err
@@ -108,25 +129,44 @@ func (s *libraryService) UpdateTemplateGroup(ctx context.Context, id uuid.UUID, 
 	return s.adminUC.UpdateTemplateGroup(ctx, id, input)
 }
 
-func (s *libraryService) CreateTemplate(ctx context.Context, input usecase.CreateTemplateInput) (*entity.LibraryTemplate, error) {
-	validated, err := s.validator.Validate(input.FileBytes, input.Filename)
-	if err != nil {
-		return nil, err
-	}
+func (s *libraryService) CreateUploadIntent(ctx context.Context, input usecase.CreateTemplateUploadIntentInput) (*usecase.CreateTemplateUploadIntentOutput, error) {
+	ext := extFromContentType(input.ContentType)
+	fileKey := fmt.Sprintf("library/templates/%s%s", uuid.New().String(), ext)
 
-	fileKey := fmt.Sprintf("library/templates/%s%s", uuid.New().String(), validated.Extension)
-	uploaded, err := s.storage.Upload(ctx, storage.UploadOptions{
+	intent, err := s.storage.CreateUploadIntent(ctx, storage.UploadIntentOptions{
 		Key:         fileKey,
-		Content:     validated.Content,
-		ContentType: validated.ContentType,
+		ContentType: input.ContentType,
+		Expiry:      15 * time.Minute,
 	})
 	if err != nil {
 		return nil, apperrors.InternalError("library.errors.uploadFailed", err)
 	}
 
-	url := uploaded.URL
-	if url == "" {
-		url = fmt.Sprintf("/api/v1/files/%s", fileKey)
+	meta := make(map[string]string)
+	for k, v := range intent.Headers {
+		meta[k] = v
+	}
+
+	return &usecase.CreateTemplateUploadIntentOutput{
+		UploadURL: intent.UploadURL,
+		Method:    intent.Method,
+		Headers:   meta,
+		FileKey:   intent.Key,
+		ExpiresAt: intent.ExpiresAt.Format(time.RFC3339),
+	}, nil
+}
+
+func (s *libraryService) CreateTemplate(ctx context.Context, input usecase.CreateTemplateInput) (*entity.LibraryTemplate, error) {
+	info, err := s.storage.GetInfo(ctx, input.FileKey)
+	if err != nil {
+		return nil, apperrors.InternalError("library.errors.fileNotFound", err)
+	}
+
+	if input.FileSize == 0 {
+		input.FileSize = info.Size
+	}
+	if input.ContentType == "" {
+		input.ContentType = info.ContentType
 	}
 
 	tmpl, err := s.adminUC.CreateTemplate(ctx, usecase.CreateTemplateInput{
@@ -134,15 +174,11 @@ func (s *libraryService) CreateTemplate(ctx context.Context, input usecase.Creat
 		Language:    input.Language,
 		Title:       input.Title,
 		Description: input.Description,
-		FileBytes:   input.FileBytes,
-		Filename:    input.Filename,
-		FileKey:     fileKey,
-		FileURL:     &url,
-		FileSize:    int64(len(input.FileBytes)),
-		ContentType: validated.ContentType,
+		FileKey:     input.FileKey,
+		FileSize:    input.FileSize,
+		ContentType: input.ContentType,
 	})
 	if err != nil {
-		_ = s.storage.Delete(ctx, fileKey)
 		return nil, err
 	}
 
@@ -198,6 +234,23 @@ func (s *libraryService) UpdateTemplate(ctx context.Context, id uuid.UUID, input
 
 func int64Ptr(v int64) *int64 {
 	return &v
+}
+
+func extFromContentType(contentType string) string {
+	switch {
+	case strings.Contains(contentType, "pdf"):
+		return ".pdf"
+	case strings.Contains(contentType, "wordprocessingml"):
+		return ".docx"
+	case strings.Contains(contentType, "spreadsheetml"):
+		return ".xlsx"
+	default:
+		ext := strings.Split(contentType, "/")
+		if len(ext) == 2 {
+			return "." + ext[1]
+		}
+		return ""
+	}
 }
 
 func (s *libraryService) extractKeyFromURL(url string) string {

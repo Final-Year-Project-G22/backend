@@ -284,6 +284,42 @@ func (s *SeaweedFS) GetPresignedURL(ctx context.Context, key string, expiry time
 	return presignResp.Url, nil
 }
 
+// local dev
+// GetPresignedURL generates a presigned URL for file access.
+// Falls back to the direct filer URL when the presign endpoint is not available.
+func (s *SeaweedFS) GetPresignedURLLocal(ctx context.Context, key string, expiry time.Duration) (string, error) {
+	presignURL := fmt.Sprintf("%s/%s?ttl=%s", s.filerURL, key, formatExpiry(expiry))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, presignURL, nil)
+	if err != nil {
+		return fmt.Sprintf("%s/%s", s.filerURL, key), nil
+	}
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return fmt.Sprintf("%s/%s", s.filerURL, key), nil
+	}
+	defer closeResponseBody(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Sprintf("%s/%s", s.filerURL, key), nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Sprintf("%s/%s", s.filerURL, key), nil
+	}
+
+	if len(body) > 0 && body[0] == '{' {
+		var presignResp SeaweedPresignResponse
+		if json.Unmarshal(body, &presignResp) == nil && presignResp.Url != "" {
+			return presignResp.Url, nil
+		}
+	}
+
+	return fmt.Sprintf("%s/%s", s.filerURL, key), nil
+}
+
 // List returns a list of files.
 func (s *SeaweedFS) List(ctx context.Context, opts ListOptions) ([]FileInfo, error) {
 	if opts.Page < 1 {

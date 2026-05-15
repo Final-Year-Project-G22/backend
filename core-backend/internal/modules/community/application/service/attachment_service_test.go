@@ -164,6 +164,9 @@ func (m *mockStorage) GetInfo(ctx context.Context, key string) (*storage.FileInf
 func (m *mockStorage) GetPresignedURL(ctx context.Context, key string, expiry time.Duration) (string, error) {
 	return "", nil
 }
+func (m *mockStorage) GetPresignedURLLocal(ctx context.Context, key string, expiry time.Duration) (string, error) {
+	return "", nil
+}
 
 func (m *mockStorage) List(ctx context.Context, opts storage.ListOptions) ([]storage.FileInfo, error) {
 	return nil, nil

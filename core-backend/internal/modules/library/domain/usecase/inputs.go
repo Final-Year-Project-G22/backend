@@ -45,6 +45,7 @@ type CreateTemplateGroupInput struct {
 	DefaultLanguage   string
 	ThumbnailBytes    []byte
 	ThumbnailFilename *string
+	ThumbnailURL      *string
 }
 
 type UpdateTemplateGroupInput struct {
@@ -111,4 +112,36 @@ type DownloadOutput struct {
 	PresignedURL string
 	ExpiresAt    string
 	Filename     string
+	ContentType  string
+}
+
+type PreviewInput struct {
+	GroupID   uuid.UUID
+	Language  *string
+	AccountID *uuid.UUID
+}
+
+type PreviewOutput struct {
+	PresignedURL string
+	ExpiresAt    string
+	Filename     string
+	ContentType  string
+}
+
+type CreateTemplateUploadIntentInput struct {
+	GroupID     uuid.UUID
+	Language    string
+	Title       string
+	Description *string
+	FileName    string
+	ContentType string
+	FileSize    int64
+}
+
+type CreateTemplateUploadIntentOutput struct {
+	UploadURL string
+	Method    string
+	Headers   map[string]string
+	FileKey   string
+	ExpiresAt string
 }
