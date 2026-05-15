@@ -22,7 +22,7 @@ type LibraryAdminUsecase interface {
 	GetTemplateGroup(ctx context.Context, id uuid.UUID) (*entity.LibraryTemplateGroup, error)
 	UpdateTemplateGroup(ctx context.Context, id uuid.UUID, input UpdateTemplateGroupInput) (*entity.LibraryTemplateGroup, error)
 	DeleteTemplateGroup(ctx context.Context, id uuid.UUID) error
-	ListAllTemplateGroups(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, error)
+	ListAllTemplateGroups(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, int64, error)
 
 	CreateTemplate(ctx context.Context, input CreateTemplateInput) (*entity.LibraryTemplate, error)
 	GetTemplate(ctx context.Context, id uuid.UUID) (*entity.LibraryTemplate, error)

@@ -157,6 +157,7 @@ type CreateTemplateGroupRequest struct {
 	RequiresAuth    bool                  `json:"requiresAuth" doc:"Requires authentication"`
 	SortOrder       int                   `json:"sortOrder" doc:"Display order"`
 	DefaultLanguage string                `json:"defaultLanguage" doc:"Default language code"`
+	ThumbnailURL    *string               `json:"thumbnailUrl,omitempty" doc:"Thumbnail URL"`
 }
 
 type CreateTemplateGroupInput struct {
@@ -218,6 +219,7 @@ type UpdateTemplateGroupRequest struct {
 	SortOrder       *int                   `json:"sortOrder,omitempty" doc:"Display order"`
 	DefaultLanguage *string                `json:"defaultLanguage,omitempty" doc:"Default language code"`
 	IsActive        *bool                  `json:"isActive,omitempty" doc:"Active flag"`
+	ThumbnailURL    *string                `json:"thumbnailUrl,omitempty" doc:"Thumbnail URL"`
 }
 
 type UpdateTemplateGroupInput struct {
@@ -258,22 +260,56 @@ type TemplateGroupSummaryResponse struct {
 	DownloadCount int                   `json:"downloadCount" doc:"Total downloads"`
 }
 
+type ListAllTemplateGroupsResponseBody struct {
+	Data       []TemplateGroupSummaryResponse `json:"data" doc:"Template groups"`
+	Total      int64                          `json:"total" doc:"Total count"`
+	Page       int                            `json:"page" doc:"Current page"`
+	PageSize   int                            `json:"pageSize" doc:"Items per page"`
+	TotalPages int                            `json:"totalPages" doc:"Total pages"`
+}
+
 type ListAllTemplateGroupsOutput struct {
-	Body []TemplateGroupSummaryResponse
+	Body ListAllTemplateGroupsResponseBody
 }
 
 // --- Templates ---
 
-type CreateTemplateFormData struct {
-	File        huma.FormFile `form:"file" required:"true" doc:"Template file"`
-	Language    string        `form:"language" required:"true" doc:"Language code"`
-	Title       string        `form:"title" required:"true" doc:"Template title"`
-	Description string        `form:"description" doc:"Template description"`
+type LibraryCreateUploadIntentRequest struct {
+	Language    string  `json:"language" doc:"Language code" minLength:"2" maxLength:"10"`
+	Title       string  `json:"title" doc:"Template title" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Template description"`
+	FileName    string  `json:"fileName" doc:"Original filename" minLength:"1"`
+	ContentType string  `json:"contentType" doc:"MIME type" minLength:"1"`
+	FileSize    int64   `json:"fileSize" doc:"File size in bytes"`
+}
+
+type LibraryCreateUploadIntentInput struct {
+	GroupID uuid.UUID `path:"groupId" doc:"Group ID"`
+	Body    LibraryCreateUploadIntentRequest
+}
+
+type LibraryCreateUploadIntentOutput struct {
+	Body struct {
+		UploadURL string            `json:"uploadUrl" doc:"Direct upload URL"`
+		Method    string            `json:"method" doc:"HTTP method for upload"`
+		Headers   map[string]string `json:"headers,omitempty" doc:"Required upload headers"`
+		FileKey   string            `json:"fileKey" doc:"Storage key for the file"`
+		ExpiresAt string            `json:"expiresAt" doc:"Upload URL expiry time"`
+	}
+}
+
+type LibraryCreateTemplateRequest struct {
+	FileKey     string  `json:"fileKey" doc:"Storage key from upload intent" minLength:"1"`
+	Language    string  `json:"language" doc:"Language code" minLength:"2" maxLength:"10"`
+	Title       string  `json:"title" doc:"Template title" minLength:"1" maxLength:"200"`
+	Description *string `json:"description,omitempty" doc:"Template description"`
+	FileSize    int64   `json:"fileSize" doc:"File size in bytes"`
+	ContentType string  `json:"contentType" doc:"MIME type"`
 }
 
 type LibraryCreateTemplateInput struct {
 	GroupID uuid.UUID `path:"groupId" doc:"Group ID"`
-	RawBody huma.MultipartFormFiles[CreateTemplateFormData]
+	Body    LibraryCreateTemplateRequest
 }
 
 type LibraryCreateTemplateOutput struct {
@@ -408,11 +444,13 @@ type ListDownloadLogsInput struct {
 }
 
 type DownloadLogResponse struct {
-	ID           uuid.UUID `json:"id" doc:"Download log ID"`
-	AccountID    uuid.UUID `json:"accountId" doc:"Account ID"`
-	TemplateID   uuid.UUID `json:"templateId" doc:"Template ID"`
-	GroupID      uuid.UUID `json:"groupId" doc:"Group ID"`
-	DownloadedAt time.Time `json:"downloadedAt" doc:"Download timestamp"`
+	ID            uuid.UUID `json:"id" doc:"Download log ID"`
+	AccountID     uuid.UUID `json:"accountId" doc:"Account ID"`
+	TemplateID    uuid.UUID `json:"templateId" doc:"Template ID"`
+	TemplateTitle string    `json:"templateTitle" doc:"Template title"`
+	GroupID       uuid.UUID `json:"groupId" doc:"Group ID"`
+	GroupName     string    `json:"groupName" doc:"Group name"`
+	DownloadedAt  time.Time `json:"downloadedAt" doc:"Download timestamp"`
 }
 
 type DownloadLogListResponse struct {
@@ -569,12 +607,14 @@ func ToInteractiveFormDetailResponse(form *entity.LibraryInteractiveForm) Intera
 	}
 }
 
-func ToDownloadLogResponse(dl *entity.LibraryTemplateDownload) DownloadLogResponse {
+func ToDownloadLogResponse(dl *entity.LibraryTemplateDownload, templateTitle string, groupName string) DownloadLogResponse {
 	return DownloadLogResponse{
-		ID:           dl.ID,
-		AccountID:    dl.AccountID,
-		TemplateID:   dl.TemplateID,
-		GroupID:      dl.GroupID,
-		DownloadedAt: *dl.CreatedAt,
+		ID:            dl.ID,
+		AccountID:     dl.AccountID,
+		TemplateID:    dl.TemplateID,
+		TemplateTitle: templateTitle,
+		GroupID:       dl.GroupID,
+		GroupName:     groupName,
+		DownloadedAt:  *dl.CreatedAt,
 	}
 }

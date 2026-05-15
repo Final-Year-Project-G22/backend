@@ -53,6 +53,22 @@ func (r *libraryTemplateGroupRepository) GetBySlug(ctx context.Context, category
 	return &group, nil
 }
 
+func (r *libraryTemplateGroupRepository) FindActive(ctx context.Context, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, error) {
+	var groups []*entity.LibraryTemplateGroup
+	db := getDB(ctx, r.db).
+		Where("is_active = ?", true).
+		Preload("Templates")
+	if q.Search != "" {
+		db = db.Where("name ILIKE ? OR slug ILIKE ?", "%"+q.Search+"%", "%"+q.Search+"%")
+	}
+	db = applyPaginationAndSorting(q, "sort_order asc, created_at asc")(db)
+	if err := db.Find(&groups).Error; err != nil {
+		r.logger.Error("Failed to find active groups", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return groups, nil
+}
+
 func (r *libraryTemplateGroupRepository) ListByCategory(ctx context.Context, categoryID uuid.UUID, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, error) {
 	var groups []*entity.LibraryTemplateGroup
 	db := getDB(ctx, r.db).

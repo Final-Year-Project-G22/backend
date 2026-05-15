@@ -44,6 +44,10 @@ func (f *fakeStorage) GetInfo(context.Context, string) (*storage.FileInfo, error
 func (f *fakeStorage) GetPresignedURL(context.Context, string, time.Duration) (string, error) {
 	return "", nil
 }
+func (m *fakeStorage) GetPresignedURLLocal(ctx context.Context, key string, expiry time.Duration) (string, error) {
+	return "", nil
+}
+
 func (f *fakeStorage) List(context.Context, storage.ListOptions) ([]storage.FileInfo, error) {
 	return nil, nil
 }
