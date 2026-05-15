@@ -63,7 +63,7 @@ func (t *SearchGuidesTool) Execute(ctx context.Context, argsJSON string, account
 	if args.Keyword != nil && *args.Keyword != "" {
 		guides, err = t.guideViewUC.SearchGuides(ctx, accountID, userID, *args.Keyword, opts, constants.LocaleEnglish)
 	} else {
-		guides, err = t.guideViewUC.ListGuides(ctx, accountID, userID, opts, constants.LocaleEnglish)
+		guides, err = t.guideViewUC.ListGuides(ctx, accountID, userID, opts, constants.LocaleEnglish, args.SectorIDs, args.TagIDs)
 	}
 	if err != nil {
 		return "", err

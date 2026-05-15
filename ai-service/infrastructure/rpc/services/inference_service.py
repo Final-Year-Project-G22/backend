@@ -161,7 +161,6 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
             async for event in self._ask_ai_usecase.execute_stream_with_tools(
                 command,
-                yield_tool_use=True,
             ):
                 if event.is_text and event.text:
                     yield service_pb2.AskStreamChunk(text=service_pb2.TextChunk(text=event.text))
