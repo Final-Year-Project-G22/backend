@@ -200,6 +200,11 @@ func (m *MinIO) GetPresignedURL(ctx context.Context, key string, expiry time.Dur
 	return url.String(), nil
 }
 
+// GetPresignedURLLocal generates a presigned URL for local development.
+func (m *MinIO) GetPresignedURLLocal(ctx context.Context, key string, expiry time.Duration) (string, error) {
+	return m.GetPresignedURL(ctx, key, expiry)
+}
+
 // List returns a list of files.
 func (m *MinIO) List(ctx context.Context, opts ListOptions) ([]FileInfo, error) {
 	if opts.Page < 1 {

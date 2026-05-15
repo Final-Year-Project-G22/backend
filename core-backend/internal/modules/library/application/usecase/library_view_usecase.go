@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/entity"
@@ -80,7 +81,7 @@ func (u *libraryViewUsecase) ListTemplateGroups(ctx context.Context, categoryID 
 	if format != nil {
 		return u.groupRepo.ListByFormat(ctx, *format, q)
 	}
-	return u.groupRepo.Find(ctx, q)
+	return u.groupRepo.FindActive(ctx, q)
 }
 
 func (u *libraryViewUsecase) GetTemplateGroup(ctx context.Context, groupID uuid.UUID, locale *string) (*entity.LibraryTemplateGroup, []*entity.LibraryTemplate, error) {
@@ -119,52 +120,38 @@ func (u *libraryViewUsecase) GetTemplateGroup(ctx context.Context, groupID uuid.
 	return group, templates, nil
 }
 
+func (u *libraryViewUsecase) PreviewTemplate(ctx context.Context, input usecase.PreviewInput) (*usecase.PreviewOutput, error) {
+	group, tmpl, err := u.resolveTemplate(ctx, input.GroupID, input.Language, input.AccountID)
+	if err != nil {
+		return nil, err
+	}
+
+	presignedURL, err := u.storage.GetPresignedURLLocal(ctx, tmpl.FileKey, 5*time.Minute)
+	if err != nil {
+		u.logger.Error("Failed to generate preview URL", core.String("templateId", tmpl.ID.String()))
+		return nil, apperrors.InternalError("library.errors.downloadFailed", err)
+	}
+
+	filename := fmt.Sprintf("%s_%s%s", group.Slug, tmpl.Language, u.extFromContentType(tmpl.ContentType))
+
+	return &usecase.PreviewOutput{
+		PresignedURL: presignedURL,
+		ExpiresAt:    "5m",
+		Filename:     filename,
+		ContentType:  tmpl.ContentType,
+	}, nil
+}
+
 func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase.DownloadInput) (*usecase.DownloadOutput, error) {
-	group, err := u.groupRepo.GetByID(ctx, input.GroupID)
+	group, tmpl, err := u.resolveTemplate(ctx, input.GroupID, input.Language, input.AccountID)
 	if err != nil {
 		return nil, err
 	}
 
-	if !group.IsActive {
-		return nil, apperrors.NotFoundErrorWithKey("library.errors.templateGroupNotFound")
-	}
-
-	if group.RequiresAuth && input.AccountID == nil {
-		return nil, apperrors.UnauthorizedError("library.errors.authRequired")
-	}
-
-	if input.AccountID != nil {
-		allowed, err := u.tierSvc.HasAccess(ctx, *input.AccountID, group.TierAccess)
-		if err != nil {
-			return nil, err
-		}
-		if !allowed {
-			return nil, apperrors.ForbiddenError("library.errors.tierAccessDenied")
-		}
-	} else if group.TierAccess == entity.TierAccessPro {
-		return nil, apperrors.ForbiddenError("library.errors.tierAccessDenied")
-	}
-
-	lang := group.DefaultLanguage
-	if input.Language != nil && *input.Language != "" {
-		lang = *input.Language
-	}
-
-	tmpl, err := u.tmplRepo.GetByGroupAndLanguage(ctx, group.ID, lang)
+	presignedURL, err := u.storage.GetPresignedURLLocal(ctx, tmpl.FileKey, 30*time.Minute)
 	if err != nil {
-		return nil, err
-	}
-	if tmpl == nil || !tmpl.IsActive {
-		return nil, apperrors.NotFoundErrorWithKey("library.errors.templateNotFound")
-	}
-
-	downloadURL := ""
-	if tmpl.FileURL != nil {
-		downloadURL = *tmpl.FileURL
-	}
-	if downloadURL == "" {
-		u.logger.Error("No download URL available for template", core.String("templateId", tmpl.ID.String()))
-		return nil, apperrors.InternalError("library.errors.downloadFailed", nil)
+		u.logger.Error("Failed to generate download URL", core.String("templateId", tmpl.ID.String()))
+		return nil, apperrors.InternalError("library.errors.downloadFailed", err)
 	}
 
 	filename := fmt.Sprintf("%s_%s%s", group.Slug, tmpl.Language, u.extFromContentType(tmpl.ContentType))
@@ -192,10 +179,53 @@ func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase
 	}
 
 	return &usecase.DownloadOutput{
-		PresignedURL: downloadURL,
-		ExpiresAt:    "5m",
+		PresignedURL: presignedURL,
+		ExpiresAt:    "30m",
 		Filename:     filename,
+		ContentType:  tmpl.ContentType,
 	}, nil
+}
+
+func (u *libraryViewUsecase) resolveTemplate(ctx context.Context, groupID uuid.UUID, language *string, accountID *uuid.UUID) (*entity.LibraryTemplateGroup, *entity.LibraryTemplate, error) {
+	group, err := u.groupRepo.GetByID(ctx, groupID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !group.IsActive {
+		return nil, nil, apperrors.NotFoundErrorWithKey("library.errors.templateGroupNotFound")
+	}
+
+	if group.RequiresAuth && accountID == nil {
+		return nil, nil, apperrors.UnauthorizedError("library.errors.authRequired")
+	}
+
+	if accountID != nil {
+		allowed, err := u.tierSvc.HasAccess(ctx, *accountID, group.TierAccess)
+		if err != nil {
+			return nil, nil, err
+		}
+		if !allowed {
+			return nil, nil, apperrors.ForbiddenError("library.errors.tierAccessDenied")
+		}
+	} else if group.TierAccess == entity.TierAccessPro {
+		return nil, nil, apperrors.ForbiddenError("library.errors.tierAccessDenied")
+	}
+
+	lang := group.DefaultLanguage
+	if language != nil && *language != "" {
+		lang = *language
+	}
+
+	tmpl, err := u.tmplRepo.GetByGroupAndLanguage(ctx, group.ID, lang)
+	if err != nil {
+		return nil, nil, err
+	}
+	if tmpl == nil || !tmpl.IsActive {
+		return nil, nil, apperrors.NotFoundErrorWithKey("library.errors.templateNotFound")
+	}
+
+	return group, tmpl, nil
 }
 
 func (u *libraryViewUsecase) extFromContentType(contentType string) string {

@@ -89,6 +89,33 @@ func (h *LibraryHandler) HandleGetTemplateGroup(ctx context.Context, input *dto.
 	return &dto.GetTemplateGroupDetailOutput{Body: dto.ToGroupDetailResponse(group, templates)}, nil
 }
 
+func (h *LibraryHandler) HandlePreviewTemplate(ctx context.Context, input *dto.PreviewTemplateInput) (*dto.PreviewTemplateOutput, error) {
+	var accountID *uuid.UUID
+	if id := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID)); id != uuid.Nil {
+		accountID = &id
+	}
+	var language *string
+	if input.Language != "" {
+		language = &input.Language
+	}
+
+	result, err := h.viewUC.PreviewTemplate(ctx, usecase.PreviewInput{
+		GroupID:   input.GroupID,
+		Language:  language,
+		AccountID: accountID,
+	})
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	return &dto.PreviewTemplateOutput{Body: dto.PreviewTemplateResponseBody{
+		PresignedURL: result.PresignedURL,
+		ExpiresAt:    result.ExpiresAt,
+		Filename:     result.Filename,
+		ContentType:  result.ContentType,
+	}}, nil
+}
+
 func (h *LibraryHandler) HandleDownloadTemplate(ctx context.Context, input *dto.DownloadTemplateInput) (*dto.DownloadTemplateOutput, error) {
 	var accountID *uuid.UUID
 	if id := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID)); id != uuid.Nil {
@@ -112,6 +139,7 @@ func (h *LibraryHandler) HandleDownloadTemplate(ctx context.Context, input *dto.
 		PresignedURL: result.PresignedURL,
 		ExpiresAt:    result.ExpiresAt,
 		Filename:     result.Filename,
+		ContentType:  result.ContentType,
 	}}, nil
 }
 

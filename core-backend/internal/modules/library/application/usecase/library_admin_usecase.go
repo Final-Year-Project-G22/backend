@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-
 	"errors"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
@@ -202,12 +201,19 @@ func (u *libraryAdminUsecase) CreateTemplateGroup(ctx context.Context, createdBy
 		RequiresAuth:    input.RequiresAuth,
 		SortOrder:       input.SortOrder,
 		DefaultLanguage: input.DefaultLanguage,
+		ThumbnailURL:    input.ThumbnailURL,
 		IsActive:        true,
 		CreatedBy:       createdBy,
 	}
 	if err := u.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
 	}
+
+	if err := u.groupRepo.UpdateByID(ctx, group.ID, map[string]interface{}{"is_active": false}); err != nil {
+		return nil, err
+	}
+	group.IsActive = false
+
 	return group, nil
 }
 
@@ -270,15 +276,26 @@ func (u *libraryAdminUsecase) DeleteTemplateGroup(ctx context.Context, id uuid.U
 	return u.groupRepo.Delete(ctx, id)
 }
 
-func (u *libraryAdminUsecase) ListAllTemplateGroups(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, error) {
+func (u *libraryAdminUsecase) ListAllTemplateGroups(ctx context.Context, categoryID *uuid.UUID, q query.QueryOptions) ([]*entity.LibraryTemplateGroup, int64, error) {
 	if categoryID != nil {
-		return u.groupRepo.ListByCategory(ctx, *categoryID, q)
+		groups, err := u.groupRepo.ListByCategory(ctx, *categoryID, q)
+		if err != nil {
+			return nil, 0, err
+		}
+		var total int64
+		if err := u.groupRepo.GetDB().Model(&entity.LibraryTemplateGroup{}).
+			Where("category_id = ?", *categoryID).
+			Count(&total).Error; err != nil {
+			return nil, 0, err
+		}
+		return groups, total, nil
 	}
-	return u.groupRepo.Find(ctx, q)
+	result := u.groupRepo.FindAll(ctx, q)
+	return result.Data, result.Total, nil
 }
 
 func (u *libraryAdminUsecase) CreateTemplate(ctx context.Context, input usecase.CreateTemplateInput) (*entity.LibraryTemplate, error) {
-	_, err := u.groupRepo.GetByID(ctx, input.GroupID)
+	group, err := u.groupRepo.GetByID(ctx, input.GroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -306,6 +323,13 @@ func (u *libraryAdminUsecase) CreateTemplate(ctx context.Context, input usecase.
 	if err := u.tmplRepo.Create(ctx, tmpl); err != nil {
 		return nil, err
 	}
+
+	if !group.IsActive {
+		if err := u.groupRepo.UpdateByID(ctx, group.ID, map[string]interface{}{"is_active": true}); err != nil {
+			return nil, err
+		}
+	}
+
 	return tmpl, nil
 }
 

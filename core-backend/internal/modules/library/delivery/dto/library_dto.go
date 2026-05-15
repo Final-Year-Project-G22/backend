@@ -94,6 +94,24 @@ type GetTemplateGroupDetailOutput struct {
 	Body UserTemplateGroupDetailResponse
 }
 
+// --- Preview Template ---
+
+type PreviewTemplateInput struct {
+	GroupID  uuid.UUID `path:"groupId" doc:"Template group ID"`
+	Language string    `query:"language,omitempty" doc:"Language code"`
+}
+
+type PreviewTemplateOutput struct {
+	Body PreviewTemplateResponseBody
+}
+
+type PreviewTemplateResponseBody struct {
+	PresignedURL string `json:"presignedUrl" doc:"Temporary preview URL"`
+	ExpiresAt    string `json:"expiresAt" doc:"Expiry time"`
+	Filename     string `json:"filename" doc:"Suggested filename"`
+	ContentType  string `json:"contentType" doc:"MIME type"`
+}
+
 // --- Download Template ---
 
 type DownloadTemplateInput struct {
@@ -109,6 +127,7 @@ type DownloadTemplateResponseBody struct {
 	PresignedURL string `json:"presignedUrl" doc:"Temporary download URL"`
 	ExpiresAt    string `json:"expiresAt" doc:"Expiry time"`
 	Filename     string `json:"filename" doc:"Suggested filename"`
+	ContentType  string `json:"contentType" doc:"MIME type"`
 }
 
 // --- List My Downloads ---
