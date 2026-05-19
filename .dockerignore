@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+.env.*
+node_modules
+__pycache__
+.venv
+.ruff_cache
+.pytest_cache
+.mypy_cache
+*.md
+docs/
+tmp/
+htmlcov/
+.coverage
+core-backend/tmp/
+core-backend/main
