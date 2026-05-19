@@ -1,0 +1,53 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches: [dev]
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate proto stubs
+        run: |
+          cd proto
+          buf generate
+
+      - name: Build and push core-backend
+        run: |
+          bash scripts/deploy.sh core-backend dev-${{ github.sha }} push
+        env:
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+
+      - name: Build and push ai-service
+        run: |
+          bash scripts/deploy.sh ai-service dev-${{ github.sha }} push
+        env:
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+
+      - name: Trigger Dokploy deploy
+        run: |
+          bash scripts/deploy.sh . ${{ secrets.DOKPLOY_COMPOSE_ID_DEV }} deploy
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}
