@@ -13,6 +13,8 @@ type RouteDependencies struct {
 	WebhookHandler          *handler.WebhookHandler
 	SSEHandler              *handler.SSEHandler
 	InboxSSEHandler         *handler.InboxSSEHandler
+	ScheduledAlertHandler   *handler.ScheduledAlertHandler
+	ComplianceHandler       *handler.ComplianceHandler
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 }
@@ -21,6 +23,8 @@ func RegisterRoutes(api huma.API, engine *gin.Engine, deps RouteDependencies) {
 	RegisterAdminNotificationRoutes(api, deps)
 	RegisterCampaignTemplateRoutes(api, deps)
 	RegisterNotificationRoutes(api, deps)
+	RegisterScheduledAlertRoutes(api, deps)
+	RegisterComplianceRoutes(api, deps)
 	RegisterWebhookRoutes(engine, deps)
 	RegisterSSERoutes(engine, deps)
 
