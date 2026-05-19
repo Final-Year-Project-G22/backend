@@ -7,13 +7,20 @@ ACTION=${3:-push}
 COMPOSE_ID=${4:-}
 
 OWNER=${GITHUB_REPOSITORY_OWNER}
-IMAGE="ghcr.io/${OWNER}/${SERVICE}:${TAG}"
+REGISTRY="ghcr.io/${OWNER}/${SERVICE}"
 
 CACHE_FROM="type=gha"
 CACHE_TO="type=gha,mode=max"
 
 build_and_push() {
-  echo "::group::Building and pushing ${IMAGE}"
+  local moving_tag
+  if [[ "${TAG}" == dev-* ]]; then
+    moving_tag="dev"
+  else
+    moving_tag="latest"
+  fi
+
+  echo "::group::Building and pushing ${REGISTRY}:${TAG} + ${REGISTRY}:${moving_tag}"
   docker buildx build \
     --platform linux/amd64 \
     --label "org.opencontainers.image.revision=${GITHUB_SHA:-unknown}" \
@@ -22,7 +29,8 @@ build_and_push() {
     --cache-from "${CACHE_FROM}" \
     --cache-to "${CACHE_TO}" \
     -f "${SERVICE}/Dockerfile" \
-    -t "${IMAGE}" \
+    -t "${REGISTRY}:${TAG}" \
+    -t "${REGISTRY}:${moving_tag}" \
     --push \
     .
   echo "::endgroup::"
