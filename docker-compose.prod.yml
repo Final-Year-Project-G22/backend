@@ -1,0 +1,284 @@
+services:
+  # ── Infrastructure ───────────────────────────────────────
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_DBNAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_DBNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-ai:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: adisu_ai
+    volumes:
+      - postgres_ai_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d adisu_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  seaweed-master:
+    image: chrislusf/seaweedfs:latest
+    restart: unless-stopped
+    command: master -ip=seaweed-master -mdir=/data/master -defaultReplication=000 -volumeSizeLimitMB=1024
+    volumes:
+      - seaweed_master_data:/data/master
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9333/cluster/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  seaweed-volume:
+    image: chrislusf/seaweedfs:latest
+    restart: unless-stopped
+    command: volume -ip=seaweed-volume -dir=/data/volume -max=5 -mserver=seaweed-master:9333 -port=8080
+    depends_on:
+      seaweed-master:
+        condition: service_started
+    volumes:
+      - seaweed_volume_data:/data/volume
+
+  seaweed-filer:
+    image: chrislusf/seaweedfs:latest
+    restart: unless-stopped
+    command: filer -ip=seaweed-filer -master=seaweed-master:9333
+    depends_on:
+      seaweed-master:
+        condition: service_started
+    volumes:
+      - seaweed_filer_data:/data/filer
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8888/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── App: core-backend ────────────────────────────────────
+  core-backend:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/core-backend:${CORE_TAG}
+    restart: unless-stopped
+    ports:
+      - "${CORE_PORT:-4000}:4000"
+    environment:
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-production}
+      APP_PORT: "${CORE_PORT:-4000}"
+      APP_GRPC_PORT: "50051"
+      APP_VERSION: ${CORE_TAG}
+
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DBNAME: ${DATABASE_DBNAME}
+      DATABASE_SSLMODE: disable
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_TTL: 15m
+      JWT_REFRESH_TOKEN_TTL: 168h
+
+      SEAWEED_MASTER_URL: seaweed-master:9333
+      SEAWEED_FILER_URL: http://seaweed-filer:8888
+      SEAWEED_VOLUME_URL: http://seaweed-volume:8080
+
+      CACHE_ENABLED: "true"
+      CACHE_HOST: redis
+      CACHE_PORT: "6379"
+      CACHE_PASSWORD: ""
+      CACHE_DB: "0"
+      CACHE_POOL_SIZE: "10"
+
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_ENABLED: "true"
+      RABBITMQ_SERVICE_NAME: core
+      RABBITMQ_EXCHANGE: core.events
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
+      EMAIL_ENABLE_TLS: ${EMAIL_ENABLE_TLS:-true}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+
+      AI_INFERENCE_GRPC_ENDPOINT: ai-server:50051
+      AI_ASK_ENABLED: "true"
+
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY}
+      OAUTH_MOBILE_REDIRECT_BASE_URL: ${OAUTH_MOBILE_REDIRECT_BASE_URL}
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      OAUTH_GOOGLE_REDIRECT_URI: ${OAUTH_GOOGLE_REDIRECT_URI}
+
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET}
+      OAUTH_FACEBOOK_REDIRECT_URI: ${OAUTH_FACEBOOK_REDIRECT_URI}
+
+      RESEND_ENABLED: ${RESEND_ENABLED:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      RESEND_FROM_NAME: ${RESEND_FROM_NAME}
+
+      CHAPA_ENABLED: ${CHAPA_ENABLED:-false}
+      CHAPA_SECRET_KEY: ${CHAPA_SECRET_KEY}
+      CHAPA_PUBLIC_KEY: ${CHAPA_PUBLIC_KEY}
+      CHAPA_WEBHOOK_SECRET: ${CHAPA_WEBHOOK_SECRET}
+      CHAPA_BASE_URL: ${CHAPA_BASE_URL:-https://api.chapa.co/v1}
+      CHAPA_CALLBACK_URL: ${CHAPA_CALLBACK_URL}
+      CHAPA_RETURN_URL: ${CHAPA_RETURN_URL}
+
+      FCM_CREDENTIALS_FILE: ${FCM_CREDENTIALS_FILE:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      seaweed-filer:
+        condition: service_started
+
+  # ── App: ai-service server ───────────────────────────────
+  ai-server:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/ai-service:${AI_TAG}
+    restart: unless-stopped
+    command: python main.py
+    ports:
+      - "${AI_PORT:-8000}:8000"
+    environment:
+      APP_NAME: ai-service
+      APP_VERSION: ${AI_TAG}
+      HTTP_PORT: "8000"
+      GRPC_PORT: "50051"
+      PROMETHEUS_PORT: "9090"
+      CORE_GRPC_ENDPOINT: core-backend:50051
+      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres-ai:5432/adisu_ai
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      SEAWEEDFS_FILER_URL: http://seaweed-filer:8888
+      INGESTION_SIGNING_ACTIVE_KEY_ID: ${INGESTION_SIGNING_ACTIVE_KEY_ID:-ingestion-v1}
+      INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
+      COHERE_API_KEY: ${COHERE_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      postgres-ai:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # ── App: ai-service worker ───────────────────────────────
+  ai-worker:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/ai-service:${AI_TAG}
+    restart: unless-stopped
+    command: python -m workers.ingestion_worker
+    environment:
+      APP_NAME: ai-worker
+      APP_VERSION: ${AI_TAG}
+      CORE_GRPC_ENDPOINT: core-backend:50051
+      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres-ai:5432/adisu_ai
+      REDIS_URL: redis://redis:6379/0
+      RABBITMQ_URL: amqp://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      SEAWEEDFS_FILER_URL: http://seaweed-filer:8888
+      INGESTION_SIGNING_ACTIVE_KEY_ID: ${INGESTION_SIGNING_ACTIVE_KEY_ID:-ingestion-v1}
+      INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
+      COHERE_API_KEY: ${COHERE_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres-ai:
+        condition: service_healthy
+
+  # ── Migrations (one-shot, run via profiles) ──────────────
+  migration-core:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/core-backend:${CORE_TAG}
+    command: /app/schema -action=apply
+    profiles: ["migration"]
+    environment:
+      SKIP_AUTO_MIGRATIONS: "true"
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DBNAME: ${DATABASE_DBNAME}
+      DATABASE_SSLMODE: disable
+      JWT_SECRET: ${JWT_SECRET}
+      SEAWEED_MASTER_URL: seaweed-master:9333
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_ENABLED: "false"
+      EMAIL_ENABLED: "false"
+      AI_ASK_ENABLED: "false"
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY}
+      CHAPA_ENABLED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migration-ai:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/ai-service:${AI_TAG}
+    command: alembic upgrade head
+    profiles: ["migration"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres-ai:5432/adisu_ai
+      COHERE_API_KEY: ${COHERE_API_KEY}
+    depends_on:
+      postgres-ai:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  postgres_ai_data:
+  redis_data:
+  rabbitmq_data:
+  seaweed_master_data:
+  seaweed_volume_data:
+  seaweed_filer_data:
