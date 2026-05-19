@@ -25,6 +25,9 @@ func (e *EntityProvider) Entities() []any {
 		&entity.NotificationOutbox{},
 		&entity.CampaignTemplate{},
 		&entity.CampaignTemplateTranslation{},
+		&entity.UserScheduledNotification{},
+		&entity.ScheduledAlertTemplate{},
+		&entity.ComplianceEntry{},
 	}
 }
 

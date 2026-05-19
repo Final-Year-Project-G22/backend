@@ -6,6 +6,8 @@ import (
 	iamnotification "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/notification"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/usecase"
 	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
+	paymentrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/payment/domain/repository"
+	paymentnotification "github.com/Final-Year-Project-G22/backend/core/internal/modules/payment/infrastructure/notification"
 	"go.uber.org/fx"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/ai"
@@ -44,5 +46,13 @@ var Modules = fx.Options(
 		db *core.Database,
 	) notifrepo.AccountReader {
 		return iamnotification.NewAccountReaderAdapter(accountRepo, db)
+	}),
+
+	// Override notification's default SubscriptionReader with a real payment-backed adapter.
+	fx.Decorate(func(
+		_ notifrepo.SubscriptionReader,
+		subscriptionRepo paymentrepo.SubscriptionRepository,
+	) notifrepo.SubscriptionReader {
+		return paymentnotification.NewSubscriptionReaderAdapter(subscriptionRepo)
 	}),
 )

@@ -43,6 +43,9 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewEmailDeliveryLogRepository, fx.As(new(repository.EmailDeliveryLogRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationCampaignRepository, fx.As(new(repository.NotificationCampaignRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewNotificationOutboxRepository, fx.As(new(repository.NotificationOutboxRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewUserScheduledNotificationRepository, fx.As(new(repository.UserScheduledNotificationRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewScheduledAlertTemplateRepository, fx.As(new(repository.ScheduledAlertTemplateRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewComplianceEntryRepository, fx.As(new(repository.ComplianceEntryRepository)))),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
@@ -52,6 +55,9 @@ var Module = fx.Module(
 	fx.Provide(appservice.NewCampaignProcessor),
 	fx.Provide(appservice.NewCampaignScheduler),
 	fx.Provide(appservice.NewNotificationOutboxDispatcher),
+	fx.Provide(appservice.NewUserNotificationScheduler),
+	fx.Provide(appservice.NewBusinessAlertScheduler),
+	fx.Provide(appservice.NewScheduledAlertTemplateSeeder),
 
 	// --- Email Provider ---
 	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.EmailProvider {
@@ -90,6 +96,11 @@ var Module = fx.Module(
 		return &defaultAccountReader{}
 	}, fx.As(new(repository.AccountReader)))),
 
+	// --- Subscription reader (default: not pro — replace with payment provider) ---
+	fx.Provide(fx.Annotate(func() repository.SubscriptionReader {
+		return &defaultSubscriptionReader{}
+	}, fx.As(new(repository.SubscriptionReader)))),
+
 	// --- Use Cases ---
 	fx.Provide(fx.Annotate(appusecase.NewNotificationTemplateUsecase, fx.As(new(usecase.NotificationTemplateUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationIngestUsecase, fx.As(new(usecase.NotificationIngestUsecase)))),
@@ -102,6 +113,8 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(appusecase.NewEmailDeliveryUsecase, fx.As(new(usecase.EmailDeliveryUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewCampaignTemplateUsecase, fx.As(new(usecase.CampaignTemplateUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationCampaignUsecase, fx.As(new(usecase.NotificationCampaignUsecase)))),
+	fx.Provide(fx.Annotate(appusecase.NewUserScheduledNotificationUsecase, fx.As(new(usecase.UserScheduledNotificationUsecase)))),
+	fx.Provide(fx.Annotate(appusecase.NewComplianceEntryUsecase, fx.As(new(usecase.ComplianceEntryUsecase)))),
 
 	// --- Handlers ---
 	fx.Provide(handler.NewNotificationAdminHandler),
@@ -110,6 +123,8 @@ var Module = fx.Module(
 	fx.Provide(handler.NewWebhookHandler),
 	fx.Provide(handler.NewSSEHandler),
 	fx.Provide(handler.NewInboxSSEHandler),
+	fx.Provide(handler.NewScheduledAlertHandler),
+	fx.Provide(handler.NewComplianceHandler),
 
 	// --- Routes ---
 	fx.Invoke(func(
@@ -121,6 +136,8 @@ var Module = fx.Module(
 		webhookHandler *handler.WebhookHandler,
 		sseHandler *handler.SSEHandler,
 		inboxSSEHandler *handler.InboxSSEHandler,
+		scheduledAlertHandler *handler.ScheduledAlertHandler,
+		complianceHandler *handler.ComplianceHandler,
 		tokenService token.TokenService,
 		authService service.AuthService,
 	) {
@@ -133,6 +150,8 @@ var Module = fx.Module(
 			WebhookHandler:          webhookHandler,
 			SSEHandler:              sseHandler,
 			InboxSSEHandler:         inboxSSEHandler,
+			ScheduledAlertHandler:   scheduledAlertHandler,
+			ComplianceHandler:       complianceHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 		})
@@ -213,6 +232,45 @@ var Module = fx.Module(
 		})
 	}),
 
+	// --- User Notification Scheduler ---
+	fx.Invoke(func(lc fx.Lifecycle, scheduler *appservice.UserNotificationScheduler) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				scheduler.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
+
+	// --- Business Alert Scheduler ---
+	fx.Invoke(func(lc fx.Lifecycle, scheduler *appservice.BusinessAlertScheduler) {
+		ctx, cancel := context.WithCancel(context.Background())
+		lc.Append(fx.Hook{
+			OnStart: func(context.Context) error {
+				scheduler.Start(ctx)
+				return nil
+			},
+			OnStop: func(context.Context) error {
+				cancel()
+				return nil
+			},
+		})
+	}),
+
+	// --- Scheduled Alert Template Seeder ---
+	fx.Invoke(func(lc fx.Lifecycle, seeder *appservice.ScheduledAlertTemplateSeeder) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				return seeder.Seed(ctx)
+			},
+		})
+	}),
+
 	// --- Event Subscriptions ---
 	fx.Invoke(registerEventSubscriptions),
 )
@@ -235,4 +293,10 @@ func (r *defaultAccountReader) FindBySegment(_ context.Context, _ map[string]int
 
 func (r *defaultAccountReader) GetAccountInfo(_ context.Context, _ uuid.UUID) (*repository.AccountInfo, error) {
 	return &repository.AccountInfo{Email: "", Locale: "en", Name: ""}, nil
+}
+
+type defaultSubscriptionReader struct{}
+
+func (r *defaultSubscriptionReader) HasActiveProSubscription(_ context.Context, _ uuid.UUID) (bool, error) {
+	return false, nil
 }
