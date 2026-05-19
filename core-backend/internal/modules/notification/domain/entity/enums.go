@@ -21,6 +21,7 @@ const (
 	NotificationTypePasswordReset        NotificationType = "password_reset"
 	NotificationTypePaymentConfirmation  NotificationType = "payment_confirmation"
 	NotificationTypeCampaign             NotificationType = "campaign"
+	NotificationTypeUserScheduled        NotificationType = "user_scheduled"
 )
 
 type NotificationPriority int8
@@ -75,6 +76,30 @@ const (
 	CampaignStatusSending   CampaignStatus = "sending"
 	CampaignStatusCompleted CampaignStatus = "completed"
 	CampaignStatusCancelled CampaignStatus = "cancelled"
+)
+
+type ScheduleStatus string
+
+const (
+	ScheduleStatusPending   ScheduleStatus = "pending"
+	ScheduleStatusSent      ScheduleStatus = "sent"
+	ScheduleStatusCancelled ScheduleStatus = "cancelled"
+)
+
+type ComplianceType string
+
+const (
+	ComplianceTypeTaxRegistration      ComplianceType = "tax_registration"
+	ComplianceTypeTradeLicense         ComplianceType = "trade_license"
+	ComplianceTypeBusinessRegistration ComplianceType = "business_registration"
+)
+
+type ComplianceEntryStatus string
+
+const (
+	ComplianceEntryStatusActive  ComplianceEntryStatus = "active"
+	ComplianceEntryStatusExpired ComplianceEntryStatus = "expired"
+	ComplianceEntryStatusRenewed ComplianceEntryStatus = "renewed"
 )
 
 type DeviceType string

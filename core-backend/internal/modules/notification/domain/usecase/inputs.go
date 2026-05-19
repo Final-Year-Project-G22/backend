@@ -128,6 +128,49 @@ type CampaignDetail struct {
 	CreatedByEmail   string
 }
 
+type ScheduleUserNotificationInput struct {
+	TemplateSlug *string          `json:"templateSlug,omitempty"`
+	Title        string           `json:"title"`
+	Body         string           `json:"body"`
+	Channels     []entity.Channel `json:"channels"`
+	ScheduledFor time.Time        `json:"scheduledFor"`
+}
+
+type RescheduleUserNotificationInput struct {
+	ScheduledFor time.Time `json:"scheduledFor"`
+}
+
+type CreateComplianceEntryInput struct {
+	BusinessProfileID  uuid.UUID             `json:"businessProfileId"`
+	ComplianceType     entity.ComplianceType `json:"complianceType"`
+	ReferenceNumber    *string               `json:"referenceNumber,omitempty"`
+	IssuedDate         *time.Time            `json:"issuedDate,omitempty"`
+	ExpiryDate         time.Time             `json:"expiryDate"`
+	ReminderDaysBefore int                   `json:"reminderDaysBefore"`
+}
+
+type UpdateComplianceEntryInput struct {
+	ReferenceNumber    *string                       `json:"referenceNumber,omitempty"`
+	IssuedDate         *time.Time                    `json:"issuedDate,omitempty"`
+	ExpiryDate         *time.Time                    `json:"expiryDate,omitempty"`
+	ReminderDaysBefore *int                          `json:"reminderDaysBefore,omitempty"`
+	Status             *entity.ComplianceEntryStatus `json:"status,omitempty"`
+}
+
+type CalendarEntry struct {
+	ID              uuid.UUID `json:"id"`
+	Type            string    `json:"type"`
+	Title           string    `json:"title"`
+	ReferenceNumber *string   `json:"referenceNumber,omitempty"`
+	Date            time.Time `json:"date"`
+	DaysRemaining   int       `json:"daysRemaining"`
+	Status          string    `json:"status"`
+}
+
+type ComplianceCalendar struct {
+	Entries []CalendarEntry `json:"entries"`
+}
+
 type ResendWebhookEvent struct {
 	EventType      string    `json:"eventType"`
 	EmailID        string    `json:"emailId"`
