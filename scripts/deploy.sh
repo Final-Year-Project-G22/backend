@@ -58,7 +58,7 @@ case "${ACTION}" in
     build_and_push
     ;;
   deploy)
-    deploy "${COMPOSE_ID}"
+    deploy "${TAG}"
     ;;
   *)
     echo "Usage: $0 <service> <tag> [build|push|deploy <compose-id>]"
