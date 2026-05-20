@@ -2,6 +2,18 @@ app:
   environment: "development"
   debug: true
 
+ai:
+  conversation_cache_ttl: 5m
+
+ingestion:
+  enabled: true
+  dispatcher:
+    batch_size: 50
+    interval: 5s
+    retry_base_delay: 30s
+    retry_max_delay: 10m
+    max_attempts_before_dlq: 10
+
 logger:
   level: "debug"
   encoding: "console"
