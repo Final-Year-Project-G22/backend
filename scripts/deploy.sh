@@ -10,7 +10,7 @@ OWNER=${GITHUB_REPOSITORY_OWNER}
 REGISTRY="ghcr.io/${OWNER}/${SERVICE}"
 
 CACHE_FROM="type=gha"
-CACHE_TO="type=gha,mode=max"
+CACHE_TO="type=gha,mode=max,ignore-error=true"
 
 build_and_push() {
   local moving_tag
