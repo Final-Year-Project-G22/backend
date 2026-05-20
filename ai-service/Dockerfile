@@ -18,6 +18,17 @@ COPY ai-service/ ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
+COPY proto/ ./proto/
+
+RUN apt-get update -qq && apt-get install -y -qq curl ca-certificates && \
+    curl -sSL "https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64" -o /usr/local/bin/buf && \
+    chmod +x /usr/local/bin/buf && \
+    cd proto && buf generate && cd .. && \
+    mkdir -p grpc_stubs && cp -r ai-service/grpc_stubs/* grpc_stubs/ && \
+    rm -rf proto ai-service/grpc_stubs /usr/local/bin/buf && \
+    apt-get remove -y curl ca-certificates && apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV PATH="/app/.venv/bin:$PATH"
 
 RUN groupadd --system app && useradd --system --no-create-home -g app app
