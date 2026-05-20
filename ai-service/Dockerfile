@@ -10,12 +10,12 @@ WORKDIR /app
 
 COPY ai-service/pyproject.toml ai-service/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+    uv sync --frozen --no-dev --no-install-project --system
 
 COPY ai-service/ ./
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --system
 
 RUN groupadd --system app && useradd --system --no-create-home -g app app
 USER app
