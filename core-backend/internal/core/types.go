@@ -109,7 +109,7 @@ type CacheConfig struct {
 	Enabled  bool   `mapstructure:"enabled"`
 	Host     string `mapstructure:"host"      validate:"required_if=Enabled true,hostname|ip"`
 	Port     int    `mapstructure:"port"      validate:"required_if=Enabled true,gt=0,lte=65535"`
-	Password string `mapstructure:"password"  validate:"required_if=Enabled true"`
+	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"        validate:"gte=0"`
 	PoolSize int    `mapstructure:"pool_size" validate:"required_if=Enabled true,gt=0"`
 }
