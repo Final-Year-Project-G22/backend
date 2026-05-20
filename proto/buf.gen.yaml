@@ -11,5 +11,7 @@ plugins:
     opt: paths=source_relative
   - remote: buf.build/protocolbuffers/python:v33.0
     out: ../ai-service/grpc_stubs
+    include_imports: true
   - remote: buf.build/grpc/python:v1.75.1
     out: ../ai-service/grpc_stubs
+    include_imports: true
