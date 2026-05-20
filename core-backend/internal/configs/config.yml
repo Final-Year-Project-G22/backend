@@ -10,21 +10,21 @@ ai:
   inference_grpc_endpoint: ${AI_INFERENCE_GRPC_ENDPOINT:-localhost:50051}
   inference_auth_token: ${AI_INFERENCE_AUTH_TOKEN:-}
   inference_timeout: 60s
-  ask_enabled: ${AI_ASK_ENABLED:-true}
-  conversation_cache_ttl: ${AI_CONVERSATION_CACHE_TTL:-5m}
+  ask_enabled: true
+  conversation_cache_ttl: 5m
 
 ingestion:
-  enabled: ${INGESTION_ENABLED:-true}
+  enabled: true
   signing:
     active_key_id: ${INGESTION_SIGNING_ACTIVE_KEY_ID:-ingestion-v1}
     active_key_secret: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET:-change-me}
     previous_keys: []
   dispatcher:
-    batch_size: ${INGESTION_DISPATCHER_BATCH_SIZE:-50}
-    interval: ${INGESTION_DISPATCHER_INTERVAL:-5s}
-    retry_base_delay: ${INGESTION_DISPATCHER_RETRY_BASE_DELAY:-30s}
-    retry_max_delay: ${INGESTION_DISPATCHER_RETRY_MAX_DELAY:-10m}
-    max_attempts_before_dlq: ${INGESTION_DISPATCHER_MAX_ATTEMPTS_BEFORE_DLQ:-10}
+    batch_size: 50
+    interval: 5s
+    retry_base_delay: 30s
+    retry_max_delay: 10m
+    max_attempts_before_dlq: 10
 
 database:
   type: "postgres"
@@ -49,6 +49,11 @@ logger:
 
 cache:
   enabled: false
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
 
 jwt:
   secret: ${JWT_SECRET}
@@ -82,9 +87,9 @@ oauth:
         - email
         - public_profile
 rabbitmq:
-  enabled: ${RABBITMQ_ENABLED}
+  enabled: true
   host: ${RABBITMQ_HOST}
-  port: ${RABBITMQ_PORT}
+  port: 5672
   username: ${RABBITMQ_USERNAME}
   password: ${RABBITMQ_PASSWORD}
   vhost: ${RABBITMQ_VHOST}
@@ -92,17 +97,17 @@ rabbitmq:
   service_name: ${RABBITMQ_SERVICE_NAME}
 
 email:
-  enabled: ${EMAIL_ENABLED}
-  host: ${EMAIL_HOST}
-  port: ${EMAIL_PORT}
-  username: ${EMAIL_USERNAME}
-  password: ${EMAIL_PASSWORD}
-  from: ${EMAIL_FROM}
-  from_name: ${EMAIL_FROM_NAME}
-  enable_tls: ${EMAIL_ENABLE_TLS}
+  enabled: false
+  host: "localhost"
+  port: 587
+  username: ""
+  password: ""
+  from: "noreply@example.com"
+  from_name: ""
+  enable_tls: false
 
 chapa:
-  enabled: ${CHAPA_ENABLED:-true}
+  enabled: false
   secret_key: ${CHAPA_SECRET_KEY}
   public_key: ${CHAPA_PUBLIC_KEY}
   webhook_secret: ${CHAPA_WEBHOOK_SECRET}
