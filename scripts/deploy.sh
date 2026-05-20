@@ -43,7 +43,7 @@ deploy() {
     exit 1
   fi
   echo "::group::Triggering Dokploy deploy for ${compose_id}"
-  response=$(curl -s -o /tmp/dokploy-response.txt -w "%{http_code}" \
+  response=$(curl -sLk -o /tmp/dokploy-response.txt -w "%{http_code}" \
     -X POST "${DOKPLOY_URL}/api/compose.deploy" \
     -H "x-api-key: ${DOKPLOY_TOKEN}" \
     -H "Content-Type: application/json" \
