@@ -19,6 +19,12 @@ FROM alpine:3.20
 
 RUN addgroup -S app && adduser -S app -G app
 
+RUN apk add --no-cache curl ca-certificates && \
+    curl -sSL "https://github.com/ariga/atlas/releases/latest/download/atlas-linux-amd64" -o /usr/local/bin/atlas && \
+    chmod +x /usr/local/bin/atlas && \
+    apk del curl ca-certificates && \
+    rm -rf /var/cache/apk/*
+
 WORKDIR /app
 
 COPY --from=builder /out/app /out/schema ./
