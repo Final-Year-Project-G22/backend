@@ -96,7 +96,7 @@ services:
 
   # ── App: core-backend ────────────────────────────────────
   core-backend:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/core-backend:${CORE_TAG}
+    image: ghcr.io/final-year-project-g22/core-backend:${CORE_TAG}
     restart: unless-stopped
     ports:
       - "${CORE_PORT:-4000}:4000"
@@ -186,7 +186,7 @@ services:
 
   # ── App: ai-service server ───────────────────────────────
   ai-server:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/ai-service:${AI_TAG}
+    image: ghcr.io/final-year-project-g22/ai-service:${AI_TAG}
     restart: unless-stopped
     command: python main.py
     ports:
@@ -216,7 +216,7 @@ services:
 
   # ── App: ai-service worker ───────────────────────────────
   ai-worker:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/ai-service:${AI_TAG}
+    image: ghcr.io/final-year-project-g22/ai-service:${AI_TAG}
     restart: unless-stopped
     command: python -m workers.ingestion_worker
     environment:
@@ -239,7 +239,7 @@ services:
 
   # ── Migrations (one-shot, run via profiles) ──────────────
   migration-core:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/core-backend:${CORE_TAG}
+    image: ghcr.io/final-year-project-g22/core-backend:${CORE_TAG}
     command: /app/schema -action=apply
     profiles: ["migration"]
     environment:
@@ -264,7 +264,7 @@ services:
         condition: service_healthy
 
   migration-ai:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/ai-service:${AI_TAG}
+    image: ghcr.io/final-year-project-g22/ai-service:${AI_TAG}
     command: alembic upgrade head
     profiles: ["migration"]
     environment:
