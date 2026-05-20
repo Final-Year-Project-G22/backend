@@ -25,6 +25,7 @@ RUN apt-get update -qq && apt-get install -y -qq curl ca-certificates && \
     chmod +x /usr/local/bin/buf && \
     cd proto && buf generate && cd .. && \
     mkdir -p grpc_stubs && cp -r ai-service/grpc_stubs/* grpc_stubs/ && \
+    test -f grpc_stubs/buf/validate/validate_pb2.py && \
     rm -rf proto ai-service/grpc_stubs /usr/local/bin/buf && \
     apt-get remove -y curl ca-certificates && apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
