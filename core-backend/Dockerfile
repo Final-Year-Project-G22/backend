@@ -19,10 +19,7 @@ FROM alpine:3.20
 
 RUN addgroup -S app && adduser -S app -G app
 
-WORKDIR /app
-
-COPY --from=builder /out/app /out/schema ./
-COPY --from=builder /build/internal/configs ./internal/configs
+COPY --from=builder /out/app /out/schema /app/
 
 EXPOSE 4000
 EXPOSE 50051
