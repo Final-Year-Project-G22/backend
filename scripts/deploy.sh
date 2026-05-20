@@ -43,10 +43,17 @@ deploy() {
     exit 1
   fi
   echo "::group::Triggering Dokploy deploy for ${compose_id}"
-  curl -s -X POST "${DOKPLOY_URL}/api/compose.deploy" \
+  response=$(curl -s -o /tmp/dokploy-response.txt -w "%{http_code}" \
+    -X POST "${DOKPLOY_URL}/api/compose.deploy" \
     -H "x-api-key: ${DOKPLOY_TOKEN}" \
     -H "Content-Type: application/json" \
-    -d "{\"composeId\": \"${compose_id}\"}"
+    -d "{\"composeId\": \"${compose_id}\"}")
+  echo "HTTP response code: ${response}"
+  echo "Response body:"
+  cat /tmp/dokploy-response.txt
+  if [[ "${response}" != "200" ]]; then
+    echo "Warning: Dokploy deploy returned ${response}, expected 200"
+  fi
   echo "::endgroup::"
 }
 
