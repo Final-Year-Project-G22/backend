@@ -17,7 +17,7 @@ COPY ai-service/ ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
-RUN addgroup -S app && adduser -S app -G app
+RUN groupadd --system app && useradd --system --no-create-home -g app app
 USER app
 
 EXPOSE 8000
