@@ -23,6 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /out/app /out/schema ./
 COPY --from=builder /build/internal/configs ./internal/configs
+COPY --from=builder /build/pkg/i18n/messages ./pkg/i18n/messages
 
 EXPOSE 4000
 EXPOSE 50051
