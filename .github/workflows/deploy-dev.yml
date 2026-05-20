@@ -55,4 +55,3 @@ jobs:
           bash scripts/deploy.sh . ${{ secrets.DOKPLOY_COMPOSE_ID_DEV }} deploy
         env:
           DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
-          DOKPLOY_TOKEN: ${{ secrets.DOKPLOY_TOKEN }}

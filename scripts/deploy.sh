@@ -42,12 +42,10 @@ deploy() {
     echo "Error: compose-id is required for deploy action"
     exit 1
   fi
-  echo "::group::Triggering Dokploy deploy for ${compose_id}"
+  local url="${DOKPLOY_URL%/}/api/deploy/compose/${compose_id}"
+  echo "::group::Triggering Dokploy deploy"
   response=$(curl -sLk -o /tmp/dokploy-response.txt -w "%{http_code}" \
-    -X POST "${DOKPLOY_URL}/api/compose.deploy" \
-    -H "x-api-key: ${DOKPLOY_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "{\"composeId\": \"${compose_id}\"}")
+    -X POST "${url}")
   echo "HTTP response code: ${response}"
   echo "Response body:"
   cat /tmp/dokploy-response.txt
