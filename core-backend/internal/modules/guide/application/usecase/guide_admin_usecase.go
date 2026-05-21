@@ -249,6 +249,7 @@ func (u *guideAdminUsecase) CreateStep(ctx context.Context, input usecase.Create
 			EstimatedTime:   input.EstimatedTime,
 			DifficultyLevel: input.DifficultyLevel,
 			FeeEstimate:     input.FeeEstimate,
+			ComplianceType:  input.ComplianceType,
 		}
 		if input.EffectiveDate != nil {
 			step.EffectiveDate = *input.EffectiveDate
@@ -305,6 +306,9 @@ func (u *guideAdminUsecase) UpdateStep(ctx context.Context, id uuid.UUID, input 
 		}
 		if input.ExpiryDate != nil {
 			step.ExpiryDate = input.ExpiryDate
+		}
+		if input.ComplianceType != nil {
+			step.ComplianceType = input.ComplianceType
 		}
 		if err := u.stepRepo.Update(txCtx, step); err != nil {
 			return err

@@ -16,4 +16,5 @@ type ComplianceEntryRepository interface {
 	ListByAccount(ctx context.Context, accountID uuid.UUID) ([]*entity.ComplianceEntry, error)
 	FetchExpiringSoon(ctx context.Context, now time.Time, limit int) ([]*entity.ComplianceEntry, error)
 	CountByStatus(ctx context.Context, businessProfileID uuid.UUID, status entity.ComplianceEntryStatus) (int64, error)
+	DeleteByAccountAndType(ctx context.Context, accountID uuid.UUID, complianceType entity.ComplianceType, source entity.ComplianceSource) error
 }

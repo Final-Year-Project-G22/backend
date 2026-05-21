@@ -22,6 +22,7 @@ const (
 	NotificationTypePaymentConfirmation  NotificationType = "payment_confirmation"
 	NotificationTypeCampaign             NotificationType = "campaign"
 	NotificationTypeUserScheduled        NotificationType = "user_scheduled"
+	NotificationTypeComplianceInfo       NotificationType = "compliance_info"
 )
 
 type NotificationPriority int8
@@ -100,6 +101,13 @@ const (
 	ComplianceEntryStatusActive  ComplianceEntryStatus = "active"
 	ComplianceEntryStatusExpired ComplianceEntryStatus = "expired"
 	ComplianceEntryStatusRenewed ComplianceEntryStatus = "renewed"
+)
+
+type ComplianceSource string
+
+const (
+	ComplianceSourceAuto   ComplianceSource = "auto"
+	ComplianceSourceManual ComplianceSource = "manual"
 )
 
 type DeviceType string

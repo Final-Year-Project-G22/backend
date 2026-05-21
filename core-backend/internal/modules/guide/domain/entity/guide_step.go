@@ -32,6 +32,7 @@ type GuideStep struct {
 	Version             int                    `gorm:"not null;default:1"`
 	EffectiveDate       time.Time              `gorm:"type:date;not null;default:CURRENT_DATE"`
 	ExpiryDate          *time.Time             `gorm:"type:date"`
+	ComplianceType      *string                `gorm:"type:varchar(64)"`
 	Conditions          []StepCondition        `gorm:"foreignKey:StepID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Dependencies        []StepDependency       `gorm:"foreignKey:StepID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ReverseDependencies []StepDependency       `gorm:"foreignKey:RequiredStepID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

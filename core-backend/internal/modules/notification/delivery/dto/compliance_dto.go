@@ -32,6 +32,7 @@ type ComplianceEntryResponse struct {
 	ExpiryDate         time.Time                    `json:"expiryDate"`
 	ReminderDaysBefore int                          `json:"reminderDaysBefore"`
 	Status             entity.ComplianceEntryStatus `json:"status"`
+	Source             entity.ComplianceSource      `json:"source"`
 	LastNotifiedAt     *time.Time                   `json:"lastNotifiedAt,omitempty"`
 }
 
@@ -129,6 +130,7 @@ func ToComplianceEntryResponse(entry *entity.ComplianceEntry) ComplianceEntryRes
 		ExpiryDate:         entry.ExpiryDate,
 		ReminderDaysBefore: entry.ReminderDaysBefore,
 		Status:             entry.Status,
+		Source:             entry.Source,
 		LastNotifiedAt:     entry.LastNotifiedAt,
 	}
 }
@@ -186,4 +188,19 @@ func ToCalendarEntryResponses(entries []usecase.CalendarEntry) []CalendarEntryRe
 		resp = append(resp, ToCalendarEntryResponse(e))
 	}
 	return resp
+}
+
+// --- Compliance Types ---
+
+type ListComplianceTypesOutput struct {
+	Body ListComplianceTypesResponseBody
+}
+
+type ListComplianceTypesResponseBody struct {
+	Data []ComplianceTypeResponse `json:"data"`
+}
+
+type ComplianceTypeResponse struct {
+	Slug  string `json:"slug"`
+	Label string `json:"label"`
 }

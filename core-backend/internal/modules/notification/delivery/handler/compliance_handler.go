@@ -5,16 +5,18 @@ import (
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/dto"
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 )
 
 type ComplianceHandler struct {
 	complianceUC usecase.ComplianceEntryUsecase
+	ctRepo       repository.ComplianceTypeRepository
 }
 
-func NewComplianceHandler(complianceUC usecase.ComplianceEntryUsecase) *ComplianceHandler {
-	return &ComplianceHandler{complianceUC: complianceUC}
+func NewComplianceHandler(complianceUC usecase.ComplianceEntryUsecase, ctRepo repository.ComplianceTypeRepository) *ComplianceHandler {
+	return &ComplianceHandler{complianceUC: complianceUC, ctRepo: ctRepo}
 }
 
 func (h *ComplianceHandler) HandleList(ctx context.Context, input *dto.ListComplianceEntriesInput) (*dto.ListComplianceEntriesOutput, error) {
@@ -68,5 +70,27 @@ func (h *ComplianceHandler) HandleGetCalendar(ctx context.Context, input *struct
 	}
 	return &dto.GetCalendarOutput{Body: dto.GetCalendarResponseBody{
 		Entries: dto.ToCalendarEntryResponses(calendar.Entries),
+	}}, nil
+}
+
+type listTypesInput struct {
+	Locale string `query:"locale"`
+}
+
+func (h *ComplianceHandler) HandleListTypes(ctx context.Context, input *listTypesInput) (*dto.ListComplianceTypesOutput, error) {
+	locale := input.Locale
+	if locale == "" {
+		locale = "en"
+	}
+	types, err := h.ctRepo.ListWithLabels(ctx, locale)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	resp := make([]dto.ComplianceTypeResponse, 0, len(types))
+	for _, t := range types {
+		resp = append(resp, dto.ComplianceTypeResponse{Slug: t.Slug, Label: t.Label})
+	}
+	return &dto.ListComplianceTypesOutput{Body: dto.ListComplianceTypesResponseBody{
+		Data: resp,
 	}}, nil
 }

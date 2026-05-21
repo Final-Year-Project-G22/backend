@@ -15,7 +15,11 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	iamrepository "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
+	notifentity "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	notifevent "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/event"
+	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	sharedRepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -24,12 +28,13 @@ import (
 )
 
 type guideViewUsecase struct {
-	guideRepo    repository.GuideRepository
-	stepRepo     repository.StepRepository
-	progressRepo repository.ProgressRepository
-	profileRepo  iamrepository.BusinessProfileRepository
-	transactor   sharedRepo.Transactor
-	logger       core.Logger
+	guideRepo       repository.GuideRepository
+	stepRepo        repository.StepRepository
+	progressRepo    repository.ProgressRepository
+	profileRepo     iamrepository.BusinessProfileRepository
+	transactor      sharedRepo.Transactor
+	notifOutboxRepo notifrepo.NotificationOutboxRepository
+	logger          core.Logger
 }
 
 func NewGuideViewUsecase(
@@ -38,15 +43,17 @@ func NewGuideViewUsecase(
 	progressRepo repository.ProgressRepository,
 	profileRepo iamrepository.BusinessProfileRepository,
 	transactor sharedRepo.Transactor,
+	notifOutboxRepo notifrepo.NotificationOutboxRepository,
 	logger core.Logger,
 ) usecase.GuideViewUseCase {
 	return &guideViewUsecase{
-		guideRepo:    guideRepo,
-		stepRepo:     stepRepo,
-		progressRepo: progressRepo,
-		profileRepo:  profileRepo,
-		transactor:   transactor,
-		logger:       logger,
+		guideRepo:       guideRepo,
+		stepRepo:        stepRepo,
+		progressRepo:    progressRepo,
+		profileRepo:     profileRepo,
+		transactor:      transactor,
+		notifOutboxRepo: notifOutboxRepo,
+		logger:          logger,
 	}
 }
 
@@ -354,7 +361,11 @@ func (s *guideViewUsecase) CompleteStep(ctx context.Context, accountID, userID, 
 		progress.UploadedDocuments = documentsToJSONMap(input.UploadedDocuments)
 	}
 
-	return s.progressRepo.UpsertProgress(ctx, progress)
+	if err := s.progressRepo.UpsertProgress(ctx, progress); err != nil {
+		return err
+	}
+
+	return s.publishStepEvent(ctx, stepID, accountID, notifevent.GuideComplianceStepCompleted)
 }
 
 func (s *guideViewUsecase) MarkStepIncomplete(ctx context.Context, accountID, userID, stepID uuid.UUID) error {
@@ -369,7 +380,61 @@ func (s *guideViewUsecase) MarkStepIncomplete(ctx context.Context, accountID, us
 	progress.Status = entity.ProgressStatusInProgress
 	progress.CompletedAt = nil
 
-	return s.progressRepo.UpsertProgress(ctx, progress)
+	if err := s.progressRepo.UpsertProgress(ctx, progress); err != nil {
+		return err
+	}
+
+	return s.publishStepEvent(ctx, stepID, accountID, notifevent.GuideComplianceStepRolledBack)
+}
+
+func (s *guideViewUsecase) publishStepEvent(ctx context.Context, stepID, accountID uuid.UUID, eventType string) error {
+	step, err := s.stepRepo.GetByID(ctx, stepID)
+	if err != nil {
+		s.logger.Warn("Failed to load step for compliance event", core.String("stepID", stepID.String()))
+		return nil
+	}
+
+	if step.ComplianceType == nil || *step.ComplianceType == "" {
+		return nil
+	}
+
+	variables := map[string]string{
+		"compliance_type": *step.ComplianceType,
+	}
+
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        eventType,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "guide",
+		AccountID:        accountID,
+		NotificationType: "guide_step_completed",
+		ChannelPolicy:    notificationevent.ChannelPolicySingle,
+		Channel:          strPtr("in_app"),
+		Variables:        variables,
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: eventType + ":" + stepID.String() + ":" + accountID.String() + ":" + uuid.New().String(),
+		},
+	}
+
+	payload := make(map[string]interface{})
+	data, _ := json.Marshal(env)
+	_ = json.Unmarshal(data, &payload)
+
+	outbox := &notifentity.NotificationOutbox{
+		EventType:      env.EventType,
+		SchemaVersion:  env.SchemaVersion,
+		SourceModule:   env.SourceModule,
+		AccountID:      env.AccountID,
+		IdempotencyKey: env.Metadata.IdempotencyKey,
+		Payload:        payload,
+		Status:         notifentity.NotificationOutboxStatusPending,
+	}
+	return s.notifOutboxRepo.Create(ctx, outbox)
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 func (s *guideViewUsecase) SkipOptionalStep(ctx context.Context, accountID, userID, stepID uuid.UUID, reason *string) error {

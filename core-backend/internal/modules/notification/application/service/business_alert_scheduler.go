@@ -2,37 +2,43 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	notifevent "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/event"
 	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 )
 
-const businessAlertPollInterval = 1 * time.Hour
+const businessAlertPollInterval = 1 * time.Second
 const businessAlertBatchSize = 100
 
 type BusinessAlertScheduler struct {
-	complianceRepo notifrepo.ComplianceEntryRepository
-	queueRepo      notifrepo.NotificationQueueRepository
-	accountReader  notifrepo.AccountReader
-	logger         core.Logger
+	complianceRepo     notifrepo.ComplianceEntryRepository
+	notifOutboxRepo    notifrepo.NotificationOutboxRepository
+	accountReader      notifrepo.AccountReader
+	complianceTypeRepo notifrepo.ComplianceTypeRepository
+	logger             core.Logger
 }
 
 func NewBusinessAlertScheduler(
 	complianceRepo notifrepo.ComplianceEntryRepository,
-	queueRepo notifrepo.NotificationQueueRepository,
+	notifOutboxRepo notifrepo.NotificationOutboxRepository,
 	accountReader notifrepo.AccountReader,
+	complianceTypeRepo notifrepo.ComplianceTypeRepository,
 	logger core.Logger,
 ) *BusinessAlertScheduler {
 	return &BusinessAlertScheduler{
-		complianceRepo: complianceRepo,
-		queueRepo:      queueRepo,
-		accountReader:  accountReader,
-		logger:         logger,
+		complianceRepo:     complianceRepo,
+		notifOutboxRepo:    notifOutboxRepo,
+		accountReader:      accountReader,
+		complianceTypeRepo: complianceTypeRepo,
+		logger:             logger,
 	}
 }
 
@@ -41,10 +47,10 @@ func (s *BusinessAlertScheduler) Start(ctx context.Context) {
 }
 
 func (s *BusinessAlertScheduler) run(ctx context.Context) {
-	ticker := time.NewTicker(businessAlertPollInterval)
-	defer ticker.Stop()
 	// Run once immediately on startup
 	s.processExpiring(ctx)
+	ticker := time.NewTicker(businessAlertPollInterval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
@@ -59,6 +65,9 @@ func (s *BusinessAlertScheduler) processExpiring(ctx context.Context) {
 	now := time.Now().UTC()
 	entries, err := s.complianceRepo.FetchExpiringSoon(ctx, now, businessAlertBatchSize)
 	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return
+		}
 		s.logger.Error("Failed to fetch expiring compliance entries", core.Error(err))
 		return
 	}
@@ -86,19 +95,15 @@ func (s *BusinessAlertScheduler) processExpiring(ctx context.Context) {
 }
 
 func (s *BusinessAlertScheduler) sendAlert(ctx context.Context, entry *entity.ComplianceEntry) error {
-	// Determine the target account from the compliance entry
-	// The compliance entry has a business_profile_id, but we don't have direct access
-	// to the business profile repo here. We enqueue to the notification_queue and
-	// the delivery pipeline will use the account info from the payload.
-
-	// For now, we enqueue with in_app + email channels
-	// The accountID is empty since we don't have a direct mapping from compliance entry
-	// to account. This should be resolved by joining through business_profile.
-	// We log a warning and skip if accountID can't be resolved.
 	if entry.BusinessProfileID == uuid.Nil {
 		s.logger.Warn("Compliance entry has no business profile ID, skipping",
 			core.String("complianceID", entry.ID.String()))
 		return nil
+	}
+
+	accountInfo, err := s.accountReader.GetAccountInfo(ctx, entry.AccountID)
+	if err != nil {
+		return err
 	}
 
 	daysRemaining := int(entry.ExpiryDate.Sub(time.Now().UTC()).Hours() / 24)
@@ -106,37 +111,50 @@ func (s *BusinessAlertScheduler) sendAlert(ctx context.Context, entry *entity.Co
 		daysRemaining = 0
 	}
 
-	title := fmt.Sprintf("%s Expiring", entry.ComplianceType)
-	body := fmt.Sprintf(
-		"Your %s is expiring in %d days (expiry: %s). Please renew before the deadline.",
-		entry.ComplianceType, daysRemaining, entry.ExpiryDate.Format("Jan 2, 2006"),
-	)
-
-	payload := datatypes.JSONMap{
-		"title":               title,
-		"body":                body,
-		"compliance_entry_id": entry.ID.String(),
-		"compliance_type":     string(entry.ComplianceType),
-		"expiry_date":         entry.ExpiryDate.Format(time.RFC3339),
+	locale := accountInfo.Locale
+	if locale == "" {
+		locale = "en"
 	}
 
-	// Enqueue for both in_app and email
-	for _, channel := range []entity.Channel{entity.ChannelInApp, entity.ChannelEmail} {
-		queueItem := &entity.NotificationQueue{
-			NotificationType: entity.NotificationTypeAccountAlertInfo,
-			AccountID:        entry.AccountID,
-			Priority:         entity.NotificationPriorityMedium,
-			Channel:          channel,
-			Payload:          payload,
-			ScheduledFor:     time.Now().UTC(),
-			MaxRetries:       3,
-			RetryCount:       0,
-			Status:           entity.NotificationStatusPending,
-		}
-		if err := s.queueRepo.Create(ctx, queueItem); err != nil {
-			return fmt.Errorf("failed to enqueue business alert: %w", err)
-		}
+	complianceLabel, _ := s.complianceTypeRepo.GetLabel(ctx, string(entry.ComplianceType), locale)
+	variables := map[string]string{
+		"complianceType": complianceLabel,
+		"daysRemaining":  fmt.Sprintf("%d", daysRemaining),
+		"expiryDate":     entry.ExpiryDate.Format("Jan 2, 2006"),
 	}
 
-	return nil
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        notifevent.ComplianceAlert,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "notification",
+		AccountID:        entry.AccountID,
+		NotificationType: string(entity.NotificationTypeComplianceInfo),
+		ChannelPolicy:    notificationevent.ChannelPolicyAllEnabled,
+		Variables:        variables,
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: "compliance-alert:" + entry.ID.String() + ":" + uuid.New().String(),
+			Locale:         &locale,
+		},
+	}
+
+	payload := make(map[string]interface{})
+	data, err := json.Marshal(env)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return err
+	}
+
+	outbox := &entity.NotificationOutbox{
+		EventType:      env.EventType,
+		SchemaVersion:  env.SchemaVersion,
+		SourceModule:   env.SourceModule,
+		AccountID:      env.AccountID,
+		IdempotencyKey: env.Metadata.IdempotencyKey,
+		Payload:        payload,
+		Status:         entity.NotificationOutboxStatusPending,
+	}
+	return s.notifOutboxRepo.Create(ctx, outbox)
 }

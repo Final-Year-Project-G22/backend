@@ -22,5 +22,10 @@ const (
 
 	UserEmailOTPRequested = "user.email_otp_requested"
 
+	BusinessProfileUpdated        = "business.profile.updated"
+	GuideComplianceStepCompleted  = "guide.compliance_step_completed"
+	GuideComplianceStepRolledBack = "guide.compliance_step_rolled_back"
+	ComplianceAlert               = "compliance.alert"
+
 	NotificationFailed = "notification.failed"
 )
