@@ -69,6 +69,15 @@ func (r *complianceEntryRepository) FetchExpiringSoon(ctx context.Context, now t
 	return entries, nil
 }
 
+func (r *complianceEntryRepository) DeleteByAccountAndType(ctx context.Context, accountID uuid.UUID, complianceType entity.ComplianceType, source entity.ComplianceSource) error {
+	result := r.getDB(ctx).Where("account_id = ? AND compliance_type = ? AND source = ?", accountID, complianceType, source).Delete(&entity.ComplianceEntry{})
+	if result.Error != nil {
+		r.logger.Error("Failed to delete compliance entries by account and type", core.Error(result.Error))
+		return errors.InternalError("errors.databaseError", result.Error)
+	}
+	return nil
+}
+
 func (r *complianceEntryRepository) CountByStatus(ctx context.Context, businessProfileID uuid.UUID, status entity.ComplianceEntryStatus) (int64, error) {
 	var count int64
 	if err := r.getDB(ctx).Model(&entity.ComplianceEntry{}).

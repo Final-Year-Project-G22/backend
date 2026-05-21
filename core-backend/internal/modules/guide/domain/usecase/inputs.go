@@ -56,6 +56,7 @@ type CreateStepInput struct {
 	Translations    []StepTranslationInput `json:"translations,omitempty"`
 	Conditions      []ConditionInput       `json:"conditions,omitempty"`
 	Dependencies    []DependencyInput      `json:"dependencies,omitempty"`
+	ComplianceType  *string                `json:"complianceType,omitempty"`
 }
 
 type UpdateStepInput struct {
@@ -72,6 +73,7 @@ type UpdateStepInput struct {
 	TranslationsMerge bool                   `json:"translationsMerge,omitempty"`
 	Conditions        []ConditionInput       `json:"conditions,omitempty"`
 	Dependencies      []DependencyInput      `json:"dependencies,omitempty"`
+	ComplianceType    *string                `json:"complianceType,omitempty"`
 }
 
 type ConditionInput struct {

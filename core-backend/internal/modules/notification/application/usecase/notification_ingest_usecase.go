@@ -51,6 +51,22 @@ func NewNotificationIngestUsecase(
 	}
 }
 
+func (uc *notificationIngestUsecase) resolveContent(ctx context.Context, tmpl *entity.NotificationTemplate, locale string) map[string]interface{} {
+	if locale == "" || locale == "en" {
+		return map[string]interface{}(tmpl.DefaultContent)
+	}
+	translations, err := uc.tmplRepo.GetTranslations(ctx, tmpl.ID)
+	if err != nil {
+		return map[string]interface{}(tmpl.DefaultContent)
+	}
+	for _, t := range translations {
+		if t.Language == locale {
+			return map[string]interface{}(t.Content)
+		}
+	}
+	return map[string]interface{}(tmpl.DefaultContent)
+}
+
 func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input usecase.ProcessEventInput) error {
 	tmpl, err := uc.tmplRepo.GetByType(ctx, input.NotificationType)
 	if err != nil {
@@ -64,7 +80,10 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 		return err
 	}
 
-	channels := uc.resolveChannels(tmpl, input.ChannelPolicy, input.Channel)
+	locale, _ := input.Metadata["locale"].(string)
+	contentMap := uc.resolveContent(ctx, tmpl, locale)
+
+	channels := uc.resolveChannels(contentMap, input.ChannelPolicy, input.Channel)
 	if len(channels) == 0 {
 		return nil
 	}
@@ -75,7 +94,7 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	}
 
 	for _, channel := range channels {
-		if !uc.hasChannelContent(tmpl, channel) {
+		if !uc.hasChannelContent(contentMap, channel) {
 			continue
 		}
 
@@ -87,7 +106,7 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 			continue
 		}
 
-		if err := uc.enqueue(ctx, tmpl, channel, input.AccountID, input.Variables, nil, isMuted); err != nil {
+		if err := uc.enqueue(ctx, tmpl, contentMap, channel, input.AccountID, input.Variables, nil, isMuted); err != nil {
 			return err
 		}
 	}
@@ -95,14 +114,14 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	return nil
 }
 
-func (uc *notificationIngestUsecase) resolveChannels(tmpl *entity.NotificationTemplate, channelPolicy string, singleChannel *entity.Channel) []entity.Channel {
+func (uc *notificationIngestUsecase) resolveChannels(content map[string]interface{}, channelPolicy string, singleChannel *entity.Channel) []entity.Channel {
 	if channelPolicy == "single" && singleChannel != nil {
-		if _, ok := tmpl.DefaultContent[string(*singleChannel)]; ok {
+		if _, ok := content[string(*singleChannel)]; ok {
 			return []entity.Channel{*singleChannel}
 		}
 		return nil
 	}
-	return uc.channelsFromTemplate(tmpl)
+	return uc.channelsFromContent(content)
 }
 
 func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input usecase.SendNotificationInput) error {
@@ -115,7 +134,9 @@ func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input
 		return err
 	}
 
-	if !uc.hasChannelContent(tmpl, input.Channel) {
+	contentMap := map[string]interface{}(tmpl.DefaultContent)
+
+	if !uc.hasChannelContent(contentMap, input.Channel) {
 		return notiferror.ErrInvalidChannel
 	}
 
@@ -132,7 +153,7 @@ func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input
 		return err
 	}
 
-	return uc.enqueue(ctx, tmpl, input.Channel, input.AccountID, input.Variables, input.ScheduledFor, isMuted)
+	return uc.enqueue(ctx, tmpl, contentMap, input.Channel, input.AccountID, input.Variables, input.ScheduledFor, isMuted)
 }
 
 func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accountID uuid.UUID, notificationType entity.NotificationType, variables map[string]string, metadata map[string]interface{}, channels []entity.Channel, expiresAt *time.Time) error {
@@ -146,13 +167,15 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 			return err
 		}
 
+		contentMap := map[string]interface{}(tmpl.DefaultContent)
+
 		isMuted, err := uc.resolveMuted(txCtx, accountID, metadata)
 		if err != nil {
 			return err
 		}
 
 		for _, channel := range channels {
-			if !uc.hasChannelContent(tmpl, channel) {
+			if !uc.hasChannelContent(contentMap, channel) {
 				continue
 			}
 
@@ -164,7 +187,7 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 				continue
 			}
 
-			if err := uc.enqueue(txCtx, tmpl, channel, accountID, variables, nil, isMuted); err != nil {
+			if err := uc.enqueue(txCtx, tmpl, contentMap, channel, accountID, variables, nil, isMuted); err != nil {
 				return err
 			}
 		}
@@ -176,14 +199,14 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 func (uc *notificationIngestUsecase) enqueue(
 	ctx context.Context,
 	tmpl *entity.NotificationTemplate,
+	content map[string]interface{},
 	channel entity.Channel,
 	accountID uuid.UUID,
 	variables map[string]string,
 	scheduledFor *time.Time,
 	isMuted bool,
 ) error {
-	contentMap := map[string]interface{}(tmpl.DefaultContent)
-	rendered, err := uc.renderer.RenderMultiChannel(contentMap, variables, []entity.Channel{channel})
+	rendered, err := uc.renderer.RenderMultiChannel(content, variables, []entity.Channel{channel})
 	if err != nil {
 		return fmt.Errorf("failed to render content for channel %s: %w", channel, err)
 	}
@@ -309,16 +332,16 @@ func (uc *notificationIngestUsecase) extractMutedAccountID(metadata map[string]i
 	return &parsed
 }
 
-func (uc *notificationIngestUsecase) channelsFromTemplate(tmpl *entity.NotificationTemplate) []entity.Channel {
+func (uc *notificationIngestUsecase) channelsFromContent(content map[string]interface{}) []entity.Channel {
 	var channels []entity.Channel
-	for key := range tmpl.DefaultContent {
+	for key := range content {
 		channels = append(channels, entity.Channel(key))
 	}
 	return channels
 }
 
-func (uc *notificationIngestUsecase) hasChannelContent(tmpl *entity.NotificationTemplate, channel entity.Channel) bool {
-	_, ok := tmpl.DefaultContent[string(channel)]
+func (uc *notificationIngestUsecase) hasChannelContent(content map[string]interface{}, channel entity.Channel) bool {
+	_, ok := content[string(channel)]
 	return ok
 }
 

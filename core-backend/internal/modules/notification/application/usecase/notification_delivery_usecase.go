@@ -87,7 +87,7 @@ func (uc *notificationDeliveryUsecase) DeliverItem(ctx context.Context, queueID 
 	}
 
 	switch item.Channel {
-	case entity.ChannelInApp:
+	case entity.ChannelInApp, entity.Channel("inapp"):
 		return uc.deliverInApp(ctx, item)
 	case entity.ChannelEmail:
 		return uc.deliverEmail(ctx, item)
@@ -114,7 +114,7 @@ func (uc *notificationDeliveryUsecase) HandleDeliveryResult(ctx context.Context,
 		}
 
 		// Publish SSE event after everything is committed
-		if item.Channel == entity.ChannelInApp {
+		if item.Channel == entity.ChannelInApp || item.Channel == entity.Channel("inapp") {
 			isMuted, _ := item.Payload["_isMuted"].(bool)
 			if !isMuted {
 				unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
@@ -262,7 +262,7 @@ func (uc *notificationDeliveryUsecase) createHistoryForPush(ctx context.Context,
 func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx context.Context, item *entity.NotificationQueue, providerMsgID, to, subject string) error {
 	err := uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		title, _ := item.Payload["title"].(string)
-		content, _ := item.Payload["content"].(string)
+		content, _ := item.Payload["body"].(string)
 		actionUrlStr, _ := item.Payload["actionUrl"].(string)
 		isMuted, _ := item.Payload["_isMuted"].(bool)
 
@@ -312,7 +312,7 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 			return uc.queueRepo.MarkDelivered(txCtx, item.ID)
 		}
 
-		if item.Channel == entity.ChannelInApp {
+		if item.Channel == entity.ChannelInApp || item.Channel == entity.Channel("inapp") {
 			inbox := &entity.UserNotificationInbox{
 				AccountID:             item.AccountID,
 				NotificationHistoryID: history.ID,
@@ -332,7 +332,7 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 		return err
 	}
 
-	if item.Channel == entity.ChannelInApp {
+	if item.Channel == entity.ChannelInApp || item.Channel == entity.Channel("inapp") {
 		isMuted, _ := item.Payload["_isMuted"].(bool)
 		if !isMuted {
 			unreadCount, _ := uc.inboxRepo.GetUnreadCount(ctx, item.AccountID)
@@ -351,7 +351,7 @@ func (uc *notificationDeliveryUsecase) createHistoryInboxAndDeliveryLog(ctx cont
 func (uc *notificationDeliveryUsecase) createHistoryAndInbox(ctx context.Context, item *entity.NotificationQueue) error {
 	err := uc.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
 		title, _ := item.Payload["title"].(string)
-		content, _ := item.Payload["content"].(string)
+		content, _ := item.Payload["body"].(string)
 		actionUrlStr, _ := item.Payload["actionUrl"].(string)
 		isMuted, _ := item.Payload["_isMuted"].(bool)
 

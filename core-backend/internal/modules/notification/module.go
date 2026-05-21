@@ -46,6 +46,7 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewUserScheduledNotificationRepository, fx.As(new(repository.UserScheduledNotificationRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewScheduledAlertTemplateRepository, fx.As(new(repository.ScheduledAlertTemplateRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewComplianceEntryRepository, fx.As(new(repository.ComplianceEntryRepository)))),
+	fx.Provide(fx.Annotate(infrarepo.NewComplianceTypeRepository, fx.As(new(repository.ComplianceTypeRepository)))),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
@@ -57,7 +58,7 @@ var Module = fx.Module(
 	fx.Provide(appservice.NewNotificationOutboxDispatcher),
 	fx.Provide(appservice.NewUserNotificationScheduler),
 	fx.Provide(appservice.NewBusinessAlertScheduler),
-	fx.Provide(appservice.NewScheduledAlertTemplateSeeder),
+	fx.Provide(appservice.NewSyncComplianceService),
 
 	// --- Email Provider ---
 	fx.Provide(fx.Annotate(func(cfg *core.Config, logger core.Logger) repository.EmailProvider {
@@ -258,15 +259,6 @@ var Module = fx.Module(
 			OnStop: func(context.Context) error {
 				cancel()
 				return nil
-			},
-		})
-	}),
-
-	// --- Scheduled Alert Template Seeder ---
-	fx.Invoke(func(lc fx.Lifecycle, seeder *appservice.ScheduledAlertTemplateSeeder) {
-		lc.Append(fx.Hook{
-			OnStart: func(ctx context.Context) error {
-				return seeder.Seed(ctx)
 			},
 		})
 	}),
