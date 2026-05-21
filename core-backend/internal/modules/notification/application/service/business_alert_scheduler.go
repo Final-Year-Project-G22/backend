@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const businessAlertPollInterval = 1 * time.Second
+const businessAlertPollInterval = 1 * time.Hour
 const businessAlertBatchSize = 100
 
 type BusinessAlertScheduler struct {
