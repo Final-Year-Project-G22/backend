@@ -28,6 +28,7 @@ func (e *EntityProvider) Entities() []any {
 		&entity.UserScheduledNotification{},
 		&entity.ScheduledAlertTemplate{},
 		&entity.ComplianceEntry{},
+		&entity.ComplianceTypeLocalization{},
 	}
 }
 

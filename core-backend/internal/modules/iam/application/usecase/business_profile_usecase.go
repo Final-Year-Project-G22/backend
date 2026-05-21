@@ -2,32 +2,40 @@ package appusecase
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	notifentity "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	notifevent "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/event"
+	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
 
 type businessProfileUsecase struct {
-	profileRepo repository.BusinessProfileRepository
-	tagRepo     repository.TagRepository
-	sectorRepo  repository.SectorRepository
+	profileRepo     repository.BusinessProfileRepository
+	tagRepo         repository.TagRepository
+	sectorRepo      repository.SectorRepository
+	notifOutboxRepo notifrepo.NotificationOutboxRepository
 }
 
-// NewBusinessProfileUsecase creates a new BusinessProfileUsecase implementation.
 func NewBusinessProfileUsecase(
 	profileRepo repository.BusinessProfileRepository,
 	tagRepo repository.TagRepository,
 	sectorRepo repository.SectorRepository,
+	notifOutboxRepo notifrepo.NotificationOutboxRepository,
 ) iamusecase.BusinessProfileUsecase {
 	return &businessProfileUsecase{
-		profileRepo: profileRepo,
-		tagRepo:     tagRepo,
-		sectorRepo:  sectorRepo,
+		profileRepo:     profileRepo,
+		tagRepo:         tagRepo,
+		sectorRepo:      sectorRepo,
+		notifOutboxRepo: notifOutboxRepo,
 	}
 }
 
@@ -75,6 +83,10 @@ func (u *businessProfileUsecase) CreateBusinessProfile(ctx context.Context, acco
 	}
 
 	if err := u.profileRepo.Create(ctx, profile); err != nil {
+		return nil, err
+	}
+
+	if err := u.publishBPEvent(ctx, accountID); err != nil {
 		return nil, err
 	}
 
@@ -160,6 +172,10 @@ func (u *businessProfileUsecase) UpdateBusinessProfile(ctx context.Context, acco
 		return nil, err
 	}
 
+	if err := u.publishBPEvent(ctx, accountID); err != nil {
+		return nil, err
+	}
+
 	return profile, nil
 }
 
@@ -175,6 +191,50 @@ func (u *businessProfileUsecase) UpdateSocialLinks(ctx context.Context, accountI
 	}
 
 	return profile, nil
+}
+
+func (u *businessProfileUsecase) publishBPEvent(ctx context.Context, accountID uuid.UUID) error {
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        notifevent.BusinessProfileUpdated,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "iam",
+		AccountID:        accountID,
+		NotificationType: "",
+		ChannelPolicy:    notificationevent.ChannelPolicySingle,
+		Channel:          strPtr("in_app"),
+		Variables:        map[string]string{},
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: "bp-updated:" + accountID.String() + ":" + uuid.New().String(),
+		},
+	}
+	return u.writeToOutbox(ctx, &env)
+}
+
+func (u *businessProfileUsecase) writeToOutbox(ctx context.Context, env *notificationevent.Envelope) error {
+	payload := make(map[string]interface{})
+	data, err := json.Marshal(env)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return err
+	}
+
+	outbox := &notifentity.NotificationOutbox{
+		EventType:      env.EventType,
+		SchemaVersion:  env.SchemaVersion,
+		SourceModule:   env.SourceModule,
+		AccountID:      env.AccountID,
+		IdempotencyKey: env.Metadata.IdempotencyKey,
+		Payload:        payload,
+		Status:         notifentity.NotificationOutboxStatusPending,
+	}
+	return u.notifOutboxRepo.Create(ctx, outbox)
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 // validateTags enforces tag group rules:

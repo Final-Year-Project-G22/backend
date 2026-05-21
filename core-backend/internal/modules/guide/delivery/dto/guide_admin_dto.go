@@ -313,6 +313,7 @@ type CreateStepRequest struct {
 	FeeEstimate     *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
 	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
 	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
+	ComplianceType  *string                 `json:"complianceType,omitempty" doc:"Optional compliance type"`
 	Translations    []CreateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
 	Conditions      []CreateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
 	Dependencies    []CreateStepDependency  `json:"dependencies,omitempty" doc:"Step dependencies"`
@@ -360,6 +361,7 @@ type UpdateStepRequest struct {
 	FeeEstimate     *int                    `json:"feeEstimate,omitempty" doc:"Estimated fee"`
 	EffectiveDate   *time.Time              `json:"effectiveDate,omitempty" doc:"When step becomes active"`
 	ExpiryDate      *time.Time              `json:"expiryDate,omitempty" doc:"When step expires"`
+	ComplianceType  *string                 `json:"complianceType,omitempty" doc:"Optional compliance type"`
 	Translations    []UpdateStepTranslation `json:"translations,omitempty" doc:"Localized translations"`
 	TranslationMode *string                 `json:"translationMode,omitempty" doc:"Translation mode: 'merge' to upsert without deleting, anything else or absent for full replacement" enum:"merge,replace"`
 	Conditions      []UpdateStepCondition   `json:"conditions,omitempty" doc:"Visibility conditions"`
@@ -714,6 +716,7 @@ type AdminGuideStepDTO struct {
 	FeeEstimate     *int                      `json:"feeEstimate,omitempty"`
 	EffectiveDate   time.Time                 `json:"effectiveDate"`
 	ExpiryDate      *time.Time                `json:"expiryDate,omitempty"`
+	ComplianceType  *string                   `json:"complianceType,omitempty"`
 	Translations    []AdminStepTranslationDTO `json:"translations"`
 }
 
@@ -819,6 +822,7 @@ func ToCreateStepInput(body CreateStepRequest) usecase.CreateStepInput {
 		FeeEstimate:     body.FeeEstimate,
 		EffectiveDate:   body.EffectiveDate,
 		ExpiryDate:      body.ExpiryDate,
+		ComplianceType:  body.ComplianceType,
 		Translations:    translations,
 		Conditions:      conditions,
 		Dependencies:    dependencies,
@@ -863,6 +867,7 @@ func ToUpdateStepInput(body UpdateStepRequest) usecase.UpdateStepInput {
 		FeeEstimate:       body.FeeEstimate,
 		EffectiveDate:     body.EffectiveDate,
 		ExpiryDate:        body.ExpiryDate,
+		ComplianceType:    body.ComplianceType,
 		Translations:      translations,
 		TranslationsMerge: merge,
 		Conditions:        conditions,
@@ -972,6 +977,7 @@ func ToAdminGuideStepDTO(step *entity.GuideStep) AdminGuideStepDTO {
 		FeeEstimate:     step.FeeEstimate,
 		EffectiveDate:   step.EffectiveDate,
 		ExpiryDate:      step.ExpiryDate,
+		ComplianceType:  step.ComplianceType,
 		Translations:    translations,
 	}
 }

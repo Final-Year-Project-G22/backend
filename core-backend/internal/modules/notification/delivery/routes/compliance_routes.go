@@ -61,4 +61,15 @@ func RegisterComplianceRoutes(api huma.API, deps RouteDependencies) {
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 	}, deps.ComplianceHandler.HandleGetCalendar)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "listComplianceTypes",
+		Method:      "GET",
+		Path:        complianceBase + "/types",
+		Summary:     "List compliance types",
+		Description: "Lists all seeded compliance types for dropdown selections.",
+		Tags:        []string{"Compliance"},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+	}, deps.ComplianceHandler.HandleListTypes)
 }

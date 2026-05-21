@@ -16,6 +16,7 @@ type ComplianceEntry struct {
 	IssuedDate         *time.Time            `gorm:"type:date"`
 	ExpiryDate         time.Time             `gorm:"type:timestamptz;not null;index:idx_compliance_expiry"`
 	ReminderDaysBefore int                   `gorm:"not null;default:30"`
+	Source             ComplianceSource      `gorm:"type:varchar(20);not null;default:'manual';index:idx_compliance_source"`
 	Status             ComplianceEntryStatus `gorm:"type:varchar(20);not null;default:'active';index:idx_compliance_status"`
 	LastNotifiedAt     *time.Time            `gorm:"type:timestamptz"`
 }
