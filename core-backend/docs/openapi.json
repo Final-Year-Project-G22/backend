@@ -22919,16 +22919,6 @@
       "get": {
         "description": "Lists all seeded compliance types for dropdown selections.",
         "operationId": "listComplianceTypes",
-        "parameters": [
-          {
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -22987,16 +22977,6 @@
               "description": "Items per page",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
             }
           },
           {
@@ -23155,18 +23135,6 @@
       "get": {
         "description": "Retrieves guides the user has started but not completed, with progress data.",
         "operationId": "getInProgressGuides",
-        "parameters": [
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -23225,16 +23193,6 @@
               "description": "Items per page",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
             }
           }
         ],
@@ -23307,16 +23265,6 @@
               "description": "Items per page",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
             }
           }
         ],
@@ -23781,16 +23729,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -23841,16 +23779,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -23890,18 +23818,6 @@
       "get": {
         "description": "Lists active categories as a tree, optionally localized.",
         "operationId": "LibraryListCategories",
-        "parameters": [
-          {
-            "description": "Language code for localized names",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language code for localized names",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -24096,16 +24012,6 @@
             "required": true,
             "schema": {
               "description": "Template group ID",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Language code",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language code",
               "type": "string"
             }
           }
