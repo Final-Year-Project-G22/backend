@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/google/uuid"
 )
 
@@ -20,11 +21,8 @@ func NewLibraryHandler(viewUC usecase.LibraryViewUsecase) *LibraryHandler {
 }
 
 func (h *LibraryHandler) HandleListCategories(ctx context.Context, input *dto.LibraryListCategoriesInput) (*dto.LibraryListCategoriesOutput, error) {
-	var locale *string
-	if input.Locale != "" {
-		locale = &input.Locale
-	}
-	categories, err := h.viewUC.ListCategories(ctx, locale)
+	locale := i18n.LocaleFromContext(ctx)
+	categories, err := h.viewUC.ListCategories(ctx, &locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -78,11 +76,8 @@ func (h *LibraryHandler) HandleListTemplateGroups(ctx context.Context, input *dt
 }
 
 func (h *LibraryHandler) HandleGetTemplateGroup(ctx context.Context, input *dto.GetPublicTemplateGroupInput) (*dto.GetTemplateGroupDetailOutput, error) {
-	var locale *string
-	if input.Locale != "" {
-		locale = &input.Locale
-	}
-	group, templates, err := h.viewUC.GetTemplateGroup(ctx, input.GroupID, locale)
+	locale := i18n.LocaleFromContext(ctx)
+	group, templates, err := h.viewUC.GetTemplateGroup(ctx, input.GroupID, &locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

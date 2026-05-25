@@ -74,15 +74,10 @@ func (h *ComplianceHandler) HandleGetCalendar(ctx context.Context, input *struct
 	}}, nil
 }
 
-type listTypesInput struct {
-	Locale string `query:"locale"`
-}
+type listTypesInput struct{}
 
 func (h *ComplianceHandler) HandleListTypes(ctx context.Context, input *listTypesInput) (*dto.ListComplianceTypesOutput, error) {
-	locale := input.Locale
-	if locale == "" {
-		locale = "en"
-	}
+	locale := i18n.LocaleFromContext(ctx)
 	types, err := h.ctRepo.ListWithLabels(ctx, locale)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)

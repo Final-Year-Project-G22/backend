@@ -7,9 +7,7 @@ import (
 
 // --- List Categories ---
 
-type LibraryListCategoriesInput struct {
-	Locale string `query:"locale,omitempty" doc:"Language code for localized names"`
-}
+type LibraryListCategoriesInput struct{}
 
 type CategoryNodeResponse struct {
 	ID        uuid.UUID              `json:"id" doc:"Category ID"`
@@ -63,7 +61,6 @@ type ListTemplateGroupsOutput struct {
 
 type GetPublicTemplateGroupInput struct {
 	GroupID uuid.UUID `path:"groupId" doc:"Template group ID"`
-	Locale  string    `query:"locale,omitempty" doc:"Language code"`
 }
 
 type LanguageVariantResponse struct {
