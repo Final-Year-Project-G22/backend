@@ -194,7 +194,14 @@
       "muteAdded": "Mute added",
       "muteRemoved": "Mute removed",
       "preferencesUpdated": "Preferences updated",
-      "deliveryChannelUpdated": "Delivery channel updated"
+      "deliveryChannelUpdated": "Delivery channel updated",
+      "archived": "Notification archived",
+      "preferenceSet": "Preference set",
+      "preferenceDeleted": "Preference deleted",
+      "accountMuted": "Account muted",
+      "accountUnmuted": "Account unmuted",
+      "deviceRegistered": "Device registered",
+      "deviceDeactivated": "Device deactivated"
     }
   },
   "payment": {
