@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type ComplianceHandler struct {
@@ -38,7 +39,7 @@ func (h *ComplianceHandler) HandleCreate(ctx context.Context, input *dto.CreateC
 	}
 	return &dto.CreateComplianceEntryOutput{Body: dto.CreateComplianceEntryResponseBody{
 		ID:      entry.ID,
-		Message: "Compliance entry created",
+		Message: i18n.T(ctx, "notification.successes.complianceEntryCreated"),
 	}}, nil
 }
 
@@ -48,7 +49,7 @@ func (h *ComplianceHandler) HandleUpdate(ctx context.Context, input *dto.UpdateC
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.UpdateComplianceEntryOutput{Body: dto.UpdateComplianceEntryResponseBody{
-		Message: "Compliance entry updated",
+		Message: i18n.T(ctx, "notification.successes.complianceEntryUpdated"),
 	}}, nil
 }
 
@@ -58,7 +59,7 @@ func (h *ComplianceHandler) HandleDelete(ctx context.Context, input *dto.DeleteC
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.DeleteComplianceEntryOutput{Body: dto.DeleteComplianceEntryResponseBody{
-		Message: "Compliance entry deleted",
+		Message: i18n.T(ctx, "notification.successes.complianceEntryDeleted"),
 	}}, nil
 }
 

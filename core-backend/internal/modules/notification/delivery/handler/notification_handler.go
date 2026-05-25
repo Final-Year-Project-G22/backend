@@ -7,6 +7,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type NotificationHandler struct {
@@ -66,7 +67,7 @@ func (h *NotificationHandler) HandleMarkAsRead(ctx context.Context, input *dto.M
 	if err := h.inboxUC.MarkAsRead(ctx, accountID, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.MarkAsReadOutput{Body: dto.MarkAsReadResponseBody{Message: "Marked as read"}}, nil
+	return &dto.MarkAsReadOutput{Body: dto.MarkAsReadResponseBody{Message: i18n.T(ctx, "notification.successes.markedAsRead")}}, nil
 }
 
 func (h *NotificationHandler) HandleMarkAllAsRead(ctx context.Context, input *struct{}) (*dto.MarkAllAsReadOutput, error) {
@@ -74,7 +75,7 @@ func (h *NotificationHandler) HandleMarkAllAsRead(ctx context.Context, input *st
 	if err := h.inboxUC.MarkAllAsRead(ctx, accountID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.MarkAllAsReadOutput{Body: dto.MarkAllAsReadResponseBody{Message: "All marked as read"}}, nil
+	return &dto.MarkAllAsReadOutput{Body: dto.MarkAllAsReadResponseBody{Message: i18n.T(ctx, "notification.successes.markedAllAsRead")}}, nil
 }
 
 func (h *NotificationHandler) HandleArchiveNotification(ctx context.Context, input *dto.ArchiveNotificationInput) (*dto.ArchiveNotificationOutput, error) {
@@ -82,7 +83,7 @@ func (h *NotificationHandler) HandleArchiveNotification(ctx context.Context, inp
 	if err := h.inboxUC.ArchiveNotification(ctx, accountID, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.ArchiveNotificationOutput{Body: dto.ArchiveNotificationResponseBody{Message: "Notification archived"}}, nil
+	return &dto.ArchiveNotificationOutput{Body: dto.ArchiveNotificationResponseBody{Message: i18n.T(ctx, "notification.successes.archived")}}, nil
 }
 
 func (h *NotificationHandler) HandleDeleteNotification(ctx context.Context, input *dto.DeleteNotificationInput) (*dto.DeleteNotificationOutput, error) {
@@ -90,7 +91,7 @@ func (h *NotificationHandler) HandleDeleteNotification(ctx context.Context, inpu
 	if err := h.inboxUC.DeleteNotification(ctx, accountID, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteNotificationOutput{Body: dto.DeleteNotificationResponseBody{Message: "Notification deleted"}}, nil
+	return &dto.DeleteNotificationOutput{Body: dto.DeleteNotificationResponseBody{Message: i18n.T(ctx, "notification.successes.deleted")}}, nil
 }
 
 // --- History ---
@@ -136,7 +137,7 @@ func (h *NotificationHandler) HandleSetPreference(ctx context.Context, input *dt
 	if err := h.prefUC.SetPreference(ctx, accountID, dto.ToSetPreferenceInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.SetPreferenceOutput{Body: dto.SetPreferenceResponseBody{Message: "Preference set"}}, nil
+	return &dto.SetPreferenceOutput{Body: dto.SetPreferenceResponseBody{Message: i18n.T(ctx, "notification.successes.preferenceSet")}}, nil
 }
 
 func (h *NotificationHandler) HandleDeletePreference(ctx context.Context, input *dto.DeletePreferenceInput) (*dto.DeletePreferenceOutput, error) {
@@ -144,7 +145,7 @@ func (h *NotificationHandler) HandleDeletePreference(ctx context.Context, input 
 	if err := h.prefUC.DeletePreference(ctx, accountID, input.NotificationType, input.Channel); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeletePreferenceOutput{Body: dto.DeletePreferenceResponseBody{Message: "Preference deleted"}}, nil
+	return &dto.DeletePreferenceOutput{Body: dto.DeletePreferenceResponseBody{Message: i18n.T(ctx, "notification.successes.preferenceDeleted")}}, nil
 }
 
 // --- Mutes ---
@@ -171,7 +172,7 @@ func (h *NotificationHandler) HandleMuteAccount(ctx context.Context, input *dto.
 	if err := h.muteUC.MuteAccount(ctx, accountID, dto.ToMuteAccountInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.MuteAccountOutput{Body: dto.MuteAccountResponseBody{Message: "Account muted"}}, nil
+	return &dto.MuteAccountOutput{Body: dto.MuteAccountResponseBody{Message: i18n.T(ctx, "notification.successes.accountMuted")}}, nil
 }
 
 func (h *NotificationHandler) HandleUnmuteAccount(ctx context.Context, input *dto.UnmuteAccountInput) (*dto.UnmuteAccountOutput, error) {
@@ -179,7 +180,7 @@ func (h *NotificationHandler) HandleUnmuteAccount(ctx context.Context, input *dt
 	if err := h.muteUC.UnmuteAccount(ctx, accountID, input.MutedAccountID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UnmuteAccountOutput{Body: dto.UnmuteAccountResponseBody{Message: "Account unmuted"}}, nil
+	return &dto.UnmuteAccountOutput{Body: dto.UnmuteAccountResponseBody{Message: i18n.T(ctx, "notification.successes.accountUnmuted")}}, nil
 }
 
 // --- Devices ---
@@ -199,7 +200,7 @@ func (h *NotificationHandler) HandleRegisterDevice(ctx context.Context, input *d
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.RegisterDeviceOutput{Body: dto.RegisterDeviceResponseBody{ID: device.ID, Message: "Device registered"}}, nil
+	return &dto.RegisterDeviceOutput{Body: dto.RegisterDeviceResponseBody{ID: device.ID, Message: i18n.T(ctx, "notification.successes.deviceRegistered")}}, nil
 }
 
 func (h *NotificationHandler) HandleUpdateDevice(ctx context.Context, input *dto.UpdateDeviceInput) (*dto.UpdateDeviceOutput, error) {
@@ -216,7 +217,7 @@ func (h *NotificationHandler) HandleDeactivateDevice(ctx context.Context, input 
 	if err := h.deviceUC.DeactivateDevice(ctx, accountID, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeactivateDeviceOutput{Body: dto.DeactivateDeviceResponseBody{Message: "Device deactivated"}}, nil
+	return &dto.DeactivateDeviceOutput{Body: dto.DeactivateDeviceResponseBody{Message: i18n.T(ctx, "notification.successes.deviceDeactivated")}}, nil
 }
 
 // --- Helpers ---

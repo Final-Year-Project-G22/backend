@@ -11,6 +11,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 )
@@ -271,7 +272,7 @@ func (h *CommunityHandler) HandleUpdateThread(ctx context.Context, input *dto.Up
 
 	h.communityService.NotifyThreadUpdated(ctx, input.ID)
 
-	return &dto.UpdateThreadOutput{Body: dto.UpdateThreadResponseBody{Message: "Thread updated"}}, nil
+	return &dto.UpdateThreadOutput{Body: dto.UpdateThreadResponseBody{Message: i18n.T(ctx, "community.successes.threadUpdated")}}, nil
 }
 
 func (h *CommunityHandler) HandleDeleteThread(ctx context.Context, input *dto.DeleteThreadInput) (*dto.DeleteThreadOutput, error) {
@@ -281,7 +282,7 @@ func (h *CommunityHandler) HandleDeleteThread(ctx context.Context, input *dto.De
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 
-	return &dto.DeleteThreadOutput{Body: dto.DeleteThreadResponseBody{Message: "Thread deleted"}}, nil
+	return &dto.DeleteThreadOutput{Body: dto.DeleteThreadResponseBody{Message: i18n.T(ctx, "community.successes.threadDeleted")}}, nil
 }
 
 func (h *CommunityHandler) HandleCreatePost(ctx context.Context, input *dto.CreatePostInput) (*dto.CreatePostOutput, error) {
@@ -334,7 +335,7 @@ func (h *CommunityHandler) HandleUpdatePost(ctx context.Context, input *dto.Upda
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdatePostOutput{Body: dto.UpdatePostResponseBody{Message: "Post updated"}}, nil
+	return &dto.UpdatePostOutput{Body: dto.UpdatePostResponseBody{Message: i18n.T(ctx, "community.successes.postUpdated")}}, nil
 }
 
 func (h *CommunityHandler) HandleDeletePost(ctx context.Context, input *dto.DeletePostInput) (*dto.DeletePostOutput, error) {
@@ -342,7 +343,7 @@ func (h *CommunityHandler) HandleDeletePost(ctx context.Context, input *dto.Dele
 	if err := h.postUsecase.DeletePost(ctx, accountID, input.PostID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeletePostOutput{Body: dto.DeletePostResponseBody{Message: "Post deleted"}}, nil
+	return &dto.DeletePostOutput{Body: dto.DeletePostResponseBody{Message: i18n.T(ctx, "community.successes.postDeleted")}}, nil
 }
 
 func (h *CommunityHandler) HandleMarkSolution(ctx context.Context, input *dto.MarkSolutionInput) (*dto.MarkSolutionOutput, error) {
@@ -350,7 +351,7 @@ func (h *CommunityHandler) HandleMarkSolution(ctx context.Context, input *dto.Ma
 	if err := h.communityService.MarkSolution(ctx, accountID, input.ThreadID, input.PostID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.MarkSolutionOutput{Body: dto.MarkSolutionResponseBody{Message: "Solution marked"}}, nil
+	return &dto.MarkSolutionOutput{Body: dto.MarkSolutionResponseBody{Message: i18n.T(ctx, "community.successes.solutionMarked")}}, nil
 }
 
 func (h *CommunityHandler) HandleFollowThread(ctx context.Context, input *dto.FollowThreadInput) (*dto.FollowThreadOutput, error) {
@@ -358,7 +359,7 @@ func (h *CommunityHandler) HandleFollowThread(ctx context.Context, input *dto.Fo
 	if err := h.communityService.FollowThread(ctx, accountID, input.ThreadID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.FollowThreadOutput{Body: dto.FollowResponseBody{Message: "Thread followed"}}, nil
+	return &dto.FollowThreadOutput{Body: dto.FollowResponseBody{Message: i18n.T(ctx, "community.successes.threadFollowed")}}, nil
 }
 
 func (h *CommunityHandler) HandleUnfollowThread(ctx context.Context, input *dto.UnfollowThreadInput) (*dto.UnfollowThreadOutput, error) {
@@ -366,7 +367,7 @@ func (h *CommunityHandler) HandleUnfollowThread(ctx context.Context, input *dto.
 	if err := h.communityService.UnfollowThread(ctx, accountID, input.ThreadID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UnfollowThreadOutput{Body: dto.FollowResponseBody{Message: "Thread unfollowed"}}, nil
+	return &dto.UnfollowThreadOutput{Body: dto.FollowResponseBody{Message: i18n.T(ctx, "community.successes.threadUnfollowed")}}, nil
 }
 
 func (h *CommunityHandler) HandleMarkThreadRead(ctx context.Context, input *dto.MarkThreadReadInput) (*dto.MarkThreadReadOutput, error) {
@@ -374,7 +375,7 @@ func (h *CommunityHandler) HandleMarkThreadRead(ctx context.Context, input *dto.
 	if err := h.communityService.MarkThreadRead(ctx, accountID, input.ThreadID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.MarkThreadReadOutput{Body: dto.MarkThreadReadResponseBody{Message: "Thread marked as read"}}, nil
+	return &dto.MarkThreadReadOutput{Body: dto.MarkThreadReadResponseBody{Message: i18n.T(ctx, "community.successes.threadMarkedAsRead")}}, nil
 }
 
 func (h *CommunityHandler) HandleFollowCategory(ctx context.Context, input *dto.FollowCategoryInput) (*dto.FollowCategoryOutput, error) {
@@ -382,7 +383,7 @@ func (h *CommunityHandler) HandleFollowCategory(ctx context.Context, input *dto.
 	if err := h.communityService.FollowCategory(ctx, accountID, input.CategoryID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.FollowCategoryOutput{Body: dto.FollowResponseBody{Message: "Category followed"}}, nil
+	return &dto.FollowCategoryOutput{Body: dto.FollowResponseBody{Message: i18n.T(ctx, "community.successes.categoryFollowed")}}, nil
 }
 
 func (h *CommunityHandler) HandleUnfollowCategory(ctx context.Context, input *dto.UnfollowCategoryInput) (*dto.UnfollowCategoryOutput, error) {
@@ -390,7 +391,7 @@ func (h *CommunityHandler) HandleUnfollowCategory(ctx context.Context, input *dt
 	if err := h.communityService.UnfollowCategory(ctx, accountID, input.CategoryID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UnfollowCategoryOutput{Body: dto.FollowResponseBody{Message: "Category unfollowed"}}, nil
+	return &dto.UnfollowCategoryOutput{Body: dto.FollowResponseBody{Message: i18n.T(ctx, "community.successes.categoryUnfollowed")}}, nil
 }
 
 func (h *CommunityHandler) HandleListFollowedThreads(ctx context.Context, input *dto.ListFollowedThreadsInput) (*dto.ListFollowedThreadsOutput, error) {
@@ -531,7 +532,7 @@ func (h *CommunityHandler) HandleBlockUser(ctx context.Context, input *dto.Block
 	}); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.BlockUserOutput{Body: dto.BlockUserResponseBody{Message: "User blocked"}}, nil
+	return &dto.BlockUserOutput{Body: dto.BlockUserResponseBody{Message: i18n.T(ctx, "community.successes.userBlocked")}}, nil
 }
 
 func (h *CommunityHandler) HandleUnblockUser(ctx context.Context, input *dto.UnblockUserInput) (*dto.UnblockUserOutput, error) {
@@ -544,7 +545,7 @@ func (h *CommunityHandler) HandleUnblockUser(ctx context.Context, input *dto.Unb
 	}); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UnblockUserOutput{Body: dto.BlockUserResponseBody{Message: "User unblocked"}}, nil
+	return &dto.UnblockUserOutput{Body: dto.BlockUserResponseBody{Message: i18n.T(ctx, "community.successes.userUnblocked")}}, nil
 }
 
 type UploadAttachmentsFormData struct {
@@ -625,5 +626,5 @@ func (h *CommunityHandler) HandleDeleteOrphanAttachment(ctx context.Context, inp
 	if err := h.attachmentUsecase.DeleteOrphan(ctx, input.ID, accountID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeletePostOutput{Body: dto.DeletePostResponseBody{Message: "Attachment deleted"}}, nil
+	return &dto.DeletePostOutput{Body: dto.DeletePostResponseBody{Message: i18n.T(ctx, "community.successes.attachmentDeleted")}}, nil
 }
