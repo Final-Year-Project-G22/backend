@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type AdminHandler struct {
@@ -41,7 +42,7 @@ func (h *AdminHandler) HandleRegisterAdmin(ctx context.Context, input *dto.Admin
 	return &dto.AdminRegisterOutput{
 		Body: dto.AdminRegisterResponseBody{
 			AccountID: result.AccountID,
-			Message:   "Admin account created",
+			Message:   i18n.T(ctx, "iam.successes.adminAccountCreated"),
 		},
 	}, nil
 }
@@ -64,7 +65,7 @@ func (h *AdminHandler) HandleUpdateAdminRoles(ctx context.Context, input *dto.Ad
 		Body: struct {
 			Message string `json:"message" doc:"Status message"`
 		}{
-			Message: "Admin roles updated",
+			Message: i18n.T(ctx, "iam.successes.adminRolesUpdated"),
 		},
 	}, nil
 }
@@ -142,7 +143,7 @@ func (h *AdminHandler) HandleUpdateAdminStatus(ctx context.Context, input *dto.U
 		Body: struct {
 			Message string `json:"message" doc:"Status message"`
 		}{
-			Message: "Admin status updated",
+			Message: i18n.T(ctx, "iam.successes.adminStatusUpdated"),
 		},
 	}, nil
 }
@@ -164,7 +165,7 @@ func (h *AdminHandler) HandleResetAdminPassword(ctx context.Context, input *dto.
 		Body: struct {
 			Message string `json:"message" doc:"Status message"`
 		}{
-			Message: "Password reset link sent",
+			Message: i18n.T(ctx, "iam.successes.passwordResetLinkSent"),
 		},
 	}, nil
 }
@@ -178,7 +179,7 @@ func (h *AdminHandler) HandleCompleteAdminPasswordReset(ctx context.Context, inp
 		Body: struct {
 			Message string `json:"message" doc:"Status message"`
 		}{
-			Message: "Password reset successfully",
+			Message: i18n.T(ctx, "iam.successes.passwordResetSuccessfully"),
 		},
 	}, nil
 }

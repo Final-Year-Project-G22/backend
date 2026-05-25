@@ -75,7 +75,7 @@ func (u *paymentUseCase) InitiatePayment(ctx context.Context, accountID uuid.UUI
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
 	if plan == nil {
-		return nil, errors.BadRequestError("errors.planNotFound")
+		return nil, errors.BadRequestError("payment.errors.planNotFound")
 	}
 
 	// 2. Generate deterministic tx_ref
@@ -101,7 +101,7 @@ func (u *paymentUseCase) InitiatePayment(ctx context.Context, accountID uuid.UUI
 		}
 	}
 	if existing != nil && existing.Status == entity.PaymentStatusSuccess {
-		return nil, errors.BadRequestError("errors.alreadyPaid")
+		return nil, errors.BadRequestError("payment.errors.alreadyPaid")
 	}
 
 	// 4. Create payment record
@@ -141,7 +141,7 @@ func (u *paymentUseCase) InitiatePayment(ctx context.Context, accountID uuid.UUI
 	chapaResp, err := u.chapaClient.InitializeTransaction(ctx, chapaReq)
 	if err != nil {
 		u.logger.Error("chapa initialize failed", core.Error(err), core.String("txRef", txRef))
-		return nil, errors.InternalError("errors.paymentInitFailed", err)
+		return nil, errors.InternalError("payment.errors.paymentInitFailed", err)
 	}
 
 	// 6. Update payment with Chapa reference
@@ -170,7 +170,7 @@ func (u *paymentUseCase) VerifyPayment(ctx context.Context, accountID uuid.UUID,
 		return nil, errors.InternalError("errors.databaseError", err)
 	}
 	if payment == nil {
-		return nil, errors.NotFoundError("payment", txRef)
+		return nil, errors.NotFoundErrorWithKey("payment.errors.paymentNotFound")
 	}
 	if payment.AccountID != accountID {
 		return nil, errors.ForbiddenError("errors.unauthorized")
@@ -189,13 +189,13 @@ func (u *paymentUseCase) VerifyPayment(ctx context.Context, accountID uuid.UUID,
 func (u *paymentUseCase) HandleWebhook(ctx context.Context, eventBody []byte, signature string) error {
 	// 1. Verify signature
 	if !chapa.VerifySignature(eventBody, signature, u.cfg.Chapa.WebhookSecret) {
-		return errors.UnauthorizedError("errors.invalidSignature")
+		return errors.UnauthorizedError("payment.errors.invalidSignature")
 	}
 
 	// 2. Parse event
 	var event chapa.WebhookEvent
 	if err := json.Unmarshal(eventBody, &event); err != nil {
-		return errors.BadRequestError("errors.invalidWebhookPayload")
+		return errors.BadRequestError("payment.errors.invalidWebhookPayload")
 	}
 
 	// 3. Find payment
@@ -229,7 +229,7 @@ func (u *paymentUseCase) processVerification(ctx context.Context, payment *entit
 	chapaResp, err := u.chapaClient.VerifyTransaction(ctx, payment.TxRef)
 	if err != nil {
 		u.logger.Error("chapa verify failed", core.Error(err), core.String("txRef", payment.TxRef))
-		return nil, errors.InternalError("errors.paymentVerifyFailed", err)
+		return nil, errors.InternalError("payment.errors.paymentVerifyFailed", err)
 	}
 
 	// Determine status from Chapa response
@@ -295,7 +295,7 @@ func (u *paymentUseCase) processVerification(ctx context.Context, payment *entit
 	})
 
 	if err != nil {
-		return nil, errors.InternalError("errors.transactionFailed", err)
+		return nil, errors.InternalError("payment.errors.transactionFailed", err)
 	}
 
 	return result, nil
