@@ -2,13 +2,13 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	notiferror "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/error"
 	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
+	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
 )
 
@@ -32,7 +32,7 @@ func NewComplianceEntryUsecase(
 
 func (uc *complianceEntryUsecase) Create(ctx context.Context, accountID uuid.UUID, input usecase.CreateComplianceEntryInput) (*entity.ComplianceEntry, error) {
 	if input.ExpiryDate.Before(time.Now().UTC()) {
-		return nil, errors.New("notification: expiry date must be in the future")
+		return nil, apperrors.BadRequestError("notification.errors.complianceExpiryMustBeFuture")
 	}
 	if input.ReminderDaysBefore <= 0 {
 		input.ReminderDaysBefore = 30
