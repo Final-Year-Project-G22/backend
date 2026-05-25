@@ -5,17 +5,15 @@ import (
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
-	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
 
 type ListGuidesInput struct {
-	Page      int              `query:"page" doc:"Page number"`
-	PageSize  int              `query:"pageSize" doc:"Items per page"`
-	Locale    constants.Locale `query:"locale" doc:"Language locale (en, am)"`
-	SectorIDs string           `query:"sectorIds" doc:"Comma-separated sector IDs"`
-	TagIDs    string           `query:"tagIds" doc:"Comma-separated tag IDs"`
+	Page      int    `query:"page" doc:"Page number"`
+	PageSize  int    `query:"pageSize" doc:"Items per page"`
+	SectorIDs string `query:"sectorIds" doc:"Comma-separated sector IDs"`
+	TagIDs    string `query:"tagIds" doc:"Comma-separated tag IDs"`
 }
 
 type ListGuidesOutput struct {
@@ -37,10 +35,9 @@ type GuideCardDTO struct {
 }
 
 type SearchGuidesInput struct {
-	Keyword  string           `query:"q" doc:"Search keyword" minLength:"1"`
-	Page     int              `query:"page" doc:"Page number"`
-	PageSize int              `query:"pageSize" doc:"Items per page"`
-	Locale   constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	Keyword  string `query:"q" doc:"Search keyword" minLength:"1"`
+	Page     int    `query:"page" doc:"Page number"`
+	PageSize int    `query:"pageSize" doc:"Items per page"`
 }
 
 type SearchGuidesOutput struct {
@@ -60,9 +57,7 @@ type GuideWithProgressDTO struct {
 	TotalSteps     int       `json:"totalSteps" doc:"Total steps count"`
 }
 
-type GetInProgressGuidesInput struct {
-	Locale constants.Locale `query:"locale" doc:"Language locale (en, am)"`
-}
+type GetInProgressGuidesInput struct{}
 
 type GetInProgressGuidesOutput struct {
 	Body GetInProgressGuidesResponseBody
@@ -114,9 +109,8 @@ func ToCompletionStatsDTO(s *usecase.CompletionStats) *CompletionStatsDTO {
 }
 
 type GetRecentlyViewedInput struct {
-	Page     int              `query:"page" doc:"Page number"`
-	PageSize int              `query:"pageSize" doc:"Items per page"`
-	Locale   constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	Page     int `query:"page" doc:"Page number"`
+	PageSize int `query:"pageSize" doc:"Items per page"`
 }
 
 type GetRecentlyViewedOutput struct {
@@ -128,8 +122,7 @@ type GetRecentlyViewedResponseBody struct {
 }
 
 type GetPersonalizedGuideInput struct {
-	GuideSlug string           `path:"guideSlug" doc:"Guide slug" minLength:"1"`
-	Locale    constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	GuideSlug string `path:"guideSlug" doc:"Guide slug" minLength:"1"`
 }
 
 type GetPersonalizedGuideOutput struct {
@@ -165,8 +158,7 @@ type GuideProgressSummaryDTO struct {
 }
 
 type GetCurrentStepInput struct {
-	GuideSlug string           `path:"guideSlug" doc:"Guide slug" minLength:"1"`
-	Locale    constants.Locale `query:"locale" doc:"Language locale (en, am)"`
+	GuideSlug string `path:"guideSlug" doc:"Guide slug" minLength:"1"`
 }
 
 type GetCurrentStepOutput struct {

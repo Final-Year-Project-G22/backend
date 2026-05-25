@@ -6,7 +6,9 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type GuideViewHandler struct {
@@ -24,7 +26,7 @@ func (h *GuideViewHandler) HandleListGuides(ctx context.Context, input *dto.List
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
 	sectorIDs := dto.ParseCSVToUUIDs(input.SectorIDs)
 	tagIDs := dto.ParseCSVToUUIDs(input.TagIDs)
-	cards, err := h.guideViewUC.ListGuides(ctx, accountID, userID, q, input.Locale, sectorIDs, tagIDs)
+	cards, err := h.guideViewUC.ListGuides(ctx, accountID, userID, q, constants.Locale(i18n.LocaleFromContext(ctx)), sectorIDs, tagIDs)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -44,7 +46,7 @@ func (h *GuideViewHandler) HandleSearchGuides(ctx context.Context, input *dto.Se
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	cards, err := h.guideViewUC.SearchGuides(ctx, accountID, userID, input.Keyword, q, input.Locale)
+	cards, err := h.guideViewUC.SearchGuides(ctx, accountID, userID, input.Keyword, q, constants.Locale(i18n.LocaleFromContext(ctx)))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -63,7 +65,7 @@ func (h *GuideViewHandler) HandleGetInProgressGuides(ctx context.Context, input 
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
-	guides, err := h.guideViewUC.GetInProgressGuides(ctx, accountID, userID, input.Locale)
+	guides, err := h.guideViewUC.GetInProgressGuides(ctx, accountID, userID, constants.Locale(i18n.LocaleFromContext(ctx)))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -97,7 +99,7 @@ func (h *GuideViewHandler) HandleGetRecentlyViewed(ctx context.Context, input *d
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	cards, err := h.guideViewUC.GetRecentlyViewed(ctx, accountID, userID, q, input.Locale)
+	cards, err := h.guideViewUC.GetRecentlyViewed(ctx, accountID, userID, q, constants.Locale(i18n.LocaleFromContext(ctx)))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -116,7 +118,7 @@ func (h *GuideViewHandler) HandleGetPersonalizedGuide(ctx context.Context, input
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
-	guide, err := h.guideViewUC.GetPersonalizedGuide(ctx, accountID, userID, input.GuideSlug, input.Locale)
+	guide, err := h.guideViewUC.GetPersonalizedGuide(ctx, accountID, userID, input.GuideSlug, constants.Locale(i18n.LocaleFromContext(ctx)))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -142,7 +144,7 @@ func (h *GuideViewHandler) HandleGetCurrentStep(ctx context.Context, input *dto.
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
-	step, err := h.guideViewUC.GetCurrentStep(ctx, accountID, userID, input.GuideSlug, input.Locale)
+	step, err := h.guideViewUC.GetCurrentStep(ctx, accountID, userID, input.GuideSlug, constants.Locale(i18n.LocaleFromContext(ctx)))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
@@ -175,7 +177,7 @@ func (h *GuideViewHandler) HandleStartStep(ctx context.Context, input *dto.Start
 	}
 
 	return &dto.StartStepOutput{
-		Body: dto.StartStepResponseBody{Message: "Step started"},
+		Body: dto.StartStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepStarted")},
 	}, nil
 }
 
@@ -192,7 +194,7 @@ func (h *GuideViewHandler) HandleCompleteStep(ctx context.Context, input *dto.Co
 	}
 
 	return &dto.CompleteStepOutput{
-		Body: dto.CompleteStepResponseBody{Message: "Step completed"},
+		Body: dto.CompleteStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepCompleted")},
 	}, nil
 }
 
@@ -205,7 +207,7 @@ func (h *GuideViewHandler) HandleMarkStepIncomplete(ctx context.Context, input *
 	}
 
 	return &dto.MarkStepIncompleteOutput{
-		Body: dto.MarkStepIncompleteResponseBody{Message: "Step marked as incomplete"},
+		Body: dto.MarkStepIncompleteResponseBody{Message: i18n.T(ctx, "guide.successes.stepMarkedIncomplete")},
 	}, nil
 }
 
@@ -218,7 +220,7 @@ func (h *GuideViewHandler) HandleSkipOptionalStep(ctx context.Context, input *dt
 	}
 
 	return &dto.SkipOptionalStepOutput{
-		Body: dto.SkipOptionalStepResponseBody{Message: "Step skipped"},
+		Body: dto.SkipOptionalStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepSkipped")},
 	}, nil
 }
 
@@ -235,7 +237,7 @@ func (h *GuideViewHandler) HandleUpdateProgress(ctx context.Context, input *dto.
 	}
 
 	return &dto.UpdateProgressOutput{
-		Body: dto.UpdateProgressResponseBody{Message: "Progress updated"},
+		Body: dto.UpdateProgressResponseBody{Message: i18n.T(ctx, "guide.successes.progressUpdated")},
 	}, nil
 }
 
@@ -248,7 +250,7 @@ func (h *GuideViewHandler) HandleAddBookmark(ctx context.Context, input *dto.Add
 	}
 
 	return &dto.AddBookmarkOutput{
-		Body: dto.AddBookmarkResponseBody{Message: "Bookmark added"},
+		Body: dto.AddBookmarkResponseBody{Message: i18n.T(ctx, "guide.successes.bookmarkAdded")},
 	}, nil
 }
 
@@ -261,7 +263,7 @@ func (h *GuideViewHandler) HandleUpdateBookmarkNote(ctx context.Context, input *
 	}
 
 	return &dto.UpdateBookmarkNoteOutput{
-		Body: dto.UpdateBookmarkNoteResponseBody{Message: "Bookmark updated"},
+		Body: dto.UpdateBookmarkNoteResponseBody{Message: i18n.T(ctx, "guide.successes.bookmarkUpdated")},
 	}, nil
 }
 
@@ -274,7 +276,7 @@ func (h *GuideViewHandler) HandleRemoveBookmark(ctx context.Context, input *dto.
 	}
 
 	return &dto.RemoveBookmarkOutput{
-		Body: dto.RemoveBookmarkResponseBody{Message: "Bookmark removed"},
+		Body: dto.RemoveBookmarkResponseBody{Message: i18n.T(ctx, "guide.successes.bookmarkRemoved")},
 	}, nil
 }
 

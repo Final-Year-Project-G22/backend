@@ -594,6 +594,9 @@
       "AdminGuideStepDTO": {
         "additionalProperties": false,
         "properties": {
+          "complianceType": {
+            "type": "string"
+          },
           "difficultyLevel": {
             "format": "int64",
             "type": "integer"
@@ -1309,6 +1312,43 @@
         ],
         "type": "object"
       },
+      "CalendarEntryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "daysRemaining": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "referenceNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "date",
+          "daysRemaining",
+          "status"
+        ],
+        "type": "object"
+      },
       "CampaignCreatedByResponse": {
         "additionalProperties": false,
         "properties": {
@@ -1513,6 +1553,10 @@
             "description": "Template description",
             "type": "string"
           },
+          "enablePushMirror": {
+            "description": "Whether push mirroring is enabled",
+            "type": "boolean"
+          },
           "id": {
             "description": "Template ID",
             "type": "string"
@@ -1536,6 +1580,7 @@
           "id",
           "name",
           "defaultContent",
+          "enablePushMirror",
           "createdAt"
         ],
         "type": "object"
@@ -1634,6 +1679,27 @@
           },
           "message": {
             "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "CancelScheduledAlertResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CancelScheduledAlertResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
             "type": "string"
           }
         },
@@ -2044,6 +2110,75 @@
         ],
         "type": "object"
       },
+      "ComplianceEntryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "string"
+          },
+          "businessProfileId": {
+            "type": "string"
+          },
+          "complianceType": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "issuedDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "lastNotifiedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "referenceNumber": {
+            "type": "string"
+          },
+          "reminderDaysBefore": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "businessProfileId",
+          "accountId",
+          "complianceType",
+          "expiryDate",
+          "reminderDaysBefore",
+          "status",
+          "source"
+        ],
+        "type": "object"
+      },
+      "ComplianceTypeResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "label"
+        ],
+        "type": "object"
+      },
       "ContentDTO": {
         "additionalProperties": false,
         "properties": {
@@ -2375,6 +2510,10 @@
             "description": "Template description",
             "type": "string"
           },
+          "enablePushMirror": {
+            "description": "Enable automatic push mirroring from in-app content",
+            "type": "boolean"
+          },
           "name": {
             "description": "Template name",
             "maxLength": 200,
@@ -2384,7 +2523,8 @@
         },
         "required": [
           "name",
-          "defaultContent"
+          "defaultContent",
+          "enablePushMirror"
         ],
         "type": "object"
       },
@@ -2469,6 +2609,73 @@
         },
         "required": [
           "id"
+        ],
+        "type": "object"
+      },
+      "CreateComplianceEntryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateComplianceEntryRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "businessProfileId": {
+            "type": "string"
+          },
+          "complianceType": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "issuedDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "referenceNumber": {
+            "type": "string"
+          },
+          "reminderDaysBefore": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "businessProfileId",
+          "complianceType",
+          "expiryDate",
+          "reminderDaysBefore"
+        ],
+        "type": "object"
+      },
+      "CreateComplianceEntryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateComplianceEntryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "message"
         ],
         "type": "object"
       },
@@ -2844,6 +3051,74 @@
         ],
         "type": "object"
       },
+      "CreateScheduledAlertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateScheduledAlertRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "scheduledFor": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "templateSlug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body",
+          "channels",
+          "scheduledFor"
+        ],
+        "type": "object"
+      },
+      "CreateScheduledAlertResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreateScheduledAlertResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "message"
+        ],
+        "type": "object"
+      },
       "CreateSectorRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2989,6 +3264,10 @@
             ],
             "format": "uri",
             "readOnly": true,
+            "type": "string"
+          },
+          "complianceType": {
+            "description": "Optional compliance type",
             "type": "string"
           },
           "conditions": {
@@ -3297,6 +3576,10 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          },
+          "thumbnailUrl": {
+            "description": "Thumbnail URL",
+            "type": "string"
           },
           "tierAccess": {
             "description": "Tier access level",
@@ -3663,6 +3946,27 @@
           },
           "message": {
             "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeleteComplianceEntryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DeleteComplianceEntryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
             "type": "string"
           }
         },
@@ -4092,6 +4396,10 @@
             "description": "Group ID",
             "type": "string"
           },
+          "groupName": {
+            "description": "Group name",
+            "type": "string"
+          },
           "id": {
             "description": "Download log ID",
             "type": "string"
@@ -4099,13 +4407,19 @@
           "templateId": {
             "description": "Template ID",
             "type": "string"
+          },
+          "templateTitle": {
+            "description": "Template title",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "accountId",
           "templateId",
+          "templateTitle",
           "groupId",
+          "groupName",
           "downloadedAt"
         ],
         "type": "object"
@@ -4120,6 +4434,10 @@
             ],
             "format": "uri",
             "readOnly": true,
+            "type": "string"
+          },
+          "contentType": {
+            "description": "MIME type",
             "type": "string"
           },
           "expiresAt": {
@@ -4138,7 +4456,8 @@
         "required": [
           "presignedUrl",
           "expiresAt",
-          "filename"
+          "filename",
+          "contentType"
         ],
         "type": "object"
       },
@@ -4395,6 +4714,33 @@
           "IsSet",
           "Size",
           "Filename"
+        ],
+        "type": "object"
+      },
+      "GetCalendarResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/GetCalendarResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntryResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "entries"
         ],
         "type": "object"
       },
@@ -5547,6 +5893,155 @@
         ],
         "type": "object"
       },
+      "LibraryCreateTemplateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/LibraryCreateTemplateRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "contentType": {
+            "description": "MIME type",
+            "type": "string"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "fileKey": {
+            "description": "Storage key from upload intent",
+            "minLength": 1,
+            "type": "string"
+          },
+          "fileSize": {
+            "description": "File size in bytes",
+            "format": "int64",
+            "type": "integer"
+          },
+          "language": {
+            "description": "Language code",
+            "maxLength": 10,
+            "minLength": 2,
+            "type": "string"
+          },
+          "title": {
+            "description": "Template title",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "fileKey",
+          "language",
+          "title",
+          "fileSize",
+          "contentType"
+        ],
+        "type": "object"
+      },
+      "LibraryCreateUploadIntentOutputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/LibraryCreateUploadIntentOutputBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "Upload URL expiry time",
+            "type": "string"
+          },
+          "fileKey": {
+            "description": "Storage key for the file",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Required upload headers",
+            "type": "object"
+          },
+          "method": {
+            "description": "HTTP method for upload",
+            "type": "string"
+          },
+          "uploadUrl": {
+            "description": "Direct upload URL",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadUrl",
+          "method",
+          "fileKey",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
+      "LibraryCreateUploadIntentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/LibraryCreateUploadIntentRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "contentType": {
+            "description": "MIME type",
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "description": "Template description",
+            "type": "string"
+          },
+          "fileName": {
+            "description": "Original filename",
+            "minLength": 1,
+            "type": "string"
+          },
+          "fileSize": {
+            "description": "File size in bytes",
+            "format": "int64",
+            "type": "integer"
+          },
+          "language": {
+            "description": "Language code",
+            "maxLength": 10,
+            "minLength": 2,
+            "type": "string"
+          },
+          "title": {
+            "description": "Template title",
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "title",
+          "fileName",
+          "contentType",
+          "fileSize"
+        ],
+        "type": "object"
+      },
       "LibraryDeleteCategoryOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -5703,6 +6198,58 @@
         },
         "required": [
           "blockedUsers",
+          "total",
+          "page",
+          "pageSize",
+          "totalPages"
+        ],
+        "type": "object"
+      },
+      "ListAllTemplateGroupsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListAllTemplateGroupsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "description": "Template groups",
+            "items": {
+              "$ref": "#/components/schemas/TemplateGroupSummaryResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "page": {
+            "description": "Current page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageSize": {
+            "description": "Items per page",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count",
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPages": {
+            "description": "Total pages",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "data",
           "total",
           "page",
           "pageSize",
@@ -5918,6 +6465,60 @@
         },
         "required": [
           "categories"
+        ],
+        "type": "object"
+      },
+      "ListComplianceEntriesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListComplianceEntriesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ComplianceEntryResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListComplianceTypesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListComplianceTypesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ComplianceTypeResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
         ],
         "type": "object"
       },
@@ -6531,6 +7132,60 @@
         },
         "required": [
           "roles"
+        ],
+        "type": "object"
+      },
+      "ListScheduledAlertsResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListScheduledAlertsResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledAlertResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListScheduledTemplatesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListScheduledTemplatesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduledTemplateResponse"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
         ],
         "type": "object"
       },
@@ -7847,6 +8502,43 @@
         ],
         "type": "object"
       },
+      "PreviewTemplateResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/PreviewTemplateResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "contentType": {
+            "description": "MIME type",
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "Expiry time",
+            "type": "string"
+          },
+          "filename": {
+            "description": "Suggested filename",
+            "type": "string"
+          },
+          "presignedUrl": {
+            "description": "Temporary preview URL",
+            "type": "string"
+          }
+        },
+        "required": [
+          "presignedUrl",
+          "expiresAt",
+          "filename",
+          "contentType"
+        ],
+        "type": "object"
+      },
       "QueueStatusResponse": {
         "additionalProperties": false,
         "properties": {
@@ -8536,6 +9228,54 @@
         ],
         "type": "object"
       },
+      "RescheduleScheduledAlertRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/RescheduleScheduledAlertRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "scheduledFor": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scheduledFor"
+        ],
+        "type": "object"
+      },
+      "RescheduleScheduledAlertResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/RescheduleScheduledAlertResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "previousScheduledFor": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "previousScheduledFor"
+        ],
+        "type": "object"
+      },
       "ResendEmailOTPResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -8685,6 +9425,95 @@
         },
         "required": [
           "message"
+        ],
+        "type": "object"
+      },
+      "ScheduledAlertResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "cancelledAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "rescheduledFrom": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "scheduledFor": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "sentAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "templateSlug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "channels",
+          "scheduledFor",
+          "status",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "ScheduledTemplateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "defaultBody": {
+            "type": "string"
+          },
+          "defaultChannel": {
+            "type": "string"
+          },
+          "defaultTitle": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "defaultTitle",
+          "defaultBody"
         ],
         "type": "object"
       },
@@ -10325,6 +11154,10 @@
             "description": "Template description",
             "type": "string"
           },
+          "enablePushMirror": {
+            "description": "Enable automatic push mirroring from in-app content",
+            "type": "boolean"
+          },
           "name": {
             "description": "Template name",
             "maxLength": 200,
@@ -10491,6 +11324,60 @@
           },
           "message": {
             "description": "Success message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "UpdateComplianceEntryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateComplianceEntryRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "expiryDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "issuedDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "referenceNumber": {
+            "type": "string"
+          },
+          "reminderDaysBefore": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateComplianceEntryResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateComplianceEntryResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "message": {
             "type": "string"
           }
         },
@@ -11081,6 +11968,10 @@
             "readOnly": true,
             "type": "string"
           },
+          "complianceType": {
+            "description": "Optional compliance type",
+            "type": "string"
+          },
           "conditions": {
             "description": "Visibility conditions",
             "items": {
@@ -11349,6 +12240,10 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          },
+          "thumbnailUrl": {
+            "description": "Thumbnail URL",
+            "type": "string"
           },
           "tierAccess": {
             "description": "Tier access level",
@@ -15530,13 +16425,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/TemplateGroupSummaryResponse"
-                  },
-                  "type": [
-                    "array",
-                    "null"
-                  ]
+                  "$ref": "#/components/schemas/ListAllTemplateGroupsResponseBody"
                 }
               }
             },
@@ -15817,7 +16706,7 @@
         ]
       },
       "post": {
-        "description": "Uploads a file and creates a template language variant.",
+        "description": "Creates a template language variant from a previously uploaded file.",
         "operationId": "LibraryCreateTemplate",
         "parameters": [
           {
@@ -15833,53 +16722,13 @@
         ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
-              "encoding": {
-                "description": {
-                  "contentType": "text/plain"
-                },
-                "file": {
-                  "contentType": "application/octet-stream"
-                },
-                "language": {
-                  "contentType": "text/plain"
-                },
-                "title": {
-                  "contentType": "text/plain"
-                }
-              },
+            "application/json": {
               "schema": {
-                "properties": {
-                  "description": {
-                    "description": "Template description",
-                    "type": "string"
-                  },
-                  "file": {
-                    "contentEncoding": "binary",
-                    "contentMediaType": "application/octet-stream",
-                    "description": "Template file",
-                    "format": "binary",
-                    "type": "string"
-                  },
-                  "language": {
-                    "description": "Language code",
-                    "type": "string"
-                  },
-                  "title": {
-                    "description": "Template title",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "file",
-                  "language",
-                  "title",
-                  "description"
-                ],
-                "type": "object"
+                "$ref": "#/components/schemas/LibraryCreateTemplateRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -15909,6 +16758,65 @@
           }
         ],
         "summary": "Create template",
+        "tags": [
+          "Admin - Library"
+        ]
+      }
+    },
+    "/api/v1/admin/library/template-groups/{groupId}/templates/upload-intent": {
+      "post": {
+        "description": "Generates a direct upload URL for a template file.",
+        "operationId": "LibraryCreateTemplateUploadIntent",
+        "parameters": [
+          {
+            "description": "Group ID",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "description": "Group ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryCreateUploadIntentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryCreateUploadIntentOutputBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create template upload intent",
         "tags": [
           "Admin - Library"
         ]
@@ -21776,6 +22684,274 @@
         ]
       }
     },
+    "/api/v1/compliance/calendar": {
+      "get": {
+        "description": "Returns upcoming compliance deadlines and scheduled alerts for the authenticated user.",
+        "operationId": "getComplianceCalendar",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCalendarResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get compliance calendar",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance/entries": {
+      "get": {
+        "description": "Lists all compliance entries for a business profile.",
+        "operationId": "listComplianceEntries",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "businessProfileId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListComplianceEntriesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List compliance entries",
+        "tags": [
+          "Compliance"
+        ]
+      },
+      "post": {
+        "description": "Creates a new compliance entry for a business profile.",
+        "operationId": "createComplianceEntry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComplianceEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateComplianceEntryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create compliance entry",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance/entries/{id}": {
+      "delete": {
+        "description": "Deletes a compliance entry.",
+        "operationId": "deleteComplianceEntry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteComplianceEntryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete compliance entry",
+        "tags": [
+          "Compliance"
+        ]
+      },
+      "patch": {
+        "description": "Updates a compliance entry.",
+        "operationId": "updateComplianceEntry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateComplianceEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateComplianceEntryResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update compliance entry",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/compliance/types": {
+      "get": {
+        "description": "Lists all seeded compliance types for dropdown selections.",
+        "operationId": "listComplianceTypes",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListComplianceTypesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List compliance types",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
     "/api/v1/guides": {
       "get": {
         "description": "Lists guides filtered by the user's business profile taxonomy (sector, tags, region, stage).",
@@ -21804,12 +22980,22 @@
             }
           },
           {
-            "description": "Language locale (en, am)",
+            "description": "Comma-separated sector IDs",
             "explode": false,
             "in": "query",
-            "name": "locale",
+            "name": "sectorIds",
             "schema": {
-              "description": "Language locale (en, am)",
+              "description": "Comma-separated sector IDs",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated tag IDs",
+            "explode": false,
+            "in": "query",
+            "name": "tagIds",
+            "schema": {
+              "description": "Comma-separated tag IDs",
               "type": "string"
             }
           }
@@ -21949,18 +23135,6 @@
       "get": {
         "description": "Retrieves guides the user has started but not completed, with progress data.",
         "operationId": "getInProgressGuides",
-        "parameters": [
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -22019,16 +23193,6 @@
               "description": "Items per page",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
             }
           }
         ],
@@ -22101,16 +23265,6 @@
               "description": "Items per page",
               "format": "int64",
               "type": "integer"
-            }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
             }
           }
         ],
@@ -22575,16 +23729,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -22635,16 +23779,6 @@
               "minLength": 1,
               "type": "string"
             }
-          },
-          {
-            "description": "Language locale (en, am)",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language locale (en, am)",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -22684,18 +23818,6 @@
       "get": {
         "description": "Lists active categories as a tree, optionally localized.",
         "operationId": "LibraryListCategories",
-        "parameters": [
-          {
-            "description": "Language code for localized names",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language code for localized names",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "content": {
@@ -22892,16 +24014,6 @@
               "description": "Template group ID",
               "type": "string"
             }
-          },
-          {
-            "description": "Language code",
-            "explode": false,
-            "in": "query",
-            "name": "locale",
-            "schema": {
-              "description": "Language code",
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -22981,6 +24093,60 @@
           }
         },
         "summary": "Download template",
+        "tags": [
+          "Library"
+        ]
+      }
+    },
+    "/api/v1/library/templates/{groupId}/preview": {
+      "get": {
+        "description": "Generates a short-lived presigned URL for previewing a template.",
+        "operationId": "LibraryPreviewTemplate",
+        "parameters": [
+          {
+            "description": "Template group ID",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "description": "Template group ID",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language code",
+            "explode": false,
+            "in": "query",
+            "name": "language",
+            "schema": {
+              "description": "Language code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewTemplateResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Preview template",
         "tags": [
           "Library"
         ]
@@ -23906,6 +25072,229 @@
           }
         ],
         "summary": "Delete preference",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/scheduled": {
+      "get": {
+        "description": "Lists all scheduled alerts for the authenticated user.",
+        "operationId": "listScheduledAlerts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListScheduledAlertsResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List scheduled alerts",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "post": {
+        "description": "Creates a new scheduled alert for the authenticated user.",
+        "operationId": "createScheduledAlert",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduledAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateScheduledAlertResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create scheduled alert",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/scheduled/templates": {
+      "get": {
+        "description": "Lists all available templates for creating scheduled alerts.",
+        "operationId": "listScheduledAlertTemplates",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListScheduledTemplatesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List scheduled alert templates",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/scheduled/{id}/cancel": {
+      "patch": {
+        "description": "Cancels a pending scheduled alert.",
+        "operationId": "cancelScheduledAlert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelScheduledAlertResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Cancel scheduled alert",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/scheduled/{id}/reschedule": {
+      "patch": {
+        "description": "Reschedules a pending scheduled alert to a new date.",
+        "operationId": "rescheduleScheduledAlert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleScheduledAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescheduleScheduledAlertResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reschedule scheduled alert",
         "tags": [
           "Notifications"
         ]

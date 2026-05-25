@@ -9,6 +9,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type NotificationAdminHandler struct {
@@ -85,14 +86,14 @@ func (h *NotificationAdminHandler) HandleUpdateTemplate(ctx context.Context, inp
 	if _, err := h.templateUC.UpdateTemplate(ctx, input.ID, dto.ToUpdateTemplateInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateTemplateOutput{Body: dto.UpdateTemplateResponseBody{Message: "Template updated"}}, nil
+	return &dto.UpdateTemplateOutput{Body: dto.UpdateTemplateResponseBody{Message: i18n.T(ctx, "notification.successes.adminTemplateUpdated")}}, nil
 }
 
 func (h *NotificationAdminHandler) HandleDeleteTemplate(ctx context.Context, input *dto.DeleteTemplateInput) (*dto.DeleteTemplateOutput, error) {
 	if err := h.templateUC.DeleteTemplate(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteTemplateOutput{Body: dto.DeleteTemplateResponseBody{Message: "Template deleted"}}, nil
+	return &dto.DeleteTemplateOutput{Body: dto.DeleteTemplateResponseBody{Message: i18n.T(ctx, "notification.successes.adminTemplateDeleted")}}, nil
 }
 
 func (h *NotificationAdminHandler) HandleAddTranslation(ctx context.Context, input *dto.AddTranslationInput) (*dto.AddTranslationOutput, error) {
@@ -109,14 +110,14 @@ func (h *NotificationAdminHandler) HandleUpdateTranslation(ctx context.Context, 
 	if _, err := h.templateUC.UpdateTranslation(ctx, input.TemplateID, input.Language, dto.ToUpdateTranslationInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateTranslationOutput{Body: dto.UpdateTranslationResponseBody{Message: "Translation updated"}}, nil
+	return &dto.UpdateTranslationOutput{Body: dto.UpdateTranslationResponseBody{Message: i18n.T(ctx, "notification.successes.adminTranslationUpdated")}}, nil
 }
 
 func (h *NotificationAdminHandler) HandleDeleteTranslation(ctx context.Context, input *dto.DeleteTranslationInput) (*dto.DeleteTranslationOutput, error) {
 	if err := h.templateUC.DeleteTranslation(ctx, input.TemplateID, input.Language); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteTranslationOutput{Body: dto.DeleteTranslationResponseBody{Message: "Translation deleted"}}, nil
+	return &dto.DeleteTranslationOutput{Body: dto.DeleteTranslationResponseBody{Message: i18n.T(ctx, "notification.successes.adminTranslationDeleted")}}, nil
 }
 
 // --- Monitoring ---
@@ -160,7 +161,7 @@ func (h *NotificationAdminHandler) HandleRetryFailed(ctx context.Context, input 
 	if err := h.deliveryUC.RetryFailed(ctx, batchSize); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.RetryFailedOutput{Body: dto.RetryFailedResponseBody{Message: "Retry initiated"}}, nil
+	return &dto.RetryFailedOutput{Body: dto.RetryFailedResponseBody{Message: i18n.T(ctx, "notification.successes.retryInitiated")}}, nil
 }
 
 // --- Campaigns ---
@@ -215,19 +216,19 @@ func (h *NotificationAdminHandler) HandleUpdateCampaign(ctx context.Context, inp
 	if _, err := h.campaignUC.UpdateCampaign(ctx, input.ID, dto.ToUpdateCampaignInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateCampaignOutput{Body: dto.UpdateCampaignResponseBody{Message: "Campaign updated"}}, nil
+	return &dto.UpdateCampaignOutput{Body: dto.UpdateCampaignResponseBody{Message: i18n.T(ctx, "notification.successes.campaignUpdated")}}, nil
 }
 
 func (h *NotificationAdminHandler) HandleScheduleCampaign(ctx context.Context, input *dto.ScheduleCampaignInput) (*dto.ScheduleCampaignOutput, error) {
 	if err := h.campaignUC.ScheduleCampaign(ctx, usecase.ScheduleCampaignInput{CampaignID: input.ID}); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.ScheduleCampaignOutput{Body: dto.ScheduleCampaignResponseBody{Message: "Campaign scheduled"}}, nil
+	return &dto.ScheduleCampaignOutput{Body: dto.ScheduleCampaignResponseBody{Message: i18n.T(ctx, "notification.successes.campaignScheduled")}}, nil
 }
 
 func (h *NotificationAdminHandler) HandleCancelCampaign(ctx context.Context, input *dto.CancelCampaignInput) (*dto.CancelCampaignOutput, error) {
 	if err := h.campaignUC.CancelCampaign(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.CancelCampaignOutput{Body: dto.CancelCampaignResponseBody{Message: "Campaign cancelled"}}, nil
+	return &dto.CancelCampaignOutput{Body: dto.CancelCampaignResponseBody{Message: i18n.T(ctx, "notification.successes.campaignCancelled")}}, nil
 }

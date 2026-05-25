@@ -8,6 +8,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 )
 
@@ -107,14 +108,14 @@ func (h *TaxonomyAdminHandler) HandleUpdateSector(ctx context.Context, input *dt
 			}
 		}
 	}
-	return &dto.UpdateSectorOutput{Body: dto.UpdateSectorResponseBody{Message: "Sector updated"}}, nil
+	return &dto.UpdateSectorOutput{Body: dto.UpdateSectorResponseBody{Message: i18n.T(ctx, "iam.successes.sectorUpdated")}}, nil
 }
 
 func (h *TaxonomyAdminHandler) HandleDeleteSector(ctx context.Context, input *dto.GetSectorInput) (*dto.UpdateSectorOutput, error) {
 	if err := h.sectorRepo.Delete(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateSectorOutput{Body: dto.UpdateSectorResponseBody{Message: "Sector deleted"}}, nil
+	return &dto.UpdateSectorOutput{Body: dto.UpdateSectorResponseBody{Message: i18n.T(ctx, "iam.successes.sectorDeleted")}}, nil
 }
 
 // --- Tag ---
@@ -208,14 +209,14 @@ func (h *TaxonomyAdminHandler) HandleUpdateTag(ctx context.Context, input *dto.U
 			}
 		}
 	}
-	return &dto.UpdateTagOutput{Body: dto.UpdateTagResponseBody{Message: "Tag updated"}}, nil
+	return &dto.UpdateTagOutput{Body: dto.UpdateTagResponseBody{Message: i18n.T(ctx, "iam.successes.tagUpdated")}}, nil
 }
 
 func (h *TaxonomyAdminHandler) HandleDeleteTag(ctx context.Context, input *dto.GetTagInput) (*dto.UpdateTagOutput, error) {
 	if err := h.tagRepo.Delete(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateTagOutput{Body: dto.UpdateTagResponseBody{Message: "Tag deleted"}}, nil
+	return &dto.UpdateTagOutput{Body: dto.UpdateTagResponseBody{Message: i18n.T(ctx, "iam.successes.tagDeleted")}}, nil
 }
 
 // --- Mappers ---

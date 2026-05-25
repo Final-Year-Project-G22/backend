@@ -27,21 +27,31 @@
       "invalidFileType": "ዋጋ የማይሰራ የፋይል አይነት። የተፈቀዱት: JPEG, PNG, GIF, WebP",
       "fileTooLarge": "የፋይል ልክ ከፍተኛ ነው (ከ5MB)",
       "readFileFailed": "ፋይል ለማንበብ ተሳካምንያለም",
-      "uploadFileFailed": "ፋይል ለማስተላለፍ ተሳካምንያለም",
-      "updateFailed": "የተጠቃሚ ገጽ ለማዘመር ተሳካምንያለም",
+      "uploadFailed": "ፋይሉን መጫን አልተሳካም",
       "failedToGenerateOtp": "የማረጋገጫ ኮድ ማመንጨት አልተሳካም",
       "invalidOtp": "የማረጋገጫ ኮድ የተሳሳተ ወይም ጊዜው ያለፈ ነው",
       "otpAttemptsExceeded": "ብዙ ጊዜ የተሳሳተ ኮድ ገብቷል። እባክዎ አዲስ ኮድ ይጠይቁ",
       "emailAlreadyVerified": "ኢሜይሉ አስቀድሞ ተረጋግጧል",
       "otpResendTooSoon": "ሌላ ኮድ ከመጠየቅዎ በፊት ትንሽ ይጠብቁ",
-      "otpResendLimitExceeded": "የኮድ ድጋሚ መላክ ገደብ ደርሷል። በኋላ ይሞክሩ",
-      "emailAlreadyExists": "ኢሜይል አስቀድም ነው",
-      "usernameAlreadyExists": "የተጠቃሚ ስም አስቀድሞ አለ።"
+      "accountStatusPendingVerification": "መለያው ማረጋገጫ በመጠባበቅ ላይ ነው",
+      "accountStatusLocked": "መለያው ተቆልፏል",
+      "accountStatusSuspended": "መለያው ታግዷል",
+      "accountStatusDisabled": "መለያው ተዘግቷል",
+      "emailAlreadyExists": "ይህ ኢሜይል ቀደም ብሎ ተመዝግቧል",
+      "usernameAlreadyExists": "ይህ የተጠቃሚ ስም ቀደም ብሎ ተመዝግቧል",
+      "otpResendLimitExceeded": "የማረጋገጫ ኮድ የመላኪያ ገደብ ላይ ደርሰዋል። እባክዎ ቆይተው እንደገና ይሞክሩ",
+      "updateFailed": "የተጠቃሚ መገለጫን (ፕሮፋይል) ማደስ አልተሳካም"
     },
     "successes": {
       "passwordUpdated": "የይለፍ ቃል ተዘምኗል",
       "emailVerified": "ኢሜይሉ በተሳካ ሁኔታ ተረጋግጧል",
-      "otpResent": "የማረጋገጫ ኮድ ተልኳል"
+      "otpResent": "የማረጋገጫ ኮድ ተልኳል",
+      "adminAccountCreated": "የአስተዳዳሪ (Admin) መለያ ተፈጥሯል",
+      "adminRolesUpdated": "የአስተዳዳሪ ሚናዎች ታድሰዋል",
+      "adminStatusUpdated": "የአስተዳዳሪው ሁኔታ ታድሷል",
+      "passwordResetLinkSent": "የይለፍ ቃል መቀየሪያ ሊንክ ተልኳል",
+      "passwordResetSuccessfully": "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል",
+      "roleDeleted": "ሚናው ተሰርዟል"
     }
   },
   "guide": {
@@ -60,7 +70,23 @@
       "stepStarted": "ደረጃው ተጀምሯል",
       "bookmarkAdded": "ምልክት ተጨምሯል",
       "bookmarkRemoved": "ምልክት ተወግዷል",
-      "bookmarkUpdated": "ምልክት ተዘምኗል"
+      "bookmarkUpdated": "ምልክት ተዘምኗል",
+      "stepMarkedIncomplete": "ደረጃው እንዳልተጠናቀቀ ተደርጓል",
+      "stepSkipped": "ደረጃው ተዘልሏል",
+      "progressUpdated": "የሂደት ደረጃው ታድሷል",
+      "guideUpdated": "መመሪያው ታድሷል",
+      "guideDeleted": "መመሪያው ተሰርዟል",
+      "conditionAdded": "ቅድመ-ሁኔታ ተጨምሯል",
+      "conditionRemoved": "ቅድመ-ሁኔታው ተነስቷል",
+      "translationsUpdated": "ትርጉሞች ታድሰዋል",
+      "stepUpdated": "ደረጃው ታድሷል",
+      "stepDeleted": "ደረጃው ተሰርዟል",
+      "stepsReordered": "የደረጃዎች ቅደም ተከተል ተስተካክሏል",
+      "dependencyAdded": "ጥገኝነት (dependency) ተጨምሯል",
+      "dependencyRemoved": "ጥገኝነት (dependency) ተነስቷል",
+      "stepReverted": "ደረጃው ወደ ቀድሞው እትም ተመልሷል",
+      "journeyInvalidated": "የተጠቃሚው ጉዞ (user journey) ውድቅ ተደርጓል",
+      "allJourneysInvalidated": "ሁሉም ጉዞዎች ውድቅ ተደርገዋል"
     }
   },
   "library": {
@@ -70,6 +96,14 @@
       "templateGroupNotFound": "የቴምፕሌት ቡድን አልተገኘም",
       "templateNotFound": "ቴምፕሌቱ አልተገኘም",
       "downloadFailed": "የማውረጃ ማገናኛ ማመንጨት አልተሳካም"
+    },
+    "successes": {
+      "categoryDeleted": "ምድቡ ተሰርዟል",
+      "translationUpdated": "ትርጉሙ ታድሷል",
+      "translationDeleted": "ትርጉሙ ተሰርዟል",
+      "templateGroupDeleted": "የቴምፕሌት ቡድን ተሰርዟል",
+      "templateDeleted": "ቴምፕሌቱ ተሰርዟል",
+      "interactiveFormDeleted": "የበይነ-ተግባር ቅጽ ተሰርዟል"
     }
   },
   "community": {
@@ -98,6 +132,22 @@
       "attachmentNotPending": "ቅልጽ ፋይሉ በመጠባበቅ ላይ አይደለም",
       "attachmentNotOwned": "ይህን ቅልጽ ፋይል የሉት አይደለም",
       "attachmentNotLinked": "ቅልጽ ፋይሉ ከዚህ ልጥፍ ጋር አልተገናኘም"
+    },
+    "successes": {
+      "threadUpdated": "ውይይቱ ታድሷል",
+      "threadDeleted": "ውይይቱ ተሰርዟል",
+      "postUpdated": "ልጥፉ (post) ታድሷል",
+      "postDeleted": "ልጥፉ (post) ተሰርዟል",
+      "solutionMarked": "መፍትሄው ተለይቷል",
+      "threadFollowed": "ውይይቱን መከታተል ጀምረዋል",
+      "threadUnfollowed": "ውይይቱን መከታተል አቁመዋል",
+      "threadMarkedAsRead": "ውይይቱ እንደተነበበ ተደርጓል",
+      "categoryFollowed": "ምድቡን መከታተል ጀምረዋል",
+      "categoryUnfollowed": "ምድቡን መከታተል አቁመዋል",
+      "userBlocked": "ተጠቃሚው ታግዷል",
+      "userUnblocked": "የተጠቃሚው እገዳ ተነስቷል",
+      "attachmentDeleted": "አባሪ ፋይሉ ተሰርዟል",
+      "reportResolved": "ሪፖርቱ ተፈትቷል"
     }
   },
   "email": {
@@ -116,13 +166,48 @@
   },
   "notification": {
     "errors": {
-      "maxScheduledAlertsReached": "ከ3 በላይ የተያዙ ማንቂያዎችን ለመፍጠር ወደ ፕሮ ያሻሽሉ"
+      "maxScheduledAlertsReached": "ከ3 በላይ የተያዙ ማንቂያዎችን ለመፍጠር ወደ ፕሮ ያሻሽሉ",
+      "channelRequired": "ቢያንስ አንድ የማሳወቂያ መስመር ያስፈልጋል",
+      "titleAndBodyRequired": "ርዕስ እና ዝርዝር መግለጫ ያስፈልጋሉ",
+      "scheduledTimeMustBeFuture": "የተቀጠረው ጊዜ የወደፊት መሆን አለበት",
+      "cancelOnlyPending": "በመጠባበቅ ላይ ያሉ የተቀጠሩ ማሳወቂያዎችን ብቻ መሰረዝ ይቻላል",
+      "rescheduleOnlyPending": "በመጠባበቅ ላይ ያሉ የተቀጠሩ ማሳወቂያዎችን ብቻ ጊዜያቸውን መቀየር ይቻላል",
+      "rescheduleTimeMustBeFuture": "የተቀየረው ቀጠሮ ጊዜ የወደፊት መሆን አለበት",
+      "complianceExpiryMustBeFuture": "የማብቂያው ቀን የወደፊት መሆን አለበት"
+    },
+    "successes": {
+      "scheduledAlertCreated": "የተቀጠረው ማሳወቂያ ተፈጥሯል",
+      "scheduledAlertCancelled": "የተቀጠረው ማሳወቂያ ተሰርዟል",
+      "scheduledAlertRescheduled": "የማሳወቂያው ቀጠሮ ተቀይሯል",
+      "complianceEntryCreated": "የተገዢነት መረጃው ተፈጥሯል",
+      "complianceEntryUpdated": "የተገዢነት መረጃው ታድሷል",
+      "complianceEntryDeleted": "የተገዢነት መረጃው ተሰርዟል",
+      "markedAsRead": "እንደተነበበ ተደርጓል",
+      "markedAsUnread": "እንዳልተነበበ ተደርጓል",
+      "markedAllAsRead": "ሁሉም እንደተነበቡ ተደርገዋል",
+      "deleted": "ተሰርዟል",
+      "muteAdded": "ማሳወቂያው ድምፅ አልባ ሆኗል",
+      "muteRemoved": "የማሳወቂያው ድምፅ አልባነት ተነስቷል",
+      "preferencesUpdated": "ምርጫዎች ታድሰዋል",
+      "deliveryChannelUpdated": "የማሳወቂያ መስመሩ ታድሷል"
+    }
+  },
+  "payment": {
+    "errors": {
+      "planNotFound": "የአገልግሎት እቅዱ (ፕላኑ) አልተገኘም",
+      "paymentNotFound": "ክፍያው አልተገኘም",
+      "alreadyPaid": "ክፍያው ቀደም ብሎ ተጠናቋል",
+      "invalidSignature": "የክፍያ ፊርማው ትክክል አይደለም",
+      "invalidWebhookPayload": "የክፍያ መረጃው (webhook payload) ትክክል አይደለም",
+      "paymentInitFailed": "ክፍያውን መጀመር አልተሳካም",
+      "paymentVerifyFailed": "ክፍያውን ማረጋገጥ አልተሳካም",
+      "transactionFailed": "የገንዘብ ዝውውሩ አልተሳካም"
     }
   },
   "errors": {
     "databaseError": "የውሂብ ጎታ ስህተት",
     "cacheError": "ኬሽ ስህተት",
-    "networkError": "የ�arm",
+    "networkError": "የኔትወርክ ስህተት አጋጥሟል",
     "unknownError": "ያልታወቀ ስህተት ተከስቷል"
   }
 }

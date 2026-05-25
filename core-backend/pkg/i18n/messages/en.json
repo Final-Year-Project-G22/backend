@@ -44,12 +44,23 @@
       "emailAlreadyVerified": "Email is already verified",
       "emailAlreadyExists": "Email already exists",
       "usernameAlreadyExists": "Username already exists",
-      "otpResendLimitExceeded": "Verification resend limit reached. Please try again later"
+      "otpResendLimitExceeded": "Verification resend limit reached. Please try again later",
+      "otpResendTooSoon": "Please wait before requesting a new code"
     },
     "successes": {
       "passwordUpdated": "Password Updated",
       "emailVerified": "Email verified successfully",
-      "otpResent": "Verification code sent"
+      "otpResent": "Verification code sent",
+      "adminAccountCreated": "Admin account created",
+      "adminRolesUpdated": "Admin roles updated",
+      "adminStatusUpdated": "Admin status updated",
+      "passwordResetLinkSent": "Password reset link sent",
+      "passwordResetSuccessfully": "Password reset successfully",
+      "roleDeleted": "Role deleted",
+      "sectorUpdated": "Sector updated",
+      "sectorDeleted": "Sector deleted",
+      "tagUpdated": "Tag updated",
+      "tagDeleted": "Tag deleted"
     }
   },
   "guide": {
@@ -68,7 +79,23 @@
       "stepStarted": "Step started",
       "bookmarkAdded": "Bookmark added",
       "bookmarkRemoved": "Bookmark removed",
-      "bookmarkUpdated": "Bookmark updated"
+      "bookmarkUpdated": "Bookmark updated",
+      "stepMarkedIncomplete": "Step marked as incomplete",
+      "stepSkipped": "Step skipped",
+      "progressUpdated": "Progress updated",
+      "guideUpdated": "Guide updated",
+      "guideDeleted": "Guide deleted",
+      "conditionAdded": "Condition added",
+      "conditionRemoved": "Condition removed",
+      "translationsUpdated": "Translations updated",
+      "stepUpdated": "Step updated",
+      "stepDeleted": "Step deleted",
+      "stepsReordered": "Steps reordered",
+      "dependencyAdded": "Dependency added",
+      "dependencyRemoved": "Dependency removed",
+      "stepReverted": "Step reverted to version",
+      "journeyInvalidated": "User journey invalidated",
+      "allJourneysInvalidated": "All journeys invalidated"
     }
   },
   "library": {
@@ -78,6 +105,14 @@
       "templateGroupNotFound": "Template group not found",
       "templateNotFound": "Template not found",
       "downloadFailed": "Failed to generate download link"
+    },
+    "successes": {
+      "categoryDeleted": "Category deleted",
+      "translationUpdated": "Translation updated",
+      "translationDeleted": "Translation deleted",
+      "templateGroupDeleted": "Template group deleted",
+      "templateDeleted": "Template deleted",
+      "interactiveFormDeleted": "Interactive form deleted"
     }
   },
   "community": {
@@ -106,6 +141,22 @@
       "attachmentNotPending": "Attachment is not in pending status",
       "attachmentNotOwned": "You do not own this attachment",
       "attachmentNotLinked": "Attachment is not linked to this post"
+    },
+    "successes": {
+      "threadUpdated": "Thread updated",
+      "threadDeleted": "Thread deleted",
+      "postUpdated": "Post updated",
+      "postDeleted": "Post deleted",
+      "solutionMarked": "Solution marked",
+      "threadFollowed": "Thread followed",
+      "threadUnfollowed": "Thread unfollowed",
+      "threadMarkedAsRead": "Thread marked as read",
+      "categoryFollowed": "Category followed",
+      "categoryUnfollowed": "Category unfollowed",
+      "userBlocked": "User blocked",
+      "userUnblocked": "User unblocked",
+      "attachmentDeleted": "Attachment deleted",
+      "reportResolved": "Report resolved"
     }
   },
   "email": {
@@ -124,7 +175,61 @@
   },
   "notification": {
     "errors": {
-      "maxScheduledAlertsReached": "Upgrade to Pro to create more than 3 scheduled alerts"
+      "maxScheduledAlertsReached": "Upgrade to Pro to create more than 3 scheduled alerts",
+      "channelRequired": "At least one notification channel is required",
+      "titleAndBodyRequired": "Title and body are required",
+      "scheduledTimeMustBeFuture": "Scheduled time must be in the future",
+      "cancelOnlyPending": "Only pending scheduled alerts can be cancelled",
+      "rescheduleOnlyPending": "Only pending scheduled alerts can be rescheduled",
+      "rescheduleTimeMustBeFuture": "Rescheduled time must be in the future",
+      "complianceExpiryMustBeFuture": "Expiry date must be in the future"
+    },
+    "successes": {
+      "scheduledAlertCreated": "Scheduled alert created",
+      "scheduledAlertCancelled": "Scheduled alert cancelled",
+      "scheduledAlertRescheduled": "Scheduled alert rescheduled",
+      "complianceEntryCreated": "Compliance entry created",
+      "complianceEntryUpdated": "Compliance entry updated",
+      "complianceEntryDeleted": "Compliance entry deleted",
+      "markedAsRead": "Marked as read",
+      "markedAsUnread": "Marked as unread",
+      "markedAllAsRead": "Marked all as read",
+      "deleted": "Deleted",
+      "muteAdded": "Mute added",
+      "muteRemoved": "Mute removed",
+      "preferencesUpdated": "Preferences updated",
+      "deliveryChannelUpdated": "Delivery channel updated",
+      "archived": "Notification archived",
+      "preferenceSet": "Preference set",
+      "preferenceDeleted": "Preference deleted",
+      "accountMuted": "Account muted",
+      "accountUnmuted": "Account unmuted",
+      "deviceRegistered": "Device registered",
+      "deviceDeactivated": "Device deactivated",
+      "adminTemplateUpdated": "Template updated",
+      "adminTemplateDeleted": "Template deleted",
+      "adminTranslationUpdated": "Translation updated",
+      "adminTranslationDeleted": "Translation deleted",
+      "retryInitiated": "Retry initiated",
+      "campaignUpdated": "Campaign updated",
+      "campaignScheduled": "Campaign scheduled",
+      "campaignCancelled": "Campaign cancelled",
+      "campaignTemplateUpdated": "Campaign template updated",
+      "campaignTemplateDeleted": "Campaign template deleted",
+      "campaignTranslationUpdated": "Translation updated",
+      "campaignTranslationDeleted": "Translation deleted"
+    }
+  },
+  "payment": {
+    "errors": {
+      "planNotFound": "Plan not found",
+      "paymentNotFound": "Payment not found",
+      "alreadyPaid": "Payment already completed",
+      "invalidSignature": "Invalid payment signature",
+      "invalidWebhookPayload": "Invalid payment webhook payload",
+      "paymentInitFailed": "Payment initialisation failed",
+      "paymentVerifyFailed": "Payment verification failed",
+      "transactionFailed": "Transaction failed"
     }
   },
   "errors": {

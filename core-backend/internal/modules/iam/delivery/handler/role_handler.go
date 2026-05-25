@@ -6,6 +6,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type RoleHandler struct {
@@ -143,7 +144,7 @@ func (h *RoleHandler) HandleDeleteRole(ctx context.Context, input *dto.DeleteRol
 		Body: struct {
 			Message string `json:"message" doc:"Status message"`
 		}{
-			Message: "Role deleted",
+			Message: i18n.T(ctx, "iam.successes.roleDeleted"),
 		},
 	}, nil
 }

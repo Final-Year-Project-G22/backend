@@ -76,6 +76,7 @@ func main() {
 		AdminHandler:            &notificationhandler.NotificationAdminHandler{},
 		NotificationHandler:     &notificationhandler.NotificationHandler{},
 		WebhookHandler:          &notificationhandler.WebhookHandler{},
+		ComplianceHandler:       &notificationhandler.ComplianceHandler{},
 		AuthMiddleware:          noOpMiddleware,
 		AccountStatusMiddleware: noOpMiddleware,
 	})
