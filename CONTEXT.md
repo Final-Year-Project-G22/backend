@@ -109,3 +109,43 @@ _Avoid_: Deadline dashboard, compliance timeline
 - A **Scheduled Alert** is optionally based on a **Scheduled Alert Template**.
 - A **Scheduled Alert** targets exactly one **Channel**.
 - A **Compliance Calendar** aggregates **Compliance Entries** and **Scheduled Alerts** into a unified timeline.
+
+### Localization terms
+
+**User Locale**:
+A user's language preference stored on their account profile. Controls the language of all API responses (error messages, success messages) and notification delivery (email, in-app, push). The system supports English (`en`) and Amharic (`am`).
+_Avoid_: Language, region setting
+
+**Request Locale**:
+The locale detected from an incoming API request, derived from the `Accept-Language` header. Used to resolve error and success messages for that request when no user session is available.
+_Avoid_: Request language, locale param
+
+**Canonical Locale Resolution**:
+A single middleware layer that extracts the request locale, stores it in the request context, and makes it available to all downstream handlers and error adapters. Eliminates ad-hoc locale extraction spread across packages.
+_Avoid_: Multiple getLocale() paths
+
+**Localized Message**:
+A user-facing string (error or success) resolved at request time against the user's locale, using a dot-notated key (e.g., `notification.errors.scheduledAlertPastDue`) and the translation file for the detected locale. Falls back to English when a locale or key is missing.
+_Avoid_: Hardcoded English string, raw message
+
+**Notification Locale**:
+The locale carried inside a **Canonical Notification Event Envelope**, set by the publisher from the target user's locale at the time of event creation. Ensures that asynchronously delivered notifications reach the user in their preferred language.
+_Avoid_: Language field, locale metadata
+
+## Relationships (localization)
+
+- A **User** has one **User Locale**.
+- A **Request Locale** is determined per API call; it may differ from the **User Locale**.
+- All API responses use **Localized Messages** resolved against the **Request Locale**.
+- A **Canonical Notification Event Envelope** carries a **Notification Locale** set from the target user's **User Locale**.
+- The **Canonical Locale Resolution** middleware populates the **Request Locale** and supersedes all prior ad-hoc extraction points.
+
+## Example dialogue
+
+> **Dev:** "When we send a scheduled alert notification, what locale should the email use?"
+> **Domain expert:** "The notification locale in the envelope — which was set from the user's stored locale at the time the event was published. If the user changed their preference afterward, it takes effect on the next notification."
+
+## Flagged ambiguities
+
+- "language" was initially used interchangeably with "locale"; resolved: **locale** is the canonical term, encompassing both language and regional formatting conventions.
+- "notification language" was used to mean both the user's display preference and the template output language; resolved: **User Locale** governs account-level preference, **Notification Locale** is the resolved locale carried in the event envelope.
