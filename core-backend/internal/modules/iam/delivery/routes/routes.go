@@ -17,6 +17,7 @@ type RouteDependencies struct {
 	UserHandler             *handler.UserHandler
 	ImageHandler            *handler.ImageHandler
 	OAuthHandler            *handler.OAuthHandler
+	NotificationPrefHandler *handler.NotificationPreferenceHandler
 	AuthMiddleware          func(huma.Context, func(huma.Context))
 	AccountStatusMiddleware func(huma.Context, func(huma.Context))
 	RoleAssignmentUsecase   usecase.RoleAssignmentUsecase
@@ -63,6 +64,11 @@ func RegisterRoutes(api huma.API, deps RouteDependencies) {
 	})
 	RegisterBusinessProfileRoutes(api, BusinessProfileRouteDependencies{
 		BusinessProfileHandler:  deps.BusinessProfileHandler,
+		AuthMiddleware:          deps.AuthMiddleware,
+		AccountStatusMiddleware: deps.AccountStatusMiddleware,
+	})
+	RegisterNotificationPreferenceRoutes(api, NotificationPreferenceRouteDependencies{
+		Handler:                 deps.NotificationPrefHandler,
 		AuthMiddleware:          deps.AuthMiddleware,
 		AccountStatusMiddleware: deps.AccountStatusMiddleware,
 	})
