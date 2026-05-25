@@ -2,13 +2,13 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
 	notiferror "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/error"
 	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
+	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
@@ -35,7 +35,7 @@ func NewUserScheduledNotificationUsecase(
 
 func (uc *userScheduledNotificationUsecase) Schedule(ctx context.Context, accountID uuid.UUID, input usecase.ScheduleUserNotificationInput) (*entity.UserScheduledNotification, error) {
 	if len(input.Channels) == 0 {
-		return nil, errors.New("notification: at least one channel is required")
+		return nil, apperrors.BadRequestError("notification.errors.channelRequired")
 	}
 
 	for _, ch := range input.Channels {
@@ -45,11 +45,11 @@ func (uc *userScheduledNotificationUsecase) Schedule(ctx context.Context, accoun
 	}
 
 	if input.Title == "" || input.Body == "" {
-		return nil, errors.New("notification: title and body are required")
+		return nil, apperrors.BadRequestError("notification.errors.titleAndBodyRequired")
 	}
 
 	if input.ScheduledFor.Before(time.Now().UTC()) {
-		return nil, errors.New("notification: scheduled time must be in the future")
+		return nil, apperrors.BadRequestError("notification.errors.scheduledTimeMustBeFuture")
 	}
 
 	count, err := uc.repo.CountPendingByAccount(ctx, accountID)
@@ -112,7 +112,7 @@ func (uc *userScheduledNotificationUsecase) Cancel(ctx context.Context, accountI
 		return notiferror.ErrScheduledAlertNotFound
 	}
 	if notif.Status != entity.ScheduleStatusPending {
-		return errors.New("notification: can only cancel pending scheduled alerts")
+		return apperrors.BadRequestError("notification.errors.cancelOnlyPending")
 	}
 	return uc.repo.CancelByID(ctx, id)
 }
@@ -126,10 +126,10 @@ func (uc *userScheduledNotificationUsecase) Reschedule(ctx context.Context, acco
 		return notiferror.ErrScheduledAlertNotFound
 	}
 	if notif.Status != entity.ScheduleStatusPending {
-		return errors.New("notification: can only reschedule pending scheduled alerts")
+		return apperrors.BadRequestError("notification.errors.rescheduleOnlyPending")
 	}
 	if input.ScheduledFor.Before(time.Now().UTC()) {
-		return errors.New("notification: rescheduled time must be in the future")
+		return apperrors.BadRequestError("notification.errors.rescheduleTimeMustBeFuture")
 	}
 
 	updates := map[string]interface{}{

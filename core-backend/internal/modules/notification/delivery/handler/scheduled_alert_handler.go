@@ -9,7 +9,6 @@ import (
 	notiferror "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
-	"github.com/danielgtaylor/huma/v2"
 )
 
 type ScheduledAlertHandler struct {
@@ -36,7 +35,7 @@ func (h *ScheduledAlertHandler) HandleCreate(ctx context.Context, input *dto.Cre
 	notif, err := h.scheduledUC.Schedule(ctx, accountID, dto.ToCreateScheduledAlertInput(input.Body))
 	if err != nil {
 		if errors.Is(err, notiferror.ErrMaxScheduledAlertsReached) {
-			return nil, huma.NewError(403, "Upgrade to Pro to create more than 3 scheduled alerts")
+			return nil, apperrors.ForbiddenError("notification.errors.maxScheduledAlertsReached")
 		}
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
