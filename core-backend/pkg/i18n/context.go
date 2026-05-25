@@ -17,3 +17,9 @@ func LocaleFromContext(ctx context.Context) string {
 
 	return GetDefaultLocale()
 }
+
+// T is a convenience function that resolves a message key using the locale from context.
+// It wraps Resolve(key, LocaleFromContext(ctx), params...).
+func T(ctx context.Context, key string, params ...map[string]string) string {
+	return Resolve(key, LocaleFromContext(ctx), params...)
+}
