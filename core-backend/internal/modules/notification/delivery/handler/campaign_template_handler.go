@@ -6,6 +6,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/dto"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type CampaignTemplateHandler struct {
@@ -69,14 +70,14 @@ func (h *CampaignTemplateHandler) HandleUpdateCampaignTemplate(ctx context.Conte
 	if err := h.campaignTemplateUC.Update(ctx, input.ID, dto.ToUpdateCampaignTemplateInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateCampaignTemplateOutput{Body: dto.UpdateCampaignTemplateResponseBody{Message: "Campaign template updated"}}, nil
+	return &dto.UpdateCampaignTemplateOutput{Body: dto.UpdateCampaignTemplateResponseBody{Message: i18n.T(ctx, "notification.successes.campaignTemplateUpdated")}}, nil
 }
 
 func (h *CampaignTemplateHandler) HandleDeleteCampaignTemplate(ctx context.Context, input *dto.DeleteCampaignTemplateInput) (*dto.DeleteCampaignTemplateOutput, error) {
 	if err := h.campaignTemplateUC.Delete(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteCampaignTemplateOutput{Body: dto.DeleteCampaignTemplateResponseBody{Message: "Campaign template deleted"}}, nil
+	return &dto.DeleteCampaignTemplateOutput{Body: dto.DeleteCampaignTemplateResponseBody{Message: i18n.T(ctx, "notification.successes.campaignTemplateDeleted")}}, nil
 }
 
 func (h *CampaignTemplateHandler) HandleAddCampaignTemplateTranslation(ctx context.Context, input *dto.AddCampaignTemplateTranslationInput) (*dto.AddCampaignTemplateTranslationOutput, error) {
@@ -93,14 +94,14 @@ func (h *CampaignTemplateHandler) HandleUpdateCampaignTemplateTranslation(ctx co
 	if _, err := h.campaignTemplateUC.UpdateTranslation(ctx, input.TemplateID, input.Language, dto.ToUpdateCampaignTranslationInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateCampaignTemplateTranslationOutput{Body: dto.UpdateCampaignTemplateTranslationResponseBody{Message: "Translation updated"}}, nil
+	return &dto.UpdateCampaignTemplateTranslationOutput{Body: dto.UpdateCampaignTemplateTranslationResponseBody{Message: i18n.T(ctx, "notification.successes.campaignTranslationUpdated")}}, nil
 }
 
 func (h *CampaignTemplateHandler) HandleDeleteCampaignTemplateTranslation(ctx context.Context, input *dto.DeleteCampaignTemplateTranslationInput) (*dto.DeleteCampaignTemplateTranslationOutput, error) {
 	if err := h.campaignTemplateUC.DeleteTranslation(ctx, input.TemplateID, input.Language); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteCampaignTemplateTranslationOutput{Body: dto.DeleteCampaignTemplateTranslationResponseBody{Message: "Translation deleted"}}, nil
+	return &dto.DeleteCampaignTemplateTranslationOutput{Body: dto.DeleteCampaignTemplateTranslationResponseBody{Message: i18n.T(ctx, "notification.successes.campaignTranslationDeleted")}}, nil
 }
 
 func (h *CampaignTemplateHandler) HandleListCampaignTemplatesWith(ctx context.Context, input *dto.ListCampaignTemplatesInput) (*dto.ListCampaignTemplatesOutput, error) {
