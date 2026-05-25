@@ -7,6 +7,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type GuideViewHandler struct {
@@ -175,7 +176,7 @@ func (h *GuideViewHandler) HandleStartStep(ctx context.Context, input *dto.Start
 	}
 
 	return &dto.StartStepOutput{
-		Body: dto.StartStepResponseBody{Message: "Step started"},
+		Body: dto.StartStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepStarted")},
 	}, nil
 }
 
@@ -192,7 +193,7 @@ func (h *GuideViewHandler) HandleCompleteStep(ctx context.Context, input *dto.Co
 	}
 
 	return &dto.CompleteStepOutput{
-		Body: dto.CompleteStepResponseBody{Message: "Step completed"},
+		Body: dto.CompleteStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepCompleted")},
 	}, nil
 }
 
@@ -205,7 +206,7 @@ func (h *GuideViewHandler) HandleMarkStepIncomplete(ctx context.Context, input *
 	}
 
 	return &dto.MarkStepIncompleteOutput{
-		Body: dto.MarkStepIncompleteResponseBody{Message: "Step marked as incomplete"},
+		Body: dto.MarkStepIncompleteResponseBody{Message: i18n.T(ctx, "guide.successes.stepMarkedIncomplete")},
 	}, nil
 }
 
@@ -218,7 +219,7 @@ func (h *GuideViewHandler) HandleSkipOptionalStep(ctx context.Context, input *dt
 	}
 
 	return &dto.SkipOptionalStepOutput{
-		Body: dto.SkipOptionalStepResponseBody{Message: "Step skipped"},
+		Body: dto.SkipOptionalStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepSkipped")},
 	}, nil
 }
 
@@ -235,7 +236,7 @@ func (h *GuideViewHandler) HandleUpdateProgress(ctx context.Context, input *dto.
 	}
 
 	return &dto.UpdateProgressOutput{
-		Body: dto.UpdateProgressResponseBody{Message: "Progress updated"},
+		Body: dto.UpdateProgressResponseBody{Message: i18n.T(ctx, "guide.successes.progressUpdated")},
 	}, nil
 }
 
@@ -248,7 +249,7 @@ func (h *GuideViewHandler) HandleAddBookmark(ctx context.Context, input *dto.Add
 	}
 
 	return &dto.AddBookmarkOutput{
-		Body: dto.AddBookmarkResponseBody{Message: "Bookmark added"},
+		Body: dto.AddBookmarkResponseBody{Message: i18n.T(ctx, "guide.successes.bookmarkAdded")},
 	}, nil
 }
 
@@ -261,7 +262,7 @@ func (h *GuideViewHandler) HandleUpdateBookmarkNote(ctx context.Context, input *
 	}
 
 	return &dto.UpdateBookmarkNoteOutput{
-		Body: dto.UpdateBookmarkNoteResponseBody{Message: "Bookmark updated"},
+		Body: dto.UpdateBookmarkNoteResponseBody{Message: i18n.T(ctx, "guide.successes.bookmarkUpdated")},
 	}, nil
 }
 
@@ -274,7 +275,7 @@ func (h *GuideViewHandler) HandleRemoveBookmark(ctx context.Context, input *dto.
 	}
 
 	return &dto.RemoveBookmarkOutput{
-		Body: dto.RemoveBookmarkResponseBody{Message: "Bookmark removed"},
+		Body: dto.RemoveBookmarkResponseBody{Message: i18n.T(ctx, "guide.successes.bookmarkRemoved")},
 	}, nil
 }
 

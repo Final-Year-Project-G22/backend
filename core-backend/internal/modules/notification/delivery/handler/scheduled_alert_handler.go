@@ -9,6 +9,7 @@ import (
 	notiferror "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type ScheduledAlertHandler struct {
@@ -41,7 +42,7 @@ func (h *ScheduledAlertHandler) HandleCreate(ctx context.Context, input *dto.Cre
 	}
 	return &dto.CreateScheduledAlertOutput{Body: dto.CreateScheduledAlertResponseBody{
 		ID:      notif.ID,
-		Message: "Scheduled alert created",
+		Message: i18n.T(ctx, "notification.successes.scheduledAlertCreated"),
 	}}, nil
 }
 
@@ -51,7 +52,7 @@ func (h *ScheduledAlertHandler) HandleCancel(ctx context.Context, input *dto.Can
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.CancelScheduledAlertOutput{Body: dto.CancelScheduledAlertResponseBody{
-		Message: "Scheduled alert cancelled",
+		Message: i18n.T(ctx, "notification.successes.scheduledAlertCancelled"),
 	}}, nil
 }
 
@@ -63,7 +64,7 @@ func (h *ScheduledAlertHandler) HandleReschedule(ctx context.Context, input *dto
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	return &dto.RescheduleScheduledAlertOutput{Body: dto.RescheduleScheduledAlertResponseBody{
-		Message: "Scheduled alert rescheduled",
+		Message: i18n.T(ctx, "notification.successes.scheduledAlertRescheduled"),
 	}}, nil
 }
 

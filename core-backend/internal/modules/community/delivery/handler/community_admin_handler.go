@@ -11,6 +11,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/contextkeys"
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 )
 
 type CommunityAdminHandler struct {
@@ -64,7 +65,7 @@ func (h *CommunityAdminHandler) HandleUpdateCategory(ctx context.Context, input 
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateCommunityCategoryOutput{Body: dto.UpdateCommunityCategoryResponseBody{Message: "Category updated"}}, nil
+	return &dto.UpdateCommunityCategoryOutput{Body: dto.UpdateCommunityCategoryResponseBody{Message: i18n.T(ctx, "community.successes.categoryUpdated")}}, nil
 }
 
 func (h *CommunityAdminHandler) HandleDeleteCategory(ctx context.Context, input *dto.DeleteCommunityCategoryInput) (*dto.DeleteCommunityCategoryOutput, error) {
@@ -72,7 +73,7 @@ func (h *CommunityAdminHandler) HandleDeleteCategory(ctx context.Context, input 
 	if err := h.categoryUsecase.DeleteCategory(ctx, accountID, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteCommunityCategoryOutput{Body: dto.DeleteCommunityCategoryResponseBody{Message: "Category deleted"}}, nil
+	return &dto.DeleteCommunityCategoryOutput{Body: dto.DeleteCommunityCategoryResponseBody{Message: i18n.T(ctx, "community.successes.categoryDeleted")}}, nil
 }
 
 func (h *CommunityAdminHandler) HandleListCategories(ctx context.Context, input *dto.AdminListCommunityCategoriesInput) (*dto.AdminListCommunityCategoriesOutput, error) {
@@ -104,7 +105,7 @@ func (h *CommunityAdminHandler) HandleBlockUser(ctx context.Context, input *dto.
 		h.logger.Error("Failed to resolve user report", core.Error(err))
 	}
 
-	return &dto.BlockUserOutput{Body: dto.BlockUserResponseBody{Message: "User blocked"}}, nil
+	return &dto.BlockUserOutput{Body: dto.BlockUserResponseBody{Message: i18n.T(ctx, "community.successes.userBlocked")}}, nil
 }
 
 func (h *CommunityAdminHandler) HandleUnblockUser(ctx context.Context, input *dto.UnblockUserInput) (*dto.UnblockUserOutput, error) {
@@ -117,7 +118,7 @@ func (h *CommunityAdminHandler) HandleUnblockUser(ctx context.Context, input *dt
 	}); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UnblockUserOutput{Body: dto.BlockUserResponseBody{Message: "User unblocked"}}, nil
+	return &dto.UnblockUserOutput{Body: dto.BlockUserResponseBody{Message: i18n.T(ctx, "community.successes.userUnblocked")}}, nil
 }
 
 func (h *CommunityAdminHandler) HandleListBlockedUsers(ctx context.Context, input *dto.ListBlockedUsersInput) (*dto.ListBlockedUsersOutput, error) {
@@ -702,7 +703,7 @@ func (h *CommunityAdminHandler) HandleDeleteReportedThread(ctx context.Context, 
 
 	return &dto.DeleteReportedThreadOutput{Body: dto.DeleteReportedContentResponseBody{
 		Success: true,
-		Message: "Thread deleted and report resolved",
+		Message: i18n.T(ctx, "community.successes.reportThreadDeleted"),
 	}}, nil
 }
 
@@ -715,7 +716,7 @@ func (h *CommunityAdminHandler) HandleDeleteReportedPost(ctx context.Context, in
 
 	return &dto.DeleteReportedPostOutput{Body: dto.DeleteReportedContentResponseBody{
 		Success: true,
-		Message: "Post deleted and report resolved",
+		Message: i18n.T(ctx, "community.successes.reportPostDeleted"),
 	}}, nil
 }
 
@@ -734,6 +735,6 @@ func (h *CommunityAdminHandler) HandleBlockReportedUser(ctx context.Context, inp
 
 	return &dto.BlockReportedUserOutput{Body: dto.BlockReportedUserResponseBody{
 		Success: true,
-		Message: "User blocked and report resolved",
+		Message: i18n.T(ctx, "community.successes.reportUserBlocked"),
 	}}, nil
 }

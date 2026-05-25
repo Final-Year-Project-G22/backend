@@ -10,6 +10,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
 	"github.com/google/uuid"
 )
@@ -72,7 +73,7 @@ func (h *LibraryAdminHandler) HandleDeleteCategory(ctx context.Context, input *d
 	}
 	return &dto.LibraryDeleteCategoryOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
-	}{Message: "Category deleted"}}, nil
+	}{Message: i18n.T(ctx, "library.successes.categoryDeleted")}}, nil
 }
 
 func (h *LibraryAdminHandler) HandleListAllCategories(ctx context.Context, input *dto.ListAllCategoriesInput) (*dto.ListAllCategoriesOutput, error) {
@@ -114,7 +115,7 @@ func (h *LibraryAdminHandler) HandleUpdateCategoryTranslation(ctx context.Contex
 	}
 	return &dto.UpdateCategoryTranslationOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
-	}{Message: "Translation updated"}}, nil
+	}{Message: i18n.T(ctx, "library.successes.translationUpdated")}}, nil
 }
 
 func (h *LibraryAdminHandler) HandleDeleteCategoryTranslation(ctx context.Context, input *dto.DeleteCategoryTranslationInput) (*dto.DeleteCategoryTranslationOutput, error) {
@@ -123,7 +124,7 @@ func (h *LibraryAdminHandler) HandleDeleteCategoryTranslation(ctx context.Contex
 	}
 	return &dto.DeleteCategoryTranslationOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
-	}{Message: "Translation deleted"}}, nil
+	}{Message: i18n.T(ctx, "library.successes.translationDeleted")}}, nil
 }
 
 // --- Template Groups ---
@@ -189,7 +190,7 @@ func (h *LibraryAdminHandler) HandleDeleteTemplateGroup(ctx context.Context, inp
 	}
 	return &dto.DeleteTemplateGroupOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
-	}{Message: "Template group deleted"}}, nil
+	}{Message: i18n.T(ctx, "library.successes.templateGroupDeleted")}}, nil
 }
 
 func (h *LibraryAdminHandler) HandleListAllTemplateGroups(ctx context.Context, input *dto.ListAllTemplateGroupsInput) (*dto.ListAllTemplateGroupsOutput, error) {
@@ -343,7 +344,7 @@ func (h *LibraryAdminHandler) HandleDeleteTemplate(ctx context.Context, input *d
 	}
 	return &dto.LibraryDeleteTemplateOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
-	}{Message: "Template deleted"}}, nil
+	}{Message: i18n.T(ctx, "library.successes.templateDeleted")}}, nil
 }
 
 func (h *LibraryAdminHandler) HandleListTemplatesByGroup(ctx context.Context, input *dto.ListTemplatesByGroupInput) (*dto.ListTemplatesByGroupOutput, error) {
@@ -401,7 +402,7 @@ func (h *LibraryAdminHandler) HandleDeleteInteractiveForm(ctx context.Context, i
 	}
 	return &dto.DeleteInteractiveFormOutput{Body: struct {
 		Message string `json:"message" doc:"Success message"`
-	}{Message: "Interactive form deleted"}}, nil
+	}{Message: i18n.T(ctx, "library.successes.interactiveFormDeleted")}}, nil
 }
 
 // --- Download Logs ---

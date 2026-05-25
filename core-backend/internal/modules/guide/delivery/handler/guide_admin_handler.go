@@ -12,6 +12,7 @@ import (
 	guideerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	apperrors "github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"github.com/google/uuid"
 )
@@ -94,14 +95,14 @@ func (h *GuideAdminHandler) HandleUpdateGuide(ctx context.Context, input *dto.Up
 	if err := h.guideAdminUC.UpdateGuide(ctx, input.ID, dto.ToUpdateGuideInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateGuideOutput{Body: dto.UpdateGuideResponseBody{Message: "Guide updated"}}, nil
+	return &dto.UpdateGuideOutput{Body: dto.UpdateGuideResponseBody{Message: i18n.T(ctx, "guide.successes.guideUpdated")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleDeleteGuide(ctx context.Context, input *dto.DeleteGuideInput) (*dto.DeleteGuideOutput, error) {
 	if err := h.guideAdminUC.DeleteGuide(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteGuideOutput{Body: dto.DeleteGuideResponseBody{Message: "Guide deleted"}}, nil
+	return &dto.DeleteGuideOutput{Body: dto.DeleteGuideResponseBody{Message: i18n.T(ctx, "guide.successes.guideDeleted")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleAddGuideCondition(ctx context.Context, input *dto.AddGuideConditionInput) (*dto.AddGuideConditionOutput, error) {
@@ -113,14 +114,14 @@ func (h *GuideAdminHandler) HandleAddGuideCondition(ctx context.Context, input *
 	}); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.AddGuideConditionOutput{Body: dto.AddGuideConditionResponseBody{Message: "Condition added"}}, nil
+	return &dto.AddGuideConditionOutput{Body: dto.AddGuideConditionResponseBody{Message: i18n.T(ctx, "guide.successes.conditionAdded")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleRemoveGuideCondition(ctx context.Context, input *dto.RemoveGuideConditionInput) (*dto.RemoveGuideConditionOutput, error) {
 	if err := h.guideAdminUC.RemoveGuideCondition(ctx, input.CondID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.RemoveGuideConditionOutput{Body: dto.RemoveGuideConditionResponseBody{Message: "Condition removed"}}, nil
+	return &dto.RemoveGuideConditionOutput{Body: dto.RemoveGuideConditionResponseBody{Message: i18n.T(ctx, "guide.successes.conditionRemoved")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleUploadGuideImage(ctx context.Context, input *dto.UploadGuideImageInput) (*dto.UploadGuideImageOutput, error) {
@@ -184,7 +185,7 @@ func (h *GuideAdminHandler) HandleSetGuideTranslations(ctx context.Context, inpu
 	if err := h.guideAdminUC.SetGuideTranslations(ctx, input.ID, translations, merge); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.SetGuideTranslationsOutput{Body: dto.SetGuideTranslationsResponseBody{Message: "Translations updated"}}, nil
+	return &dto.SetGuideTranslationsOutput{Body: dto.SetGuideTranslationsResponseBody{Message: i18n.T(ctx, "guide.successes.translationsUpdated")}}, nil
 }
 
 // --- Step ---
@@ -201,14 +202,14 @@ func (h *GuideAdminHandler) HandleUpdateStep(ctx context.Context, input *dto.Upd
 	if err := h.guideAdminUC.UpdateStep(ctx, input.ID, dto.ToUpdateStepInput(input.Body)); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.UpdateStepOutput{Body: dto.UpdateStepResponseBody{Message: "Step updated"}}, nil
+	return &dto.UpdateStepOutput{Body: dto.UpdateStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepUpdated")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleDeleteStep(ctx context.Context, input *dto.DeleteStepInput) (*dto.DeleteStepOutput, error) {
 	if err := h.guideAdminUC.DeleteStep(ctx, input.ID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.DeleteStepOutput{Body: dto.DeleteStepResponseBody{Message: "Step deleted"}}, nil
+	return &dto.DeleteStepOutput{Body: dto.DeleteStepResponseBody{Message: i18n.T(ctx, "guide.successes.stepDeleted")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleReorderSteps(ctx context.Context, input *dto.ReorderStepsInput) (*dto.ReorderStepsOutput, error) {
@@ -218,7 +219,7 @@ func (h *GuideAdminHandler) HandleReorderSteps(ctx context.Context, input *dto.R
 		}
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.ReorderStepsOutput{Body: dto.ReorderStepsResponseBody{Message: "Steps reordered"}}, nil
+	return &dto.ReorderStepsOutput{Body: dto.ReorderStepsResponseBody{Message: i18n.T(ctx, "guide.successes.stepsReordered")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleAddStepCondition(ctx context.Context, input *dto.AddStepConditionInput) (*dto.AddStepConditionOutput, error) {
@@ -230,28 +231,28 @@ func (h *GuideAdminHandler) HandleAddStepCondition(ctx context.Context, input *d
 	}); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.AddStepConditionOutput{Body: dto.AddStepConditionResponseBody{Message: "Condition added"}}, nil
+	return &dto.AddStepConditionOutput{Body: dto.AddStepConditionResponseBody{Message: i18n.T(ctx, "guide.successes.conditionAdded")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleRemoveStepCondition(ctx context.Context, input *dto.RemoveStepConditionInput) (*dto.RemoveStepConditionOutput, error) {
 	if err := h.guideAdminUC.RemoveStepCondition(ctx, input.CondID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.RemoveStepConditionOutput{Body: dto.RemoveStepConditionResponseBody{Message: "Condition removed"}}, nil
+	return &dto.RemoveStepConditionOutput{Body: dto.RemoveStepConditionResponseBody{Message: i18n.T(ctx, "guide.successes.conditionRemoved")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleAddStepDependency(ctx context.Context, input *dto.AddStepDependencyInput) (*dto.AddStepDependencyOutput, error) {
 	if err := h.guideAdminUC.AddStepDependency(ctx, input.StepID, input.Body.RequiredStepID, input.Body.DependencyType); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.AddStepDependencyOutput{Body: dto.AddStepDependencyResponseBody{Message: "Dependency added"}}, nil
+	return &dto.AddStepDependencyOutput{Body: dto.AddStepDependencyResponseBody{Message: i18n.T(ctx, "guide.successes.dependencyAdded")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleRemoveStepDependency(ctx context.Context, input *dto.RemoveStepDependencyInput) (*dto.RemoveStepDependencyOutput, error) {
 	if err := h.guideAdminUC.RemoveStepDependency(ctx, input.DepID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.RemoveStepDependencyOutput{Body: dto.RemoveStepDependencyResponseBody{Message: "Dependency removed"}}, nil
+	return &dto.RemoveStepDependencyOutput{Body: dto.RemoveStepDependencyResponseBody{Message: i18n.T(ctx, "guide.successes.dependencyRemoved")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleSetStepTranslations(ctx context.Context, input *dto.SetStepTranslationsInput) (*dto.SetStepTranslationsOutput, error) {
@@ -269,7 +270,7 @@ func (h *GuideAdminHandler) HandleSetStepTranslations(ctx context.Context, input
 	if err := h.guideAdminUC.SetStepTranslations(ctx, input.ID, translations, merge); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.SetStepTranslationsOutput{Body: dto.SetStepTranslationsResponseBody{Message: "Translations updated"}}, nil
+	return &dto.SetStepTranslationsOutput{Body: dto.SetStepTranslationsResponseBody{Message: i18n.T(ctx, "guide.successes.translationsUpdated")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleGetStepVersions(ctx context.Context, input *dto.GetStepVersionsInput) (*dto.GetStepVersionsOutput, error) {
@@ -289,7 +290,7 @@ func (h *GuideAdminHandler) HandleRevertStepToVersion(ctx context.Context, input
 	if err := h.guideAdminUC.RevertStepToVersion(ctx, input.StepID, input.Version); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.RevertStepToVersionOutput{Body: dto.RevertStepToVersionResponseBody{Message: "Step reverted to version"}}, nil
+	return &dto.RevertStepToVersionOutput{Body: dto.RevertStepToVersionResponseBody{Message: i18n.T(ctx, "guide.successes.stepReverted")}}, nil
 }
 
 // --- Journey ---
@@ -298,12 +299,12 @@ func (h *GuideAdminHandler) HandleInvalidateUserJourney(ctx context.Context, inp
 	if err := h.journeyAdminUC.InvalidateUserJourney(ctx, input.Body.GuideID, input.UserID, input.Body.GuideID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.InvalidateUserJourneyOutput{Body: dto.InvalidateUserJourneyResponseBody{Message: "User journey invalidated"}}, nil
+	return &dto.InvalidateUserJourneyOutput{Body: dto.InvalidateUserJourneyResponseBody{Message: i18n.T(ctx, "guide.successes.journeyInvalidated")}}, nil
 }
 
 func (h *GuideAdminHandler) HandleInvalidateAllJourneys(ctx context.Context, input *dto.InvalidateAllJourneysInput) (*dto.InvalidateAllJourneysOutput, error) {
 	if err := h.journeyAdminUC.InvalidateAllJourneysForGuide(ctx, input.GuideID); err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
-	return &dto.InvalidateAllJourneysOutput{Body: dto.InvalidateAllJourneysResponseBody{Message: "All journeys invalidated"}}, nil
+	return &dto.InvalidateAllJourneysOutput{Body: dto.InvalidateAllJourneysResponseBody{Message: i18n.T(ctx, "guide.successes.allJourneysInvalidated")}}, nil
 }
