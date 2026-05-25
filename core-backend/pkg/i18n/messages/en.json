@@ -56,7 +56,11 @@
       "adminStatusUpdated": "Admin status updated",
       "passwordResetLinkSent": "Password reset link sent",
       "passwordResetSuccessfully": "Password reset successfully",
-      "roleDeleted": "Role deleted"
+      "roleDeleted": "Role deleted",
+      "sectorUpdated": "Sector updated",
+      "sectorDeleted": "Sector deleted",
+      "tagUpdated": "Tag updated",
+      "tagDeleted": "Tag deleted"
     }
   },
   "guide": {
@@ -201,7 +205,19 @@
       "accountMuted": "Account muted",
       "accountUnmuted": "Account unmuted",
       "deviceRegistered": "Device registered",
-      "deviceDeactivated": "Device deactivated"
+      "deviceDeactivated": "Device deactivated",
+      "adminTemplateUpdated": "Template updated",
+      "adminTemplateDeleted": "Template deleted",
+      "adminTranslationUpdated": "Translation updated",
+      "adminTranslationDeleted": "Translation deleted",
+      "retryInitiated": "Retry initiated",
+      "campaignUpdated": "Campaign updated",
+      "campaignScheduled": "Campaign scheduled",
+      "campaignCancelled": "Campaign cancelled",
+      "campaignTemplateUpdated": "Campaign template updated",
+      "campaignTemplateDeleted": "Campaign template deleted",
+      "campaignTranslationUpdated": "Translation updated",
+      "campaignTranslationDeleted": "Translation deleted"
     }
   },
   "payment": {
