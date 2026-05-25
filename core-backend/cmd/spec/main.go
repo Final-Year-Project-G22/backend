@@ -43,6 +43,7 @@ func main() {
 		UserHandler:             &iamhandler.UserHandler{},
 		ImageHandler:            &iamhandler.ImageHandler{},
 		OAuthHandler:            &iamhandler.OAuthHandler{},
+		NotificationPrefHandler: &iamhandler.NotificationPreferenceHandler{},
 		AuthMiddleware:          noOpMiddleware,
 		AccountStatusMiddleware: noOpMiddleware,
 		RoleAssignmentUsecase:   nil,

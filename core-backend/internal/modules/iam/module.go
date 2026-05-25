@@ -289,6 +289,7 @@ var Module = fx.Module("iam",
 	fx.Provide(handler.NewTaxonomyAdminHandler),
 	fx.Provide(handler.NewTaxonomyHandler),
 	fx.Provide(handler.NewBusinessProfileHandler),
+	fx.Provide(handler.NewNotificationPreferenceHandler),
 
 	// Invocations
 
@@ -299,7 +300,9 @@ var Module = fx.Module("iam",
 		businessProfileHandler *handler.BusinessProfileHandler,
 		permissionHandler *handler.PermissionHandler, roleHandler *handler.RoleHandler,
 		userHandler *handler.UserHandler, imageHandler *handler.ImageHandler,
-		oauthHandler *handler.OAuthHandler, tokenService token.TokenService,
+		oauthHandler *handler.OAuthHandler,
+		notificationPrefHandler *handler.NotificationPreferenceHandler,
+		tokenService token.TokenService,
 		authService service.AuthService, roleAssignmentUsecase usecase.RoleAssignmentUsecase) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
@@ -314,6 +317,7 @@ var Module = fx.Module("iam",
 			UserHandler:             userHandler,
 			ImageHandler:            imageHandler,
 			OAuthHandler:            oauthHandler,
+			NotificationPrefHandler: notificationPrefHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 			RoleAssignmentUsecase:   roleAssignmentUsecase,

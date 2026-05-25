@@ -24,6 +24,7 @@ type notificationIngestUsecase struct {
 	mutedRepo     notifrepo.MutedAccountRepository
 	queueRepo     notifrepo.NotificationQueueRepository
 	accountRepo   iamrepo.AccountRepository
+	iamReader     IAMGlobalPreferenceReader
 	muteResolvers []notifrepo.MuteResolver
 	renderer      *service.TemplateRenderer
 	transactor    sharedrepo.Transactor
@@ -35,6 +36,7 @@ func NewNotificationIngestUsecase(
 	mutedRepo notifrepo.MutedAccountRepository,
 	queueRepo notifrepo.NotificationQueueRepository,
 	accountRepo iamrepo.AccountRepository,
+	iamReader IAMGlobalPreferenceReader,
 	renderer *service.TemplateRenderer,
 	transactor sharedrepo.Transactor,
 	muteResolvers ...notifrepo.MuteResolver,
@@ -45,6 +47,7 @@ func NewNotificationIngestUsecase(
 		mutedRepo:     mutedRepo,
 		queueRepo:     queueRepo,
 		accountRepo:   accountRepo,
+		iamReader:     iamReader,
 		renderer:      renderer,
 		transactor:    transactor,
 		muteResolvers: muteResolvers,
@@ -98,6 +101,14 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 			continue
 		}
 
+		globallyAllowed, err := uc.isChannelEnabledGlobally(ctx, input.AccountID, channel)
+		if err != nil {
+			return err
+		}
+		if !globallyAllowed {
+			continue
+		}
+
 		allowed, err := uc.isChannelAllowed(ctx, input.AccountID, input.NotificationType, channel)
 		if err != nil {
 			return err
@@ -112,6 +123,17 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	}
 
 	return nil
+}
+
+func (uc *notificationIngestUsecase) isChannelEnabledGlobally(ctx context.Context, accountID uuid.UUID, channel entity.Channel) (bool, error) {
+	switch channel {
+	case entity.ChannelInApp:
+		return true, nil
+	case entity.ChannelEmail, entity.ChannelPush:
+		return uc.iamReader.IsNotificationEnabled(ctx, accountID, string(channel))
+	default:
+		return true, nil
+	}
 }
 
 func (uc *notificationIngestUsecase) resolveChannels(content map[string]interface{}, channelPolicy string, singleChannel *entity.Channel) []entity.Channel {
@@ -138,6 +160,14 @@ func (uc *notificationIngestUsecase) SendNotification(ctx context.Context, input
 
 	if !uc.hasChannelContent(contentMap, input.Channel) {
 		return notiferror.ErrInvalidChannel
+	}
+
+	globallyAllowed, err := uc.isChannelEnabledGlobally(ctx, input.AccountID, input.Channel)
+	if err != nil {
+		return err
+	}
+	if !globallyAllowed {
+		return nil
 	}
 
 	allowed, err := uc.isChannelAllowed(ctx, input.AccountID, input.NotificationType, input.Channel)
@@ -176,6 +206,14 @@ func (uc *notificationIngestUsecase) SendMultiChannel(ctx context.Context, accou
 
 		for _, channel := range channels {
 			if !uc.hasChannelContent(contentMap, channel) {
+				continue
+			}
+
+			globallyAllowed, err := uc.isChannelEnabledGlobally(txCtx, accountID, channel)
+			if err != nil {
+				return err
+			}
+			if !globallyAllowed {
 				continue
 			}
 
