@@ -587,6 +587,11 @@ func (s *guideViewUsecase) toPersonalizedStep(step *entity.GuideStep, status ent
 }
 
 func (s *guideViewUsecase) resolveGuideName(g *entity.Guide, locale constants.Locale) string {
+	for _, t := range g.Translations {
+		if t.Language == string(locale) {
+			return t.Name
+		}
+	}
 	if len(g.Translations) > 0 {
 		return g.Translations[0].Name
 	}
@@ -594,6 +599,11 @@ func (s *guideViewUsecase) resolveGuideName(g *entity.Guide, locale constants.Lo
 }
 
 func (s *guideViewUsecase) resolveGuideDescription(g *entity.Guide, locale constants.Locale) *string {
+	for _, t := range g.Translations {
+		if t.Language == string(locale) {
+			return t.Description
+		}
+	}
 	if len(g.Translations) > 0 {
 		return g.Translations[0].Description
 	}
@@ -601,6 +611,11 @@ func (s *guideViewUsecase) resolveGuideDescription(g *entity.Guide, locale const
 }
 
 func (s *guideViewUsecase) resolveStepTitle(step *entity.GuideStep, locale constants.Locale) string {
+	for _, t := range step.Translations {
+		if t.Language == string(locale) {
+			return t.Title
+		}
+	}
 	if len(step.Translations) > 0 {
 		return step.Translations[0].Title
 	}
@@ -608,6 +623,11 @@ func (s *guideViewUsecase) resolveStepTitle(step *entity.GuideStep, locale const
 }
 
 func (s *guideViewUsecase) resolveStepDescription(step *entity.GuideStep, locale constants.Locale) *string {
+	for _, t := range step.Translations {
+		if t.Language == string(locale) {
+			return t.Description
+		}
+	}
 	if len(step.Translations) > 0 {
 		return step.Translations[0].Description
 	}
