@@ -124,7 +124,8 @@ ignore = [
 "alembic/versions/*.py" = ["PLC0415", "F401"]
 "infrastructure/rpc/services/inference_service.py" = ["ARG002"]
 "infrastructure/tools/local/*.py" = ["ARG002"]
-"core/usecases/strategies/agentic_ask.py" = ["PLR0915"]
+"core/usecases/strategies/agentic_ask.py" = ["PLR0915", "PLR0912"]
+"infrastructure/prefetch/pipeline.py" = ["TRY300"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "core", "grpc", "infrastructure", "workers"]
