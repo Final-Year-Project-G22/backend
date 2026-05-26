@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	ai_tool_port "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai_tool/domain/port"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
 	iamrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
@@ -138,6 +139,15 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(appusecase.NewNotificationCampaignUsecase, fx.As(new(usecase.NotificationCampaignUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewUserScheduledNotificationUsecase, fx.As(new(usecase.UserScheduledNotificationUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewComplianceEntryUsecase, fx.As(new(usecase.ComplianceEntryUsecase)))),
+
+	// AI tool handlers
+	fx.Provide(
+		fx.Annotate(
+			NewCheckComplianceStatusTool,
+			fx.As(new(ai_tool_port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
 
 	// --- Handlers ---
 	fx.Provide(handler.NewNotificationAdminHandler),

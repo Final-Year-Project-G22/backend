@@ -296,6 +296,13 @@ var Module = fx.Module("iam",
 			fx.ResultTags(`group:"ai_tool_handlers"`),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			NewGetUserProfileTool,
+			fx.As(new(port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
 
 	// Delivery Layer - Handler
 	fx.Provide(handler.NewAuthHandler),

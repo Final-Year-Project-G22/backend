@@ -80,6 +80,13 @@ var Module = fx.Module(
 			fx.ResultTags(`group:"ai_tool_handlers"`),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			NewGuideProgressTool,
+			fx.As(new(port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
 
 	fx.Provide(handler.NewGuideViewHandler),
 	fx.Provide(handler.NewGuideAdminHandler),
