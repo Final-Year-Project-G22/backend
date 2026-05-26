@@ -17,6 +17,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists guides for admin management with pagination and filters.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.ReadPermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleListGuides)
 
 	huma.Register(api, huma.Operation{
@@ -27,6 +28,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Retrieves guide detail for admin editor.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.ReadPermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleGetGuideAdmin)
 
 	huma.Register(api, huma.Operation{
@@ -37,6 +39,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists steps of a guide for admin editor.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.ReadPermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleListGuideStepsAdmin)
 
 	huma.Register(api, huma.Operation{
@@ -47,6 +50,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Creates a new guide with optional translations and conditions.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleCreateGuide)
 
 	huma.Register(api, huma.Operation{
@@ -57,6 +61,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Updates an existing guide.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleUpdateGuide)
 
 	huma.Register(api, huma.Operation{
@@ -67,6 +72,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Deletes a guide.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleDeleteGuide)
 
 	huma.Register(api, huma.Operation{
@@ -77,6 +83,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Adds a visibility condition to a guide.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleAddGuideCondition)
 
 	huma.Register(api, huma.Operation{
@@ -87,6 +94,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Removes a visibility condition from a guide.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleRemoveGuideCondition)
 
 	huma.Register(api, huma.Operation{
@@ -97,6 +105,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Replaces all translations for a guide.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleSetGuideTranslations)
 
 	huma.Register(api, huma.Operation{
@@ -107,6 +116,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Uploads and sets the cover image for a guide.",
 		Tags:        []string{"Admin - Guides"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleUploadGuideImage)
 
 	huma.Register(api, huma.Operation{
@@ -117,6 +127,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Creates a new guide step with translations, conditions, and dependencies.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleCreateStep)
 
 	huma.Register(api, huma.Operation{
@@ -127,6 +138,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Updates an existing guide step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleUpdateStep)
 
 	huma.Register(api, huma.Operation{
@@ -137,6 +149,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Deletes a guide step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleDeleteStep)
 
 	huma.Register(api, huma.Operation{
@@ -147,6 +160,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Reorders the steps of a guide.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleReorderSteps)
 
 	huma.Register(api, huma.Operation{
@@ -157,6 +171,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Adds a visibility condition to a step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleAddStepCondition)
 
 	huma.Register(api, huma.Operation{
@@ -167,6 +182,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Removes a visibility condition from a step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleRemoveStepCondition)
 
 	huma.Register(api, huma.Operation{
@@ -177,6 +193,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Adds a dependency to a step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleAddStepDependency)
 
 	huma.Register(api, huma.Operation{
@@ -187,6 +204,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Removes a dependency from a step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleRemoveStepDependency)
 
 	huma.Register(api, huma.Operation{
@@ -197,6 +215,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Replaces all translations for a step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.UpdatePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleSetStepTranslations)
 
 	huma.Register(api, huma.Operation{
@@ -207,6 +226,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Lists all versions of a step.",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.ReadPermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleGetStepVersions)
 
 	huma.Register(api, huma.Operation{
@@ -217,6 +237,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Reverts a step to a previous version (not yet supported).",
 		Tags:        []string{"Admin - Steps"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.WritePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleRevertStepToVersion)
 
 	huma.Register(api, huma.Operation{
@@ -227,6 +248,7 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Invalidates a specific user's journey for a guide.",
 		Tags:        []string{"Admin - Journeys"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleInvalidateUserJourney)
 
 	huma.Register(api, huma.Operation{
@@ -237,5 +259,6 @@ func RegisterGuideAdminRoutes(api huma.API, deps RouteDependencies) {
 		Description: "Invalidates all journeys for a guide.",
 		Tags:        []string{"Admin - Journeys"},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware, deps.DeletePermissionMiddleware},
 	}, deps.GuideAdminHandler.HandleInvalidateAllJourneys)
 }

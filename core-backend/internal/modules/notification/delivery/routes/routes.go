@@ -7,16 +7,20 @@ import (
 )
 
 type RouteDependencies struct {
-	AdminHandler            *handler.NotificationAdminHandler
-	CampaignTemplateHandler *handler.CampaignTemplateHandler
-	NotificationHandler     *handler.NotificationHandler
-	WebhookHandler          *handler.WebhookHandler
-	SSEHandler              *handler.SSEHandler
-	InboxSSEHandler         *handler.InboxSSEHandler
-	ScheduledAlertHandler   *handler.ScheduledAlertHandler
-	ComplianceHandler       *handler.ComplianceHandler
-	AuthMiddleware          func(huma.Context, func(huma.Context))
-	AccountStatusMiddleware func(huma.Context, func(huma.Context))
+	AdminHandler               *handler.NotificationAdminHandler
+	CampaignTemplateHandler    *handler.CampaignTemplateHandler
+	NotificationHandler        *handler.NotificationHandler
+	WebhookHandler             *handler.WebhookHandler
+	SSEHandler                 *handler.SSEHandler
+	InboxSSEHandler            *handler.InboxSSEHandler
+	ScheduledAlertHandler      *handler.ScheduledAlertHandler
+	ComplianceHandler          *handler.ComplianceHandler
+	AuthMiddleware             func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware    func(huma.Context, func(huma.Context))
+	ReadPermissionMiddleware   func(huma.Context, func(huma.Context))
+	WritePermissionMiddleware  func(huma.Context, func(huma.Context))
+	UpdatePermissionMiddleware func(huma.Context, func(huma.Context))
+	DeletePermissionMiddleware func(huma.Context, func(huma.Context))
 }
 
 func RegisterRoutes(api huma.API, engine *gin.Engine, deps RouteDependencies) {

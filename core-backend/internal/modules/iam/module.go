@@ -16,6 +16,7 @@ import (
 	iamoauth "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/oauth"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/repository"
 	infratoken "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/infrastructure/token"
+	permissions "github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
@@ -226,6 +227,18 @@ var Module = fx.Module("iam",
 	),
 	fx.Provide(service.NewRolePermissionSeeder),
 	fx.Provide(service.NewSuperAdminSeeder),
+	fx.Provide(
+		fx.Annotate(
+			service.IAMSeedPermissions,
+			fx.ResultTags(`group:"permission_seeds"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			service.IAMSeedRoles,
+			fx.ResultTags(`group:"role_seeds"`),
+		),
+	),
 
 	// Application Layer - Auth Service
 	fx.Provide(
@@ -332,13 +345,18 @@ var Module = fx.Module("iam",
 	}),
 
 	// Seed IAM permissions and roles
-	fx.Invoke(func(lc fx.Lifecycle, seeder *service.RolePermissionSeeder) {
-		lc.Append(fx.Hook{
-			OnStart: func(ctx context.Context) error {
-				return seeder.Seed(ctx)
+	fx.Invoke(
+		fx.Annotate(
+			func(lc fx.Lifecycle, seeder *service.RolePermissionSeeder, permGroups [][]permissions.SeedPermission, roleGroups [][]permissions.SeedRole) {
+				lc.Append(fx.Hook{
+					OnStart: func(ctx context.Context) error {
+						return seeder.Seed(ctx, permGroups, roleGroups)
+					},
+				})
 			},
-		})
-	}),
+			fx.ParamTags(`""`, `""`, `group:"permission_seeds"`, `group:"role_seeds"`),
+		),
+	),
 
 	// Seed super admin account
 	fx.Invoke(func(lc fx.Lifecycle, seeder *service.SuperAdminSeeder) {
