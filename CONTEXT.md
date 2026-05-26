@@ -215,3 +215,79 @@ _Avoid_: Identity admin, user admin
 - "permission" was initially used to mean both the code string and the database entity; resolved: **Permission Code** refers to the string constant, **Seed Permission** refers to the seed-time registration.
 - "role" was initially considered module-scoped; resolved: roles are **Global Roles** — a single role can authorize actions across library, community, and IAM modules.
 - "super admin bypass" was initially treated as specific to IAM routes; resolved: **Role Bypass** is a pattern used uniformly across all modules, passing `["super_admin"]` as the allowed bypass roles.
+
+### AI and agentic RAG terms
+
+**Agentic RAG**:
+A retrieval-augmented generation architecture where the LLM autonomously decides if, when, and which tools to invoke during a query. Uses a ReAct (Reason-Act-Observe) loop with a bounded iteration limit. Contrasts with simple RAG, which always retrieves and generates in one pass.
+_Avoid_: Tool-calling RAG, function-calling RAG
+
+**ReAct Loop**:
+A reasoning cycle where the LLM alternates between reasoning about what to do next and acting by calling AI Tools, observing results, until it produces a final answer. Capped at a configurable maximum number of iterations (default: 5) with forced finalization if the cap is reached.
+_Avoid_: Agent loop, tool loop, reasoning cycle
+
+**Ask Strategy**:
+The approach used to process a user query. Two strategies exist: **Simple Ask** (basic RAG with hybrid search, no LLM-driven tool autonomy) and **Agentic Ask** (ReAct loop with LLM-driven tool selection). Selected per-request via the API, falling back to simple when the configured LLM provider does not support tool calling.
+_Avoid_: Mode, pipeline type, inference mode
+
+**AI Tool**:
+A callable function that the LLM can invoke as part of a ReAct loop. Each tool has a name, description, and JSON parameter schema consumed by the LLM for function calling. Tools are either **local** (defined and executed in the AI service, e.g., knowledge base search, trusted web search) or **remote** (defined and executed in core-backend Go modules and called via gRPC, e.g., guide search, profile lookup, compliance check).
+_Avoid_: Function, plugin, capability, skill
+
+**Tool Registry**:
+A unified registry in the AI service that merges local tool definitions with remote tool definitions discovered from core-backend via `AIToolGrpcClient.ListTools()`. Exposes a combined tool list to the LLM and dispatches execution to the correct handler (local function or remote gRPC call). Remote tools are fetched at startup and refreshed on a TTL.
+_Avoid_: Tool manager, function registry, tool directory
+
+**Intent Classifier**:
+A lightweight pre-processing step that classifies a user query into one of three intent categories — `knowledge` (factual information), `personal` (user-specific status), or `mixed` (both) — using cosine similarity against pre-computed embedding centroids. Determines which tools are pre-fetched before the first LLM call.
+_Avoid_: Query router, intent detector, query classifier
+
+**Tool Pre-Fetch**:
+A performance optimization where certain tool results (e.g., knowledge base search) are computed before the first LLM call and injected into the initial prompt. Eliminates one full ReAct iteration for common queries where the LLM would have called that tool as its first action. Only one round of pre-fetching is performed per query.
+_Avoid_: Speculative execution, eager evaluation, pre-emptive tool call
+
+**Thinking Chunk**:
+A streaming event containing the LLM's internal reasoning or chain-of-thought text. Visible only in admin/debug streaming mode to provide transparency into the agent's decision-making process. Not exposed on the user-facing endpoint.
+_Avoid_: Reasoning event, chain-of-thought chunk, plan chunk
+
+**Trusted Web Search**:
+An AI Tool that fetches content from a hardcoded whitelist of domain sources (e.g., Ethiopian government and regulatory websites). Uses direct URL mapping per topic area with no external search API dependency. Runs locally in the AI service via httpx.
+_Avoid_: Web search, internet lookup, external search
+
+**Tool Call Record**:
+A structured entry stored inside an AI Response message that captures each tool invocation during a ReAct loop: tool name, arguments, result summary, success/failure status, execution time, and iteration number. Stored as JSONB and loaded as summarized context for multi-turn conversations.
+_Avoid_: Tool invocation, function call log
+
+**Debug Streaming**:
+An admin-gated variant of the Ask streaming endpoint that exposes the full ReAct loop internals: raw reasoning text (thinking chunks), complete tool arguments and results, and per-iteration latency. Regular user streaming shows only status-level events (tool call started, tool call completed).
+_Avoid_: Verbose mode, developer mode
+
+**Prompt Template**:
+A Jinja2 file loaded at application startup that defines the system prompt for the LLM. Two top-level templates exist — one for the Agentic Ask strategy (including tool instructions) and one for the Simple Ask strategy — sharing common sections (persona, guardrails, locale rules) via includes. Provider-specific formatting is handled by each LLM adapter.
+_Avoid_: System prompt, prompt config, prompt string
+
+## Relationships (AI)
+
+- An **Agentic RAG** query executes a **ReAct Loop** using one **Ask Strategy** (agentic), with tool execution managed by the **Tool Registry**.
+- A **ReAct Loop** may invoke multiple **AI Tools**, each producing a **Tool Call Record** stored on the AI Response message.
+- An **Intent Classifier** determines the **Tool Pre-Fetch** set for a query before the first LLM call.
+- The **Tool Registry** merges local **AI Tools** (knowledge base search, trusted web search) with remote **AI Tools** (guide search, profile lookup, compliance check, template find, guide progress).
+- **Debug Streaming** exposes **Thinking Chunks** and full tool details; user-facing streaming exposes only status-level tool events.
+- **Prompt Templates** are loaded at startup and rendered per-request with the available tool list, locale, and pre-fetched context.
+
+## Example dialogue
+
+> **Dev:** "When the agent calls search_knowledge_base and get_user_profile in the same ReAct step, do we run them sequentially or in parallel?"
+> **Domain expert:** "In parallel — they're independent. The Tool Registry executes them concurrently and feeds all results back to the LLM in the next reasoning step."
+
+> **Dev:** "What happens if the intent classifier misclassifies a query as 'knowledge' when the user actually needs their compliance status?"
+> **Domain expert:** "The LLM still has access to all tools via explicit tool calling. The pre-fetch just gives it KB results upfront. If it needs compliance, it calls check_compliance_status during the ReAct loop — there's no penalty for pre-fetching the wrong thing, just a small amount of wasted context."
+
+> **Dev:** "Should the user-facing stream show the LLM's reasoning text?"
+> **Domain expert:** "No — that's what debug streaming is for. The user sees 'Searching knowledge base...' as a status pill, not the raw chain-of-thought."
+
+## Flagged ambiguities
+
+- "tool calling" was initially used to mean both the programmatic auto-search pattern (regex-triggered search_guides before the LLM call) and LLM-driven function calling; resolved: programmatic auto-search is removed in favor of genuine LLM-driven tool selection via the ReAct loop.
+- "agent" was initially used loosely to mean any AI enhancement; resolved: **Agentic RAG** specifically refers to the ReAct loop architecture with LLM-driven tool selection, distinct from simple RAG.
+- "streaming" was overloaded between text streaming and tool event streaming; resolved: text chunks, tool use chunks, tool result chunks, and thinking chunks are distinct event types within the same SSE stream, with visibility controlled by debug mode.
