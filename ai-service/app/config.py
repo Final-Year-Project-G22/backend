@@ -103,6 +103,54 @@ class Settings(BaseSettings):
     ]
     AI_TOOL_REFRESH_TTL_SEC: int = 300
 
+    AI_INTENT_SIMILARITY_THRESHOLD: float = 0.6
+
+    AI_INTENT_SEED_QUERIES_KNOWLEDGE: list[str] = [
+        "business registration process",
+        "how to register a business in ethiopia",
+        "tax rates for small businesses",
+        "license types for restaurants",
+        "regulation for importers",
+        "trade license requirements",
+        "business formalization steps",
+        "what permits do I need",
+        "renewal process for trade license",
+        "tax filing deadlines ethiopia",
+        "vat registration requirements",
+        "business name registration",
+        "penalties for late filing",
+        "investment incentives ethiopia",
+        "labor law requirements",
+        "environmental impact assessment",
+        "construction permit process",
+        "food handling certificate",
+        "export license requirements",
+        "professional license renewal",
+    ]
+
+    AI_INTENT_SEED_QUERIES_PERSONAL: list[str] = [
+        "my business profile",
+        "what is my current status",
+        "show my compliance deadlines",
+        "my guide progress",
+        "where am I stuck",
+        "what step am I on",
+        "my account settings",
+        "show my reminders",
+        "my upcoming deadlines",
+        "check my compliance status",
+        "am I compliant",
+        "what have I completed so far",
+        "my recent activity",
+        "show my dashboard",
+        "my business information",
+        "what is my sector",
+        "my registration stage",
+        "how far along am I",
+        "what is missing in my profile",
+        "my pending tasks",
+    ]
+
     OTEL_ENABLED: bool = False
     PROMETHEUS_PORT: int = 9090
 

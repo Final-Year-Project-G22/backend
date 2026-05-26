@@ -31,8 +31,10 @@ from infrastructure.database.repositories import (
 from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.parsers.registry import ParserRegistry
+from infrastructure.prefetch.pipeline import PreFetchPipeline
 from infrastructure.prompts import PromptLoader
 from infrastructure.rpc import AIToolGrpcClient, CoreServiceGrpcAdapter, CoreUserGrpcClient
+from infrastructure.tools.intent_classifier import EmbeddingIntentClassifier
 from infrastructure.tools.local.search_knowledge_base import SearchKnowledgeBaseTool
 from infrastructure.tools.local.search_trusted_web import SearchTrustedWebTool
 from infrastructure.tools.tool_registry import ToolRegistry
@@ -113,6 +115,19 @@ class Container(containers.DeclarativeContainer):
         expected_remote_tools=config.provided.AI_EXPECTED_REMOTE_TOOLS,
         search_knowledge_base=search_knowledge_base_tool,
         search_trusted_web=search_trusted_web_tool,
+    )
+
+    intent_classifier = providers.Singleton(
+        EmbeddingIntentClassifier,
+        embedding_port=embedding_port,
+        knowledge_seeds=config.provided.AI_INTENT_SEED_QUERIES_KNOWLEDGE,
+        personal_seeds=config.provided.AI_INTENT_SEED_QUERIES_PERSONAL,
+        threshold=config.provided.AI_INTENT_SIMILARITY_THRESHOLD,
+    )
+
+    pre_fetch_pipeline = providers.Singleton(
+        PreFetchPipeline,
+        tool_registry=tool_registry,
     )
 
     cache_port: providers.Provider[CachePort | None] = cast(
@@ -208,6 +223,8 @@ class Container(containers.DeclarativeContainer):
         llm_port=llm_port,
         prompt_loader=prompt_loader,
         tool_registry=tool_registry,
+        intent_classifier=intent_classifier,
+        pre_fetch_pipeline=pre_fetch_pipeline,
         max_iterations=config.provided.AI_AGENTIC_MAX_ITERATIONS,
         cache=cache_port,
         event_bus=event_bus_port,

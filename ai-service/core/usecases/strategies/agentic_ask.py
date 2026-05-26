@@ -16,6 +16,7 @@ from core.ports.cache import CachePort
 from core.ports.conversation_repository import ConversationRepositoryPort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
+from core.ports.intent_classifier import IntentClassifierPort
 from core.ports.knowledge_repository import KnowledgeRepositoryPort
 from core.ports.llm import LLMPort, ToolCall
 from core.ports.tool_registry import ToolRegistryPort
@@ -26,6 +27,7 @@ from core.usecases.defaults import (
     DEFAULT_MAX_CONTEXT_HITS,
     DEFAULT_MAX_OUTPUT_TOKENS,
 )
+from infrastructure.prefetch.pipeline import PreFetchPipeline
 from infrastructure.prompts import PromptLoader
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,8 @@ class AgenticAskStrategy(AskStrategyPort):
         llm_port: LLMPort,
         prompt_loader: PromptLoader,
         tool_registry: ToolRegistryPort,
+        intent_classifier: IntentClassifierPort,
+        pre_fetch_pipeline: PreFetchPipeline,
         max_iterations: int = MAX_AGENTIC_ITERATIONS,
         *,
         cache: CachePort | None = None,
@@ -58,6 +62,8 @@ class AgenticAskStrategy(AskStrategyPort):
         self._llm_port = llm_port
         self._prompt_loader = prompt_loader
         self._tool_registry = tool_registry
+        self._intent_classifier = intent_classifier
+        self._pre_fetch_pipeline = pre_fetch_pipeline
         self._max_iterations = max_iterations
         self._cache = cache
         self._event_bus = event_bus
@@ -115,6 +121,14 @@ class AgenticAskStrategy(AskStrategyPort):
         vector_hits, bm25_hits = await self._retrieve_context(command, query_embedding)
         merged_hits = self._merge_and_dedupe_hits(vector_hits, bm25_hits)
 
+        intent = await self._intent_classifier.classify(query_embedding)
+        pre_fetch = await self._pre_fetch_pipeline.pre_fetch(
+            intent,
+            command.prompt,
+            str(command.account_id),
+            str(command.user_id),
+        )
+
         tool_defs = await self._tool_registry.get_tool_definitions()
         history = await self._load_history(conversation.id)
 
@@ -129,10 +143,19 @@ class AgenticAskStrategy(AskStrategyPort):
             history_text = self._format_history(history)
             messages.append({"role": "assistant", "content": history_text})
 
-        kb_context = self._format_kb_context(merged_hits)
+        user_context_parts: list[str] = []
+        if pre_fetch.get("kb"):
+            user_context_parts.append(pre_fetch["kb"])
+        if pre_fetch.get("profile"):
+            user_context_parts.append(f"User profile: {pre_fetch['profile']}")
+        if pre_fetch.get("progress"):
+            user_context_parts.append(f"Guide progress: {pre_fetch['progress']}")
+        if pre_fetch.get("compliance"):
+            user_context_parts.append(f"Compliance status: {pre_fetch['compliance']}")
+
         user_content = command.prompt
-        if kb_context:
-            user_content = f"{kb_context}\n\nQuestion: {user_content}"
+        if user_context_parts:
+            user_content = "Context:\n" + "\n\n".join(user_context_parts) + "\n\n" + user_content
         messages.append({"role": "user", "content": user_content})
 
         final_answer_parts: list[str] = []
