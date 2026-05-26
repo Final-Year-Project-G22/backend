@@ -944,6 +944,11 @@
             "readOnly": true,
             "type": "string"
           },
+          "debugMode": {
+            "default": false,
+            "description": "Enable debug mode including thinking chunks",
+            "type": "boolean"
+          },
           "language": {
             "description": "Language code (e.g. en, am)",
             "type": "string"
@@ -956,6 +961,11 @@
           },
           "sessionId": {
             "description": "Optional conversation ID to continue",
+            "type": "string"
+          },
+          "strategy": {
+            "default": "simple",
+            "description": "Ask strategy: simple or agentic",
             "type": "string"
           },
           "title": {
@@ -7930,6 +7940,31 @@
         ],
         "type": "object"
       },
+      "NotificationPreferencesResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/NotificationPreferencesResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "emailEnabled": {
+            "type": "boolean"
+          },
+          "pushEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "emailEnabled",
+          "pushEnabled"
+        ],
+        "type": "object"
+      },
       "NotificationSummaryResponse": {
         "additionalProperties": false,
         "properties": {
@@ -11641,6 +11676,27 @@
             "description": "Display order",
             "format": "int64",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateNotificationPreferencesRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateNotificationPreferencesRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "emailEnabled": {
+            "type": "boolean"
+          },
+          "pushEnabled": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -24378,6 +24434,88 @@
           }
         ],
         "summary": "Update device",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/global-preferences": {
+      "get": {
+        "description": "Returns the global email and push notification preferences for the authenticated user.",
+        "operationId": "getNotificationPreferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferencesResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get notification preferences",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "put": {
+        "description": "Updates the global email and push notification preferences for the authenticated user.",
+        "operationId": "updateNotificationPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferencesResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update notification preferences",
         "tags": [
           "Notifications"
         ]

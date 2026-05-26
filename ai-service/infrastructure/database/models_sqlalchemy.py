@@ -75,7 +75,7 @@ class DocumentChunk(Base):
     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(1024), nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True)
     content_tsvector: Mapped[str | None] = mapped_column(
         Text,
         Computed("to_tsvector('simple', chunk_text)", persisted=True),
@@ -188,7 +188,7 @@ class AIChatMessage(Base):
     message_type: Mapped[str] = mapped_column(String(20), nullable=False)
     user_query: Mapped[str | None] = mapped_column(Text, nullable=True)
     query_language: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
-    query_embedding: Mapped[list[float] | None] = mapped_column(Vector(1024), nullable=True)
+    query_embedding: Mapped[list[float] | None] = mapped_column(Vector(768), nullable=True)
     retrieved_chunk_ids: Mapped[list[uuid.UUID] | None] = mapped_column(
         ARRAY(UUID(as_uuid=True)), nullable=True
     )

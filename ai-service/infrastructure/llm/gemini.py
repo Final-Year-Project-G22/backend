@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -8,6 +9,8 @@ import httpx
 
 from core.domain.exceptions import LLMError
 from core.ports.llm import LLMChunk, LLMPort, LLMResult, ToolCall, ToolDefinition
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiLLMAdapter(LLMPort):
@@ -17,10 +20,17 @@ class GeminiLLMAdapter(LLMPort):
         api_key: str,
         model: str,
         http_client: httpx.AsyncClient,
+        use_vertex: bool = False,
+        vertex_project: str = "",
+        vertex_location: str = "us-central1",
     ) -> None:
         self._api_key = api_key
         self._model = model
         self._http = http_client
+        self._use_vertex = use_vertex
+        self._vertex_project = vertex_project
+        self._vertex_location = vertex_location
+        self._auth_token: str | None = None
 
     @property
     def provider(self) -> str:
@@ -29,6 +39,33 @@ class GeminiLLMAdapter(LLMPort):
     @property
     def model(self) -> str:
         return self._model
+
+    def _ensure_auth(self) -> None:
+        if self._use_vertex and not self._auth_token:
+            try:
+                import google.auth
+                import google.auth.transport.requests
+
+                credentials, _ = google.auth.default(
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                )
+                creds = credentials
+                if hasattr(creds, "refresh"):
+                    request = google.auth.transport.requests.Request()
+                    creds.refresh(request)
+                self._auth_token = creds.token
+            except Exception as e:
+                logger.warning("Vertex AI auth failed: %s", e)
+                self._auth_token = ""
+
+    def _build_url(self, action: str) -> str:
+        if self._use_vertex:
+            return (
+                f"https://{self._vertex_location}-aiplatform.googleapis.com/v1/"
+                f"projects/{self._vertex_project}/locations/{self._vertex_location}/"
+                f"publishers/google/models/{self._model}:{action}"
+            )
+        return f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:{action}"
 
     async def generate(
         self,
@@ -39,6 +76,7 @@ class GeminiLLMAdapter(LLMPort):
         max_tokens: int = 1024,
         temperature: float = 0.2,
     ) -> LLMResult:
+        self._ensure_auth()
         payload = _build_payload(
             prompt=prompt,
             system_prompt=system_prompt,
@@ -46,10 +84,13 @@ class GeminiLLMAdapter(LLMPort):
             max_tokens=max_tokens,
             temperature=temperature,
         )
+        url = self._build_url("generateContent")
+        params, headers = self._build_request_params()
         try:
             response = await self._http.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:generateContent",
-                params={"key": self._api_key},
+                url,
+                params=params or None,
+                headers=headers or None,
                 json=payload,
                 timeout=60,
             )
@@ -72,6 +113,8 @@ class GeminiLLMAdapter(LLMPort):
         max_tokens: int = 1024,
         temperature: float = 0.2,
     ) -> AsyncIterator[LLMChunk]:
+        self._ensure_auth()
+
         async def _stream() -> AsyncIterator[LLMChunk]:
             payload = _build_payload(
                 prompt=prompt,
@@ -80,11 +123,14 @@ class GeminiLLMAdapter(LLMPort):
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
+            url = self._build_url("streamGenerateContent")
+            params, headers = self._build_request_params()
             try:
                 async with self._http.stream(
                     "POST",
-                    f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:streamGenerateContent",
-                    params={"key": self._api_key},
+                    url,
+                    params=params or None,
+                    headers=headers or None,
                     json=payload,
                     timeout=60,
                 ) as response:
@@ -109,6 +155,14 @@ class GeminiLLMAdapter(LLMPort):
                 ) from exc
 
         return _stream()
+
+    def _build_request_params(self) -> tuple[dict[str, str], dict[str, str]]:
+        if self._use_vertex:
+            headers = {}
+            if self._auth_token:
+                headers["Authorization"] = f"Bearer {self._auth_token}"
+            return {}, headers
+        return {"key": self._api_key}, {}
 
 
 def _build_payload(

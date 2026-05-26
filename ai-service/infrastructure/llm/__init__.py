@@ -27,6 +27,9 @@ def create_llm_adapter(
             api_key=settings.GEMINI_API_KEY,
             model=settings.GEMINI_LLM_MODEL,
             http_client=http_client,
+            use_vertex=settings.GEMINI_USE_VERTEX,
+            vertex_project=settings.GEMINI_VERTEX_PROJECT,
+            vertex_location=settings.GEMINI_VERTEX_LOCATION,
         )
 
     if provider == "ollama":
