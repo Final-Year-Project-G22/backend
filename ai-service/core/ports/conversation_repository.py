@@ -31,6 +31,9 @@ class ConversationRepositoryPort(ABC):
     async def soft_delete_session(self, session_id: uuid.UUID, *, deleted_at: datetime) -> bool: ...
 
     @abstractmethod
+    async def update_session_title(self, session_id: uuid.UUID, title: str) -> None: ...
+
+    @abstractmethod
     async def add_message(self, message: AIChatMessage) -> AIChatMessage: ...
 
     @abstractmethod
