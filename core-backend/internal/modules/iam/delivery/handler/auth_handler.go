@@ -51,7 +51,7 @@ func (h *AuthHandler) HandleRegister(ctx context.Context, input *dto.RegisterInp
 			AccessToken: result.AccessToken,
 			ExpiresAt:   result.ExpiresAt,
 			User:        toUserDTO(result.User),
-			Account:     toAccountDTO(result.Account),
+			Account:     toAccountDTO(result.Account, result.Language),
 		},
 	}, nil
 }
@@ -73,7 +73,7 @@ func (h *AuthHandler) HandleLogin(ctx context.Context, input *dto.LoginInput) (*
 			AccessToken: result.AccessToken,
 			ExpiresAt:   result.ExpiresAt,
 			User:        toUserDTO(result.User),
-			Account:     toAccountDTO(result.Account),
+			Account:     toAccountDTO(result.Account, result.Language),
 		},
 	}, nil
 }
@@ -159,7 +159,7 @@ func (h *AuthHandler) HandleGetCurrentUser(ctx context.Context, input *dto.GetCu
 	return &dto.GetCurrentUserOutput{
 		Body: dto.GetCurrentUserResponseBody{
 			User:        toUserDTO(result.User),
-			Account:     toAccountDTO(result.Account),
+			Account:     toAccountDTO(result.Account, result.Language),
 			Roles:       toRoleDTOs(result.Roles),
 			Permissions: toPermissionDTOs(result.Permissions),
 		},
@@ -272,12 +272,13 @@ func toUserDTO(user *entity.User) dto.UserDTO {
 }
 
 // toAccountDTO maps a domain Account entity to an AccountDTO.
-func toAccountDTO(account *entity.Account) dto.AccountDTO {
+func toAccountDTO(account *entity.Account, language string) dto.AccountDTO {
 	return dto.AccountDTO{
 		ID:       account.ID,
 		Email:    account.Email,
 		Username: account.Username,
 		Status:   string(account.Status),
+		Language: language,
 	}
 }
 

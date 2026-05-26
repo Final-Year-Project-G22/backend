@@ -120,6 +120,12 @@ var Module = fx.Module("iam",
 			fx.As(new(repository.SectorRepository)),
 		),
 	),
+	fx.Provide(
+		fx.Annotate(
+			infrarepo.NewAccountPreferenceRepository,
+			fx.As(new(repository.AccountPreferenceRepository)),
+		),
+	),
 
 	// OAuth Infrastructure
 	fx.Provide(fx.Annotate(
@@ -303,6 +309,7 @@ var Module = fx.Module("iam",
 	fx.Provide(handler.NewTaxonomyHandler),
 	fx.Provide(handler.NewBusinessProfileHandler),
 	fx.Provide(handler.NewNotificationPreferenceHandler),
+	fx.Provide(handler.NewAccountPreferenceHandler),
 
 	// Invocations
 
@@ -315,6 +322,7 @@ var Module = fx.Module("iam",
 		userHandler *handler.UserHandler, imageHandler *handler.ImageHandler,
 		oauthHandler *handler.OAuthHandler,
 		notificationPrefHandler *handler.NotificationPreferenceHandler,
+		accountPrefHandler *handler.AccountPreferenceHandler,
 		tokenService token.TokenService,
 		authService service.AuthService, roleAssignmentUsecase usecase.RoleAssignmentUsecase) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
@@ -331,6 +339,7 @@ var Module = fx.Module("iam",
 			ImageHandler:            imageHandler,
 			OAuthHandler:            oauthHandler,
 			NotificationPrefHandler: notificationPrefHandler,
+			AccountPrefHandler:      accountPrefHandler,
 			AuthMiddleware:          authMiddleware,
 			AccountStatusMiddleware: accountStatusMiddleware,
 			RoleAssignmentUsecase:   roleAssignmentUsecase,
