@@ -108,3 +108,33 @@ async def test_execute_returns_strategy_result() -> None:
     command = _build_command()
     response = await usecase.execute(command)
     assert response is result
+
+
+@pytest.mark.asyncio
+async def test_execute_falls_back_to_simple_when_agentic_disabled() -> None:
+    simple = _make_strategy()
+    agentic = _make_strategy()
+    usecase = AskAIUseCase(
+        simple_strategy=simple,
+        agentic_strategy=agentic,
+        agentic_enabled=False,
+    )
+    command = _build_command(strategy="agentic")
+    await usecase.execute(command)
+    simple.execute.assert_awaited_once_with(command)
+    agentic.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_execute_uses_agentic_when_enabled() -> None:
+    simple = _make_strategy()
+    agentic = _make_strategy()
+    usecase = AskAIUseCase(
+        simple_strategy=simple,
+        agentic_strategy=agentic,
+        agentic_enabled=True,
+    )
+    command = _build_command(strategy="agentic")
+    await usecase.execute(command)
+    agentic.execute.assert_awaited_once_with(command)
+    simple.execute.assert_not_awaited()
