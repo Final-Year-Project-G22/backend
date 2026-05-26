@@ -90,6 +90,10 @@ class Settings(BaseSettings):
     OLLAMA_LLM_MODEL: str = "qwen2.5"
     AI_ASK_ENABLED: bool = True
 
+    AI_PROMPT_DIR: str = "prompts"
+    AI_AGENTIC_ENABLED: bool = False
+    AI_AGENTIC_MAX_ITERATIONS: int = 5
+
     OTEL_ENABLED: bool = False
     PROMETHEUS_PORT: int = 9090
 
