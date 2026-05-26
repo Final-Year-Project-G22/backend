@@ -29,6 +29,7 @@ from infrastructure.database.repositories import (
 from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.parsers.registry import ParserRegistry
+from infrastructure.prompts import PromptLoader
 from infrastructure.rpc import AIToolGrpcClient, CoreServiceGrpcAdapter, CoreUserGrpcClient
 from workers.tasks import IngestionRequestedTaskHandler
 
@@ -49,6 +50,11 @@ class Container(containers.DeclarativeContainer):
     )
 
     config = providers.Singleton(Settings)
+
+    prompt_loader = providers.Singleton(
+        PromptLoader,
+        template_dir=config.provided.AI_PROMPT_DIR,
+    )
 
     core_grpc_client = providers.Singleton(
         CoreUserGrpcClient,

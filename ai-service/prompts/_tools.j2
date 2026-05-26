@@ -1,0 +1,7 @@
+You have access to the following tools:
+
+{% for tool in tools %}
+- {{ tool.name }}: {{ tool.description }}
+{% endfor %}
+
+Use these tools when you need information that is not already in your conversation history. Do NOT call a tool if you already have the information needed from the context below.
