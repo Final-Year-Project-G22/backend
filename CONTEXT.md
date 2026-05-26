@@ -149,3 +149,69 @@ _Avoid_: Language field, locale metadata
 
 - "language" was initially used interchangeably with "locale"; resolved: **locale** is the canonical term, encompassing both language and regional formatting conventions.
 - "notification language" was used to mean both the user's display preference and the template output language; resolved: **User Locale** governs account-level preference, **Notification Locale** is the resolved locale carried in the event envelope.
+
+### Permission and authorization terms
+
+**Permission Code**:
+A dot-notated string that identifies one discrete action in the system, such as `library.read`, `iam.admin.list`, or `guide.write`. Permission codes follow the pattern `module.action` — where `module` is the owning module's namespace. Permissions are the atomic unit of authorization.
+_Avoid_: Right, scope, privilege
+
+**Module Permission Namespace**:
+The prefix of a permission code that identifies the owning module (e.g., `library.*` for the library module, `iam.*` for the IAM module). Each module defines its own namespace, keeping authorization concerns co-located with the code they protect.
+_Avoid_: Permission category, permission group
+
+**Seed Permission**:
+A permission registered at application startup by a module through the FX group injection mechanism (`group:"permission_seeds"`). Upserted into the permissions table by the Role Permission Seeder on every start. Exists for the lifetime of the application.
+_Avoid_: Dynamic permission, runtime permission
+
+**Global Role**:
+A role entity stored in the IAM module that can hold **Permission Codes** from any module. Roles are not scoped to a single module. Assigning a **Global Role** to an account grants all linked permissions across all modules.
+_Avoid_: Module role, scoped role
+
+**System Role**:
+A non-mutable **Global Role** seeded at startup, such as `super_admin` or `iam_admin`. Cannot be deleted or renamed through the API.
+_Avoid_: Default role, built-in role
+
+**Custom Role**:
+A mutable **Global Role** created through the admin API. Can be assigned any subset of seeded permissions from any module.
+_Avoid_: User role, custom permission set
+
+**Role-Permission Assignment**:
+The mapping between a **Global Role** and a **Permission Code** via the `role_permissions` join table. Determines what permissions are granted to any account that holds the role.
+_Avoid_: Role permission link, grant record
+
+**Role Bypass**:
+A middleware optimization that skips the permission lookup for accounts holding an enumerated set of role codes (e.g., `super_admin`). Used when the role implicitly grants all applicable permissions.
+_Avoid_: Super admin bypass, role skip
+
+**Idempotent Permission Seed**:
+A seed operation that upserts a **Seed Permission** only when its code does not already exist in the database. Prevents duplicate permission rows across restarts.
+_Avoid_: Create-or-skip, first-run seed
+
+**Super Admin Role**:
+The **System Role** with code `super_admin`. Receives every **Seed Permission** from every module automatically via the seeder. Uses **Role Bypass** in all middleware instances to avoid per-request permission checks.
+_Avoid_: Root, admin, global admin
+
+**IAM Admin Role**:
+The **System Role** with code `iam_admin`. Receives an explicit subset of `iam.*` permissions. Does not receive permissions from other modules (library, community, guide, notification).
+_Avoid_: Identity admin, user admin
+
+## Relationships (permissions)
+
+- A **Permission Code** belongs to exactly one **Module Permission Namespace**.
+- A **Seed Permission** is defined by the module that owns its namespace and is provided via `group:"permission_seeds"`.
+- A **Global Role** aggregates **Permission Codes** through **Role-Permission Assignments**.
+- A **System Role** is seeded at startup; a **Custom Role** is created at runtime.
+- The **Super Admin Role** automatically receives all **Seed Permissions** from all modules; the **IAM Admin Role** receives only `iam.*` permissions.
+- A **Role Bypass** is a middleware-level shortcut that avoids checking individual **Permission Codes** by verifying the account's role against an allow-list.
+
+## Example dialogue
+
+> **Dev:** "Should I add `community.read` as a permission on the community admin list endpoint?"
+> **Domain expert:** "Yes — every module's admin endpoints should be gated by its own namespace. That way a `community_admin` role can read communities without also getting IAM read access."
+
+## Flagged ambiguities
+
+- "permission" was initially used to mean both the code string and the database entity; resolved: **Permission Code** refers to the string constant, **Seed Permission** refers to the seed-time registration.
+- "role" was initially considered module-scoped; resolved: roles are **Global Roles** — a single role can authorize actions across library, community, and IAM modules.
+- "super admin bypass" was initially treated as specific to IAM routes; resolved: **Role Bypass** is a pattern used uniformly across all modules, passing `["super_admin"]` as the allowed bypass roles.
