@@ -5,7 +5,7 @@ from typing import Any, cast
 from dependency_injector import containers, providers
 
 import grpc as grpc_lib
-from app.config import AI_PERSONA_SYSTEM_PROMPT, AI_RESTRICTIONS, Settings
+from app.config import Settings
 from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
 from core.ports.core_service import CoreServicePort
@@ -18,6 +18,8 @@ from core.usecases import (
     IngestionOrchestratorUseCase,
     QuotaGuardUseCase,
 )
+from core.usecases.strategies.agentic_ask import AgenticAskStrategy
+from core.usecases.strategies.simple_ask import SimpleAskStrategy
 from infrastructure.chunking.registry import ChunkingRegistry
 from infrastructure.database.connection import async_session_factory
 from infrastructure.database.repositories import (
@@ -185,16 +187,34 @@ class Container(containers.DeclarativeContainer):
         conversation_repository=conversation_repository,
         quota_guard=quota_guard,
     )
-    ask_ai = providers.Factory(
-        AskAIUseCase,
+
+    simple_ask_strategy = providers.Factory(
+        SimpleAskStrategy,
         conversation=conversation,
-        quota_guard=quota_guard,
         knowledge_repository=knowledge_repository,
         embedding_port=embedding_port,
         llm_port=llm_port,
-        ai_tool_client=ai_tool_client,
-        persona_prompt=providers.Object(AI_PERSONA_SYSTEM_PROMPT),
-        restrictions=providers.Object(AI_RESTRICTIONS),
+        prompt_loader=prompt_loader,
+        tool_registry=tool_registry,
         cache=cache_port,
         event_bus=event_bus_port,
+    )
+
+    agentic_ask_strategy = providers.Factory(
+        AgenticAskStrategy,
+        conversation=conversation,
+        knowledge_repository=knowledge_repository,
+        embedding_port=embedding_port,
+        llm_port=llm_port,
+        prompt_loader=prompt_loader,
+        tool_registry=tool_registry,
+        max_iterations=config.provided.AI_AGENTIC_MAX_ITERATIONS,
+        cache=cache_port,
+        event_bus=event_bus_port,
+    )
+
+    ask_ai = providers.Factory(
+        AskAIUseCase,
+        simple_strategy=simple_ask_strategy,
+        agentic_strategy=agentic_ask_strategy,
     )
