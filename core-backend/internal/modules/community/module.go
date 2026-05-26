@@ -16,7 +16,6 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
-	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/taxonomy"
 	"github.com/Final-Year-Project-G22/backend/core/internal/ws"
 	"github.com/danielgtaylor/huma/v2"
@@ -140,6 +139,18 @@ var Module = fx.Module(
 	fx.Provide(handler.NewCommunityAdminHandler),
 	fx.Provide(service.NewCommunityAttachmentValidator),
 	fx.Provide(handler.NewCommunityHandler),
+	fx.Provide(
+		fx.Annotate(
+			CommunitySeedPermissions,
+			fx.ResultTags(`group:"permission_seeds"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			CommunitySeedRoles,
+			fx.ResultTags(`group:"role_seeds"`),
+		),
+	),
 	fx.Provide(ws.NewHub),
 	fx.Provide(ws.NewHandler),
 	fx.Invoke(func(
@@ -156,10 +167,10 @@ var Module = fx.Module(
 		engine.GET("/ws", gin.WrapH(wsHandler))
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
-		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMRead, nil)
-		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMWrite, nil)
-		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMUpdate, nil)
-		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMDelete, nil)
+		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, CommunityRead, []string{"super_admin"})
+		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, CommunityWrite, []string{"super_admin"})
+		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, CommunityUpdate, []string{"super_admin"})
+		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, CommunityDelete, []string{"super_admin"})
 
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			CommunityHandler:           communityHandler,

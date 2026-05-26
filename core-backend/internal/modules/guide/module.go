@@ -12,6 +12,8 @@ import (
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -82,14 +84,35 @@ var Module = fx.Module(
 	fx.Provide(handler.NewGuideViewHandler),
 	fx.Provide(handler.NewGuideAdminHandler),
 
-	fx.Invoke(func(api huma.API, guideViewHandler *handler.GuideViewHandler, guideAdminHandler *handler.GuideAdminHandler, tokenService token.TokenService, authService iamservice.AuthService) {
+	fx.Provide(
+		fx.Annotate(
+			GuideSeedPermissions,
+			fx.ResultTags(`group:"permission_seeds"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			GuideSeedRoles,
+			fx.ResultTags(`group:"role_seeds"`),
+		),
+	),
+
+	fx.Invoke(func(api huma.API, guideViewHandler *handler.GuideViewHandler, guideAdminHandler *handler.GuideAdminHandler, tokenService token.TokenService, authService iamservice.AuthService, roleAssignmentUsecase iamusecase.RoleAssignmentUsecase) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
+		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, GuideRead, []string{"super_admin"})
+		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, GuideWrite, []string{"super_admin"})
+		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, GuideUpdate, []string{"super_admin"})
+		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, GuideDelete, []string{"super_admin"})
 		routes.RegisterRoutes(api, routes.RouteDependencies{
-			GuideViewHandler:        guideViewHandler,
-			GuideAdminHandler:       guideAdminHandler,
-			AuthMiddleware:          authMiddleware,
-			AccountStatusMiddleware: accountStatusMiddleware,
+			GuideViewHandler:           guideViewHandler,
+			GuideAdminHandler:          guideAdminHandler,
+			AuthMiddleware:             authMiddleware,
+			AccountStatusMiddleware:    accountStatusMiddleware,
+			ReadPermissionMiddleware:   readPermissionMiddleware,
+			WritePermissionMiddleware:  writePermissionMiddleware,
+			UpdatePermissionMiddleware: updatePermissionMiddleware,
+			DeletePermissionMiddleware: deletePermissionMiddleware,
 		})
 	}),
 )

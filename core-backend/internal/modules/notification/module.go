@@ -7,6 +7,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	appservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/service"
 	appusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/delivery/handler"
@@ -16,6 +17,7 @@ import (
 	emailProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/email"
 	pushProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/push"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/repository"
+	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -127,6 +129,19 @@ var Module = fx.Module(
 	fx.Provide(handler.NewScheduledAlertHandler),
 	fx.Provide(handler.NewComplianceHandler),
 
+	fx.Provide(
+		fx.Annotate(
+			NotificationSeedPermissions,
+			fx.ResultTags(`group:"permission_seeds"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			NotificationSeedRoles,
+			fx.ResultTags(`group:"role_seeds"`),
+		),
+	),
+
 	// --- Routes ---
 	fx.Invoke(func(
 		api huma.API,
@@ -141,20 +156,29 @@ var Module = fx.Module(
 		complianceHandler *handler.ComplianceHandler,
 		tokenService token.TokenService,
 		authService service.AuthService,
+		roleAssignmentUsecase iamusecase.RoleAssignmentUsecase,
 	) {
 		authMiddleware := middleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := middleware.AccountStatusMiddleware(api, authService)
+		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, NotificationRead, []string{"super_admin"})
+		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, NotificationWrite, []string{"super_admin"})
+		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, NotificationUpdate, []string{"super_admin"})
+		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, NotificationDelete, []string{"super_admin"})
 		routes.RegisterRoutes(api, engine, routes.RouteDependencies{
-			AdminHandler:            adminHandler,
-			CampaignTemplateHandler: campaignTemplateHandler,
-			NotificationHandler:     notificationHandler,
-			WebhookHandler:          webhookHandler,
-			SSEHandler:              sseHandler,
-			InboxSSEHandler:         inboxSSEHandler,
-			ScheduledAlertHandler:   scheduledAlertHandler,
-			ComplianceHandler:       complianceHandler,
-			AuthMiddleware:          authMiddleware,
-			AccountStatusMiddleware: accountStatusMiddleware,
+			AdminHandler:               adminHandler,
+			CampaignTemplateHandler:    campaignTemplateHandler,
+			NotificationHandler:        notificationHandler,
+			WebhookHandler:             webhookHandler,
+			SSEHandler:                 sseHandler,
+			InboxSSEHandler:            inboxSSEHandler,
+			ScheduledAlertHandler:      scheduledAlertHandler,
+			ComplianceHandler:          complianceHandler,
+			AuthMiddleware:             authMiddleware,
+			AccountStatusMiddleware:    accountStatusMiddleware,
+			ReadPermissionMiddleware:   readPermissionMiddleware,
+			WritePermissionMiddleware:  writePermissionMiddleware,
+			UpdatePermissionMiddleware: updatePermissionMiddleware,
+			DeletePermissionMiddleware: deletePermissionMiddleware,
 		})
 	}),
 
