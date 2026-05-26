@@ -234,4 +234,5 @@ class Container(containers.DeclarativeContainer):
         AskAIUseCase,
         simple_strategy=simple_ask_strategy,
         agentic_strategy=agentic_ask_strategy,
+        agentic_enabled=config.provided.AI_AGENTIC_ENABLED,
     )

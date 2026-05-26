@@ -18,9 +18,12 @@ class AskAIUseCase:
         self,
         simple_strategy: SimpleAskStrategy,
         agentic_strategy: AgenticAskStrategy | None = None,
+        *,
+        agentic_enabled: bool = True,
     ) -> None:
         self._simple_strategy = simple_strategy
         self._agentic_strategy = agentic_strategy
+        self._agentic_enabled = agentic_enabled
 
     @property
     def _llm_port(self) -> Any:
@@ -30,7 +33,11 @@ class AskAIUseCase:
             return None
 
     def _select_strategy(self, command: AskAICommand) -> AskStrategyPort:
-        if command.strategy == "agentic" and self._agentic_strategy is not None:
+        if (
+            self._agentic_enabled
+            and command.strategy == "agentic"
+            and self._agentic_strategy is not None
+        ):
             return self._agentic_strategy
         return self._simple_strategy
 
