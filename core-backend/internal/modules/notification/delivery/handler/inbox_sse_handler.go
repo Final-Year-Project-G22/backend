@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
@@ -27,6 +29,18 @@ func NewInboxSSEHandler(broadcaster *service.InboxSSEBroadcaster, tokenService t
 		authService:  authService,
 		logger:       logger,
 	}
+}
+
+// resetFlusher wraps a gin.ResponseWriter to reset the write deadline on each flush.
+// This prevents http.Server.WriteTimeout from killing long-lived SSE connections.
+type resetFlusher struct {
+	gin.ResponseWriter
+}
+
+func (w *resetFlusher) Flush() {
+	ctrl := http.NewResponseController(w.ResponseWriter)
+	_ = ctrl.SetWriteDeadline(time.Now().Add(30 * time.Second))
+	w.ResponseWriter.Flush()
 }
 
 func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
@@ -53,6 +67,8 @@ func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("X-Accel-Buffering", "no")
 
+	c.Writer = &resetFlusher{ResponseWriter: c.Writer}
+
 	// Flush the headers to establish the connection
 	c.Writer.Flush()
 
@@ -69,6 +85,9 @@ func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
 		return
 	}
 
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case event := <-ch:
@@ -78,6 +97,9 @@ func (h *InboxSSEHandler) HandleInboxEvents(c *gin.Context) {
 				continue
 			}
 			_, _ = fmt.Fprintf(c.Writer, "event: notification_new\ndata: %s\n\n", data)
+			flusher.Flush()
+		case <-ticker.C:
+			_, _ = fmt.Fprintf(c.Writer, ": heartbeat\n\n")
 			flusher.Flush()
 		case <-c.Request.Context().Done():
 			return

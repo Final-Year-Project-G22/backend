@@ -86,6 +86,10 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	muteStatus, err := h.communityService.ListThreadMuteStatus(ctx, accountID, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 	unreadCounts, err := h.communityService.ListThreadUnreadCounts(ctx, accountID, threadIDs)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -99,7 +103,7 @@ func (h *CommunityHandler) HandleListThreads(ctx context.Context, input *dto.Lis
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
 		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
+		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], muteStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
 	}
 
 	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
@@ -123,6 +127,10 @@ func (h *CommunityHandler) HandleListAllThreads(ctx context.Context, input *dto.
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	muteStatus, err := h.communityService.ListThreadMuteStatus(ctx, accountID, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 	unreadCounts, err := h.communityService.ListThreadUnreadCounts(ctx, accountID, threadIDs)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -136,7 +144,7 @@ func (h *CommunityHandler) HandleListAllThreads(ctx context.Context, input *dto.
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
 		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
+		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], muteStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
 	}
 
 	return &dto.ListThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
@@ -159,6 +167,10 @@ func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.S
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	muteStatus, err := h.communityService.ListThreadMuteStatus(ctx, accountID, threadIDs)
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 	unreadCounts, err := h.communityService.ListThreadUnreadCounts(ctx, accountID, threadIDs)
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -172,7 +184,7 @@ func (h *CommunityHandler) HandleSearchThreads(ctx context.Context, input *dto.S
 	items := make([]*dto.ThreadDTO, 0, len(threads))
 	for _, thread := range threads {
 		authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
+		items = append(items, dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], muteStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID]))
 	}
 	return &dto.SearchThreadsOutput{Body: dto.ListThreadsResponseBody{Threads: items}}, nil
 }
@@ -188,6 +200,10 @@ func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetTh
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
+	muteStatus, err := h.communityService.ListThreadMuteStatus(ctx, accountID, []uuid.UUID{thread.ID})
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
 	unreadCounts, err := h.communityService.ListThreadUnreadCounts(ctx, accountID, []uuid.UUID{thread.ID})
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
@@ -197,7 +213,7 @@ func (h *CommunityHandler) HandleGetThread(ctx context.Context, input *dto.GetTh
 		return nil, apperrors.ToHumaError(ctx, err)
 	}
 	authorMeta := h.resolveAuthorMeta(ctx, thread.AuthorAccountID, make(map[uuid.UUID]*dto.AuthorMeta))
-	return &dto.GetThreadOutput{Body: dto.GetThreadResponseBody{Thread: dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID])}}, nil
+	return &dto.GetThreadOutput{Body: dto.GetThreadResponseBody{Thread: dto.ToThreadDTO(thread, authorMeta, followStatus[thread.ID], muteStatus[thread.ID], unreadCounts[thread.ID], solutionStatus[thread.ID])}}, nil
 }
 
 func (h *CommunityHandler) HandleListPosts(ctx context.Context, input *dto.ListPostsInput) (*dto.ListPostsOutput, error) {
@@ -370,6 +386,22 @@ func (h *CommunityHandler) HandleUnfollowThread(ctx context.Context, input *dto.
 	return &dto.UnfollowThreadOutput{Body: dto.FollowResponseBody{Message: i18n.T(ctx, "community.successes.threadUnfollowed")}}, nil
 }
 
+func (h *CommunityHandler) HandleMuteThread(ctx context.Context, input *dto.MuteThreadInput) (*dto.MuteThreadOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.communityService.MuteThread(ctx, accountID, input.ThreadID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.MuteThreadOutput{Body: dto.FollowResponseBody{Message: "Thread muted"}}, nil
+}
+
+func (h *CommunityHandler) HandleUnmuteThread(ctx context.Context, input *dto.UnmuteThreadInput) (*dto.UnmuteThreadOutput, error) {
+	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
+	if err := h.communityService.UnmuteThread(ctx, accountID, input.ThreadID); err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+	return &dto.UnmuteThreadOutput{Body: dto.FollowResponseBody{Message: "Thread unmuted"}}, nil
+}
+
 func (h *CommunityHandler) HandleMarkThreadRead(ctx context.Context, input *dto.MarkThreadReadInput) (*dto.MarkThreadReadOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	if err := h.communityService.MarkThreadRead(ctx, accountID, input.ThreadID); err != nil {
@@ -420,7 +452,7 @@ func (h *CommunityHandler) HandleListFollowedThreads(ctx context.Context, input 
 	authorCache := make(map[uuid.UUID]*dto.AuthorMeta)
 	for _, setting := range settings {
 		authorMeta := h.resolveAuthorMeta(ctx, setting.Thread.AuthorAccountID, authorCache)
-		items = append(items, dto.ToThreadDTO(&setting.Thread, authorMeta, true, unreadCounts[setting.Thread.ID], solutionStatus[setting.Thread.ID]))
+		items = append(items, dto.ToThreadDTO(&setting.Thread, authorMeta, true, setting.IsMuted, unreadCounts[setting.Thread.ID], solutionStatus[setting.Thread.ID]))
 	}
 	return &dto.ListFollowedThreadsOutput{Body: dto.ListFollowedThreadsResponseBody{Threads: items}}, nil
 }

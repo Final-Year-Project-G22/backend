@@ -58,6 +58,21 @@ func (u *communityFollowUsecase) UnfollowThread(ctx context.Context, accountID, 
 	return u.threadSettingsRepo.UpsertFollow(ctx, accountID, threadID, false)
 }
 
+func (u *communityFollowUsecase) MuteThread(ctx context.Context, accountID, threadID uuid.UUID) error {
+	if _, err := u.threadRepo.GetByID(ctx, threadID); err != nil {
+		return err
+	}
+	return u.threadSettingsRepo.SetMuted(ctx, accountID, threadID, true)
+}
+
+func (u *communityFollowUsecase) UnmuteThread(ctx context.Context, accountID, threadID uuid.UUID) error {
+	return u.threadSettingsRepo.SetMuted(ctx, accountID, threadID, false)
+}
+
+func (u *communityFollowUsecase) ListThreadMuteStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	return u.threadSettingsRepo.ListMuteStatus(ctx, accountID, threadIDs)
+}
+
 func (u *communityFollowUsecase) FollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error {
 	if err := u.ensureCategoryActive(ctx, categoryID); err != nil {
 		return err
@@ -85,6 +100,10 @@ func (u *communityFollowUsecase) ListFollowedCategories(ctx context.Context, acc
 
 func (u *communityFollowUsecase) ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
 	return u.threadSettingsRepo.ListFollowStatus(ctx, accountID, threadIDs)
+}
+
+func (u *communityFollowUsecase) ListThreadFollowers(ctx context.Context, threadID uuid.UUID) ([]uuid.UUID, error) {
+	return u.threadSettingsRepo.ListThreadFollowers(ctx, threadID)
 }
 
 func (u *communityFollowUsecase) ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error) {

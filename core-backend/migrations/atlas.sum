@@ -1,4 +1,4 @@
-h1:/UBdxmv353H04viHg31v3+obqzGp+sM9ZEDLKvda9Hg=
+h1:ObV/4K2rXyU6DlLmcUZLSXnTpXz+mSFMi68T6nyJDPs=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -35,3 +35,4 @@ h1:/UBdxmv353H04viHg31v3+obqzGp+sM9ZEDLKvda9Hg=
 20260520203200_seed_amharic_notification_translations.sql h1:Vneu2O/eXUc/tKH4sH+Fat6W3zwOBdAnRKXuvqYb2PQ=
 20260520203300_seed_compliance_alert_template.sql h1:ad0xUp+LHiowumz1ARH1Ylcx0qut6QUdtSgxj6QMyEM=
 20260520203400_seed_compliance_type_localizations.sql h1:HI2ahTC6pgWoj+yjAeP0TZH22lDMouF2DovrXcKbg00=
+20260520203600_update_community_notification_content.sql h1:s/yRSdwOJJHHaVAMdzUKfBNNnahbBnuDh2lMxEqumiE=

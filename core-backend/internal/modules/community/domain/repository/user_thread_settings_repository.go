@@ -13,6 +13,8 @@ type UserThreadSettingsRepository interface {
 	Get(ctx context.Context, accountID, threadID uuid.UUID) (*entity.UserThreadSettings, error)
 	ListFollowed(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserThreadSettings, error)
 	ListFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
+	ListMuteStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
+	ListThreadFollowers(ctx context.Context, threadID uuid.UUID) ([]uuid.UUID, error)
 	UpsertFollow(ctx context.Context, accountID, threadID uuid.UUID, following bool) error
 	SetMuted(ctx context.Context, accountID, threadID uuid.UUID, muted bool) error
 	UpdateLastRead(ctx context.Context, accountID, threadID uuid.UUID, at time.Time) error
