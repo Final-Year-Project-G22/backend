@@ -167,6 +167,9 @@ services:
       CHAPA_RETURN_URL: ${CHAPA_RETURN_URL}
 
       FCM_CREDENTIALS_FILE: ${FCM_CREDENTIALS_FILE:-}
+
+      IAM_SUPER_ADMIN_EMAIL: ${IAM_SUPER_ADMIN_EMAIL}
+      IAM_SUPER_ADMIN_PASSWORD: ${IAM_SUPER_ADMIN_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
