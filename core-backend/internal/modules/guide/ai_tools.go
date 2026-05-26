@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/guide/domain/usecase"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/constants"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/query"
@@ -119,4 +120,71 @@ func (t *GuideDetailTool) Execute(ctx context.Context, argsJSON string, accountI
 
 	result, _ := json.Marshal(guide)
 	return string(result), nil
+}
+
+// GuideProgressTool returns the user's progress through business formalization guides.
+type guideProgressArgs struct {
+	GuideID *string `json:"guideId,omitempty"`
+}
+
+type GuideProgressTool struct {
+	progressRepo repository.ProgressRepository
+}
+
+func NewGuideProgressTool(progressRepo repository.ProgressRepository) *GuideProgressTool {
+	return &GuideProgressTool{progressRepo: progressRepo}
+}
+
+func (t *GuideProgressTool) Name() string { return "get_guide_progress" }
+
+func (t *GuideProgressTool) Description() string {
+	return "Get the user's progress through business formalization guides: completed steps, current step, and overall completion stats."
+}
+
+func (t *GuideProgressTool) ParameterSchema() string {
+	return `{
+		"type": "object",
+		"properties": {
+			"guideId": {"type": "string", "format": "uuid", "description": "Optional specific guide ID to get progress for"}
+		}
+	}`
+}
+
+func (t *GuideProgressTool) Execute(ctx context.Context, argsJSON string, accountID, userID uuid.UUID) (string, error) {
+	var args guideProgressArgs
+	if err := json.Unmarshal([]byte(argsJSON), &args); err != nil {
+		return "", err
+	}
+
+	if args.GuideID != nil && *args.GuideID != "" {
+		guideID, parseErr := uuid.Parse(*args.GuideID)
+		if parseErr != nil {
+			return "", parseErr
+		}
+		progress, listErr := t.progressRepo.ListProgressByGuide(ctx, accountID, userID, guideID, query.DefaultQueryOptions())
+		if listErr != nil {
+			return "", listErr
+		}
+		payload, _ := json.Marshal(progress)
+		return string(payload), nil
+	}
+
+	completed, inProgress, totalStepsDone, totalStepsAll, statsErr := t.progressRepo.GetProgressStats(ctx, accountID, userID)
+	if statsErr != nil {
+		return "", statsErr
+	}
+
+	result := map[string]interface{}{
+		"completedGuides":   completed,
+		"inProgressGuides":  inProgress,
+		"totalStepsDone":    totalStepsDone,
+		"totalStepsAll":     totalStepsAll,
+		"completionPercent": 0.0,
+	}
+	if totalStepsAll > 0 {
+		result["completionPercent"] = float64(totalStepsDone) / float64(totalStepsAll) * 100.0
+	}
+
+	payload, _ := json.Marshal(result)
+	return string(payload), nil
 }

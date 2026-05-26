@@ -2,6 +2,7 @@ package library
 
 import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
+	ai_tool_port "github.com/Final-Year-Project-G22/backend/core/internal/modules/ai_tool/domain/port"
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
@@ -93,6 +94,15 @@ var Module = fx.Module(
 
 	fx.Provide(handler.NewLibraryHandler),
 	fx.Provide(handler.NewLibraryAdminHandler),
+
+	// AI tool handlers
+	fx.Provide(
+		fx.Annotate(
+			NewFindTemplateTool,
+			fx.As(new(ai_tool_port.ToolHandler)),
+			fx.ResultTags(`group:"ai_tool_handlers"`),
+		),
+	),
 
 	fx.Provide(
 		fx.Annotate(
