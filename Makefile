@@ -103,12 +103,16 @@ infra-up:
 infra-down:
 	docker compose down
 
+AI_ENV = GOOGLE_APPLICATION_CREDENTIALS=/home/johna/Desktop/stuff/projects/final_year_project/backend/mindful-backup-495108-n5-640600bd5b33.json \
+	GEMINI_VERTEX_PROJECT=mindful-backup-495108-n5 \
+	GEMINI_USE_VERTEX=true
+
 # Start all dev servers
 dev:
 	@trap 'kill 0' EXIT; \
 	cd core-backend && air & \
-	cd ai-service && uv run python main.py & \
-	cd ai-service && uv run python -m workers.ingestion_worker & \
+	cd ai-service && $(AI_ENV) uv run python main.py & \
+	cd ai-service && $(AI_ENV) uv run python -m workers.ingestion_worker & \
 	wait
 
 # Start core-backend only
@@ -117,10 +121,10 @@ dev-go:
 
 # Start ai-service only
 dev-python:
-	cd ai-service && uv run python main.py
+	cd ai-service && $(AI_ENV) uv run python main.py
 
 dev-worker:
-	cd ai-service && uv run python -m workers.ingestion_worker
+	cd ai-service && $(AI_ENV) uv run python -m workers.ingestion_worker
 
 # ==============================================================================
 # Clean

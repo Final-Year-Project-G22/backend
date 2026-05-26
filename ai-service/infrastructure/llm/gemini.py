@@ -58,13 +58,16 @@ class GeminiLLMAdapter(LLMPort):
                 logger.warning("Vertex AI auth failed: %s", e)
                 self._auth_token = ""
 
-    def _build_url(self, action: str) -> str:
+    def _build_url(self, action: str, *, alt_sse: bool = False) -> str:
         if self._use_vertex:
-            return (
+            url = (
                 f"https://{self._vertex_location}-aiplatform.googleapis.com/v1/"
                 f"projects/{self._vertex_project}/locations/{self._vertex_location}/"
                 f"publishers/google/models/{self._model}:{action}"
             )
+            if alt_sse:
+                url += "?alt=sse"
+            return url
         return f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:{action}"
 
     async def generate(
@@ -123,7 +126,7 @@ class GeminiLLMAdapter(LLMPort):
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
-            url = self._build_url("streamGenerateContent")
+            url = self._build_url("streamGenerateContent", alt_sse=True)
             params, headers = self._build_request_params()
             try:
                 async with self._http.stream(

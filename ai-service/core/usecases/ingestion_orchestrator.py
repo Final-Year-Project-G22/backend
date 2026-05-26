@@ -153,21 +153,7 @@ class IngestionOrchestratorUseCase:
                     retry_count=0,
                     error_message=error_message,
                 )
-                return IngestionTransitionResult(
-                    context=IngestionTransitionContext(
-                        event_id=event_id,
-                        document_id=document_id,
-                        account_id=account_id,
-                        idempotency_key=idempotency_key,
-                        from_stage=current_stage,
-                        to_stage=IngestionStage.FAILED,
-                        occurred_at=occurred_at,
-                        retry_count=0,
-                        metadata={},
-                    ),
-                    is_terminal=True,
-                    status="failed",
-                )
+                raise
 
         # Pipeline completed successfully
         await self._publish_status_event(

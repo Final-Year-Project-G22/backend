@@ -370,12 +370,7 @@ var Module = fx.Module("iam",
 					},
 				})
 			},
-			fx.ParamTags(
-				``,
-				``,
-				`group:"permission_seeds"`,
-				`group:"role_seeds"`,
-			),
+			fx.ParamTags(``, ``, `group:"permission_seeds"`, `group:"role_seeds"`),
 		),
 	),
 
