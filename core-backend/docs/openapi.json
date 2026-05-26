@@ -19098,6 +19098,46 @@
         ]
       }
     },
+    "/api/v1/ai/ask/stream/debug": {
+      "post": {
+        "description": "Ask AI a question and receive full ReAct loop internals including reasoning, tool calls, and results. Requires admin permission.",
+        "operationId": "askStreamDebug",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Ask a question with debug streaming (admin only)",
+        "tags": [
+          "AI Ask"
+        ]
+      }
+    },
     "/api/v1/ai/conversations": {
       "get": {
         "description": "Get a paginated list of user's conversation sessions.",
