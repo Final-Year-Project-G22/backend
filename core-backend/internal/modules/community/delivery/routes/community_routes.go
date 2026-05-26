@@ -193,6 +193,28 @@ func RegisterCommunityRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.CommunityHandler.HandleUnfollowThread)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "muteCommunityThread",
+		Method:      "POST",
+		Path:        communityBase + "/threads/{id}/mute",
+		Summary:     "Mute thread",
+		Description: "Mutes notifications for a discussion thread.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleMuteThread)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "unmuteCommunityThread",
+		Method:      "DELETE",
+		Path:        communityBase + "/threads/{id}/mute",
+		Summary:     "Unmute thread",
+		Description: "Unmutes notifications for a discussion thread.",
+		Tags:        []string{"Community"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.CommunityHandler.HandleUnmuteThread)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "markThreadRead",
 		Method:      "POST",
 		Path:        communityBase + "/threads/{id}/read",
