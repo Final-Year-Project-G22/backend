@@ -264,6 +264,19 @@ func (h *AskHandler) parseAskInput(
 		topK = *body.TopK
 	}
 
+	strategy := "simple"
+	if body.Strategy != nil && strings.TrimSpace(*body.Strategy) != "" {
+		s := strings.TrimSpace(*body.Strategy)
+		if s == "simple" || s == "agentic" {
+			strategy = s
+		}
+	}
+
+	debugMode := false
+	if body.DebugMode != nil {
+		debugMode = *body.DebugMode
+	}
+
 	return service.AskInput{
 		UserID:    userID,
 		AccountID: accountID,
@@ -272,6 +285,8 @@ func (h *AskHandler) parseAskInput(
 		SessionID: sessionID,
 		Title:     title,
 		TopK:      topK,
+		Strategy:  strategy,
+		DebugMode: debugMode,
 	}, nil
 }
 

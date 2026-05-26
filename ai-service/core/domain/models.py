@@ -207,6 +207,18 @@ class AIConversationSession(BaseModel):
         return self
 
 
+class ToolCallRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    tool_name: str = Field(min_length=1)
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    result_summary: str = Field(default="")
+    success: bool = True
+    error_message: str | None = None
+    execution_ms: int = Field(default=0, ge=0)
+    iteration: int = Field(default=1, ge=1)
+
+
 class AIChatMessage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -227,6 +239,9 @@ class AIChatMessage(BaseModel):
     token_usage: TokenUsage | None = None
     model_used: str = Field(default="", max_length=100)
     prompt_version: int = Field(default=1, ge=1)
+
+    tool_calls: list[ToolCallRecord] | None = None
+    agent_strategy: str = "simple"
 
     trace_id: str | None = Field(default=None, min_length=1, max_length=255)
     cache_hit: bool = False
@@ -300,4 +315,5 @@ __all__ = [
     "AIUserQuota",
     "DocumentChunk",
     "KnowledgeDocument",
+    "ToolCallRecord",
 ]

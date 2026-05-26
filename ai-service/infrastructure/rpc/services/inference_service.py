@@ -63,6 +63,9 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID or enum: {e}")  # type: ignore
                 return service_pb2.AskResponse()  # type: ignore
 
+            strategy = getattr(request, "strategy", "simple") or "simple"
+            debug_mode = getattr(request, "debug_mode", False)
+
             domain_req = AskAICommand(
                 user_id=user_id,
                 account_id=account_id,
@@ -71,6 +74,8 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 conversation_id=session_id,
                 title=request.title if getattr(request, "title", "") else None,
                 vector_top_k=request.top_k if request.top_k > 0 else 5,
+                strategy=strategy,
+                debug_mode=debug_mode,
             )
 
             response = await self._ask_ai_usecase.execute(domain_req)
@@ -144,6 +149,9 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
             if request.language:
                 language = Language(request.language)
 
+            strategy = getattr(request, "strategy", "simple") or "simple"
+            debug_mode = getattr(request, "debug_mode", False)
+
             command = AskAICommand(
                 user_id=user_id,
                 account_id=account_id,
@@ -152,6 +160,8 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 conversation_id=session_id,
                 title=request.title if getattr(request, "title", "") else None,
                 vector_top_k=request.top_k if request.top_k > 0 else 5,
+                strategy=strategy,
+                debug_mode=debug_mode,
             )
 
             ai_message = None

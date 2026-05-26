@@ -20,6 +20,8 @@ message AskRequest {
   optional string session_id = 6 [(buf.validate.field).string.uuid = true];
   int32 top_k = 7 [(buf.validate.field).int32 = {gte: 1, lte: 20}];
   optional string title = 8;
+  string strategy = 9;
+  bool debug_mode = 10;
 }
 
 message Citation {
@@ -57,6 +59,7 @@ message AskStreamChunk {
     ErrorChunk error = 4;
     ToolUseChunk tool_use = 5;
     ToolResultChunk tool_result = 6;
+    ThinkingChunk thinking = 7;
   }
 }
 
@@ -90,4 +93,8 @@ message ToolUseChunk {
 message ToolResultChunk {
   string tool = 1;
   string result_summary = 2;
+}
+
+message ThinkingChunk {
+  string text = 1;
 }

@@ -12,6 +12,8 @@ type AskRequest struct {
 	SessionID *string `json:"sessionId,omitempty" doc:"Optional conversation ID to continue"`
 	Title     *string `json:"title,omitempty" doc:"Custom conversation title"`
 	TopK      *int32  `json:"topK,omitempty" doc:"Number of context chunks to retrieve" default:"5"`
+	Strategy  *string `json:"strategy,omitempty" doc:"Ask strategy: simple or agentic" default:"simple"`
+	DebugMode *bool   `json:"debugMode,omitempty" doc:"Enable debug mode including thinking chunks" default:"false"`
 }
 
 type AskInput struct {
@@ -73,6 +75,20 @@ type AskStreamDoneEventBody struct {
 type AskStreamErrorEventBody struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+type AskStreamToolUseEventBody struct {
+	Tool          string `json:"tool"`
+	ArgumentsJSON string `json:"argumentsJson"`
+}
+
+type AskStreamToolResultEventBody struct {
+	Tool          string `json:"tool"`
+	ResultSummary string `json:"resultSummary"`
+}
+
+type AskStreamThinkingEventBody struct {
+	Text string `json:"text"`
 }
 
 type ConversationDTO struct {

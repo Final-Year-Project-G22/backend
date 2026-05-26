@@ -30,6 +30,8 @@ type AskInput struct {
 	SessionID *uuid.UUID
 	Title     *string
 	TopK      int32
+	Strategy  string
+	DebugMode bool
 }
 
 type AskOutput struct {
@@ -90,6 +92,8 @@ func (s *AskService) Ask(ctx context.Context, in AskInput) (AskOutput, error) {
 		SessionID: in.SessionID,
 		Title:     in.Title,
 		TopK:      in.TopK,
+		Strategy:  in.Strategy,
+		DebugMode: in.DebugMode,
 		SectorIDs: sectorIDs,
 		TagIDs:    tagIDs,
 		Region:    region,
@@ -125,6 +129,8 @@ type AskStreamInput struct {
 	SessionID *uuid.UUID
 	Title     *string
 	TopK      int32
+	Strategy  string
+	DebugMode bool
 }
 
 func (s *AskService) AskStream(ctx context.Context, in AskStreamInput) (<-chan port.AskStreamChunk, error) {
@@ -151,6 +157,8 @@ func (s *AskService) AskStream(ctx context.Context, in AskStreamInput) (<-chan p
 		SessionID: in.SessionID,
 		Title:     in.Title,
 		TopK:      in.TopK,
+		Strategy:  in.Strategy,
+		DebugMode: in.DebugMode,
 		SectorIDs: sectorIDs,
 		TagIDs:    tagIDs,
 		Region:    region,

@@ -199,6 +199,8 @@ class AIChatMessage(Base):
     token_usage: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     model_used: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     prompt_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    tool_calls: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+    agent_strategy: Mapped[str] = mapped_column(String(20), nullable=False, default="simple")
     trace_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     cache_hit: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     user_feedback: Mapped[int | None] = mapped_column(Integer, nullable=True)
