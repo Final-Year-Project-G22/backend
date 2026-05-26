@@ -1,142 +1,131 @@
 package service
 
-import (
-	"strings"
+import "github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 
-	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
-)
-
-type seedPermission struct {
-	Code        string
-	Name        string
-	Description *string
-	Module      string
-}
-
-type seedRole struct {
-	Code        string
-	Name        string
-	Description *string
-}
-
-func seedPermissions() []seedPermission {
-	return []seedPermission{
+func IAMSeedPermissions() []permissions.SeedPermission {
+	return []permissions.SeedPermission{
 		// Generic IAM permissions
 		{
 			Code:        permissions.IAMRead,
 			Name:        permissions.IAMRead,
-			Description: stringPtr("Read access to IAM resources"),
+			Description: permissions.StringPtr("Read access to IAM resources"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.IAMWrite,
 			Name:        permissions.IAMWrite,
-			Description: stringPtr("Write access to IAM resources"),
+			Description: permissions.StringPtr("Write access to IAM resources"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.IAMUpdate,
 			Name:        permissions.IAMUpdate,
-			Description: stringPtr("Update access to IAM resources"),
+			Description: permissions.StringPtr("Update access to IAM resources"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.IAMDelete,
 			Name:        permissions.IAMDelete,
-			Description: stringPtr("Delete access to IAM resources"),
+			Description: permissions.StringPtr("Delete access to IAM resources"),
 			Module:      "iam",
 		},
 		// Fine-grained admin management permissions
 		{
 			Code:        permissions.AdminList,
 			Name:        permissions.AdminList,
-			Description: stringPtr("List all admin accounts"),
+			Description: permissions.StringPtr("List all admin accounts"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.AdminRead,
 			Name:        permissions.AdminRead,
-			Description: stringPtr("View detailed information about an admin account"),
+			Description: permissions.StringPtr("View detailed information about an admin account"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.AdminCreate,
 			Name:        permissions.AdminCreate,
-			Description: stringPtr("Register a new admin account"),
+			Description: permissions.StringPtr("Register a new admin account"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.AdminRolesUpdate,
 			Name:        permissions.AdminRolesUpdate,
-			Description: stringPtr("Update roles assigned to an admin account"),
+			Description: permissions.StringPtr("Update roles assigned to an admin account"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.AdminResetPassword,
 			Name:        permissions.AdminResetPassword,
-			Description: stringPtr("Trigger a password reset for an admin account"),
+			Description: permissions.StringPtr("Trigger a password reset for an admin account"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.AdminStatusUpdate,
 			Name:        permissions.AdminStatusUpdate,
-			Description: stringPtr("Lock, suspend, or activate an admin account"),
+			Description: permissions.StringPtr("Lock, suspend, or activate an admin account"),
 			Module:      "iam",
 		},
 		// Role management permissions
 		{
 			Code:        permissions.RoleRead,
 			Name:        permissions.RoleRead,
-			Description: stringPtr("View role details and permissions"),
+			Description: permissions.StringPtr("View role details and permissions"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.RoleCreate,
 			Name:        permissions.RoleCreate,
-			Description: stringPtr("Create a new custom role"),
+			Description: permissions.StringPtr("Create a new custom role"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.RoleUpdate,
 			Name:        permissions.RoleUpdate,
-			Description: stringPtr("Update an existing custom role"),
+			Description: permissions.StringPtr("Update an existing custom role"),
 			Module:      "iam",
 		},
 		{
 			Code:        permissions.RoleDelete,
 			Name:        permissions.RoleDelete,
-			Description: stringPtr("Delete a custom role"),
+			Description: permissions.StringPtr("Delete a custom role"),
 			Module:      "iam",
 		},
 		// Permission catalog
 		{
 			Code:        permissions.PermissionRead,
 			Name:        permissions.PermissionRead,
-			Description: stringPtr("List and view all available permissions"),
+			Description: permissions.StringPtr("List and view all available permissions"),
 			Module:      "iam",
 		},
 	}
 }
 
-func seedRoles() []seedRole {
-	return []seedRole{
+func IAMSeedRoles() []permissions.SeedRole {
+	return []permissions.SeedRole{
 		{
 			Code:        "super_admin",
 			Name:        "Super Admin",
-			Description: stringPtr("Full access to all IAM capabilities"),
+			Description: permissions.StringPtr("Full access to all system capabilities"),
 		},
 		{
 			Code:        "iam_admin",
 			Name:        "IAM Admin",
-			Description: stringPtr("Administrative access to IAM"),
+			Description: permissions.StringPtr("Administrative access to IAM"),
+			PermissionCodes: []string{
+				"iam.read",
+				"iam.write",
+				"iam.update",
+				"iam.delete",
+				"iam.admin.list",
+				"iam.admin.read",
+				"iam.admin.create",
+				"iam.admin.roles.update",
+				"iam.role.read",
+				"iam.role.create",
+				"iam.role.update",
+				"iam.permission.read",
+			},
 		},
 	}
-}
-
-func stringPtr(value string) *string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return nil
-	}
-	return &trimmed
 }

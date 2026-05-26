@@ -15,6 +15,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/event"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
@@ -242,7 +243,7 @@ func (s *adminService) UpdateAdminRoles(ctx context.Context, input UpdateAdminRo
 			return err
 		}
 		for _, assignment := range assignments {
-			if err := s.roleAssignmentRepo.Revoke(txCtx, assignment.ID, time.Now(), stringPtr("roles updated")); err != nil {
+			if err := s.roleAssignmentRepo.Revoke(txCtx, assignment.ID, time.Now(), permissions.StringPtr("roles updated")); err != nil {
 				return err
 			}
 		}

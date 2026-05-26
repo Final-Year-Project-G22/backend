@@ -10,6 +10,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/entity"
 	iamerror "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/error"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
 	"github.com/google/uuid"
 )
@@ -35,19 +36,19 @@ func NewRolePermissionSeeder(
 	}
 }
 
-func (s *RolePermissionSeeder) Seed(ctx context.Context) error {
-	permissions := seedPermissions()
-	if err := s.seedPermissions(ctx, permissions); err != nil {
+func (s *RolePermissionSeeder) Seed(ctx context.Context, permGroups [][]permissions.SeedPermission, roleGroups [][]permissions.SeedRole) error {
+	allPermissions := flattenPermissions(permGroups)
+	if err := s.seedPermissions(ctx, allPermissions); err != nil {
 		return err
 	}
 
-	roles := seedRoles()
-	if err := s.seedRoles(ctx, roles); err != nil {
+	allRoles := flattenRoles(roleGroups)
+	if err := s.seedRoles(ctx, allRoles); err != nil {
 		return err
 	}
 
-	permissionCodes := make([]string, 0, len(permissions))
-	for _, perm := range permissions {
+	permissionCodes := make([]string, 0, len(allPermissions))
+	for _, perm := range allPermissions {
 		permissionCodes = append(permissionCodes, perm.Code)
 	}
 
@@ -56,35 +57,29 @@ func (s *RolePermissionSeeder) Seed(ctx context.Context) error {
 		return err
 	}
 
-	for _, role := range roles {
+	for _, role := range allRoles {
 		seededRole, err := s.roleRepo.GetByCode(ctx, role.Code)
 		if err != nil {
 			return err
 		}
 
+		var targetPerms map[string]*entity.Permission
 		if role.Code == "super_admin" {
-			if err := s.assignPermissions(ctx, seededRole.ID, permissionsByCode); err != nil {
-				return err
-			}
-		} else if role.Code == "iam_admin" {
-			iamAdminPerms := make(map[string]*entity.Permission)
-			for code, perm := range permissionsByCode {
-				if code == "iam.admin.reset_password" || code == "iam.admin.status.update" || code == "iam.role.delete" {
-					continue
-				}
-				iamAdminPerms[code] = perm
-			}
-			if err := s.assignPermissions(ctx, seededRole.ID, iamAdminPerms); err != nil {
-				return err
-			}
+			targetPerms = permissionsByCode
+		} else {
+			targetPerms = filterPermissionsByCodes(permissionsByCode, role.PermissionCodes)
+		}
+
+		if err := s.assignPermissions(ctx, seededRole.ID, targetPerms); err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (s *RolePermissionSeeder) seedPermissions(ctx context.Context, permissions []seedPermission) error {
-	for _, perm := range permissions {
+func (s *RolePermissionSeeder) seedPermissions(ctx context.Context, perms []permissions.SeedPermission) error {
+	for _, perm := range perms {
 		_, err := s.permissionRepo.GetByCode(ctx, perm.Code)
 		if err == nil {
 			continue
@@ -110,7 +105,7 @@ func (s *RolePermissionSeeder) seedPermissions(ctx context.Context, permissions 
 	return nil
 }
 
-func (s *RolePermissionSeeder) seedRoles(ctx context.Context, roles []seedRole) error {
+func (s *RolePermissionSeeder) seedRoles(ctx context.Context, roles []permissions.SeedRole) error {
 	for _, role := range roles {
 		_, err := s.roleRepo.GetByCode(ctx, role.Code)
 		if err == nil {
@@ -158,19 +153,19 @@ func (s *RolePermissionSeeder) loadPermissionsByCode(ctx context.Context, codes 
 	return permissionsByCode, nil
 }
 
-func (s *RolePermissionSeeder) assignPermissions(ctx context.Context, roleID uuid.UUID, permissionsByCode map[string]*entity.Permission) error {
+func (s *RolePermissionSeeder) assignPermissions(ctx context.Context, roleID uuid.UUID, permsByCode map[string]*entity.Permission) error {
 	existing, err := s.rolePermissionRepo.ListByRoleID(ctx, roleID)
 	if err != nil {
 		return err
 	}
 
 	existingMap := make(map[uuid.UUID]struct{}, len(existing))
-	for _, rolePermission := range existing {
-		existingMap[rolePermission.PermissionID] = struct{}{}
+	for _, rp := range existing {
+		existingMap[rp.PermissionID] = struct{}{}
 	}
 
-	toCreate := make([]*entity.RolePermission, 0, len(permissionsByCode))
-	for _, permission := range permissionsByCode {
+	toCreate := make([]*entity.RolePermission, 0, len(permsByCode))
+	for _, permission := range permsByCode {
 		if _, ok := existingMap[permission.ID]; ok {
 			continue
 		}
@@ -185,6 +180,40 @@ func (s *RolePermissionSeeder) assignPermissions(ctx context.Context, roleID uui
 	}
 
 	return nil
+}
+
+func flattenPermissions(groups [][]permissions.SeedPermission) []permissions.SeedPermission {
+	total := 0
+	for _, g := range groups {
+		total += len(g)
+	}
+	result := make([]permissions.SeedPermission, 0, total)
+	for _, g := range groups {
+		result = append(result, g...)
+	}
+	return result
+}
+
+func flattenRoles(groups [][]permissions.SeedRole) []permissions.SeedRole {
+	total := 0
+	for _, g := range groups {
+		total += len(g)
+	}
+	result := make([]permissions.SeedRole, 0, total)
+	for _, g := range groups {
+		result = append(result, g...)
+	}
+	return result
+}
+
+func filterPermissionsByCodes(permsByCode map[string]*entity.Permission, codes []string) map[string]*entity.Permission {
+	result := make(map[string]*entity.Permission, len(codes))
+	for _, code := range codes {
+		if perm, ok := permsByCode[code]; ok {
+			result[code] = perm
+		}
+	}
+	return result
 }
 
 func missingCodes(codes []string, existing map[string]*entity.Permission) []string {

@@ -15,7 +15,6 @@ import (
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/library/infrastructure/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/library/infrastructure/tier"
 	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
-	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	"github.com/danielgtaylor/huma/v2"
 	"go.uber.org/fx"
 )
@@ -95,6 +94,19 @@ var Module = fx.Module(
 	fx.Provide(handler.NewLibraryHandler),
 	fx.Provide(handler.NewLibraryAdminHandler),
 
+	fx.Provide(
+		fx.Annotate(
+			LibrarySeedPermissions,
+			fx.ResultTags(`group:"permission_seeds"`),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
+			LibrarySeedRoles,
+			fx.ResultTags(`group:"role_seeds"`),
+		),
+	),
+
 	fx.Invoke(func(
 		api huma.API,
 		libraryHandler *handler.LibraryHandler,
@@ -105,10 +117,10 @@ var Module = fx.Module(
 	) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
-		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMRead, nil)
-		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMWrite, nil)
-		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMUpdate, nil)
-		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, permissions.IAMDelete, nil)
+		readPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, LibraryRead, []string{"super_admin"})
+		writePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, LibraryWrite, []string{"super_admin"})
+		updatePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, LibraryUpdate, []string{"super_admin"})
+		deletePermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, LibraryDelete, []string{"super_admin"})
 
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			ViewHandler:                libraryHandler,
