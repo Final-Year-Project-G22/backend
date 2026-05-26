@@ -1,0 +1,4 @@
+Previous tool use in this conversation:
+{% for entry in tool_history %}
+- {{ entry.tool_name }}: {{ entry.result_summary }}
+{% endfor %}
