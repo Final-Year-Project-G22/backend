@@ -23,6 +23,7 @@ type AccountDTO struct {
 	Email    string    `json:"email" doc:"Account email address"`
 	Username *string   `json:"username,omitempty" doc:"Account username"`
 	Status   string    `json:"status" doc:"Account status (pending_verification, active, locked, suspended, disabled)"`
+	Language string    `json:"language,omitempty" doc:"Account language preference (en, am)"`
 }
 
 type UpdateUserProfileRequest struct {

@@ -25,6 +25,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
+	"github.com/Final-Year-Project-G22/backend/core/pkg/i18n"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/datatypes"
@@ -83,6 +84,7 @@ type AuthResult struct {
 	ExpiresAt    time.Time
 	User         *entity.User
 	Account      *entity.Account
+	Language     string
 }
 
 type ValidatedAccessSessionOutput struct {
@@ -95,6 +97,7 @@ type GetCurrentUserOutput struct {
 	Account     *entity.Account
 	Roles       []*entity.Role
 	Permissions []*entity.Permission
+	Language    string
 }
 
 type authService struct {
@@ -105,6 +108,7 @@ type authService struct {
 	sessionUsecase        usecase.SessionUsecase
 	roleAssignmentUsecase usecase.RoleAssignmentUsecase
 	sessionRepo           repository.SessionRepository
+	accountPrefRepo       repository.AccountPreferenceRepository
 	tokenService          token.TokenService
 	logger                core.Logger
 	cfg                   *core.Config
@@ -126,6 +130,7 @@ func NewAuthService(
 	sessionUsecase usecase.SessionUsecase,
 	roleAssignmentUsecase usecase.RoleAssignmentUsecase,
 	sessionRepo repository.SessionRepository,
+	accountPrefRepo repository.AccountPreferenceRepository,
 	tokenService token.TokenService,
 	logger core.Logger,
 	cfg *core.Config,
@@ -139,6 +144,7 @@ func NewAuthService(
 		sessionUsecase:        sessionUsecase,
 		roleAssignmentUsecase: roleAssignmentUsecase,
 		sessionRepo:           sessionRepo,
+		accountPrefRepo:       accountPrefRepo,
 		tokenService:          tokenService,
 		logger:                logger,
 		cfg:                   cfg,
@@ -238,6 +244,16 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 			s.logger.Error("Failed to write OTP notification outbox row", core.Error(txErr))
 		}
 
+		// Create account preference with locale from request context
+		locale := i18n.LocaleFromContext(txCtx)
+		if txErr := s.accountPrefRepo.Create(txCtx, &entity.AccountPreference{
+			AccountID: account.ID,
+			Language:  locale,
+			Timezone:  "UTC",
+		}); txErr != nil {
+			return txErr
+		}
+
 		return nil
 	})
 
@@ -265,6 +281,7 @@ func (s *authService) Register(ctx context.Context, input RegisterInput) (*AuthR
 		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
 		User:         user,
 		Account:      account,
+		Language:     i18n.LocaleFromContext(ctx),
 	}, nil
 }
 
@@ -337,6 +354,28 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 		s.logger.Error("Failed to update last login timestamp", core.Error(err))
 	}
 
+	// Upsert account preference with locale from Accept-Language header
+	locale := i18n.LocaleFromContext(ctx)
+	pref, err := s.accountPrefRepo.GetByAccountID(ctx, account.ID)
+	if err != nil {
+		s.logger.Error("Failed to get account preference", core.Error(err))
+	}
+	if pref == nil {
+		pref = &entity.AccountPreference{
+			AccountID: account.ID,
+			Language:  locale,
+			Timezone:  "UTC",
+		}
+		if err := s.accountPrefRepo.Create(ctx, pref); err != nil {
+			s.logger.Error("Failed to create account preference", core.Error(err))
+		}
+	} else if pref.Language != locale {
+		pref.Language = locale
+		if err := s.accountPrefRepo.Update(ctx, pref); err != nil {
+			s.logger.Error("Failed to update account preference", core.Error(err))
+		}
+	}
+
 	s.logger.Info("User logged in successfully",
 		core.String("accountID", account.ID.String()),
 	)
@@ -347,6 +386,7 @@ func (s *authService) Login(ctx context.Context, input LoginInput) (*AuthResult,
 		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
 		User:         user,
 		Account:      account,
+		Language:     locale,
 	}, nil
 }
 func (s *authService) UpdateUserProfile(ctx context.Context, userId uuid.UUID, input UpdateUserProfileInput) (*UpdateUserProfileOutput, error) {
@@ -512,6 +552,7 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 		ExpiresAt:    time.Now().Add(s.tokenService.GetAccessTokenTTL()),
 		User:         user,
 		Account:      account,
+		Language:     i18n.LocaleFromContext(ctx),
 	}, nil
 }
 
@@ -730,11 +771,20 @@ func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID, acco
 		return nil, err
 	}
 
+	language := "en"
+	pref, err := s.accountPrefRepo.GetByAccountID(ctx, accountID)
+	if err != nil {
+		s.logger.Error("Failed to get account preference", core.Error(err))
+	} else if pref != nil {
+		language = pref.Language
+	}
+
 	return &GetCurrentUserOutput{
 		User:        user,
 		Account:     account,
 		Roles:       roles,
 		Permissions: permissions,
+		Language:    language,
 	}, nil
 }
 
