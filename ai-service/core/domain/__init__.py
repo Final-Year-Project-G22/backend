@@ -1,4 +1,5 @@
 from core.domain.enums import (
+    AskStrategy,
     ChunkStatus,
     DocumentSource,
     DocumentStatus,
@@ -26,6 +27,7 @@ from core.domain.models import (
     AIUserQuota,
     DocumentChunk,
     KnowledgeDocument,
+    ToolCallRecord,
 )
 from core.domain.value_objects import (
     IngestionTransitionContext,
@@ -42,6 +44,7 @@ __all__ = [
     "AIConversationSession",
     "AIServiceError",
     "AIUserQuota",
+    "AskStrategy",
     "CacheError",
     "ChunkStatus",
     "ConfigurationError",
@@ -66,6 +69,7 @@ __all__ = [
     "SessionStatus",
     "Tier",
     "TokenUsage",
+    "ToolCallRecord",
     "UsageSnapshot",
     "ValidationError",
 ]

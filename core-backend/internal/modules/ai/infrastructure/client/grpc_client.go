@@ -71,6 +71,8 @@ func (c *InferenceGRPCClient) Ask(ctx context.Context, req port.AskRequest) (por
 		Query:     req.Query,
 		Language:  string(req.Language),
 		TopK:      req.TopK,
+		Strategy:  req.Strategy,
+		DebugMode: req.DebugMode,
 	}
 	if req.SessionID != nil {
 		sid := req.SessionID.String()
@@ -235,6 +237,8 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 		Query:     req.Query,
 		Language:  string(req.Language),
 		TopK:      req.TopK,
+		Strategy:  req.Strategy,
+		DebugMode: req.DebugMode,
 	}
 	if req.SessionID != nil {
 		sid := req.SessionID.String()
@@ -313,6 +317,22 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 					Code:    errChunk.GetCode(),
 					Message: errChunk.GetMessage(),
 				}
+			}
+			if toolUse := chunk.GetToolUse(); toolUse != nil {
+				out.ToolUse = &port.ToolUseInfo{
+					Tool:          toolUse.GetTool(),
+					ArgumentsJSON: toolUse.GetArgumentsJson(),
+				}
+			}
+			if toolResult := chunk.GetToolResult(); toolResult != nil {
+				out.ToolResult = &port.ToolResultInfo{
+					Tool:          toolResult.GetTool(),
+					ResultSummary: toolResult.GetResultSummary(),
+				}
+			}
+			if thinking := chunk.GetThinking(); thinking != nil {
+				t := thinking.GetText()
+				out.Thinking = &t
 			}
 			if citations := chunk.GetCitations(); citations != nil {
 				out.Citations = make([]port.Citation, 0, len(citations.GetCitations()))

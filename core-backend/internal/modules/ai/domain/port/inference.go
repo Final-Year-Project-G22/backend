@@ -16,6 +16,8 @@ type AskRequest struct {
 	SessionID *uuid.UUID
 	Title     *string
 	TopK      int32
+	Strategy  string
+	DebugMode bool
 	// Taxonomy filters for retrieval narrowing
 	SectorIDs []uuid.UUID
 	TagIDs    []uuid.UUID
@@ -105,10 +107,23 @@ type ArchiveConversationResponse struct {
 }
 
 type AskStreamChunk struct {
-	Text      *string
-	Citations []Citation
-	Done      *DoneInfo
-	Error     *ErrorInfo
+	Text       *string
+	Citations  []Citation
+	Done       *DoneInfo
+	Error      *ErrorInfo
+	ToolUse    *ToolUseInfo
+	ToolResult *ToolResultInfo
+	Thinking   *string
+}
+
+type ToolUseInfo struct {
+	Tool          string
+	ArgumentsJSON string
+}
+
+type ToolResultInfo struct {
+	Tool          string
+	ResultSummary string
 }
 
 type DoneInfo struct {

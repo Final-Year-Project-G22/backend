@@ -54,6 +54,8 @@ class AskAICommand(BaseModel):
     title: str | None = None
     vector_top_k: int = Field(default=DEFAULT_VECTOR_TOP_K, ge=MIN_TOP_K, le=MAX_TOP_K)
     bm25_top_k: int = Field(default=DEFAULT_BM25_TOP_K, ge=MIN_TOP_K, le=MAX_TOP_K)
+    strategy: str = "simple"
+    debug_mode: bool = False
 
     @field_validator("prompt")
     @classmethod
