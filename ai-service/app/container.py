@@ -31,6 +31,9 @@ from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.parsers.registry import ParserRegistry
 from infrastructure.prompts import PromptLoader
 from infrastructure.rpc import AIToolGrpcClient, CoreServiceGrpcAdapter, CoreUserGrpcClient
+from infrastructure.tools.local.search_knowledge_base import SearchKnowledgeBaseTool
+from infrastructure.tools.local.search_trusted_web import SearchTrustedWebTool
+from infrastructure.tools.tool_registry import ToolRegistry
 from workers.tasks import IngestionRequestedTaskHandler
 
 
@@ -90,6 +93,24 @@ class Container(containers.DeclarativeContainer):
     )
     llm_port: providers.Dependency[LLMPort] = providers.Dependency(
         instance_of=LLMPort,
+    )
+
+    search_knowledge_base_tool = providers.Factory(
+        SearchKnowledgeBaseTool,
+        knowledge_repository=knowledge_repository,
+        embedding_port=embedding_port,
+    )
+
+    search_trusted_web_tool = providers.Factory(
+        SearchTrustedWebTool,
+    )
+
+    tool_registry = providers.Singleton(
+        ToolRegistry,
+        ai_tool_client=ai_tool_client,
+        expected_remote_tools=config.provided.AI_EXPECTED_REMOTE_TOOLS,
+        search_knowledge_base=search_knowledge_base_tool,
+        search_trusted_web=search_trusted_web_tool,
     )
 
     cache_port: providers.Provider[CachePort | None] = cast(

@@ -94,6 +94,15 @@ class Settings(BaseSettings):
     AI_AGENTIC_ENABLED: bool = False
     AI_AGENTIC_MAX_ITERATIONS: int = 5
 
+    AI_EXPECTED_REMOTE_TOOLS: list[str] = [
+        "search_guides",
+        "get_user_profile",
+        "find_template",
+        "get_guide_progress",
+        "check_compliance_status",
+    ]
+    AI_TOOL_REFRESH_TTL_SEC: int = 300
+
     OTEL_ENABLED: bool = False
     PROMETHEUS_PORT: int = 9090
 
