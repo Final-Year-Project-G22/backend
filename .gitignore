@@ -45,3 +45,4 @@ ai-service/grpc/generated/
 
 # GCP service account keys
 mindful-backup-*.json
+core-backend/spec
