@@ -61,15 +61,16 @@ func main() {
 	})
 
 	airoutes.RegisterRoutes(api, airoutes.RouteDependencies{
-		IngestionHandler:        &aihandler.IngestionHandler{},
-		StatusHandler:           &aihandler.StatusHandler{},
-		AskHandler:              &aihandler.AskHandler{},
-		DLQHandler:              &aihandler.DLQHandler{},
-		SSEHandler:              &aihandler.SSEHandler{},
-		ToggleHandler:           &aihandler.ToggleHandler{},
-		AskEnabled:              true,
-		AuthMiddleware:          noOpMiddleware,
-		AccountStatusMiddleware: noOpMiddleware,
+		IngestionHandler:          &aihandler.IngestionHandler{},
+		StatusHandler:             &aihandler.StatusHandler{},
+		AskHandler:                &aihandler.AskHandler{},
+		DLQHandler:                &aihandler.DLQHandler{},
+		SSEHandler:                &aihandler.SSEHandler{},
+		ToggleHandler:             &aihandler.ToggleHandler{},
+		AskEnabled:                true,
+		AuthMiddleware:            noOpMiddleware,
+		AccountStatusMiddleware:   noOpMiddleware,
+		AdminPermissionMiddleware: noOpMiddleware,
 	})
 
 	notificationroutes.RegisterRoutes(api, engine, notificationroutes.RouteDependencies{

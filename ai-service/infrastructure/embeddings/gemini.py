@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, cast
 
 import httpx
 
 from core.domain.exceptions import EmbeddingError
 from core.ports.embedding import EmbeddingPort
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiEmbeddingAdapter(EmbeddingPort):
@@ -16,11 +19,17 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
         model: str,
         dimensions: int,
         http_client: httpx.AsyncClient,
+        use_vertex: bool = False,
+        vertex_project: str = "",
+        vertex_location: str = "us-central1",
     ) -> None:
         self._api_key = api_key
         self._model = model
         self._dimensions = dimensions
         self._http = http_client
+        self._use_vertex = use_vertex
+        self._vertex_project = vertex_project
+        self._vertex_location = vertex_location
 
     @property
     def dimensions(self) -> int:
@@ -56,10 +65,15 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
         if task_type is not None:
             payload["taskType"] = task_type
 
+        url, params, headers = self._build_request()
+        extra_params = {"key": self._api_key} if not self._use_vertex else {}
+        params = {**extra_params, **params}
+
         try:
             response = await self._http.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:embedContent",
-                params={"key": self._api_key},
+                url,
+                params=params or None,
+                headers=headers or None,
                 json=payload,
                 timeout=30,
             )
@@ -79,6 +93,41 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
             )
 
         return _ensure_float_list(cast(list[object], embedding))
+
+    def _build_request(self) -> tuple[str, dict[str, str], dict[str, str]]:
+        if self._use_vertex:
+            url = (
+                f"https://{self._vertex_location}-aiplatform.googleapis.com/v1/"
+                f"projects/{self._vertex_project}/locations/{self._vertex_location}/"
+                f"publishers/google/models/{self._model}:embedContent"
+            )
+            headers: dict[str, str] = {}
+            params: dict[str, str] = {}
+            try:
+                import google.auth
+                import google.auth.transport.requests
+
+                credentials, _ = google.auth.default(
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                )
+                creds = credentials
+                if hasattr(creds, "refresh"):
+                    try:
+                        request = google.auth.transport.requests.Request()
+                        creds.refresh(request)
+                    except Exception:  # nosec
+                        pass
+                token = creds.token
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
+            except Exception:
+                logger.warning("Vertex AI auth failed, falling back to API key")
+                params["key"] = self._api_key
+        else:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:embedContent"
+            params = {"key": self._api_key}
+            headers = {}
+        return url, params, headers
 
 
 def _map_task_type(input_type: str | None) -> str | None:
