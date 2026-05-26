@@ -526,12 +526,23 @@ func mapCitations(citations []*pb.Citation) []port.Citation {
 	for _, c := range citations {
 		docID, _ := uuid.Parse(c.GetDocumentId())
 		chunkID, _ := uuid.Parse(c.GetChunkId())
+		var title *string
+		if c.GetTitle() != "" {
+			t := c.GetTitle()
+			title = &t
+		}
+		var excerpt *string
+		if c.GetExcerpt() != "" {
+			e := c.GetExcerpt()
+			excerpt = &e
+		}
 		result = append(result, port.Citation{
 			DocumentID: docID,
 			ChunkID:    chunkID,
 			SourceType: c.GetSourceType(),
-			Title:      nil,
+			Title:      title,
 			Score:      c.GetScore(),
+			Excerpt:    excerpt,
 		})
 	}
 	return result
