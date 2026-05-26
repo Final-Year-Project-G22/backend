@@ -84,3 +84,59 @@ func (t *ListTagsTool) Execute(ctx context.Context, argsJSON string, _, _ uuid.U
 	payload, _ := json.Marshal(result.Data)
 	return string(payload), nil
 }
+
+// GetUserProfileTool returns the user's business profile including sector, region, stage, and tags.
+type GetUserProfileTool struct {
+	bpRepo repository.BusinessProfileRepository
+}
+
+func NewGetUserProfileTool(bpRepo repository.BusinessProfileRepository) *GetUserProfileTool {
+	return &GetUserProfileTool{bpRepo: bpRepo}
+}
+
+func (t *GetUserProfileTool) Name() string { return "get_user_profile" }
+
+func (t *GetUserProfileTool) Description() string {
+	return "Get the user's business profile: company name, sector, region, business stage, and tags."
+}
+
+func (t *GetUserProfileTool) ParameterSchema() string {
+	return `{
+		"type": "object",
+		"properties": {}
+	}`
+}
+
+func (t *GetUserProfileTool) Execute(ctx context.Context, _ string, accountID, _ uuid.UUID) (string, error) {
+	profile, err := t.bpRepo.GetByAccountID(ctx, accountID)
+	if err != nil {
+		return "", err
+	}
+	if profile == nil {
+		return `{"error": "no business profile found"}`, nil
+	}
+
+	type profileResult struct {
+		CompanyName string `json:"companyName"`
+		Region      string `json:"region,omitempty"`
+		Stage       string `json:"stage,omitempty"`
+		SectorID    string `json:"sectorId,omitempty"`
+		TagCount    int    `json:"tagCount"`
+	}
+	result := profileResult{
+		CompanyName: profile.CompanyName,
+		TagCount:    len(profile.Tags),
+	}
+	if profile.Region != nil {
+		result.Region = string(*profile.Region)
+	}
+	if profile.Stage != nil {
+		result.Stage = string(*profile.Stage)
+	}
+	if profile.SectorID != nil {
+		result.SectorID = profile.SectorID.String()
+	}
+
+	payload, _ := json.Marshal(result)
+	return string(payload), nil
+}
