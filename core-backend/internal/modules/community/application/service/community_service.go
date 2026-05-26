@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/entity"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/community/domain/usecase"
@@ -20,11 +21,15 @@ type CommunityService interface {
 	UnblockUserInThread(ctx context.Context, input usecase.BlockUserInput) error
 	FollowThread(ctx context.Context, accountID, threadID uuid.UUID) error
 	UnfollowThread(ctx context.Context, accountID, threadID uuid.UUID) error
+	MuteThread(ctx context.Context, accountID, threadID uuid.UUID) error
+	UnmuteThread(ctx context.Context, accountID, threadID uuid.UUID) error
 	FollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
 	UnfollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error
 	ListFollowedThreads(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserThreadSettings, error)
 	ListFollowedCategories(ctx context.Context, accountID uuid.UUID, q query.QueryOptions) ([]*entity.UserCategorySettings, error)
 	ListThreadFollowStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
+	ListThreadMuteStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
+	ListThreadFollowers(ctx context.Context, threadID uuid.UUID) ([]uuid.UUID, error)
 	ListThreadUnreadCounts(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]int, error)
 	ListThreadSolutionStatus(ctx context.Context, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error)
 	MarkThreadRead(ctx context.Context, accountID, threadID uuid.UUID) error
@@ -36,6 +41,7 @@ type CommunityService interface {
 }
 
 type communityService struct {
+	db                *core.Database
 	threadUsecase     usecase.DiscussionThreadUsecase
 	postUsecase       usecase.DiscussionPostUsecase
 	attachmentUsecase usecase.AttachmentUsecase
@@ -44,9 +50,11 @@ type communityService struct {
 	reportUsecase     usecase.ContentReportUsecase
 	threadRepo        repository.DiscussionThreadRepository
 	wsHub             *ws.Hub
+	notifPublisher    NotificationEventPublisher
 }
 
 func NewCommunityService(
+	db *core.Database,
 	threadUsecase usecase.DiscussionThreadUsecase,
 	postUsecase usecase.DiscussionPostUsecase,
 	attachmentUsecase usecase.AttachmentUsecase,
@@ -55,8 +63,10 @@ func NewCommunityService(
 	reportUsecase usecase.ContentReportUsecase,
 	threadRepo repository.DiscussionThreadRepository,
 	wsHub *ws.Hub,
+	notifPublisher NotificationEventPublisher,
 ) CommunityService {
 	return &communityService{
+		db:                db,
 		threadUsecase:     threadUsecase,
 		postUsecase:       postUsecase,
 		attachmentUsecase: attachmentUsecase,
@@ -65,6 +75,7 @@ func NewCommunityService(
 		reportUsecase:     reportUsecase,
 		threadRepo:        threadRepo,
 		wsHub:             wsHub,
+		notifPublisher:    notifPublisher,
 	}
 }
 
@@ -85,33 +96,87 @@ func (s *communityService) CreateThreadWithPost(ctx context.Context, accountID u
 
 func (s *communityService) ReplyToThread(ctx context.Context, accountID, threadID uuid.UUID, parentPostID *uuid.UUID, input usecase.CreatePostInput) (*entity.DiscussionPost, error) {
 	var post *entity.DiscussionPost
-	var err error
-	if parentPostID != nil {
-		post, err = s.postUsecase.ReplyToPost(ctx, accountID, threadID, *parentPostID, input)
-	} else {
-		post, err = s.postUsecase.CreatePost(ctx, accountID, threadID, input)
-	}
+
+	err := s.db.WithinTransaction(ctx, func(txCtx context.Context) error {
+		var err error
+		if parentPostID != nil {
+			post, err = s.postUsecase.ReplyToPost(txCtx, accountID, threadID, *parentPostID, input)
+		} else {
+			post, err = s.postUsecase.CreatePost(txCtx, accountID, threadID, input)
+		}
+		if err != nil {
+			return err
+		}
+
+		if len(input.AttachmentIds) > 0 {
+			if err := s.attachmentUsecase.LinkToPost(txCtx, post.ID, input.AttachmentIds, accountID); err != nil {
+				return err
+			}
+		}
+
+		if parentPostID != nil {
+			parentPost, err := s.postUsecase.GetPost(txCtx, *parentPostID)
+			if err != nil {
+				return err
+			}
+
+			if parentPost.AuthorAccountID != accountID {
+				if err := s.notifPublisher.PublishThreadReply(
+					txCtx,
+					parentPost.AuthorAccountID,
+					threadID,
+					post.ID,
+					accountID,
+				); err != nil {
+					return err
+				}
+			}
+		}
+
+		isOwner, err := s.threadRepo.IsAuthor(txCtx, threadID, accountID)
+		if err == nil && !isOwner {
+			_ = s.followUsecase.FollowThread(txCtx, accountID, threadID)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	if len(input.AttachmentIds) > 0 {
-		if err := s.attachmentUsecase.LinkToPost(ctx, post.ID, input.AttachmentIds, accountID); err != nil {
-			return nil, err
-		}
-	}
-
-	isOwner, err := s.threadRepo.IsAuthor(ctx, threadID, accountID)
-	if err == nil && !isOwner {
-		_ = s.followUsecase.FollowThread(ctx, accountID, threadID)
-	}
 
 	s.wsHub.PublishToThread(threadID, ws.NewPostCreatedEvent(threadID.String(), post.ID.String()))
+	s.wsHub.PublishToAll(ws.NewPostCreatedEvent(threadID.String(), post.ID.String()))
 
 	return post, nil
 }
 
 func (s *communityService) MarkSolution(ctx context.Context, accountID, threadID, postID uuid.UUID) error {
-	return s.postUsecase.MarkSolution(ctx, accountID, threadID, postID)
+	return s.db.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.postUsecase.MarkSolution(txCtx, accountID, threadID, postID); err != nil {
+			return err
+		}
+
+		followers, err := s.followUsecase.ListThreadFollowers(txCtx, threadID)
+		if err != nil {
+			return err
+		}
+
+		for _, followerID := range followers {
+			if followerID == accountID {
+				continue
+			}
+
+			_ = s.notifPublisher.PublishThreadSolution(
+				txCtx,
+				followerID,
+				threadID,
+				postID,
+				accountID,
+			)
+		}
+
+		return nil
+	})
 }
 
 func (s *communityService) UpdatePost(ctx context.Context, accountID, postID uuid.UUID, input usecase.UpdatePostInput) (*entity.DiscussionPost, error) {
@@ -163,6 +228,22 @@ func (s *communityService) FollowThread(ctx context.Context, accountID, threadID
 
 func (s *communityService) UnfollowThread(ctx context.Context, accountID, threadID uuid.UUID) error {
 	return s.followUsecase.UnfollowThread(ctx, accountID, threadID)
+}
+
+func (s *communityService) MuteThread(ctx context.Context, accountID, threadID uuid.UUID) error {
+	return s.followUsecase.MuteThread(ctx, accountID, threadID)
+}
+
+func (s *communityService) UnmuteThread(ctx context.Context, accountID, threadID uuid.UUID) error {
+	return s.followUsecase.UnmuteThread(ctx, accountID, threadID)
+}
+
+func (s *communityService) ListThreadMuteStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	return s.followUsecase.ListThreadMuteStatus(ctx, accountID, threadIDs)
+}
+
+func (s *communityService) ListThreadFollowers(ctx context.Context, threadID uuid.UUID) ([]uuid.UUID, error) {
+	return s.followUsecase.ListThreadFollowers(ctx, threadID)
 }
 
 func (s *communityService) FollowCategory(ctx context.Context, accountID, categoryID uuid.UUID) error {

@@ -6,6 +6,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/core"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
+	iamrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
 	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
 	appservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/application/service"
@@ -18,6 +19,7 @@ import (
 	pushProvider "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/push"
 	infrarepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/infrastructure/repository"
 	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
+	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -49,6 +51,7 @@ var Module = fx.Module(
 	fx.Provide(fx.Annotate(infrarepo.NewScheduledAlertTemplateRepository, fx.As(new(repository.ScheduledAlertTemplateRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewComplianceEntryRepository, fx.As(new(repository.ComplianceEntryRepository)))),
 	fx.Provide(fx.Annotate(infrarepo.NewComplianceTypeRepository, fx.As(new(repository.ComplianceTypeRepository)))),
+	fx.Provide(infrarepo.NewThreadMuteResolver),
 
 	// --- Services ---
 	fx.Provide(appservice.NewTemplateRenderer),
@@ -106,7 +109,24 @@ var Module = fx.Module(
 
 	// --- Use Cases ---
 	fx.Provide(fx.Annotate(appusecase.NewNotificationTemplateUsecase, fx.As(new(usecase.NotificationTemplateUsecase)))),
-	fx.Provide(fx.Annotate(appusecase.NewNotificationIngestUsecase, fx.As(new(usecase.NotificationIngestUsecase)))),
+	fx.Provide(fx.Annotate(func(
+		tmplRepo repository.NotificationTemplateRepository,
+		prefRepo repository.UserNotificationPreferenceRepository,
+		mutedRepo repository.MutedAccountRepository,
+		queueRepo repository.NotificationQueueRepository,
+		accountRepo iamrepo.AccountRepository,
+		iamReader appusecase.IAMGlobalPreferenceReader,
+		renderer *appservice.TemplateRenderer,
+		transactor sharedrepo.Transactor,
+		muteResolver repository.MuteResolver,
+	) usecase.NotificationIngestUsecase {
+		resolvers := []repository.MuteResolver{muteResolver}
+		return appusecase.NewNotificationIngestUsecase(
+			tmplRepo, prefRepo, mutedRepo, queueRepo, accountRepo,
+			iamReader, renderer, transactor,
+			resolvers,
+		)
+	}, fx.As(new(usecase.NotificationIngestUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationDeliveryUsecase, fx.As(new(usecase.NotificationDeliveryUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationInboxUsecase, fx.As(new(usecase.NotificationInboxUsecase)))),
 	fx.Provide(fx.Annotate(appusecase.NewNotificationHistoryUsecase, fx.As(new(usecase.NotificationHistoryUsecase)))),

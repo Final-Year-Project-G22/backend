@@ -131,6 +131,12 @@ var Module = fx.Module(
 	),
 	fx.Provide(
 		fx.Annotate(
+			service.NewNotificationEventPublisher,
+			fx.As(new(service.NotificationEventPublisher)),
+		),
+	),
+	fx.Provide(
+		fx.Annotate(
 			service.NewCommunityAttachmentValidator,
 			fx.As(new(service.AttachmentValidator)),
 		),

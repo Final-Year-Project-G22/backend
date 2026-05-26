@@ -154,6 +154,45 @@ func (r *userThreadSettingsRepository) ListFollowStatus(ctx context.Context, acc
 	return result, nil
 }
 
+func (r *userThreadSettingsRepository) ListMuteStatus(ctx context.Context, accountID uuid.UUID, threadIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	result := make(map[uuid.UUID]bool, len(threadIDs))
+	for _, id := range threadIDs {
+		result[id] = false
+	}
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	var rows []struct {
+		ThreadID uuid.UUID `gorm:"column:thread_id"`
+		IsMuted  bool      `gorm:"column:is_muted"`
+	}
+	if err := r.getDB(ctx).
+		Model(&entity.UserThreadSettings{}).
+		Select("thread_id, is_muted").
+		Where("account_id = ? AND thread_id IN ?", accountID, threadIDs).
+		Find(&rows).Error; err != nil {
+		r.logger.Error("Failed to list thread mute status", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	for _, row := range rows {
+		result[row.ThreadID] = row.IsMuted
+	}
+	return result, nil
+}
+
+func (r *userThreadSettingsRepository) ListThreadFollowers(ctx context.Context, threadID uuid.UUID) ([]uuid.UUID, error) {
+	var ids []uuid.UUID
+	if err := r.getDB(ctx).
+		Model(&entity.UserThreadSettings{}).
+		Where("thread_id = ? AND is_following = ?", threadID, true).
+		Pluck("account_id", &ids).Error; err != nil {
+		r.logger.Error("Failed to list thread followers", core.Error(err))
+		return nil, errors.InternalError("errors.databaseError", err)
+	}
+	return ids, nil
+}
+
 func (r *userThreadSettingsRepository) Delete(ctx context.Context, accountID, threadID uuid.UUID) error {
 	result := r.getDB(ctx).Where("account_id = ? AND thread_id = ?", accountID, threadID).Delete(&entity.UserThreadSettings{})
 	if result.Error != nil {

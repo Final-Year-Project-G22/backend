@@ -75,3 +75,15 @@ func (h *Hub) PublishToThread(threadID uuid.UUID, event *ServerEvent) {
 		}
 	}
 }
+
+func (h *Hub) PublishToAll(event *ServerEvent) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	data, err := event.Marshal()
+	if err != nil {
+		return
+	}
+	for _, client := range h.clients {
+		client.Send(data)
+	}
+}

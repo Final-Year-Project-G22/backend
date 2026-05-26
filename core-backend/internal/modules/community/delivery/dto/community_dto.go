@@ -38,6 +38,7 @@ type ThreadDTO struct {
 	AuthorAvatar   *string             `json:"authorAvatarUrl,omitempty" doc:"Author avatar URL"`
 	IsPinned       bool                `json:"isPinned" doc:"Pinned flag"`
 	IsFollowed     bool                `json:"isFollowed" doc:"Whether current user follows this thread"`
+	IsMuted        bool                `json:"isMuted" doc:"Whether current user has muted this thread"`
 	UnreadCount    int                 `json:"unreadCount" doc:"Number of unread posts/replies"`
 	HasSolution    bool                `json:"hasSolution" doc:"Whether thread has an accepted solution"`
 	Status         entity.ThreadStatus `json:"status" doc:"Thread status"`
@@ -337,6 +338,22 @@ type MarkThreadReadResponseBody struct {
 	Message string `json:"message" doc:"Success message"`
 }
 
+type MuteThreadInput struct {
+	ThreadID uuid.UUID `path:"id" doc:"Thread ID"`
+}
+
+type MuteThreadOutput struct {
+	Body FollowResponseBody
+}
+
+type UnmuteThreadInput struct {
+	ThreadID uuid.UUID `path:"id" doc:"Thread ID"`
+}
+
+type UnmuteThreadOutput struct {
+	Body FollowResponseBody
+}
+
 type ListFollowedThreadsInput struct {
 	Page     int    `query:"page" doc:"Page number"`
 	PageSize int    `query:"pageSize" doc:"Page size"`
@@ -472,7 +489,7 @@ func ToCategoryDTO(category *entity.CommunityCategory) *CategoryDTO {
 	}
 }
 
-func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFollowed bool, unreadCount int, hasSolution bool) *ThreadDTO {
+func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFollowed bool, isMuted bool, unreadCount int, hasSolution bool) *ThreadDTO {
 	if thread == nil {
 		return nil
 	}
@@ -501,6 +518,7 @@ func ToThreadDTO(thread *entity.DiscussionThread, authorMeta *AuthorMeta, isFoll
 		AuthorAvatar:   authorAvatarURL,
 		IsPinned:       thread.IsPinned,
 		IsFollowed:     isFollowed,
+		IsMuted:        isMuted,
 		UnreadCount:    unreadCount,
 		HasSolution:    hasSolution,
 		Status:         thread.Status,
