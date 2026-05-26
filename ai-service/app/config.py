@@ -79,16 +79,21 @@ class Settings(BaseSettings):
     COHERE_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     COHERE_EMBEDDING_MODEL: str = "embed-multilingual-v3.0"
-    GEMINI_EMBEDDING_MODEL: str = "text-embedding-004"
+    GEMINI_EMBEDDING_MODEL: str = "text-multilingual-embedding-002"
     OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     EMBEDDING_DIMENSIONS: int | None = None
 
     LLM_PROVIDER: str = "cohere"
     COHERE_LLM_MODEL: str = "command-a-03-2025"
-    GEMINI_LLM_MODEL: str = "gemini-1.5-flash"
+    GEMINI_LLM_MODEL: str = "gemini-2.5-flash"
     OLLAMA_LLM_MODEL: str = "qwen2.5"
     AI_ASK_ENABLED: bool = True
+
+    # Gemini / Vertex AI
+    GEMINI_USE_VERTEX: bool = False
+    GEMINI_VERTEX_PROJECT: str = ""
+    GEMINI_VERTEX_LOCATION: str = "us-central1"
 
     AI_PROMPT_DIR: str = "prompts"
     AI_AGENTIC_ENABLED: bool = False

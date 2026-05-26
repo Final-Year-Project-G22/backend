@@ -30,6 +30,9 @@ def create_embedding_adapter(
             model=settings.GEMINI_EMBEDDING_MODEL,
             dimensions=dimensions or 768,
             http_client=http_client,
+            use_vertex=settings.GEMINI_USE_VERTEX,
+            vertex_project=settings.GEMINI_VERTEX_PROJECT,
+            vertex_location=settings.GEMINI_VERTEX_LOCATION,
         )
 
     if provider == "ollama":
