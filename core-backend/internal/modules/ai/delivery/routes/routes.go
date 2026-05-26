@@ -7,16 +7,17 @@ import (
 )
 
 type RouteDependencies struct {
-	IngestionHandler        *handler.IngestionHandler
-	StatusHandler           *handler.StatusHandler
-	AskHandler              *handler.AskHandler
-	DLQHandler              *handler.DLQHandler
-	SSEHandler              *handler.SSEHandler
-	ToggleHandler           *handler.ToggleHandler
-	Logger                  core.Logger
-	AskEnabled              bool
-	AuthMiddleware          func(huma.Context, func(huma.Context))
-	AccountStatusMiddleware func(huma.Context, func(huma.Context))
+	IngestionHandler          *handler.IngestionHandler
+	StatusHandler             *handler.StatusHandler
+	AskHandler                *handler.AskHandler
+	DLQHandler                *handler.DLQHandler
+	SSEHandler                *handler.SSEHandler
+	ToggleHandler             *handler.ToggleHandler
+	Logger                    core.Logger
+	AskEnabled                bool
+	AuthMiddleware            func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware   func(huma.Context, func(huma.Context))
+	AdminPermissionMiddleware func(huma.Context, func(huma.Context))
 }
 
 func RegisterRoutes(api huma.API, deps RouteDependencies) {

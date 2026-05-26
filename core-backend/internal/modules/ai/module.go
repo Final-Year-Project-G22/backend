@@ -19,6 +19,8 @@ import (
 	iamservice "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/application/service"
 	iammiddleware "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/delivery/middleware"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/token"
+	iamusecase "github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	sharedmiddleware "github.com/Final-Year-Project-G22/backend/core/internal/shared/middleware"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	stg "github.com/Final-Year-Project-G22/backend/core/pkg/storage"
 	"github.com/danielgtaylor/huma/v2"
@@ -95,6 +97,12 @@ var Module = fx.Module("ai",
 	fx.Provide(handler.NewAskHandler),
 	fx.Provide(handler.NewSSEHandler),
 	fx.Provide(handler.NewToggleHandler),
+	fx.Provide(
+		fx.Annotate(
+			AISeedPermissions,
+			fx.ResultTags(`group:"permission_seeds"`),
+		),
+	),
 	fx.Provide(func(dlqController port.DLQController) *handler.DLQHandler {
 		return handler.NewDLQHandler(dlqController)
 	}),
@@ -110,20 +118,22 @@ var Module = fx.Module("ai",
 			fx.As(new(port.IngestControl)),
 		),
 	),
-	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, tokenService token.TokenService, authService iamservice.AuthService, logger core.Logger) {
+	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, tokenService token.TokenService, authService iamservice.AuthService, roleAssignmentUsecase iamusecase.RoleAssignmentUsecase, logger core.Logger) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
+		adminPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, AIAdminStream, []string{"super_admin"})
 		routes.RegisterRoutes(api, routes.RouteDependencies{
-			IngestionHandler:        ingestionHandler,
-			StatusHandler:           statusHandler,
-			AskHandler:              askHandler,
-			DLQHandler:              dlqHandler,
-			SSEHandler:              sseHandler,
-			ToggleHandler:           toggleHandler,
-			Logger:                  logger,
-			AskEnabled:              cfg.AI.AskEnabled,
-			AuthMiddleware:          authMiddleware,
-			AccountStatusMiddleware: accountStatusMiddleware,
+			IngestionHandler:          ingestionHandler,
+			StatusHandler:             statusHandler,
+			AskHandler:                askHandler,
+			DLQHandler:                dlqHandler,
+			SSEHandler:                sseHandler,
+			ToggleHandler:             toggleHandler,
+			Logger:                    logger,
+			AskEnabled:                cfg.AI.AskEnabled,
+			AuthMiddleware:            authMiddleware,
+			AccountStatusMiddleware:   accountStatusMiddleware,
+			AdminPermissionMiddleware: adminPermissionMiddleware,
 		})
 	}),
 	fx.Invoke(func(lc fx.Lifecycle, cfg *core.Config, dispatcher *service.OutboxDispatcher) {
