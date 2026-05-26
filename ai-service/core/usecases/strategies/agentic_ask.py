@@ -130,7 +130,7 @@ class AgenticAskStrategy(AskStrategyPort):
         )
 
         tool_defs = await self._tool_registry.get_tool_definitions()
-        history = await self._load_history(conversation.id)
+        history = await self._load_history(conversation.id, conversation.message_count)
 
         system_prompt = self._prompt_loader.render_agentic(
             locale=command.language.value,
@@ -257,6 +257,7 @@ class AgenticAskStrategy(AskStrategyPort):
                 cache_key = self._build_cache_key(command, conversation.id)
                 await self._cache_response(cache_key, full_response)
                 await self._publish_query_event(command, conversation, ai_message)
+                await self._try_update_title(conversation, command, tool_calls_flat)
 
                 yield AskStreamEvent(
                     type_=AskStreamEventType.DONE,
@@ -314,10 +315,15 @@ class AgenticAskStrategy(AskStrategyPort):
             return "Conversation history:\n" + "\n".join(reversed(parts))
         return ""
 
-    async def _load_history(self, conversation_id: Any) -> list[AIChatMessage]:
+    async def _load_history(
+        self,
+        conversation_id: Any,
+        message_count: int = 0,
+    ) -> list[AIChatMessage]:
         try:
+            offset = max(0, message_count - HISTORY_LIMIT)
             return await self._conversation.list_messages(
-                conversation_id, limit=HISTORY_LIMIT, offset=0
+                conversation_id, limit=HISTORY_LIMIT, offset=offset
             )
         except Exception:
             return []
@@ -491,3 +497,30 @@ class AgenticAskStrategy(AskStrategyPort):
             await self._event_bus.publish("ai.query.completed", payload)
         except AIServiceError:
             pass
+
+    async def _try_update_title(
+        self,
+        conversation: AIConversationSession,
+        command: AskAICommand,
+        tool_calls_flat: list[ToolCallRecord],
+    ) -> None:
+        if not tool_calls_flat or conversation.title != command.prompt[:80]:
+            return
+
+        tool_names = ", ".join(sorted({tc.tool_name for tc in tool_calls_flat}))
+        title_prompt = (
+            f"Summarize this Ethiopian business query in 1-5 words: "
+            f"'{command.prompt}' (tools used: {tool_names})"
+        )
+        try:
+            result = await self._llm_port.generate(
+                title_prompt,
+                max_tokens=20,
+                temperature=0.3,
+            )
+            new_title = result.text.strip().strip("'\"").strip()
+            max_title_len = 100
+            if new_title and len(new_title) <= max_title_len:
+                await self._conversation.update_session_title(conversation.id, new_title)
+        except Exception:
+            logger.warning("Failed to generate conversation title for %s", conversation.id)

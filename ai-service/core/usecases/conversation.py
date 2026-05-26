@@ -91,6 +91,13 @@ class ConversationUseCase:
             offset=offset,
         )
 
+    async def update_session_title(
+        self,
+        session_id: uuid.UUID,
+        title: str,
+    ) -> None:
+        await self._conversation_repository.update_session_title(session_id, title)
+
     async def _resolve_tier(self, user_id: uuid.UUID) -> Tier:
         if self._quota_guard is None:
             return Tier.BASIC

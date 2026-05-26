@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -127,6 +127,20 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
             ) from exc
 
         return True
+
+    async def update_session_title(self, session_id: uuid.UUID, title: str) -> None:
+        try:
+            model = await self._get_session_model(session_id)
+            if model is not None:
+                model.title = title
+                model.updated_at = datetime.now(UTC)
+                await self._session.flush()
+                await self._session.commit()
+        except SQLAlchemyError as exc:
+            raise RepositoryError(
+                "failed to update conversation session title",
+                details={"session_id": str(session_id)},
+            ) from exc
 
     async def add_message(self, message: AIChatMessage) -> AIChatMessage:
         model = to_orm_message(message)

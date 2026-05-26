@@ -86,7 +86,7 @@ class SimpleAskStrategy(AskStrategyPort):
             locale=command.language.value,
             kb_context=self._format_kb_context(merged_hits),
         )
-        history = await self._load_history(conversation.id)
+        history = await self._load_history(conversation.id, conversation.message_count)
         prompt = self._build_prompt(command.prompt, history, language=command.language)
 
         result = await self._llm_port.generate(
@@ -126,7 +126,7 @@ class SimpleAskStrategy(AskStrategyPort):
             locale=command.language.value,
             kb_context=self._format_kb_context(merged_hits),
         )
-        history = await self._load_history(conversation.id)
+        history = await self._load_history(conversation.id, conversation.message_count)
         prompt = self._build_prompt(command.prompt, history, language=command.language)
 
         full_response_parts: list[str] = []
@@ -183,7 +183,13 @@ class SimpleAskStrategy(AskStrategyPort):
                 if msg.message_type == MessageType.USER_QUERY and msg.user_query:
                     history_parts.append(f"User: {msg.user_query}")
                 elif msg.message_type == MessageType.AI_RESPONSE and msg.llm_response:
-                    history_parts.append(f"Assistant: {msg.llm_response}")
+                    tool_summary = ""
+                    if msg.tool_calls:
+                        summaries = [
+                            f"  [{tc.tool_name}] {tc.result_summary}" for tc in msg.tool_calls
+                        ]
+                        tool_summary = "\n" + "\n".join(summaries)
+                    history_parts.append(f"Assistant: {msg.llm_response}{tool_summary}")
             if history_parts:
                 parts.append("Conversation history:\n" + "\n".join(reversed(history_parts)) + "\n")
 
@@ -193,10 +199,15 @@ class SimpleAskStrategy(AskStrategyPort):
         parts.append(f"\nQuestion: {user_query}\n\n{lang_instruction}")
         return "\n\n".join(parts)
 
-    async def _load_history(self, conversation_id: Any) -> list[AIChatMessage]:
+    async def _load_history(
+        self,
+        conversation_id: Any,
+        message_count: int = 0,
+    ) -> list[AIChatMessage]:
         try:
+            offset = max(0, message_count - HISTORY_LIMIT)
             return await self._conversation.list_messages(
-                conversation_id, limit=HISTORY_LIMIT, offset=0
+                conversation_id, limit=HISTORY_LIMIT, offset=offset
             )
         except Exception:
             return []
