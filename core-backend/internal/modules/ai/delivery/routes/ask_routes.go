@@ -105,6 +105,26 @@ func registerAskRoutes(api huma.API, deps RouteDependencies) {
 							})
 							return
 						}
+
+						if chunk.ToolUse != nil {
+							_ = writer.WriteEvent("tool_use", dto.AskStreamToolUseEventBody{
+								Tool:          chunk.ToolUse.Tool,
+								ArgumentsJSON: chunk.ToolUse.ArgumentsJSON,
+							})
+						}
+
+						if chunk.ToolResult != nil {
+							_ = writer.WriteEvent("tool_result", dto.AskStreamToolResultEventBody{
+								Tool:          chunk.ToolResult.Tool,
+								ResultSummary: chunk.ToolResult.ResultSummary,
+							})
+						}
+
+						if chunk.Thinking != nil {
+							_ = writer.WriteEvent("thinking", dto.AskStreamThinkingEventBody{
+								Text: *chunk.Thinking,
+							})
+						}
 					}
 				}
 			},

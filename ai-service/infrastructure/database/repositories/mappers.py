@@ -17,6 +17,7 @@ from core.domain.models import (
     AIUserQuota,
     DocumentChunk,
     KnowledgeDocument,
+    ToolCallRecord,
 )
 from core.domain.value_objects import ResponseSource, SearchHit, TokenUsage
 from infrastructure.database import models_sqlalchemy as sa_models
@@ -125,6 +126,8 @@ def to_domain_message(model: sa_models.AIChatMessage) -> AIChatMessage:
         token_usage=_deserialize_token_usage(model.token_usage),
         model_used=model.model_used,
         prompt_version=model.prompt_version,
+        tool_calls=_deserialize_tool_calls(model.tool_calls),
+        agent_strategy=model.agent_strategy or "simple",
         trace_id=model.trace_id,
         cache_hit=model.cache_hit,
         user_feedback=model.user_feedback,
@@ -153,6 +156,8 @@ def to_orm_message(domain: AIChatMessage) -> sa_models.AIChatMessage:
         token_usage=serialize_token_usage(domain.token_usage),
         model_used=domain.model_used,
         prompt_version=domain.prompt_version,
+        tool_calls=serialize_tool_calls(domain.tool_calls),
+        agent_strategy=domain.agent_strategy,
         trace_id=domain.trace_id,
         cache_hit=domain.cache_hit,
         user_feedback=domain.user_feedback,
@@ -280,6 +285,18 @@ def _deserialize_search_hits(raw: list[dict[str, Any]] | None) -> list[SearchHit
     if raw is None:
         return None
     return [SearchHit.model_validate(item) for item in raw]
+
+
+def serialize_tool_calls(tool_calls: list[ToolCallRecord] | None) -> list[dict[str, Any]] | None:
+    if tool_calls is None:
+        return None
+    return [tc.model_dump(mode="python") for tc in tool_calls]
+
+
+def _deserialize_tool_calls(raw: list[dict[str, Any]] | None) -> list[ToolCallRecord] | None:
+    if raw is None:
+        return None
+    return [ToolCallRecord.model_validate(item) for item in raw]
 
 
 __all__ = [

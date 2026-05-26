@@ -69,6 +69,10 @@ func (m *AskRequest) validate(all bool) error {
 
 	// no validation rules for TopK
 
+	// no validation rules for Strategy
+
+	// no validation rules for DebugMode
+
 	if m.SessionId != nil {
 		// no validation rules for SessionId
 	}
@@ -812,6 +816,47 @@ func (m *AskStreamChunk) validate(all bool) error {
 			if err := v.Validate(); err != nil {
 				return AskStreamChunkValidationError{
 					field:  "ToolResult",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AskStreamChunk_Thinking:
+		if v == nil {
+			err := AskStreamChunkValidationError{
+				field:  "Chunk",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetThinking()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Thinking",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AskStreamChunkValidationError{
+						field:  "Thinking",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetThinking()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AskStreamChunkValidationError{
+					field:  "Thinking",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -1582,3 +1627,105 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ToolResultChunkValidationError{}
+
+// Validate checks the field values on ThinkingChunk with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ThinkingChunk) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ThinkingChunk with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ThinkingChunkMultiError, or
+// nil if none found.
+func (m *ThinkingChunk) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ThinkingChunk) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Text
+
+	if len(errors) > 0 {
+		return ThinkingChunkMultiError(errors)
+	}
+
+	return nil
+}
+
+// ThinkingChunkMultiError is an error wrapping multiple validation errors
+// returned by ThinkingChunk.ValidateAll() if the designated constraints
+// aren't met.
+type ThinkingChunkMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ThinkingChunkMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ThinkingChunkMultiError) AllErrors() []error { return m }
+
+// ThinkingChunkValidationError is the validation error returned by
+// ThinkingChunk.Validate if the designated constraints aren't met.
+type ThinkingChunkValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ThinkingChunkValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ThinkingChunkValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ThinkingChunkValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ThinkingChunkValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ThinkingChunkValidationError) ErrorName() string { return "ThinkingChunkValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ThinkingChunkValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sThinkingChunk.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ThinkingChunkValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ThinkingChunkValidationError{}

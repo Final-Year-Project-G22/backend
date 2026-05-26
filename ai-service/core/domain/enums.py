@@ -46,6 +46,11 @@ class MessageType(StrEnum):
     AI_RESPONSE = "ai_response"
 
 
+class AskStrategy(StrEnum):
+    SIMPLE = "simple"
+    AGENTIC = "agentic"
+
+
 class IngestionStage(StrEnum):
     QUEUED = "queued"
     VALIDATING = "validating"
@@ -59,6 +64,7 @@ class IngestionStage(StrEnum):
 
 
 __all__ = [
+    "AskStrategy",
     "ChunkStatus",
     "DocumentSource",
     "DocumentStatus",
