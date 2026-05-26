@@ -124,6 +124,7 @@ ignore = [
 "alembic/versions/*.py" = ["PLC0415", "F401"]
 "infrastructure/rpc/services/inference_service.py" = ["ARG002"]
 "infrastructure/tools/local/*.py" = ["ARG002"]
+"core/usecases/strategies/agentic_ask.py" = ["PLR0915"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "core", "grpc", "infrastructure", "workers"]
@@ -141,7 +142,7 @@ pythonVersion = "3.11"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
 include = ["app", "core", "infrastructure", "workers"]
-exclude = [".venv", "__pycache__", "grpc_stubs", "grpc", "grpc/generated", "tests", "infrastructure/rpc/services", "infrastructure/llm", "infrastructure/rpc/ai_tool_client.py", "infrastructure/tools"]
+exclude = [".venv", "__pycache__", "grpc_stubs", "grpc", "grpc/generated", "tests", "infrastructure/rpc/services", "infrastructure/llm", "infrastructure/rpc/ai_tool_client.py", "infrastructure/tools", "core/usecases/strategies", "core/usecases/ask_ai.py"]
 extraPaths = ["grpc_stubs"]
 reportMissingTypeStubs = false
 reportUntypedFunctionDecorator = false

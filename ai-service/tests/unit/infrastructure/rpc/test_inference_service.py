@@ -7,7 +7,9 @@ from unittest.mock import AsyncMock
 import pytest
 
 import grpc
+from core.domain.enums import DocumentSource, Language
 from core.domain.exceptions import AIServiceError, QuotaExceededError, RepositoryError
+from core.domain.value_objects import SearchHit
 from core.usecases.contracts import AskAICommand
 from core.usecases.defaults import MAX_PROMPT_LENGTH
 from infrastructure.rpc.services.inference_service import AIInferenceService
@@ -56,10 +58,14 @@ async def test_ask_maps_successful_response() -> None:
             ),
         ),
         retrieved_hits=[
-            SimpleNamespace(
+            SearchHit(
                 document_id=hit_document_id,
                 chunk_id=hit_chunk_id,
                 score=0.87,
+                chunk_text="Relevant text",
+                chunk_index=0,
+                source=DocumentSource.GUIDE,
+                language=Language.ENGLISH,
             )
         ],
     )

@@ -175,22 +175,25 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 if event.is_text and event.text:
                     yield service_pb2.AskStreamChunk(text=service_pb2.TextChunk(text=event.text))
 
-                if event.is_tool_use and event.tool_uses:
-                    for tc in event.tool_uses:
-                        yield service_pb2.AskStreamChunk(
-                            tool_use=service_pb2.ToolUseChunk(
-                                tool=tc.name,
-                                arguments_json=json.dumps(tc.arguments),
-                            )
+                if event.is_tool_call and event.tool_name:
+                    yield service_pb2.AskStreamChunk(
+                        tool_use=service_pb2.ToolUseChunk(
+                            tool=event.tool_name,
+                            arguments_json=json.dumps(event.tool_arguments or {}),
                         )
+                    )
 
-                if event.is_tool_result and event.tool_result:
-                    result_summary = json.dumps(event.tool_result_data, default=str)[:500]
+                if event.is_tool_result and event.tool_name:
                     yield service_pb2.AskStreamChunk(
                         tool_result=service_pb2.ToolResultChunk(
-                            tool=event.tool_result.name,
-                            result_summary=result_summary,
+                            tool=event.tool_name,
+                            result_summary=event.tool_result_summary or "",
                         )
+                    )
+
+                if event.is_thinking and event.text and debug_mode:
+                    yield service_pb2.AskStreamChunk(
+                        thinking=service_pb2.ThinkingChunk(text=event.text),
                     )
 
                 if event.is_done:

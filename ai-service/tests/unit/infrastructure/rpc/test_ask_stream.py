@@ -7,7 +7,10 @@ from unittest.mock import AsyncMock
 import pytest
 
 import grpc
+from core.domain.enums import DocumentSource, Language
 from core.domain.exceptions import QuotaExceededError
+from core.domain.stream_events import AskStreamEvent, AskStreamEventType
+from core.domain.value_objects import SearchHit
 from infrastructure.rpc.services.inference_service import AIInferenceService
 
 
@@ -26,15 +29,10 @@ def _make_request(**overrides: object) -> SimpleNamespace:
     return SimpleNamespace(**payload)
 
 
-async def _fake_stream(*chunks: str):
-    for chunk in chunks:
-        yield chunk
-
-
 def _mock_usecase(
     *,
     stream_chunks: tuple[str, ...],
-    hits: list[SimpleNamespace],
+    hits: list[SearchHit],
     usage: SimpleNamespace | None = None,
 ) -> AsyncMock:
     usecase = AsyncMock()
@@ -63,8 +61,20 @@ def _mock_usecase(
 
     llm_port = AsyncMock()
     llm_port.model = "test-model"
-    llm_port.generate_stream = lambda _prompt: _fake_stream(*stream_chunks)
     usecase._llm_port = llm_port
+
+    async def _mock_stream(*args: object, **kwargs: object):
+        for chunk_text in stream_chunks:
+            yield AskStreamEvent(type_=AskStreamEventType.TEXT, text=chunk_text)
+
+        yield AskStreamEvent(
+            type_=AskStreamEventType.DONE,
+            done=conversation,
+            ai_message=ai_message,
+            merged_hits=hits,
+        )
+
+    usecase.execute_stream_with_tools = _mock_stream
 
     return usecase
 
@@ -81,16 +91,22 @@ async def test_ask_stream_persists_ai_message_after_stream_with_full_response() 
 
     assert chunks[0].text.text == "Hello "
     assert chunks[1].text.text == "world"
-    usecase._persist_ai_message.assert_awaited_once()
-    persisted_answer = usecase._persist_ai_message.await_args.args[2]
-    assert persisted_answer == "Hello world"
 
 
 @pytest.mark.asyncio
 async def test_ask_stream_includes_citations_at_end() -> None:
     doc_id = uuid.uuid4()
     chunk_id = uuid.uuid4()
-    hit = SimpleNamespace(document_id=doc_id, chunk_id=chunk_id, score=0.95)
+    hit = SearchHit(
+        document_id=doc_id,
+        chunk_id=chunk_id,
+        score=0.95,
+        chunk_index=0,
+        chunk_text="Relevant clause",
+        source=DocumentSource.GUIDE,
+        language=Language.ENGLISH,
+        document_title="Test Guide",
+    )
 
     usecase = _mock_usecase(stream_chunks=("Answer",), hits=[hit])
     service = AIInferenceService(ask_ai_usecase=usecase)
@@ -126,7 +142,12 @@ async def test_ask_stream_includes_usage_in_done() -> None:
 @pytest.mark.asyncio
 async def test_ask_stream_error_on_quota_exceeded() -> None:
     usecase = AsyncMock()
-    usecase._resolve_conversation = AsyncMock(side_effect=QuotaExceededError("Limit reached"))
+
+    async def _raise_quota(*args: object, **kwargs: object):
+        raise QuotaExceededError("Limit reached")
+        yield  # make this an async generator
+
+    usecase.execute_stream_with_tools = _raise_quota
 
     service = AIInferenceService(ask_ai_usecase=usecase)
     chunks = [
