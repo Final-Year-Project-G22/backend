@@ -184,7 +184,7 @@ func (r *progressRepository) GetBookmark(ctx context.Context, accountID, userID,
 
 func (r *progressRepository) ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions) ([]*entity.UserGuideBookmark, error) {
 	var bookmarks []*entity.UserGuideBookmark
-	db := r.getDB(ctx).Where("account_id = ? AND user_id = ?", accountID, userID).Preload("Step")
+	db := r.getDB(ctx).Where("account_id = ? AND user_id = ?", accountID, userID).Preload("Step.Translations").Preload("Step.Guide.Translations")
 	for _, preload := range q.Preload {
 		db = db.Preload(preload)
 	}
