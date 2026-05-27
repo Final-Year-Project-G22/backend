@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_DBNAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test:
         ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_DBNAME}"]
@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: adisu_ai
     volumes:
-      - postgres_ai_data:/var/lib/postgresql/data
+      - postgres_ai_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d adisu_ai"]
       interval: 10s
@@ -60,6 +60,7 @@ services:
   seaweed-master:
     image: chrislusf/seaweedfs:latest
     restart: unless-stopped
+    user: root
     command: master -ip=seaweed-master -mdir=/data/master -defaultReplication=000 -volumeSizeLimitMB=1024
     volumes:
       - seaweed_master_data:/data/master
@@ -67,6 +68,7 @@ services:
   seaweed-volume:
     image: chrislusf/seaweedfs:latest
     restart: unless-stopped
+    user: root
     command: volume -ip=seaweed-volume -dir=/data/volume -max=5 -mserver=seaweed-master:9333 -port=8080
     depends_on:
       seaweed-master:
@@ -77,6 +79,10 @@ services:
   seaweed-filer:
     image: chrislusf/seaweedfs:latest
     restart: unless-stopped
+<<<<<<< HEAD
+=======
+    user: root
+>>>>>>> 4ba5081 (fix(core): updated guide step view)
     command: filer -ip=seaweed-filer -ip.bind=0.0.0.0 -master=seaweed-master:9333
     depends_on:
       seaweed-master:
@@ -85,6 +91,7 @@ services:
       - seaweed_filer_data:/data/filer
     labels:
       - "traefik.enable=true"
+<<<<<<< HEAD
       - "traefik.http.routers.seaweed-filer.rule=Host(`files.johna.me`)"
       - "traefik.http.routers.seaweed-filer.entrypoints=websecure"
       - "traefik.http.routers.seaweed-filer.tls.certresolver=letsencrypt"
@@ -93,6 +100,18 @@ services:
     networks:
       - dokploy-network
       - default
+=======
+      - "traefik.http.routers.seaweed-filer.rule=Host(`storage.johna.me`)"
+      - "traefik.http.routers.seaweed-filer.entrypoints=websecure"
+      - "traefik.http.routers.seaweed-filer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.seaweed-filer.loadbalancer.server.port=8888"
+      - "traefik.http.middlewares.sse-nobuffer.headers.customresponseheaders.X-Accel-Buffering=no"
+      - "traefik.http.routers.core-backend.middlewares=sse-nobuffer"
+      - "traefik.docker.network=dokploy-network"
+    networks:
+      - default
+      - dokploy-network
+>>>>>>> 4ba5081 (fix(core): updated guide step view)
 
   core-backend:
     image: ghcr.io/final-year-project-g22/core-backend:${CORE_TAG}
@@ -120,7 +139,11 @@ services:
       SEAWEED_MASTER_URL: seaweed-master:9333
       SEAWEED_FILER_URL: http://seaweed-filer:8888
       SEAWEED_VOLUME_URL: http://seaweed-volume:8080
+<<<<<<< HEAD
       STORAGE_SEAWEEDFS_PUBLIC_URL: https://files.johna.me
+=======
+      STORAGE_SEAWEEDFS_PUBLIC_URL: https://storage.johna.me
+>>>>>>> 4ba5081 (fix(core): updated guide step view)
 
       CACHE_ENABLED: "true"
       CACHE_HOST: redis
@@ -185,9 +208,16 @@ services:
       - "traefik.http.routers.core-backend.entrypoints=websecure"
       - "traefik.http.routers.core-backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.core-backend.loadbalancer.server.port=4000"
+<<<<<<< HEAD
     networks:
       - dokploy-network
       - default
+=======
+      - "traefik.docker.network=dokploy-network"
+    networks:
+      - default
+      - dokploy-network
+>>>>>>> 4ba5081 (fix(core): updated guide step view)
     depends_on:
       postgres:
         condition: service_healthy
@@ -220,6 +250,10 @@ services:
       INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
       COHERE_API_KEY: ${COHERE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/mindful-backup-495108-n5-640600bd5b33.json
+      GEMINI_VERTEX_PROJECT: mindful-backup-495108-n5
+    volumes:
+      - /etc/dokploy/secrets:/secrets:ro
     depends_on:
       postgres-ai:
         condition: service_healthy
@@ -245,6 +279,10 @@ services:
       INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
       COHERE_API_KEY: ${COHERE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/mindful-backup-495108-n5-640600bd5b33.json
+      GEMINI_VERTEX_PROJECT: mindful-backup-495108-n5
+    volumes:
+      - /etc/dokploy/secrets:/secrets:ro
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -300,5 +338,11 @@ volumes:
 
 networks:
   default:
+<<<<<<< HEAD
     external: true
     name: dokploy-network
+=======
+    name: adisuserategnadev-server-163qkx_default
+  dokploy-network:
+    external: true
+>>>>>>> 4ba5081 (fix(core): updated guide step view)

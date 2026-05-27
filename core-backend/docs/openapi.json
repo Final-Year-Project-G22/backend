@@ -12,6 +12,10 @@
             "description": "Account's unique identifier",
             "type": "string"
           },
+          "language": {
+            "description": "Account language preference (en, am)",
+            "type": "string"
+          },
           "status": {
             "description": "Account status (pending_verification, active, locked, suspended, disabled)",
             "type": "string"
@@ -25,6 +29,33 @@
           "id",
           "email",
           "status"
+        ],
+        "type": "object"
+      },
+      "AccountPreferenceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AccountPreferenceResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "language": {
+            "description": "User's language preference (en, am)",
+            "type": "string"
+          },
+          "timezone": {
+            "description": "User's timezone (e.g. UTC, Africa/Addis_Ababa)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "timezone"
         ],
         "type": "object"
       },
@@ -8263,6 +8294,11 @@
             "description": "Localized description",
             "type": "string"
           },
+          "detailedContent": {
+            "additionalProperties": {},
+            "description": "Rich step content (checklists, documents, pro tips)",
+            "type": "object"
+          },
           "estimatedTime": {
             "description": "Estimated time in minutes",
             "format": "int64",
@@ -10681,6 +10717,10 @@
             "description": "Whether current user follows this thread",
             "type": "boolean"
           },
+          "isMuted": {
+            "description": "Whether current user has muted this thread",
+            "type": "boolean"
+          },
           "isPinned": {
             "description": "Pinned flag",
             "type": "boolean"
@@ -10762,6 +10802,7 @@
           "authorDisplayName",
           "isPinned",
           "isFollowed",
+          "isMuted",
           "unreadCount",
           "hasSolution",
           "status",
@@ -10903,6 +10944,26 @@
         "required": [
           "message"
         ],
+        "type": "object"
+      },
+      "UpdateAccountPreferenceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/UpdateAccountPreferenceRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "language": {
+            "description": "Language code (en, am)",
+            "maxLength": 10,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UpdateAdminStatusOutputBody": {
@@ -20672,6 +20733,88 @@
         ]
       }
     },
+    "/api/v1/auth/preferences": {
+      "get": {
+        "description": "Returns the language and timezone preferences for the authenticated user.",
+        "operationId": "getAccountPreferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountPreferenceResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get account preferences",
+        "tags": [
+          "Authentication"
+        ]
+      },
+      "put": {
+        "description": "Updates the language and timezone preferences for the authenticated user.",
+        "operationId": "updateAccountPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountPreferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountPreferenceResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update account preferences",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "description": "Uses the refresh token cookie to issue new access and refresh tokens. Implements token rotation for security.",
@@ -22243,6 +22386,102 @@
           }
         ],
         "summary": "Follow thread",
+        "tags": [
+          "Community"
+        ]
+      }
+    },
+    "/api/v1/community/threads/{id}/mute": {
+      "delete": {
+        "description": "Unmutes notifications for a discussion thread.",
+        "operationId": "unmuteCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Unmute thread",
+        "tags": [
+          "Community"
+        ]
+      },
+      "post": {
+        "description": "Mutes notifications for a discussion thread.",
+        "operationId": "muteCommunityThread",
+        "parameters": [
+          {
+            "description": "Thread ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Thread ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Mute thread",
         "tags": [
           "Community"
         ]

@@ -80,15 +80,16 @@ type PersonalizedGuide struct {
 }
 
 type PersonalizedStep struct {
-	ID            uuid.UUID             `json:"id"`
-	Slug          string                `json:"slug"`
-	Title         string                `json:"title"`
-	Description   *string               `json:"description,omitempty"`
-	StepType      entity.StepType       `json:"stepType"`
-	SortOrder     int                   `json:"sortOrder"`
-	IsOptional    bool                  `json:"isOptional"`
-	Status        entity.ProgressStatus `json:"status"`
-	EstimatedTime *int                  `json:"estimatedTime,omitempty"`
+	ID              uuid.UUID              `json:"id"`
+	Slug            string                 `json:"slug"`
+	Title           string                 `json:"title"`
+	Description     *string                `json:"description,omitempty"`
+	StepType        entity.StepType        `json:"stepType"`
+	SortOrder       int                    `json:"sortOrder"`
+	IsOptional      bool                   `json:"isOptional"`
+	Status          entity.ProgressStatus  `json:"status"`
+	EstimatedTime   *int                   `json:"estimatedTime,omitempty"`
+	DetailedContent map[string]interface{} `json:"detailedContent,omitempty"`
 }
 
 type GuideProgressSummary struct {
