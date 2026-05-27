@@ -29,7 +29,7 @@ type GuideViewUseCase interface {
 	AddBookmark(ctx context.Context, accountID, userID, stepID uuid.UUID, note *string) error
 	UpdateBookmarkNote(ctx context.Context, accountID, userID, stepID uuid.UUID, note *string) error
 	RemoveBookmark(ctx context.Context, accountID, userID, stepID uuid.UUID) error
-	ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions) ([]*BookmarkWithStep, error)
+	ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*BookmarkWithStep, error)
 }
 
 type GuideWithProgress struct {
