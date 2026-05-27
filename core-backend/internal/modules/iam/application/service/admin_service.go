@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/json"
+	"fmt"
 	"math/big"
 	"strings"
 	"time"
@@ -15,6 +17,9 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/event"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/repository"
 	"github.com/Final-Year-Project-G22/backend/core/internal/modules/iam/domain/usecase"
+	notifentity "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/entity"
+	notifrepo "github.com/Final-Year-Project-G22/backend/core/internal/modules/notification/domain/repository"
+	"github.com/Final-Year-Project-G22/backend/core/internal/shared/notificationevent"
 	"github.com/Final-Year-Project-G22/backend/core/internal/shared/permissions"
 	sharedrepo "github.com/Final-Year-Project-G22/backend/core/internal/shared/repository"
 	"github.com/Final-Year-Project-G22/backend/core/pkg/errors"
@@ -22,6 +27,7 @@ import (
 	"github.com/Final-Year-Project-G22/backend/core/pkg/rabbitmq"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 )
 
 const adminPasswordLength = 12
@@ -107,6 +113,8 @@ type adminService struct {
 	otpUsecase         usecase.AccountEmailOTPUsecase
 	messageBus         rabbitmq.Bus
 	logger             core.Logger
+	cfg                *core.Config
+	notifOutboxRepo    notifrepo.NotificationOutboxRepository
 }
 
 func NewAdminService(
@@ -118,6 +126,8 @@ func NewAdminService(
 	otpUsecase usecase.AccountEmailOTPUsecase,
 	messageBus rabbitmq.Bus,
 	logger core.Logger,
+	cfg *core.Config,
+	notifOutboxRepo notifrepo.NotificationOutboxRepository,
 ) AdminService {
 	return &adminService{
 		transactor:         transactor,
@@ -128,6 +138,8 @@ func NewAdminService(
 		otpUsecase:         otpUsecase,
 		messageBus:         messageBus,
 		logger:             logger,
+		cfg:                cfg,
+		notifOutboxRepo:    notifOutboxRepo,
 	}
 }
 
@@ -209,13 +221,15 @@ func (s *adminService) RegisterAdmin(ctx context.Context, input RegisterAdminInp
 			}
 		}
 
+		if txErr := s.writeAdminCreatedOutbox(txCtx, account, user, password); txErr != nil {
+			s.logger.Error("Failed to write admin credentials notification outbox row", core.Error(txErr))
+		}
+
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	go s.publishAdminCreated(ctx, account, user, password)
 
 	return &RegisterAdminOutput{AccountID: account.ID}, nil
 }
@@ -449,18 +463,53 @@ func (s *adminService) publishPasswordReset(ctx context.Context, account *entity
 	}
 }
 
-func (s *adminService) publishAdminCreated(ctx context.Context, account *entity.Account, user *entity.User, password string) {
-	err := s.messageBus.Publish(ctx, event.AdminCreated, event.AdminCreatedEvent{
-		AccountID: account.ID.String(),
-		Email:     account.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Password:  password,
-		Locale:    i18n.LocaleFromContext(ctx),
-	})
-	if err != nil {
-		s.logger.Error("Failed to publish admin credentials event", core.Error(err))
+func (s *adminService) writeAdminCreatedOutbox(ctx context.Context, account *entity.Account, user *entity.User, password string) error {
+	env := notificationevent.Envelope{
+		SchemaVersion:    notificationevent.SchemaVersionV1,
+		EventType:        event.AdminCreated,
+		OccurredAt:       time.Now().UTC(),
+		SourceModule:     "iam",
+		AccountID:        account.ID,
+		NotificationType: string(notifentity.NotificationTypeAdminProvisioned),
+		ChannelPolicy:    notificationevent.ChannelPolicySingle,
+		Channel:          strPtr(string(notifentity.ChannelEmail)),
+		Variables: map[string]string{
+			"platformName": s.cfg.App.Name,
+			"accountName":  user.FirstName,
+			"email":        account.Email,
+			"password":     password,
+		},
+		Metadata: notificationevent.Metadata{
+			IdempotencyKey: "admin-created:" + account.ID.String() + ":" + uuid.New().String(),
+			Locale:         nil,
+		},
 	}
+	return s.writeEnvelopeToOutbox(ctx, &env)
+}
+
+func (s *adminService) writeEnvelopeToOutbox(ctx context.Context, envelope *notificationevent.Envelope) error {
+	data, err := json.Marshal(envelope)
+	if err != nil {
+		return fmt.Errorf("failed to marshal envelope: %w", err)
+	}
+
+	var payload datatypes.JSONMap
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return fmt.Errorf("failed to convert envelope to JSONMap: %w", err)
+	}
+
+	outbox := &notifentity.NotificationOutbox{
+		EventType:      envelope.EventType,
+		SchemaVersion:  envelope.SchemaVersion,
+		SourceModule:   envelope.SourceModule,
+		AccountID:      envelope.AccountID,
+		IdempotencyKey: envelope.Metadata.IdempotencyKey,
+		Payload:        payload,
+		Status:         notifentity.NotificationOutboxStatusPending,
+		AttemptCount:   0,
+	}
+
+	return s.notifOutboxRepo.Create(ctx, outbox)
 }
 
 func generateAdminPassword(length int) (string, error) {

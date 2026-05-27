@@ -23,6 +23,7 @@ const (
 	NotificationTypeCampaign             NotificationType = "campaign"
 	NotificationTypeUserScheduled        NotificationType = "user_scheduled"
 	NotificationTypeComplianceInfo       NotificationType = "compliance_info"
+	NotificationTypeAdminProvisioned     NotificationType = "admin_provisioned"
 )
 
 type NotificationPriority int8

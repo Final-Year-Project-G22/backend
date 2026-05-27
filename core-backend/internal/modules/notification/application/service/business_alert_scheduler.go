@@ -116,11 +116,24 @@ func (s *BusinessAlertScheduler) sendAlert(ctx context.Context, entry *entity.Co
 		locale = "en"
 	}
 
+	var expiryDate string
+	if strings.HasPrefix(locale, "am") {
+		amharicMonths := map[time.Month]string{
+			time.January: "ጥር", time.February: "የካቲት", time.March: "መጋቢት",
+			time.April: "ሚያዝያ", time.May: "ግንቦት", time.June: "ሰኔ",
+			time.July: "ሐምሌ", time.August: "ነሐሴ", time.September: "መስከረም",
+			time.October: "ጥቅምት", time.November: "ኅዳር", time.December: "ታኅሣሥ",
+		}
+		expiryDate = fmt.Sprintf("%s %d, %d", amharicMonths[entry.ExpiryDate.Month()], entry.ExpiryDate.Day(), entry.ExpiryDate.Year())
+	} else {
+		expiryDate = entry.ExpiryDate.Format("January 2, 2006")
+	}
+
 	complianceLabel, _ := s.complianceTypeRepo.GetLabel(ctx, string(entry.ComplianceType), locale)
 	variables := map[string]string{
 		"complianceType": complianceLabel,
 		"daysRemaining":  fmt.Sprintf("%d", daysRemaining),
-		"expiryDate":     entry.ExpiryDate.Format("Jan 2, 2006"),
+		"expiryDate":     expiryDate,
 	}
 
 	env := notificationevent.Envelope{

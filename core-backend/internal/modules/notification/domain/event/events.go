@@ -27,5 +27,6 @@ const (
 	GuideComplianceStepRolledBack = "guide.compliance_step_rolled_back"
 	ComplianceAlert               = "compliance.alert"
 
+	AdminCreated       = "admin.created"
 	NotificationFailed = "notification.failed"
 )

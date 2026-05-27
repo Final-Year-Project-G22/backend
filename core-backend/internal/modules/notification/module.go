@@ -116,6 +116,7 @@ var Module = fx.Module(
 		mutedRepo repository.MutedAccountRepository,
 		queueRepo repository.NotificationQueueRepository,
 		accountRepo iamrepo.AccountRepository,
+		accountPrefRepo iamrepo.AccountPreferenceRepository,
 		iamReader appusecase.IAMGlobalPreferenceReader,
 		renderer *appservice.TemplateRenderer,
 		transactor sharedrepo.Transactor,
@@ -124,6 +125,7 @@ var Module = fx.Module(
 		resolvers := []repository.MuteResolver{muteResolver}
 		return appusecase.NewNotificationIngestUsecase(
 			tmplRepo, prefRepo, mutedRepo, queueRepo, accountRepo,
+			accountPrefRepo,
 			iamReader, renderer, transactor,
 			resolvers,
 		)
