@@ -1,5 +1,5 @@
 app:
-  name: "server"
+  name: "Adisu Serategna Platform"
   environment: "local"
   version: "0.1.0"
   port: 4000

@@ -821,10 +821,9 @@ func (s *authService) writeOTPNotificationOutbox(ctx context.Context, accountID 
 		ChannelPolicy:    notificationevent.ChannelPolicySingle,
 		Channel:          strPtr(string(notifentity.ChannelEmail)),
 		Variables: map[string]string{
-			"platformName":        s.cfg.App.Name,
-			"verificationMessage": fmt.Sprintf("Your verification code is %s. Please enter this code to verify your email.", otpCode),
-			"verificationUrl":     "https://app.wegotcha.com/verify-email?code=" + otpCode,
-			"expiryMinutes":       fmt.Sprintf("%d", int(otpTTL/time.Minute)),
+			"platformName":  s.cfg.App.Name,
+			"otpCode":       otpCode,
+			"expiryMinutes": fmt.Sprintf("%d", int(otpTTL/time.Minute)),
 		},
 		Metadata: notificationevent.Metadata{
 			IdempotencyKey: "verify-email:" + accountID.String() + ":" + otpRecordID.String(),

@@ -19,15 +19,16 @@ import (
 )
 
 type notificationIngestUsecase struct {
-	tmplRepo      notifrepo.NotificationTemplateRepository
-	prefRepo      notifrepo.UserNotificationPreferenceRepository
-	mutedRepo     notifrepo.MutedAccountRepository
-	queueRepo     notifrepo.NotificationQueueRepository
-	accountRepo   iamrepo.AccountRepository
-	iamReader     IAMGlobalPreferenceReader
-	muteResolvers []notifrepo.MuteResolver
-	renderer      *service.TemplateRenderer
-	transactor    sharedrepo.Transactor
+	tmplRepo        notifrepo.NotificationTemplateRepository
+	prefRepo        notifrepo.UserNotificationPreferenceRepository
+	mutedRepo       notifrepo.MutedAccountRepository
+	queueRepo       notifrepo.NotificationQueueRepository
+	accountRepo     iamrepo.AccountRepository
+	accountPrefRepo iamrepo.AccountPreferenceRepository
+	iamReader       IAMGlobalPreferenceReader
+	muteResolvers   []notifrepo.MuteResolver
+	renderer        *service.TemplateRenderer
+	transactor      sharedrepo.Transactor
 }
 
 func NewNotificationIngestUsecase(
@@ -36,21 +37,23 @@ func NewNotificationIngestUsecase(
 	mutedRepo notifrepo.MutedAccountRepository,
 	queueRepo notifrepo.NotificationQueueRepository,
 	accountRepo iamrepo.AccountRepository,
+	accountPrefRepo iamrepo.AccountPreferenceRepository,
 	iamReader IAMGlobalPreferenceReader,
 	renderer *service.TemplateRenderer,
 	transactor sharedrepo.Transactor,
 	muteResolvers []notifrepo.MuteResolver,
 ) usecase.NotificationIngestUsecase {
 	return &notificationIngestUsecase{
-		tmplRepo:      tmplRepo,
-		prefRepo:      prefRepo,
-		mutedRepo:     mutedRepo,
-		queueRepo:     queueRepo,
-		accountRepo:   accountRepo,
-		iamReader:     iamReader,
-		renderer:      renderer,
-		transactor:    transactor,
-		muteResolvers: muteResolvers,
+		tmplRepo:        tmplRepo,
+		prefRepo:        prefRepo,
+		mutedRepo:       mutedRepo,
+		queueRepo:       queueRepo,
+		accountRepo:     accountRepo,
+		accountPrefRepo: accountPrefRepo,
+		iamReader:       iamReader,
+		renderer:        renderer,
+		transactor:      transactor,
+		muteResolvers:   muteResolvers,
 	}
 }
 
@@ -84,6 +87,11 @@ func (uc *notificationIngestUsecase) ProcessEvent(ctx context.Context, input use
 	}
 
 	locale, _ := input.Metadata["locale"].(string)
+	if locale == "" {
+		if pref, err := uc.accountPrefRepo.GetByAccountID(ctx, input.AccountID); err == nil && pref != nil && pref.Language != "" {
+			locale = pref.Language
+		}
+	}
 	contentMap := uc.resolveContent(ctx, tmpl, locale)
 
 	channels := uc.resolveChannels(contentMap, input.ChannelPolicy, input.Channel)
