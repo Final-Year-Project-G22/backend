@@ -1,4 +1,4 @@
-h1:aLH+qEiig2EvSVjAB6SfVYq/m+enAc02ed8Z2rbG26I=
+h1:PX5oqQQVok4PWjF0RLLfxVtR8A6tF7dq62LTXyiKI9k=
 000001_init_pgcrypto.sql h1:cljwOzMRQEgrQGkGLxuXYJBD9CV4ikgWC+NxLlGS9IQ=
 20260309073359_iamEntities.sql h1:CisWciHk2NxPKZUw/iOc+pQ0h0C2i0N3rM+6z5irJ1M=
 20260319224745_updateOnAccountPasswordHash.sql h1:Lbfhx0bM4+q1q/w/pbHfmE2O9emm1fxn7Eb6dNvUczw=
@@ -37,3 +37,5 @@ h1:aLH+qEiig2EvSVjAB6SfVYq/m+enAc02ed8Z2rbG26I=
 20260520203400_seed_compliance_type_localizations.sql h1:HI2ahTC6pgWoj+yjAeP0TZH22lDMouF2DovrXcKbg00=
 20260520203600_update_community_notification_content.sql h1:s/yRSdwOJJHHaVAMdzUKfBNNnahbBnuDh2lMxEqumiE=
 20260527003000_consolidated_notification_templates.sql h1:RSYWmnam6aCorYeQ+iCUwENbDXVl/RlLh2yhiaa+a4s=
+20260528000000_seed_amharic_library_category_translations.sql h1:InFwrIxMXX4qMUcixDD2h2CgruS78Agatt490F+iqhk=
+20260528000001_seed_missing_sector_tag_translations.sql h1:pzTrR5CMAC+epANBCbIKJMRTEZvTncBzYqh9ArxTxMc=
