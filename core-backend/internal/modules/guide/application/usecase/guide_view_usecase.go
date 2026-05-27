@@ -533,6 +533,10 @@ func (s *guideViewUsecase) ListBookmarks(ctx context.Context, accountID, userID 
 			if len(b.Step.Translations) > 0 {
 				stepTitle = b.Step.Translations[0].Title
 			}
+			guideName = b.Step.Guide.Slug
+			if len(b.Step.Guide.Translations) > 0 {
+				guideName = b.Step.Guide.Translations[0].Name
+			}
 		}
 		result[i] = &usecase.BookmarkWithStep{
 			ID:        b.ID,
