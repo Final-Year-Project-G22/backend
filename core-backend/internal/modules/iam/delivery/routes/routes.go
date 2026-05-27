@@ -7,21 +7,22 @@ import (
 )
 
 type RouteDependencies struct {
-	AuthHandler             *handler.AuthHandler
-	AdminHandler            *handler.AdminHandler
-	TaxonomyAdminHandler    *handler.TaxonomyAdminHandler
-	TaxonomyHandler         *handler.TaxonomyHandler
-	BusinessProfileHandler  *handler.BusinessProfileHandler
-	PermissionHandler       *handler.PermissionHandler
-	RoleHandler             *handler.RoleHandler
-	UserHandler             *handler.UserHandler
-	ImageHandler            *handler.ImageHandler
-	OAuthHandler            *handler.OAuthHandler
-	NotificationPrefHandler *handler.NotificationPreferenceHandler
-	AccountPrefHandler      *handler.AccountPreferenceHandler
-	AuthMiddleware          func(huma.Context, func(huma.Context))
-	AccountStatusMiddleware func(huma.Context, func(huma.Context))
-	RoleAssignmentUsecase   usecase.RoleAssignmentUsecase
+	AuthHandler                 *handler.AuthHandler
+	AdminHandler                *handler.AdminHandler
+	TaxonomyAdminHandler        *handler.TaxonomyAdminHandler
+	TaxonomyHandler             *handler.TaxonomyHandler
+	BusinessProfileHandler      *handler.BusinessProfileHandler
+	BusinessProfileImageHandler *handler.BusinessProfileImageHandler
+	PermissionHandler           *handler.PermissionHandler
+	RoleHandler                 *handler.RoleHandler
+	UserHandler                 *handler.UserHandler
+	ImageHandler                *handler.ImageHandler
+	OAuthHandler                *handler.OAuthHandler
+	NotificationPrefHandler     *handler.NotificationPreferenceHandler
+	AccountPrefHandler          *handler.AccountPreferenceHandler
+	AuthMiddleware              func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware     func(huma.Context, func(huma.Context))
+	RoleAssignmentUsecase       usecase.RoleAssignmentUsecase
 }
 
 func RegisterRoutes(api huma.API, deps RouteDependencies) {
@@ -64,9 +65,10 @@ func RegisterRoutes(api huma.API, deps RouteDependencies) {
 		AccountStatusMiddleware: deps.AccountStatusMiddleware,
 	})
 	RegisterBusinessProfileRoutes(api, BusinessProfileRouteDependencies{
-		BusinessProfileHandler:  deps.BusinessProfileHandler,
-		AuthMiddleware:          deps.AuthMiddleware,
-		AccountStatusMiddleware: deps.AccountStatusMiddleware,
+		BusinessProfileHandler:      deps.BusinessProfileHandler,
+		BusinessProfileImageHandler: deps.BusinessProfileImageHandler,
+		AuthMiddleware:              deps.AuthMiddleware,
+		AccountStatusMiddleware:     deps.AccountStatusMiddleware,
 	})
 	RegisterNotificationPreferenceRoutes(api, NotificationPreferenceRouteDependencies{
 		Handler:                 deps.NotificationPrefHandler,
