@@ -285,7 +285,7 @@ func (h *GuideViewHandler) HandleListBookmarks(ctx context.Context, input *dto.L
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))
 
 	q := dto.ToQueryOptions(input.Page, input.PageSize)
-	bookmarks, err := h.guideViewUC.ListBookmarks(ctx, accountID, userID, q)
+	bookmarks, err := h.guideViewUC.ListBookmarks(ctx, accountID, userID, q, constants.Locale(i18n.LocaleFromContext(ctx)))
 	if err != nil {
 		return nil, apperrors.ToHumaError(ctx, err)
 	}

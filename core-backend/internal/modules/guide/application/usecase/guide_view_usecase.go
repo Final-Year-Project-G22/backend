@@ -519,7 +519,7 @@ func (s *guideViewUsecase) RemoveBookmark(ctx context.Context, accountID, userID
 	return s.progressRepo.RemoveBookmark(ctx, accountID, userID, stepID)
 }
 
-func (s *guideViewUsecase) ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions) ([]*usecase.BookmarkWithStep, error) {
+func (s *guideViewUsecase) ListBookmarks(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*usecase.BookmarkWithStep, error) {
 	bookmarks, err := s.progressRepo.ListBookmarks(ctx, accountID, userID, q)
 	if err != nil {
 		return nil, err
@@ -529,14 +529,8 @@ func (s *guideViewUsecase) ListBookmarks(ctx context.Context, accountID, userID 
 		stepTitle := ""
 		guideName := ""
 		if b.Step.ID != uuid.Nil {
-			stepTitle = b.Step.Slug
-			if len(b.Step.Translations) > 0 {
-				stepTitle = b.Step.Translations[0].Title
-			}
-			guideName = b.Step.Guide.Slug
-			if len(b.Step.Guide.Translations) > 0 {
-				guideName = b.Step.Guide.Translations[0].Name
-			}
+			stepTitle = s.resolveStepTitle(&b.Step, locale)
+			guideName = s.resolveGuideName(&b.Step.Guide, locale)
 		}
 		result[i] = &usecase.BookmarkWithStep{
 			ID:        b.ID,
