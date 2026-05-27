@@ -101,4 +101,4 @@ if __name__ == "__main__":
     from app.config import get_settings
 
     settings = get_settings()
-    uvicorn.run("main:app", host="127.0.0.1", port=settings.HTTP_PORT, reload=settings.DEBUG)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.HTTP_PORT, reload=settings.DEBUG)  # noqa: S104

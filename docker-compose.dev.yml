@@ -77,14 +77,22 @@ services:
   seaweed-filer:
     image: chrislusf/seaweedfs:latest
     restart: unless-stopped
-    command: filer -ip=seaweed-filer -master=seaweed-master:9333
+    command: filer -ip=seaweed-filer -ip.bind=0.0.0.0 -master=seaweed-master:9333
     depends_on:
       seaweed-master:
         condition: service_started
     volumes:
       - seaweed_filer_data:/data/filer
-    ports:
-      - "8888:8888"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.seaweed-filer.rule=Host(`files.johna.me`)"
+      - "traefik.http.routers.seaweed-filer.entrypoints=websecure"
+      - "traefik.http.routers.seaweed-filer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.seaweed-filer.loadbalancer.server.port=8888"
+      - "traefik.docker.network=dokploy-network"
+    networks:
+      - dokploy-network
+      - default
 
   core-backend:
     image: ghcr.io/final-year-project-g22/core-backend:${CORE_TAG}
@@ -112,7 +120,7 @@ services:
       SEAWEED_MASTER_URL: seaweed-master:9333
       SEAWEED_FILER_URL: http://seaweed-filer:8888
       SEAWEED_VOLUME_URL: http://seaweed-volume:8080
-      STORAGE_SEAWEEDFS_PUBLIC_URL: http://34.46.171.63:8888
+      STORAGE_SEAWEEDFS_PUBLIC_URL: https://files.johna.me
 
       CACHE_ENABLED: "true"
       CACHE_HOST: redis
@@ -141,6 +149,8 @@ services:
 
       AI_INFERENCE_GRPC_ENDPOINT: ai-server:50051
       AI_ASK_ENABLED: "true"
+      INGESTION_SIGNING_ACTIVE_KEY_ID: ${INGESTION_SIGNING_ACTIVE_KEY_ID:-ingestion-v1}
+      INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
 
       OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY}
       OAUTH_MOBILE_REDIRECT_BASE_URL: ${OAUTH_MOBILE_REDIRECT_BASE_URL}
@@ -169,6 +179,15 @@ services:
       FCM_CREDENTIALS_FILE: ${FCM_CREDENTIALS_FILE:-}
       IAM_SUPER_ADMIN_EMAIL: ${IAM_SUPER_ADMIN_EMAIL}
       IAM_SUPER_ADMIN_PASSWORD: ${IAM_SUPER_ADMIN_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.core-backend.rule=Host(`api.johna.me`)"
+      - "traefik.http.routers.core-backend.entrypoints=websecure"
+      - "traefik.http.routers.core-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.core-backend.loadbalancer.server.port=4000"
+    networks:
+      - dokploy-network
+      - default
     depends_on:
       postgres:
         condition: service_healthy
@@ -278,3 +297,8 @@ volumes:
   seaweed_master_data:
   seaweed_volume_data:
   seaweed_filer_data:
+
+networks:
+  default:
+    external: true
+    name: dokploy-network
