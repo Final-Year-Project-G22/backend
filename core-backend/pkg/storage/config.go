@@ -26,6 +26,11 @@ type SeaweedConfig struct {
 	// Required.
 	FilerURL string `mapstructure:"filer_url"`
 
+	// PublicURL is the public-facing URL for file access.
+	// Format: "http://host:port" (e.g., "http://example.com:8888")
+	// Optional. If empty, FilerURL is used for both internal and external access.
+	PublicURL string `mapstructure:"public_url"`
+
 	// VolumeURL is the base URL for volume servers.
 	// Format: "http://host:port" (e.g., "http://localhost:8080")
 	// Optional. If empty, derived from FilerURL.
