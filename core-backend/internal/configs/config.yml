@@ -66,6 +66,7 @@ storage:
     master_url: ${SEAWEED_MASTER_URL}
     filer_url: ${SEAWEED_FILER_URL}
     volume_url: ${SEAWEED_VOLUME_URL}
+    public_url: ${STORAGE_SEAWEEDFS_PUBLIC_URL:-}
 
 oauth:
   encryption_key: ${OAUTH_ENCRYPTION_KEY}
