@@ -8,9 +8,10 @@ import (
 const businessProfileBase = "/api/v1/users/business-profile"
 
 type BusinessProfileRouteDependencies struct {
-	BusinessProfileHandler  *handler.BusinessProfileHandler
-	AuthMiddleware          func(huma.Context, func(huma.Context))
-	AccountStatusMiddleware func(huma.Context, func(huma.Context))
+	BusinessProfileHandler      *handler.BusinessProfileHandler
+	BusinessProfileImageHandler *handler.BusinessProfileImageHandler
+	AuthMiddleware              func(huma.Context, func(huma.Context))
+	AccountStatusMiddleware     func(huma.Context, func(huma.Context))
 }
 
 func RegisterBusinessProfileRoutes(api huma.API, deps BusinessProfileRouteDependencies) {
@@ -46,4 +47,26 @@ func RegisterBusinessProfileRoutes(api huma.API, deps BusinessProfileRouteDepend
 		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
 		Security:    []map[string][]string{{"bearerAuth": {}}},
 	}, deps.BusinessProfileHandler.HandleUpdateBusinessProfile)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "uploadBusinessProfileLogo",
+		Method:      "POST",
+		Path:        businessProfileBase + "/logo",
+		Summary:     "Upload business profile logo",
+		Description: "Uploads and sets the authenticated user's business profile logo image.",
+		Tags:        []string{"Business Profile"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.BusinessProfileImageHandler.HandleUploadBusinessLogo)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "uploadBusinessProfileBanner",
+		Method:      "POST",
+		Path:        businessProfileBase + "/banner",
+		Summary:     "Upload business profile banner",
+		Description: "Uploads and sets the authenticated user's business profile banner image.",
+		Tags:        []string{"Business Profile"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.BusinessProfileImageHandler.HandleUploadBusinessBanner)
 }
