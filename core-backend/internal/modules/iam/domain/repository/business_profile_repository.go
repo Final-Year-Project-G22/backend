@@ -13,4 +13,6 @@ type BusinessProfileRepository interface {
 
 	GetByAccountID(ctx context.Context, accountID uuid.UUID) (*entity.BusinessProfile, error)
 	ExistsByAccountID(ctx context.Context, accountID uuid.UUID) (bool, error)
+	GetImageURLByAccount(ctx context.Context, accountID uuid.UUID, column string) (string, error)
+	UpdateImageURL(ctx context.Context, accountID uuid.UUID, column string, imageURL string) error
 }

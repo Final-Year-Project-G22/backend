@@ -59,6 +59,12 @@ func (m *mockProfileRepo) GetByAccountID(ctx context.Context, accountID uuid.UUI
 func (m *mockProfileRepo) ExistsByAccountID(ctx context.Context, accountID uuid.UUID) (bool, error) {
 	return false, nil
 }
+func (m *mockProfileRepo) GetImageURLByAccount(ctx context.Context, accountID uuid.UUID, column string) (string, error) {
+	return "", nil
+}
+func (m *mockProfileRepo) UpdateImageURL(ctx context.Context, accountID uuid.UUID, column string, imageURL string) error {
+	return nil
+}
 
 var _ iamrepo.BusinessProfileRepository = (*mockProfileRepo)(nil)
 
