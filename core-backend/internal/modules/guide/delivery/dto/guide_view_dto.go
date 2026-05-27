@@ -139,15 +139,16 @@ type GetPersonalizedGuideResponseBody struct {
 }
 
 type PersonalizedStepDTO struct {
-	ID            uuid.UUID             `json:"id" doc:"Step ID"`
-	Slug          string                `json:"slug" doc:"Step slug"`
-	Title         string                `json:"title" doc:"Localized step title"`
-	Description   *string               `json:"description,omitempty" doc:"Localized description"`
-	StepType      entity.StepType       `json:"stepType" doc:"Step type"`
-	SortOrder     int                   `json:"sortOrder" doc:"Display order"`
-	IsOptional    bool                  `json:"isOptional" doc:"Whether step can be skipped"`
-	Status        entity.ProgressStatus `json:"status" doc:"User progress status"`
-	EstimatedTime *int                  `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
+	ID              uuid.UUID              `json:"id" doc:"Step ID"`
+	Slug            string                 `json:"slug" doc:"Step slug"`
+	Title           string                 `json:"title" doc:"Localized step title"`
+	Description     *string                `json:"description,omitempty" doc:"Localized description"`
+	StepType        entity.StepType        `json:"stepType" doc:"Step type"`
+	SortOrder       int                    `json:"sortOrder" doc:"Display order"`
+	IsOptional      bool                   `json:"isOptional" doc:"Whether step can be skipped"`
+	Status          entity.ProgressStatus  `json:"status" doc:"User progress status"`
+	EstimatedTime   *int                   `json:"estimatedTime,omitempty" doc:"Estimated time in minutes"`
+	DetailedContent map[string]interface{} `json:"detailedContent,omitempty" doc:"Rich step content (checklists, documents, pro tips)"`
 }
 
 type GuideProgressSummaryDTO struct {
@@ -335,15 +336,16 @@ func ToPersonalizedStepDTO(step *usecase.PersonalizedStep) *PersonalizedStepDTO 
 		return nil
 	}
 	return &PersonalizedStepDTO{
-		ID:            step.ID,
-		Slug:          step.Slug,
-		Title:         step.Title,
-		Description:   step.Description,
-		StepType:      step.StepType,
-		SortOrder:     step.SortOrder,
-		IsOptional:    step.IsOptional,
-		Status:        step.Status,
-		EstimatedTime: step.EstimatedTime,
+		ID:              step.ID,
+		Slug:            step.Slug,
+		Title:           step.Title,
+		Description:     step.Description,
+		StepType:        step.StepType,
+		SortOrder:       step.SortOrder,
+		IsOptional:      step.IsOptional,
+		Status:          step.Status,
+		EstimatedTime:   step.EstimatedTime,
+		DetailedContent: step.DetailedContent,
 	}
 }
 

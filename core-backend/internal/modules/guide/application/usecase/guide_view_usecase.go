@@ -568,21 +568,26 @@ func (s *guideViewUsecase) toGuideCard(g *entity.Guide) *usecase.GuideCard {
 func (s *guideViewUsecase) toPersonalizedStep(step *entity.GuideStep, status entity.ProgressStatus) *usecase.PersonalizedStep {
 	title := step.Slug
 	var desc *string
+	var detailedContent map[string]interface{}
 	if len(step.Translations) > 0 {
 		t := step.Translations[0]
 		title = t.Title
 		desc = t.Description
+		if t.DetailedContent != nil {
+			detailedContent = map[string]interface{}(t.DetailedContent)
+		}
 	}
 	return &usecase.PersonalizedStep{
-		ID:            step.ID,
-		Slug:          step.Slug,
-		Title:         title,
-		Description:   desc,
-		StepType:      step.StepType,
-		SortOrder:     step.SortOrder,
-		IsOptional:    step.IsOptional,
-		Status:        status,
-		EstimatedTime: step.EstimatedTime,
+		ID:              step.ID,
+		Slug:            step.Slug,
+		Title:           title,
+		Description:     desc,
+		StepType:        step.StepType,
+		SortOrder:       step.SortOrder,
+		IsOptional:      step.IsOptional,
+		Status:          status,
+		EstimatedTime:   step.EstimatedTime,
+		DetailedContent: detailedContent,
 	}
 }
 
