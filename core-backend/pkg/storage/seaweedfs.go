@@ -19,6 +19,7 @@ import (
 // SeaweedFS implements Storage interface for SeaweedFS.
 type SeaweedFS struct {
 	filerURL    string
+	publicURL   string
 	volumeURL   string
 	masterURL   string
 	replication string
@@ -51,6 +52,7 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 
 	s := &SeaweedFS{
 		filerURL:    config.FilerURL,
+		publicURL:   config.PublicURL,
 		volumeURL:   config.VolumeURL,
 		masterURL:   config.MasterURL,
 		replication: config.Replication,
@@ -70,6 +72,10 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 
 	if s.masterURL == "" {
 		s.masterURL = strings.ReplaceAll(s.filerURL, "8888", "9333")
+	}
+
+	if s.publicURL == "" {
+		s.publicURL = s.filerURL
 	}
 
 	if !strings.HasPrefix(s.filerURL, "http://") && !strings.HasPrefix(s.filerURL, "https://") {
@@ -116,7 +122,7 @@ func (s *SeaweedFS) CreateUploadIntent(ctx context.Context, opts UploadIntentOpt
 
 	return &UploadIntent{
 		Key:       key,
-		UploadURL: s.filerURL + "/" + key,
+		UploadURL: s.publicURL + "/" + key,
 		Method:    http.MethodPut,
 		Headers:   metadata,
 		ExpiresAt: expiresAt,
@@ -163,7 +169,7 @@ func (s *SeaweedFS) UploadFromReader(ctx context.Context, opts UploadOptions, re
 		ContentType: opts.ContentType,
 		Metadata:    opts.Metadata,
 		CreatedAt:   time.Now(),
-		URL:         s.filerURL + "/" + opts.Key,
+		URL:         s.publicURL + "/" + opts.Key,
 	}
 
 	if fileInfo.ContentType == "" {
@@ -253,7 +259,7 @@ func (s *SeaweedFS) GetInfo(ctx context.Context, key string) (*FileInfo, error) 
 		ContentType: contentType,
 		Metadata:    nil, // Extracted headers could go here if needed
 		CreatedAt:   time.Now(),
-		URL:         s.filerURL + "/" + key,
+		URL:         s.publicURL + "/" + key,
 	}, nil
 }
 

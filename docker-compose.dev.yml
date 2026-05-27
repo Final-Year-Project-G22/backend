@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_DBNAME}
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
         ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_DBNAME}"]
@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: adisu_ai
     volumes:
-      - postgres_ai_data:/var/lib/postgresql
+      - postgres_ai_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d adisu_ai"]
       interval: 10s
@@ -63,11 +63,6 @@ services:
     command: master -ip=seaweed-master -mdir=/data/master -defaultReplication=000 -volumeSizeLimitMB=1024
     volumes:
       - seaweed_master_data:/data/master
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:9333/cluster/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
   seaweed-volume:
     image: chrislusf/seaweedfs:latest
@@ -88,11 +83,8 @@ services:
         condition: service_started
     volumes:
       - seaweed_filer_data:/data/filer
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8888/"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    ports:
+      - "8888:8888"
 
   core-backend:
     image: ghcr.io/final-year-project-g22/core-backend:${CORE_TAG}
@@ -102,7 +94,7 @@ services:
       - "${CORE_PORT:-4001}:4000"
     environment:
       APP_ENVIRONMENT: ${APP_ENVIRONMENT:-development}
-      APP_PORT: "${CORE_PORT:-4001}"
+      APP_PORT: "4000"
       APP_GRPC_PORT: "50051"
       APP_VERSION: ${CORE_TAG}
 
@@ -120,6 +112,14 @@ services:
       SEAWEED_MASTER_URL: seaweed-master:9333
       SEAWEED_FILER_URL: http://seaweed-filer:8888
       SEAWEED_VOLUME_URL: http://seaweed-volume:8080
+      STORAGE_SEAWEEDFS_PUBLIC_URL: http://34.46.171.63:8888
+
+      CACHE_ENABLED: "true"
+      CACHE_HOST: redis
+      CACHE_PORT: "6379"
+      CACHE_PASSWORD: ""
+      CACHE_DB: "0"
+      CACHE_POOL_SIZE: "10"
 
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"
@@ -167,7 +167,6 @@ services:
       CHAPA_RETURN_URL: ${CHAPA_RETURN_URL}
 
       FCM_CREDENTIALS_FILE: ${FCM_CREDENTIALS_FILE:-}
-
       IAM_SUPER_ADMIN_EMAIL: ${IAM_SUPER_ADMIN_EMAIL}
       IAM_SUPER_ADMIN_PASSWORD: ${IAM_SUPER_ADMIN_PASSWORD}
     depends_on:
