@@ -18,7 +18,7 @@ type AdminRouteDependencies struct {
 	RoleAssignmentUsecase   usecase.RoleAssignmentUsecase
 }
 
-func RegisterAdminRoutes(api huma.API, deps AdminRouteDependencies) {
+func RegisterAdminRoutes(api huma.API, deps AdminRouteDependencies, dashboardHandler *handler.DashboardHandler) {
 	adminListMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.AdminList, []string{"super_admin"})
 	adminStatusUpdateMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.AdminStatusUpdate, []string{"super_admin"})
 	adminResetPasswordMiddleware := sharedmiddleware.PermissionMiddleware(api, deps.RoleAssignmentUsecase, permissions.AdminResetPassword, []string{"super_admin"})
@@ -66,4 +66,5 @@ func RegisterAdminRoutes(api huma.API, deps AdminRouteDependencies) {
 	}, deps.AdminHandler.HandleCompleteAdminPasswordReset)
 
 	RegisterTaxonomyAdminRoutes(api, deps)
+	RegisterDashboardRoutes(api, deps, dashboardHandler)
 }

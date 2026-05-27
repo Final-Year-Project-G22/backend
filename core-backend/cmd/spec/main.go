@@ -38,6 +38,7 @@ func main() {
 	iamroutes.RegisterRoutes(api, iamroutes.RouteDependencies{
 		AuthHandler:             &iamhandler.AuthHandler{},
 		AdminHandler:            &iamhandler.AdminHandler{},
+		DashboardHandler:        &iamhandler.DashboardHandler{},
 		PermissionHandler:       &iamhandler.PermissionHandler{},
 		RoleHandler:             &iamhandler.RoleHandler{},
 		UserHandler:             &iamhandler.UserHandler{},
@@ -72,6 +73,10 @@ func main() {
 		AccountStatusMiddleware:   noOpMiddleware,
 		AdminPermissionMiddleware: noOpMiddleware,
 	})
+	airoutes.RegisterAIDashboardRoutes(api, airoutes.RouteDependencies{
+		AuthMiddleware:          noOpMiddleware,
+		AccountStatusMiddleware: noOpMiddleware,
+	}, &aihandler.AIDashboardHandler{})
 
 	notificationroutes.RegisterRoutes(api, engine, notificationroutes.RouteDependencies{
 		AdminHandler:            &notificationhandler.NotificationAdminHandler{},

@@ -93,6 +93,7 @@ var Module = fx.Module("ai",
 	fx.Provide(aiinframsg.NewStatusEventSubscriber),
 	fx.Provide(handler.NewIngestionHandler),
 	fx.Provide(handler.NewStatusHandler),
+	fx.Provide(handler.NewAIDashboardHandler),
 	fx.Provide(service.NewAskService),
 	fx.Provide(handler.NewAskHandler),
 	fx.Provide(handler.NewSSEHandler),
@@ -118,7 +119,7 @@ var Module = fx.Module("ai",
 			fx.As(new(port.IngestControl)),
 		),
 	),
-	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, tokenService token.TokenService, authService iamservice.AuthService, roleAssignmentUsecase iamusecase.RoleAssignmentUsecase, logger core.Logger) {
+	fx.Invoke(func(cfg *core.Config, api huma.API, ingestionHandler *handler.IngestionHandler, statusHandler *handler.StatusHandler, askHandler *handler.AskHandler, dlqHandler *handler.DLQHandler, sseHandler *handler.SSEHandler, toggleHandler *handler.ToggleHandler, aiDashboardHandler *handler.AIDashboardHandler, tokenService token.TokenService, authService iamservice.AuthService, roleAssignmentUsecase iamusecase.RoleAssignmentUsecase, logger core.Logger) {
 		authMiddleware := iammiddleware.AuthMiddleware(api, tokenService, authService)
 		accountStatusMiddleware := iammiddleware.AccountStatusMiddleware(api, authService)
 		adminPermissionMiddleware := sharedmiddleware.PermissionMiddleware(api, roleAssignmentUsecase, AIAdminStream, []string{"super_admin"})
@@ -135,6 +136,7 @@ var Module = fx.Module("ai",
 			AccountStatusMiddleware:   accountStatusMiddleware,
 			AdminPermissionMiddleware: adminPermissionMiddleware,
 		})
+		routes.RegisterAIDashboardRoutes(api, routes.RouteDependencies{AuthMiddleware: authMiddleware, AccountStatusMiddleware: accountStatusMiddleware}, aiDashboardHandler)
 	}),
 	fx.Invoke(func(lc fx.Lifecycle, cfg *core.Config, dispatcher *service.OutboxDispatcher) {
 		if !cfg.Ingestion.Enabled {

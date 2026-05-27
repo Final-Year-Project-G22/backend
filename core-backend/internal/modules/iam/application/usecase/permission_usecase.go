@@ -47,7 +47,7 @@ func (u *permissionUsecase) ListPermissionsByRole(ctx context.Context, roleID uu
 func (u *permissionUsecase) ListPermissions(ctx context.Context, input usecase.ListPermissionsInput) ([]*entity.Permission, error) {
 	module := strings.TrimSpace(input.Module)
 	if module == "" && len(input.Codes) == 0 {
-		return u.permissionRepo.Find(ctx, query.QueryOptions{})
+		return u.permissionRepo.Find(ctx, query.QueryOptions{PageSize: query.MaxPageSize})
 	}
 
 	return u.permissionRepo.ListByCodesAndModule(ctx, input.Codes, module)

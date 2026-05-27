@@ -308,6 +308,7 @@ var Module = fx.Module("iam",
 	// Delivery Layer - Handler
 	fx.Provide(handler.NewAuthHandler),
 	fx.Provide(handler.NewAdminHandler),
+	fx.Provide(handler.NewDashboardHandler),
 	fx.Provide(handler.NewPermissionHandler),
 	fx.Provide(handler.NewRoleHandler),
 	fx.Provide(handler.NewUserHandler),
@@ -324,6 +325,7 @@ var Module = fx.Module("iam",
 
 	// Register all routes
 	fx.Invoke(func(api huma.API, authHandler *handler.AuthHandler, adminHandler *handler.AdminHandler,
+		dashboardHandler *handler.DashboardHandler,
 		taxonomyAdminHandler *handler.TaxonomyAdminHandler,
 		taxonomyHandler *handler.TaxonomyHandler,
 		businessProfileHandler *handler.BusinessProfileHandler,
@@ -340,6 +342,7 @@ var Module = fx.Module("iam",
 		routes.RegisterRoutes(api, routes.RouteDependencies{
 			AuthHandler:                 authHandler,
 			AdminHandler:                adminHandler,
+			DashboardHandler:            dashboardHandler,
 			TaxonomyAdminHandler:        taxonomyAdminHandler,
 			TaxonomyHandler:             taxonomyHandler,
 			BusinessProfileHandler:      businessProfileHandler,
