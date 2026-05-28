@@ -30,6 +30,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     ask_ai_usecase = container.ask_ai()
     conversation_usecase = container.conversation()
+
+    # Initialize remote tool registry (fetches tools from core-backend gRPC)
+    tool_registry = container.tool_registry()
+    await tool_registry.initialize()
+    logger.info(
+        "Tool registry initialized with %d tools", len(await tool_registry.get_tool_definitions())
+    )
+
+    # Initialize intent classifier
+    intent_classifier = container.intent_classifier()
+    await intent_classifier.initialize()
+
     rpc_server = await serve_rpc(
         port=settings.GRPC_PORT,
         ask_ai_usecase=ask_ai_usecase,
