@@ -11,7 +11,7 @@ from core.domain.exceptions import EmbeddingError
 from core.ports.embedding import EmbeddingPort
 
 BATCH_SIZE = 50
-BATCH_DELAY_S = 2.0
+BATCH_DELAY_S = 5.0
 MAX_RETRIES = 5
 _429_TOO_MANY_REQUESTS = 429
 
