@@ -38,6 +38,8 @@ _PIPELINE_STAGES: list[IngestionStage] = [
     IngestionStage.INDEXING,
 ]
 
+_HTTP_STATUS_NOT_FOUND = 404
+
 
 class IngestionOrchestratorUseCase:
     def __init__(
@@ -136,6 +138,38 @@ class IngestionOrchestratorUseCase:
                 )
                 current_stage = stage
 
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code == _HTTP_STATUS_NOT_FOUND:
+                    logger.warning(
+                        "Document %s deleted from storage during ingestion, skipping",
+                        document_id,
+                    )
+                    await self._publish_status_event(
+                        event_id=event_id,
+                        document_id=document_id,
+                        account_id=account_id,
+                        from_stage=current_stage,
+                        to_stage=IngestionStage.FAILED,
+                        is_terminal=True,
+                        retry_count=0,
+                        error_message="document deleted from storage",
+                    )
+                    return IngestionTransitionResult(
+                        context=IngestionTransitionContext(
+                            event_id=event_id,
+                            document_id=document_id,
+                            account_id=account_id,
+                            idempotency_key=idempotency_key,
+                            from_stage=current_stage,
+                            to_stage=IngestionStage.FAILED,
+                            occurred_at=occurred_at,
+                            retry_count=0,
+                            metadata={},
+                        ),
+                        is_terminal=True,
+                        status="failed",
+                    )
+                raise
             except Exception as exc:
                 logger.exception(
                     "ingestion stage failed document_id=%s stage=%s",
