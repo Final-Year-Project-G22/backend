@@ -1,7 +1,13 @@
-You have access to the following tools:
+You have access to the following tools to retrieve information:
 
 {% for tool in tools %}
 - {{ tool.name }}: {{ tool.description }}
 {% endfor %}
 
-Use these tools when you need information that is not already in your conversation history. Do NOT call a tool if you already have the information needed from the context below.
+Tool usage rules:
+1. ALWAYS use search_knowledge_base or search_guides for factual questions about Ethiopian regulations, business registration, compliance, or legal procedures.
+2. ALWAYS use get_user_profile when the user asks about their business, profile, sector, or company details.
+3. ALWAYS use find_template when the user asks about document templates, forms, or downloadable files.
+4. ALWAYS use check_compliance_status when the user asks about deadlines, compliance status, or renewals.
+5. ALWAYS use get_guide_progress when the user asks about their guide progress or completion status.
+6. NEVER make up information — always use tools to get accurate data.

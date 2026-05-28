@@ -144,8 +144,6 @@ class AgenticAskStrategy(AskStrategyPort):
             messages.append({"role": "assistant", "content": history_text})
 
         user_context_parts: list[str] = []
-        if pre_fetch.get("kb"):
-            user_context_parts.append(pre_fetch["kb"])
         if pre_fetch.get("profile"):
             user_context_parts.append(f"User profile: {pre_fetch['profile']}")
         if pre_fetch.get("progress"):

@@ -44,12 +44,21 @@ class _GrpcStubLoader:
         _original_path = list(_core_mod.__path__)
         _core_mod.__path__.append(str(_GRPC_STUBS_DIR / "core"))
 
+        # Add grpc_stubs to sys.path so that top-level package imports
+        # referenced by the generated stubs (buf.validate, etc.) resolve.
+        _stubs_str = str(_GRPC_STUBS_DIR)
+        _sys_path_added = _stubs_str not in sys.path
+        if _sys_path_added:
+            sys.path.insert(0, _stubs_str)
+
         try:
             return importlib.import_module(module_name)
         except Exception:
             return None
         finally:
             _core_mod.__path__[:] = _original_path
+            if _sys_path_added:
+                sys.path.remove(_stubs_str)
             # Reset cached child modules so the patched path doesn't leak
             for _key in list(sys.modules):
                 if _key.startswith(("core.user.", "core.document.", "core.ai_tool.")):
