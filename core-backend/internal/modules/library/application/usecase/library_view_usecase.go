@@ -126,7 +126,7 @@ func (u *libraryViewUsecase) PreviewTemplate(ctx context.Context, input usecase.
 		return nil, err
 	}
 
-	presignedURL, err := u.storage.GetPresignedURL(ctx, tmpl.FileKey, 5*time.Minute)
+	presignedURL, err := u.storage.GetPresignedURLLocal(ctx, tmpl.FileKey, 5*time.Minute)
 	if err != nil {
 		u.logger.Error("Failed to generate preview URL", core.String("templateId", tmpl.ID.String()))
 		return nil, apperrors.InternalError("library.errors.downloadFailed", err)
@@ -148,7 +148,7 @@ func (u *libraryViewUsecase) DownloadTemplate(ctx context.Context, input usecase
 		return nil, err
 	}
 
-	presignedURL, err := u.storage.GetPresignedURL(ctx, tmpl.FileKey, 30*time.Minute)
+	presignedURL, err := u.storage.GetPresignedURLLocal(ctx, tmpl.FileKey, 30*time.Minute)
 	if err != nil {
 		u.logger.Error("Failed to generate download URL", core.String("templateId", tmpl.ID.String()))
 		return nil, apperrors.InternalError("library.errors.downloadFailed", err)
