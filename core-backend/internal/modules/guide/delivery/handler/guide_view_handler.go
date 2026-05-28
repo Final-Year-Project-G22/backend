@@ -41,6 +41,23 @@ func (h *GuideViewHandler) HandleListGuides(ctx context.Context, input *dto.List
 	}, nil
 }
 
+func (h *GuideViewHandler) HandleListAllGuides(ctx context.Context, input *dto.ListAllGuidesInput) (*dto.ListAllGuidesOutput, error) {
+	q := dto.ToQueryOptions(input.Page, input.PageSize)
+	cards, err := h.guideViewUC.ListAllGuides(ctx, q, constants.Locale(i18n.LocaleFromContext(ctx)))
+	if err != nil {
+		return nil, apperrors.ToHumaError(ctx, err)
+	}
+
+	guides := make([]*dto.GuideCardDTO, 0, len(cards))
+	for _, card := range cards {
+		guides = append(guides, dto.ToGuideCardDTO(card))
+	}
+
+	return &dto.ListAllGuidesOutput{
+		Body: dto.ListAllGuidesResponseBody{Guides: guides},
+	}, nil
+}
+
 func (h *GuideViewHandler) HandleSearchGuides(ctx context.Context, input *dto.SearchGuidesInput) (*dto.SearchGuidesOutput, error) {
 	accountID := contextkeys.GetAccountID(ctx.Value(contextkeys.AccountID))
 	userID := contextkeys.GetUserID(ctx.Value(contextkeys.UserID))

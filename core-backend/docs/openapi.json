@@ -6395,6 +6395,33 @@
         ],
         "type": "object"
       },
+      "ListAllGuidesResponseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ListAllGuidesResponseBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "guides": {
+            "items": {
+              "$ref": "#/components/schemas/GuideCardDTO"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "guides"
+        ],
+        "type": "object"
+      },
       "ListAllTemplateGroupsResponseBody": {
         "additionalProperties": false,
         "properties": {
@@ -24053,6 +24080,67 @@
           }
         ],
         "summary": "List guides",
+        "tags": [
+          "Guides"
+        ]
+      }
+    },
+    "/api/v1/guides/all": {
+      "get": {
+        "description": "Lists all available guides without user-based taxonomy filtering.",
+        "operationId": "listAllGuides",
+        "parameters": [
+          {
+            "description": "Page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "description": "Page number",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Items per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "description": "Items per page",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAllGuidesResponseBody"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List all guides",
         "tags": [
           "Guides"
         ]
