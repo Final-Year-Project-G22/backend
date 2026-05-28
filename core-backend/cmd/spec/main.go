@@ -36,18 +36,23 @@ func main() {
 	}
 
 	iamroutes.RegisterRoutes(api, iamroutes.RouteDependencies{
-		AuthHandler:             &iamhandler.AuthHandler{},
-		AdminHandler:            &iamhandler.AdminHandler{},
-		DashboardHandler:        &iamhandler.DashboardHandler{},
-		PermissionHandler:       &iamhandler.PermissionHandler{},
-		RoleHandler:             &iamhandler.RoleHandler{},
-		UserHandler:             &iamhandler.UserHandler{},
-		ImageHandler:            &iamhandler.ImageHandler{},
-		OAuthHandler:            &iamhandler.OAuthHandler{},
-		NotificationPrefHandler: &iamhandler.NotificationPreferenceHandler{},
-		AuthMiddleware:          noOpMiddleware,
-		AccountStatusMiddleware: noOpMiddleware,
-		RoleAssignmentUsecase:   nil,
+		AuthHandler:                 &iamhandler.AuthHandler{},
+		AdminHandler:                &iamhandler.AdminHandler{},
+		DashboardHandler:            &iamhandler.DashboardHandler{},
+		TaxonomyAdminHandler:        &iamhandler.TaxonomyAdminHandler{},
+		TaxonomyHandler:             &iamhandler.TaxonomyHandler{},
+		BusinessProfileHandler:      &iamhandler.BusinessProfileHandler{},
+		BusinessProfileImageHandler: &iamhandler.BusinessProfileImageHandler{},
+		PermissionHandler:           &iamhandler.PermissionHandler{},
+		RoleHandler:                 &iamhandler.RoleHandler{},
+		UserHandler:                 &iamhandler.UserHandler{},
+		ImageHandler:                &iamhandler.ImageHandler{},
+		OAuthHandler:                &iamhandler.OAuthHandler{},
+		NotificationPrefHandler:     &iamhandler.NotificationPreferenceHandler{},
+		AccountPrefHandler:          &iamhandler.AccountPreferenceHandler{},
+		AuthMiddleware:              noOpMiddleware,
+		AccountStatusMiddleware:     noOpMiddleware,
+		RoleAssignmentUsecase:       nil,
 	})
 
 	communityroutes.RegisterRoutes(api, communityroutes.RouteDependencies{

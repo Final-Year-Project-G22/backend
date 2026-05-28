@@ -96,7 +96,7 @@ class Settings(BaseSettings):
     GEMINI_VERTEX_LOCATION: str = "us-central1"
 
     AI_PROMPT_DIR: str = "prompts"
-    AI_AGENTIC_ENABLED: bool = False
+    AI_AGENTIC_ENABLED: bool = True
     AI_AGENTIC_MAX_ITERATIONS: int = 5
 
     AI_EXPECTED_REMOTE_TOOLS: list[str] = [
@@ -105,6 +105,9 @@ class Settings(BaseSettings):
         "find_template",
         "get_guide_progress",
         "check_compliance_status",
+        "list_sectors",
+        "list_tags",
+        "get_guide_detail",
     ]
     AI_TOOL_REFRESH_TTL_SEC: int = 300
 
