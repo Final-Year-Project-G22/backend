@@ -11,6 +11,7 @@ import (
 
 type GuideViewUseCase interface {
 	ListGuides(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale, sectorIDs, tagIDs []uuid.UUID) ([]*GuideCard, error)
+	ListAllGuides(ctx context.Context, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 	SearchGuides(ctx context.Context, accountID, userID uuid.UUID, keyword string, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 	GetRecentlyViewed(ctx context.Context, accountID, userID uuid.UUID, q query.QueryOptions, locale constants.Locale) ([]*GuideCard, error)
 

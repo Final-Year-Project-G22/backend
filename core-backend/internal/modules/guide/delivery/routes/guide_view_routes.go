@@ -21,6 +21,17 @@ func RegisterGuideViewRoutes(api huma.API, deps RouteDependencies) {
 	}, deps.GuideViewHandler.HandleListGuides)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "listAllGuides",
+		Method:      "GET",
+		Path:        guideBase + "/all",
+		Summary:     "List all guides",
+		Description: "Lists all available guides without user-based taxonomy filtering.",
+		Tags:        []string{"Guides"},
+		Middlewares: huma.Middlewares{deps.AuthMiddleware, deps.AccountStatusMiddleware},
+		Security:    []map[string][]string{{"bearerAuth": {}}},
+	}, deps.GuideViewHandler.HandleListAllGuides)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "searchGuides",
 		Method:      "GET",
 		Path:        guideBase + "/search",

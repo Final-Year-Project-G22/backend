@@ -91,6 +91,19 @@ func (s *guideViewUsecase) ListGuides(ctx context.Context, accountID, userID uui
 	return cards, nil
 }
 
+func (s *guideViewUsecase) ListAllGuides(ctx context.Context, q query.QueryOptions, locale constants.Locale) ([]*usecase.GuideCard, error) {
+	guides, err := s.guideRepo.ListByTaxonomy(ctx, nil, nil, q, locale)
+	if err != nil {
+		return nil, err
+	}
+
+	cards := make([]*usecase.GuideCard, len(guides))
+	for i, g := range guides {
+		cards[i] = s.toGuideCard(g)
+	}
+	return cards, nil
+}
+
 func (s *guideViewUsecase) SearchGuides(ctx context.Context, accountID, userID uuid.UUID, keyword string, q query.QueryOptions, locale constants.Locale) ([]*usecase.GuideCard, error) {
 	guides, err := s.guideRepo.Search(ctx, keyword, q, locale)
 	if err != nil {

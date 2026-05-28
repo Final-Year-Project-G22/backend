@@ -34,6 +34,19 @@ type GuideCardDTO struct {
 	TagIDs      []uuid.UUID `json:"tagIds" doc:"Target tag IDs"`
 }
 
+type ListAllGuidesInput struct {
+	Page     int `query:"page" doc:"Page number"`
+	PageSize int `query:"pageSize" doc:"Items per page"`
+}
+
+type ListAllGuidesOutput struct {
+	Body ListAllGuidesResponseBody
+}
+
+type ListAllGuidesResponseBody struct {
+	Guides []*GuideCardDTO `json:"guides"`
+}
+
 type SearchGuidesInput struct {
 	Keyword  string `query:"q" doc:"Search keyword" minLength:"1"`
 	Page     int    `query:"page" doc:"Page number"`
