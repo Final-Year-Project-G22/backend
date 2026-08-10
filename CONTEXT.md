@@ -291,3 +291,34 @@ _Avoid_: System prompt, prompt config, prompt string
 - "tool calling" was initially used to mean both the programmatic auto-search pattern (regex-triggered search_guides before the LLM call) and LLM-driven function calling; resolved: programmatic auto-search is removed in favor of genuine LLM-driven tool selection via the ReAct loop.
 - "agent" was initially used loosely to mean any AI enhancement; resolved: **Agentic RAG** specifically refers to the ReAct loop architecture with LLM-driven tool selection, distinct from simple RAG.
 - "streaming" was overloaded between text streaming and tool event streaming; resolved: text chunks, tool use chunks, tool result chunks, and thinking chunks are distinct event types within the same SSE stream, with visibility controlled by debug mode.
+
+## Uploads
+
+**Upload Intent**:
+A grant the backend issues that lets a client transfer a file directly to object storage without routing bytes through the backend. It names the object's storage key, the HTTP method, the headers to send, and an expiry. The URL is not cryptographically signed in the current SeaweedFS implementation — expiry is advisory only.
+_Avoid_: Presigned URL (implies a signature the implementation does not produce)
+
+**Direct-to-Storage Upload**:
+An upload performed by the client itself: it obtains an **Upload Intent**, PUTs the bytes straight to storage, then calls **Finalize Upload** to register the object. Used for AI knowledge-base documents and library templates.
+_Avoid_: Pre-upload
+
+**Backend-Proxied Upload**:
+An upload the client performs against the backend (multipart), which stores the bytes itself. Used for community attachments, guide cover images, and IAM avatars/business images.
+_Avoid_: Pre-upload attachment (ambiguous with the intent flow)
+
+**Finalize Upload**:
+The step that validates an uploaded object exists and records its metadata — for ingestion, atomically with the outbox event that starts the pipeline.
+_Avoid_: Complete upload
+
+**Storage Key**:
+The object's key in object storage. Module-scoped namespaces: `community/attachments`, `library/templates`, `guides/images`, `business` (logo/banner), `avatars`; ingestion documents use a bare key without a namespace.
+
+**Storage Base URL — Public vs Filer**:
+Every stored object has an internal base URL (the filer, used for backend-side operations) and a public-facing base URL used in URLs handed to clients. The public base URL must be absolute and reachable from client devices; when unset it falls back to the internal filer URL.
+_Avoid_: Storage URL (ambiguous about which side of the boundary)
+
+## Relationships
+
+- A **Direct-to-Storage Upload** consists of an **Upload Intent** followed by a **Finalize Upload**; the bytes travel client → storage, never through the backend.
+- A **Backend-Proxied Upload** stores bytes via the filer base URL and returns a **Storage Key**; clients later reference the object by its public base URL + key.
+- **Finalize Upload** succeeds only if the object at the **Storage Key** already exists.
