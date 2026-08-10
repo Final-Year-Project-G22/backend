@@ -300,7 +300,7 @@ func (r *accountRepository) ListAdmins(ctx context.Context, permissionCodes []st
 		countDB = countDB.Where("ro.id = ?", roleID)
 	}
 
-	countDB.Model(&entity.Account{}).Count(&total)
+	countDB.Model(&entity.Account{}).Distinct("accounts.id").Count(&total)
 
 	return accounts, total, nil
 }

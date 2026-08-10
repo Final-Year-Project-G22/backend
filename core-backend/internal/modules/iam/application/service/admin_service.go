@@ -278,7 +278,20 @@ func (s *adminService) UpdateAdminRoles(ctx context.Context, input UpdateAdminRo
 }
 
 func (s *adminService) ListAdmins(ctx context.Context, input ListAdminsInput) (*ListAdminsOutput, error) {
-	permissionCodes := []string{"iam.admin.list", "iam.role.read"}
+	// An account is an admin if any of its roles grants any IAM-admin capability
+	// (list/read/create/roles.update/status.update/reset_password) or role
+	// management. Admin hub registration offers every role, so admins registered
+	// with content/moderation roles (e.g. ai_content_manager carries
+	// iam.admin.read) must still appear in the hub's admin list.
+	permissionCodes := []string{
+		permissions.AdminList,
+		permissions.AdminRead,
+		permissions.AdminCreate,
+		permissions.AdminRolesUpdate,
+		permissions.AdminResetPassword,
+		permissions.AdminStatusUpdate,
+		permissions.RoleRead,
+	}
 	queryOpts := map[string]interface{}{
 		"search":   input.Search,
 		"status":   input.Status,
