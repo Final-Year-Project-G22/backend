@@ -82,8 +82,9 @@ class CohereEmbeddingAdapter(EmbeddingPort):
             "model": self._model,
             "texts": texts,
         }
-        if input_type is not None:
-            payload["input_type"] = input_type
+        # embed-multilingual-v3.0 requires input_type; default to the
+        # document side so callers embedding into the index can omit it.
+        payload["input_type"] = input_type or "search_document"
 
         embed_url = "https://api.cohere.com/v1/embed"
 

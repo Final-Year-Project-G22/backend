@@ -85,12 +85,12 @@ async def test_cohere_embed_documents_returns_vectors() -> None:
 
 
 @pytest.mark.asyncio
-async def test_cohere_embed_documents_without_input_type_omits_field() -> None:
+async def test_cohere_embed_documents_without_input_type_defaults_to_search_document() -> None:
     payload = {"embeddings": [[0.1, 0.2]]}
 
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
-        assert "input_type" not in body
+        assert body["input_type"] == "search_document"
         return httpx.Response(200, json=payload)
 
     transport = httpx.MockTransport(handler)

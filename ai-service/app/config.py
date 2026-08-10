@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     INGESTION_SIGNING_PREVIOUS_KEYS_JSON: str = "{}"
 
     # Embeddings
-    EMBEDDING_PROVIDER: str = "gemini"
+    EMBEDDING_PROVIDER: str = "cohere"
     COHERE_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     COHERE_EMBEDDING_MODEL: str = "embed-multilingual-v3.0"
@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     EMBEDDING_DIMENSIONS: int | None = None
 
-    LLM_PROVIDER: str = "gemini"
+    LLM_PROVIDER: str = "cohere"
     COHERE_LLM_MODEL: str = "command-a-03-2025"
     GEMINI_LLM_MODEL: str = "gemini-2.5-flash"
     OLLAMA_LLM_MODEL: str = "qwen2.5"

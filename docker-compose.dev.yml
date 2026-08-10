@@ -226,10 +226,8 @@ services:
       INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
       COHERE_API_KEY: ${COHERE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GOOGLE_APPLICATION_CREDENTIALS: /secrets/mindful-backup-495108-n5-640600bd5b33.json
-      GEMINI_VERTEX_PROJECT: mindful-backup-495108-n5
-    volumes:
-      - /etc/dokploy/secrets:/secrets:ro
+      EMBEDDING_PROVIDER: cohere
+      LLM_PROVIDER: cohere
     depends_on:
       postgres-ai:
         condition: service_healthy
@@ -255,10 +253,8 @@ services:
       INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
       COHERE_API_KEY: ${COHERE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GOOGLE_APPLICATION_CREDENTIALS: /secrets/mindful-backup-495108-n5-640600bd5b33.json
-      GEMINI_VERTEX_PROJECT: mindful-backup-495108-n5
-    volumes:
-      - /etc/dokploy/secrets:/secrets:ro
+      EMBEDDING_PROVIDER: cohere
+      LLM_PROVIDER: cohere
     depends_on:
       rabbitmq:
         condition: service_healthy
