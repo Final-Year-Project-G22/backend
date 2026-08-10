@@ -291,12 +291,18 @@ func (s *SeaweedFS) GetPresignedURL(ctx context.Context, key string, expiry time
 		return "", fmt.Errorf("presign failed with status %d", resp.StatusCode)
 	}
 
-	var presignResp SeaweedPresignResponse
-	if err := json.NewDecoder(resp.Body).Decode(&presignResp); err != nil {
-		return "", fmt.Errorf("failed to decode response: %w", err)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
 	}
 
-	return presignResp.Url, nil
+	// The filer ignores the ?ttl= presign parameter and returns the raw file
+	// bytes. Only interpret a JSON payload as a presigned URL; fall back to
+	// the public URL otherwise so downloads keep working.
+	if url, ok := parsePresignResponse(body); ok {
+		return url, nil
+	}
+	return fmt.Sprintf("%s/%s", s.publicURL, key), nil
 }
 
 // GetPresignedURLLocal generates a presigned URL for file access.
@@ -324,14 +330,24 @@ func (s *SeaweedFS) GetPresignedURLLocal(ctx context.Context, key string, expiry
 		return fmt.Sprintf("%s/%s", s.publicURL, key), nil
 	}
 
-	if len(body) > 0 && body[0] == '{' {
-		var presignResp SeaweedPresignResponse
-		if json.Unmarshal(body, &presignResp) == nil && presignResp.Url != "" {
-			return presignResp.Url, nil
-		}
+	if url, ok := parsePresignResponse(body); ok {
+		return url, nil
 	}
 
 	return fmt.Sprintf("%s/%s", s.publicURL, key), nil
+}
+
+// parsePresignResponse interprets a filer response body. The filer ignores
+// the ?ttl= presign parameter and returns raw file bytes, so only JSON
+// payloads yield a presigned URL.
+func parsePresignResponse(body []byte) (string, bool) {
+	if len(body) > 0 && body[0] == '{' {
+		var presignResp SeaweedPresignResponse
+		if json.Unmarshal(body, &presignResp) == nil && presignResp.Url != "" {
+			return presignResp.Url, true
+		}
+	}
+	return "", false
 }
 
 // List returns a list of files.
