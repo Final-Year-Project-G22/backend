@@ -14,7 +14,7 @@ repos:
 
       - id: go-fmt
         name: Go Formatting (goimports)
-        entry: bash -c 'cd core-backend && goimports -l -w $(git ls-files "*.go" ":!:pb/**")'
+        entry: bash -c 'git ls-files "core-backend/*.go" "core-backend/**/*.go" ":!:core-backend/pb/**" | xargs -r goimports -l -w'
         language: system
         types: [go]
         pass_filenames: false

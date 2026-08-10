@@ -66,6 +66,12 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 		opt(s)
 	}
 
+	// Normalize the filer URL first so derived and fallback URLs inherit an
+	// absolute, reachable scheme.
+	if !strings.HasPrefix(s.filerURL, "http://") && !strings.HasPrefix(s.filerURL, "https://") {
+		s.filerURL = "http://" + s.filerURL
+	}
+
 	if s.volumeURL == "" {
 		s.volumeURL = strings.ReplaceAll(s.filerURL, "8888", "8080")
 	}
@@ -78,11 +84,14 @@ func NewSeaweedFS(config SeaweedConfig, opts ...SeaweedFSOption) (*SeaweedFS, er
 		s.publicURL = s.filerURL
 	}
 
-	if !strings.HasPrefix(s.filerURL, "http://") && !strings.HasPrefix(s.filerURL, "https://") {
-		s.filerURL = "http://" + s.filerURL
-	}
 	if !strings.HasPrefix(s.volumeURL, "http://") && !strings.HasPrefix(s.volumeURL, "https://") {
 		s.volumeURL = "http://" + s.volumeURL
+	}
+
+	// The public URL is handed to clients (upload intents, download fallbacks,
+	// file info URLs), so it must be absolute and reachable from client devices.
+	if !strings.HasPrefix(s.publicURL, "http://") && !strings.HasPrefix(s.publicURL, "https://") {
+		s.publicURL = "http://" + s.publicURL
 	}
 
 	return s, nil
