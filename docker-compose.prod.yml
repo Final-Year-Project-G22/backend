@@ -205,6 +205,8 @@ services:
       INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
       COHERE_API_KEY: ${COHERE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      EMBEDDING_PROVIDER: cohere
+      LLM_PROVIDER: cohere
     depends_on:
       postgres-ai:
         condition: service_healthy
@@ -231,6 +233,8 @@ services:
       INGESTION_SIGNING_ACTIVE_KEY_SECRET: ${INGESTION_SIGNING_ACTIVE_KEY_SECRET}
       COHERE_API_KEY: ${COHERE_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      EMBEDDING_PROVIDER: cohere
+      LLM_PROVIDER: cohere
     depends_on:
       rabbitmq:
         condition: service_healthy
