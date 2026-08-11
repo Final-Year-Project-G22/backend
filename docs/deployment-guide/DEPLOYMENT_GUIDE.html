@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Deployment Guide: Adisu Serategna</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Deployment Guide: Adisu Serategna</h1>
+</header>
+<h1 id="deployment-guide-adisu-serategna">Deployment Guide — Adisu
+Serategna</h1>
+<h2 id="document-metadata-change-log">1. Document Metadata &amp; Change
+Log</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Version</strong></td>
+<td>1.0.0</td>
+</tr>
+<tr>
+<td><strong>Last Updated</strong></td>
+<td>2026-05-27</td>
+</tr>
+<tr>
+<td><strong>Target Environments</strong></td>
+<td>Dev, Production</td>
+</tr>
+<tr>
+<td><strong>Authors</strong></td>
+<td>Yohannes Solomon (<a
+href="mailto:solomonjohna21@gmail.com">solomonjohna21@gmail.com</a>, <a
+href="https://github.com/johna210">github.com/johna210</a>)</td>
+</tr>
+<tr>
+<td><strong>Maintainers</strong></td>
+<td>Yohannes Solomon, Dawit Belay</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deployment-log">Deployment Log</h3>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 26%" />
+<col style="width: 32%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Date</th>
+<th>Version</th>
+<th>Service(s)</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-05-27</td>
+<td>—</td>
+<td>—</td>
+<td>Initial deployment guide created</td>
+</tr>
+<tr>
+<td>2026-05-10</td>
+<td>core-backend v0.9.0</td>
+<td>core-backend</td>
+<td>Library admin CRUD, notification templates, canonical events</td>
+</tr>
+<tr>
+<td>2026-05-10</td>
+<td>ai-service v0.5.1</td>
+<td>ai-service</td>
+<td>Document ingestion fixes</td>
+</tr>
+<tr>
+<td>2026-04-29</td>
+<td>core-backend v0.8.0</td>
+<td>core-backend</td>
+<td>Notification module (domain → delivery pipeline), campaigns</td>
+</tr>
+<tr>
+<td>2026-04-22</td>
+<td>core-backend v0.7.0</td>
+<td>core-backend</td>
+<td>AI integration, conversation cache, documents endpoint</td>
+</tr>
+<tr>
+<td>2026-04-22</td>
+<td>ai-service v0.5.0</td>
+<td>ai-service</td>
+<td>Ask stream, conversation service, feature flags</td>
+</tr>
+<tr>
+<td>2026-04-17</td>
+<td>core-backend v0.6.0</td>
+<td>core-backend</td>
+<td>IAM, community, AI ingestion, guides, payments</td>
+</tr>
+<tr>
+<td>2026-04-17</td>
+<td>ai-service v0.4.0</td>
+<td>ai-service</td>
+<td>Domain layer, SQLAlchemy repos, gRPC, ingestion orchestration</td>
+</tr>
+<tr>
+<td>2026-04-13</td>
+<td>core-backend v0.5.0</td>
+<td>core-backend</td>
+<td>Dev sync</td>
+</tr>
+<tr>
+<td>2026-04-13</td>
+<td>ai-service v0.3.0</td>
+<td>ai-service</td>
+<td>Dev sync</td>
+</tr>
+<tr>
+<td>2026-04-07</td>
+<td>core-backend v0.4.0</td>
+<td>core-backend</td>
+<td>OTP, guide state, admin seeder, permissions</td>
+</tr>
+<tr>
+<td>2026-04-07</td>
+<td>ai-service v0.2.0</td>
+<td>ai-service</td>
+<td>Application usecases, SQLAlchemy repos</td>
+</tr>
+<tr>
+<td>2026-04-07</td>
+<td>ai-service v0.1.0</td>
+<td>ai-service</td>
+<td>Foundation, initial schema, domain contracts</td>
+</tr>
+<tr>
+<td>2026-03-18</td>
+<td>core-backend v0.3.0</td>
+<td>core-backend</td>
+<td>Avatar upload, user profile, localization</td>
+</tr>
+<tr>
+<td>2026-03-12</td>
+<td>core-backend v0.2.0</td>
+<td>core-backend</td>
+<td>Register/login, JWT, IAM domain, gin setup</td>
+</tr>
+<tr>
+<td>2026-03-??</td>
+<td>core-backend v0.1.0</td>
+<td>core-backend</td>
+<td>Initial release</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="architecture-system-overview">2. Architecture &amp; System
+Overview</h2>
+<h3 id="architecture-diagram">Architecture Diagram</h3>
+<pre><code>                             ┌──────────────┐
+                             │   Internet   │
+                             └──────┬───────┘
+                                    │
+                             ┌──────▼───────┐
+                             │   Traefik    │
+                             │  (TLS/443)   │
+                             └──────┬───────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+             ┌──────▼──────┐  ┌────▼────┐  ┌───────▼──────┐
+             │  Web Admin  │  │ Mobile  │  │ core-backend │
+             │ (Next.js)   │  │(Flutter)│  │  Go :4000    │
+             │  (Vercel)   │  │         │  │  gRPC :50051 │
+             └─────────────┘  └─────────┘  └───┬───┬──────┘
+                                                │   │
+                    ┌───────────────────────────┼───┼──────────────┐
+                    │                           │   │              │
+                    │                    ┌──────┘   └──────┐       │
+                    │                    │ (gRPC)          │       │
+                    │                    ▼                  ▼       │
+                    │           ┌──────────────┐  ┌──────────────┐  │
+                    │           │  ai-server   │  │  ai-worker   │  │
+                    │           │ Python :8000 │  │  (same img)  │  │
+                    │           │ gRPC :50051  │  │  ingestion   │  │
+                    │           └──┬───┬───┬───┘  └──┬───┬───────┘  │
+                    │              │   │   │         │   │          │
+                    └──────────────┼───┼───┼─────────┼───┼──────────┘
+                                   │   │   │         │   │
+              ┌────────────────────┼───┼───┼─────────┼───┼──────────┐
+              │                    │   │   │         │   │          │
+              │      ┌─────────────┘   │   └─────────┘   └─────┐    │
+              │      │                 │                       │    │
+              │  ┌───▼──────┐   ┌──────▼──────┐   ┌───────────▼──┐ │
+              │  │PostgreSQL│   │PostgreSQL   │   │  SeaweedFS  │ │
+              │  │  core    │   │  + pgvector │   │  M+V+Filer  │ │
+              │  │  :5432   │   │  AI :5433   │   │  :9333/8080 │ │
+              │  └──────────┘   └─────────────┘   │  /8888      │ │
+              │                                   └─────────────┘ │
+              │  ┌──────────┐   ┌──────────────┐                  │
+              │  │  Redis   │   │  RabbitMQ    │                  │
+              │  │  :6379   │   │  :5672/15672 │                  │
+              │  └──────────┘   └──────────────┘                  │
+              └───────────────────────────────────────────────────┘</code></pre>
+<h3 id="tech-stack">Tech Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Main API</strong></td>
+<td>Go (Gin + Huma + FX)</td>
+<td>1.25.3</td>
+</tr>
+<tr>
+<td><strong>AI Service</strong></td>
+<td>Python (FastAPI + gRPC)</td>
+<td>3.11.9</td>
+</tr>
+<tr>
+<td><strong>Database (Core)</strong></td>
+<td>PostgreSQL</td>
+<td>18-alpine</td>
+</tr>
+<tr>
+<td><strong>Database (AI)</strong></td>
+<td>PostgreSQL + pgvector</td>
+<td>pg18</td>
+</tr>
+<tr>
+<td><strong>Cache</strong></td>
+<td>Redis</td>
+<td>8-alpine</td>
+</tr>
+<tr>
+<td><strong>Message Broker</strong></td>
+<td>RabbitMQ</td>
+<td>3.13-management-alpine</td>
+</tr>
+<tr>
+<td><strong>File Storage</strong></td>
+<td>SeaweedFS (Master + Volume + Filer)</td>
+<td>latest</td>
+</tr>
+<tr>
+<td><strong>Web Admin</strong></td>
+<td>Next.js</td>
+<td>16.1.6</td>
+</tr>
+<tr>
+<td><strong>Mobile</strong></td>
+<td>Flutter</td>
+<td>3.11+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="services-ports">Services &amp; Ports</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Internal Port</th>
+<th>External</th>
+<th>Protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>core-backend</td>
+<td>4000</td>
+<td>4000 (prod) / 4001 (dev)</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>core-backend gRPC</td>
+<td>50051</td>
+<td>—</td>
+<td>gRPC</td>
+</tr>
+<tr>
+<td>ai-server</td>
+<td>8000</td>
+<td>8000 (prod) / 8001 (dev)</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>ai-server gRPC</td>
+<td>50051</td>
+<td>—</td>
+<td>gRPC</td>
+</tr>
+<tr>
+<td>ai-server metrics</td>
+<td>9090</td>
+<td>—</td>
+<td>Prometheus</td>
+</tr>
+<tr>
+<td>PostgreSQL (core)</td>
+<td>5432</td>
+<td>—</td>
+<td>TCP</td>
+</tr>
+<tr>
+<td>PostgreSQL (AI)</td>
+<td>5433</td>
+<td>—</td>
+<td>TCP</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>6379</td>
+<td>—</td>
+<td>TCP</td>
+</tr>
+<tr>
+<td>RabbitMQ AMQP</td>
+<td>5672</td>
+<td>—</td>
+<td>TCP</td>
+</tr>
+<tr>
+<td>RabbitMQ Management</td>
+<td>15672</td>
+<td>—</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>SeaweedFS Master</td>
+<td>9333</td>
+<td>—</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>SeaweedFS Volume</td>
+<td>8080</td>
+<td>—</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>SeaweedFS Filer</td>
+<td>8888</td>
+<td>443 (via Traefik)</td>
+<td>HTTP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="network-security">Network &amp; Security</h3>
+<ul>
+<li><strong>Reverse Proxy</strong>: Traefik (managed by Dokploy) with
+Let’s Encrypt TLS</li>
+<li><strong>Public endpoints</strong>: <code>api.johna.me</code> →
+core-backend, <code>files.johna.me</code> → SeaweedFS Filer</li>
+<li><strong>Internal-only</strong>: All infrastructure services (DB,
+Redis, RabbitMQ, SeaweedFS internal)</li>
+<li><strong>AI service</strong>: Internal-only; public API routes
+through core-backend</li>
+<li><strong>Network</strong>: Custom Docker network
+<code>dokploy-network</code></li>
+<li><strong>Container Registry</strong>:
+<code>ghcr.io/final-year-project-g22/</code></li>
+</ul>
+<h3 id="docker-compose-files">Docker Compose Files</h3>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/docker-compose.yml</code></td>
+<td>Base infrastructure (not used directly in deploy)</td>
+</tr>
+<tr>
+<td><code>backend/docker-compose.dev.yml</code></td>
+<td>Dev stack (port offset +1, Traefik labels)</td>
+</tr>
+<tr>
+<td><code>backend/docker-compose.prod.yml</code></td>
+<td>Production stack (standard ports, no Traefik)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="image-naming">Image Naming</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Registry Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>core-backend</td>
+<td><code>ghcr.io/final-year-project-g22/core-backend</code></td>
+</tr>
+<tr>
+<td>ai-service</td>
+<td><code>ghcr.io/final-year-project-g22/ai-service</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="prerequisites-environment-setup">3. Prerequisites &amp;
+Environment Setup</h2>
+<h3 id="server-specification">Server Specification</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Dev &amp; Prod</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Provider</strong></td>
+<td>Google Cloud Platform (GCP)</td>
+</tr>
+<tr>
+<td><strong>Machine Type</strong></td>
+<td><code>e2-custom-4-8192</code> (4 vCPU, 8 GB RAM)</td>
+</tr>
+<tr>
+<td><strong>Disk</strong></td>
+<td>80 GB balanced persistent disk</td>
+</tr>
+<tr>
+<td><strong>OS</strong></td>
+<td>Ubuntu Minimal 2604 LTS (resolute)</td>
+</tr>
+<tr>
+<td><strong>Location</strong></td>
+<td><code>us-central1-a</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: 8 GB RAM is the minimum for this stack. Under
+load (document ingestion, LLM inference, concurrent users), consider
+upgrading to 16 GB.</p>
+</blockquote>
+<h3 id="access-permissions">Access &amp; Permissions</h3>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GitHub Actions</strong></td>
+<td>CI/CD — build, push to ghcr.io, trigger Dokploy deploy</td>
+</tr>
+<tr>
+<td><strong>Dokploy UI</strong></td>
+<td>Service management, env vars, deploy logs</td>
+</tr>
+<tr>
+<td><strong>SSH (key-only)</strong></td>
+<td>Manual debugging, emergency rollback</td>
+</tr>
+<tr>
+<td><strong>GitHub Container Registry</strong></td>
+<td>Image storage (<code>ghcr.io</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="required-github-actions-secrets">Required GitHub Actions
+Secrets</h3>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 30%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr>
+<th>Secret</th>
+<th>Used By</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GITHUB_TOKEN</code></td>
+<td>deploy-dev.yml, deploy-prod.yml</td>
+<td>Auto-provided, requires <code>packages: write</code></td>
+</tr>
+<tr>
+<td><code>DOKPLOY_URL</code></td>
+<td>deploy-dev.yml, deploy-prod.yml</td>
+<td>Dokploy API endpoint</td>
+</tr>
+<tr>
+<td><code>DOKPLOY_COMPOSE_ID_DEV</code></td>
+<td>deploy-dev.yml</td>
+<td>Dokploy dev compose project ID</td>
+</tr>
+<tr>
+<td><code>DOKPLOY_COMPOSE_ID_PROD</code></td>
+<td>deploy-prod.yml</td>
+<td>Dokploy prod compose project ID</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dokploy-configuration">Dokploy Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Compose File</th>
+<th>Port Offset</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>adisu-dev</code></td>
+<td><code>docker-compose.dev.yml</code></td>
+<td>+1 (4001, 8001)</td>
+</tr>
+<tr>
+<td><code>adisu-prod</code></td>
+<td><code>docker-compose.prod.yml</code></td>
+<td>0 (4000, 8000)</td>
+</tr>
+</tbody>
+</table>
+<p>Both projects must have all environment variables configured in the
+Dokploy UI (see Section 4).</p>
+<h3 id="dependencies">Dependencies</h3>
+<p>Pre-installed on the VPS (managed by Dokploy):</p>
+<table>
+<thead>
+<tr>
+<th>Software</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker Engine 24+</td>
+<td>Container runtime</td>
+</tr>
+<tr>
+<td>Docker Compose v2</td>
+<td>Service orchestration</td>
+</tr>
+<tr>
+<td>Traefik</td>
+<td>Reverse proxy + TLS (managed by Dokploy)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="configuration-secrets-management">4. Configuration &amp; Secrets
+Management</h2>
+<h3 id="environment-variables">Environment Variables</h3>
+<p>Variables are set in the Dokploy UI per environment (dev/prod). Never
+commit production secrets to the repository.</p>
+<h4 id="core-backend-core-backend">Core Backend
+(<code>core-backend</code>)</h4>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Dev Example</th>
+<th>Prod Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>APP_ENVIRONMENT</code></td>
+<td>Runtime environment</td>
+<td><code>development</code></td>
+<td><code>production</code></td>
+</tr>
+<tr>
+<td><code>CORE_TAG</code></td>
+<td>Image tag to deploy</td>
+<td><code>dev-abc1234</code></td>
+<td><code>v0.9.0</code></td>
+</tr>
+<tr>
+<td><code>CORE_PORT</code></td>
+<td>Host port for core-backend</td>
+<td><code>4001</code></td>
+<td><code>4000</code></td>
+</tr>
+<tr>
+<td><code>DATABASE_USER</code></td>
+<td>PostgreSQL user</td>
+<td><code>user_adisu</code></td>
+<td><code>user_adisu</code></td>
+</tr>
+<tr>
+<td><code>DATABASE_PASSWORD</code></td>
+<td>PostgreSQL password</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>DATABASE_DBNAME</code></td>
+<td>Core database name</td>
+<td><code>adisu_db</code></td>
+<td><code>adisu_db</code></td>
+</tr>
+<tr>
+<td><code>JWT_SECRET</code></td>
+<td>JWT signing key</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>JWT_ACCESS_TOKEN_TTL</code></td>
+<td>Access token TTL</td>
+<td><code>15m</code></td>
+<td><code>15m</code></td>
+</tr>
+<tr>
+<td><code>JWT_REFRESH_TOKEN_TTL</code></td>
+<td>Refresh token TTL</td>
+<td><code>168h</code></td>
+<td><code>168h</code></td>
+</tr>
+<tr>
+<td><code>RABBITMQ_USERNAME</code></td>
+<td>RabbitMQ user</td>
+<td><code>guest</code></td>
+<td><code>guest</code></td>
+</tr>
+<tr>
+<td><code>RABBITMQ_PASSWORD</code></td>
+<td>RabbitMQ password</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>RABBITMQ_VHOST</code></td>
+<td>RabbitMQ vhost</td>
+<td><code>/</code></td>
+<td><code>/</code></td>
+</tr>
+<tr>
+<td><code>EMAIL_HOST</code></td>
+<td>SMTP host</td>
+<td><code>smtp.gmail.com</code></td>
+<td><code>smtp.gmail.com</code></td>
+</tr>
+<tr>
+<td><code>EMAIL_PORT</code></td>
+<td>SMTP port</td>
+<td><code>587</code></td>
+<td><code>587</code></td>
+</tr>
+<tr>
+<td><code>EMAIL_USERNAME</code></td>
+<td>SMTP username</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>EMAIL_PASSWORD</code></td>
+<td>SMTP password</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>EMAIL_FROM</code></td>
+<td>From address</td>
+<td><code>noreply@adisu-serategna.com</code></td>
+<td><code>noreply@adisu-serategna.com</code></td>
+</tr>
+<tr>
+<td><code>EMAIL_FROM_NAME</code></td>
+<td>From display name</td>
+<td><code>Adisu Serategna</code></td>
+<td><code>Adisu Serategna</code></td>
+</tr>
+<tr>
+<td><code>EMAIL_ENABLED</code></td>
+<td>Enable email sending</td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>OAUTH_ENCRYPTION_KEY</code></td>
+<td>OAuth state encryption key</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>OAUTH_MOBILE_REDIRECT_BASE_URL</code></td>
+<td>Mobile OAuth redirect base</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GOOGLE_CLIENT_ID</code></td>
+<td>Google OAuth client ID</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GOOGLE_CLIENT_SECRET</code></td>
+<td>Google OAuth client secret</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>OAUTH_GOOGLE_REDIRECT_URI</code></td>
+<td>Google OAuth redirect URI</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>FACEBOOK_CLIENT_ID</code></td>
+<td>Facebook OAuth client ID</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>FACEBOOK_CLIENT_SECRET</code></td>
+<td>Facebook OAuth client secret</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>OAUTH_FACEBOOK_REDIRECT_URI</code></td>
+<td>Facebook OAuth redirect URI</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>RESEND_API_KEY</code></td>
+<td>Resend email API key</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>RESEND_FROM_EMAIL</code></td>
+<td>Resend from address</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>RESEND_FROM_NAME</code></td>
+<td>Resend from name</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>RESEND_ENABLED</code></td>
+<td>Enable Resend</td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>CHAPA_SECRET_KEY</code></td>
+<td>Chapa payment secret key</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>CHAPA_PUBLIC_KEY</code></td>
+<td>Chapa payment public key</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>CHAPA_WEBHOOK_SECRET</code></td>
+<td>Chapa webhook secret</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>CHAPA_CALLBACK_URL</code></td>
+<td>Chapa callback URL</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>CHAPA_RETURN_URL</code></td>
+<td>Chapa return URL</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>CHAPA_ENABLED</code></td>
+<td>Enable Chapa payments</td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>FCM_CREDENTIALS_FILE</code></td>
+<td>Firebase Cloud Messaging credentials</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>IAM_SUPER_ADMIN_EMAIL</code></td>
+<td>Super admin seed email</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>IAM_SUPER_ADMIN_PASSWORD</code></td>
+<td>Super admin seed password</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>INGESTION_SIGNING_ACTIVE_KEY_ID</code></td>
+<td>Ingestion signing key ID</td>
+<td><code>ingestion-v1</code></td>
+<td><code>ingestion-v1</code></td>
+</tr>
+<tr>
+<td><code>INGESTION_SIGNING_ACTIVE_KEY_SECRET</code></td>
+<td>Ingestion signing key secret</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ai-service-ai-server-ai-worker">AI Service
+(<code>ai-server</code>, <code>ai-worker</code>)</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 43%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AI_TAG</code></td>
+<td>Image tag to deploy</td>
+<td>e.g., <code>dev-abc1234</code> or <code>v0.5.1</code></td>
+</tr>
+<tr>
+<td><code>AI_PORT</code></td>
+<td>Host port for ai-server</td>
+<td><code>8001</code> (dev) / <code>8000</code> (prod)</td>
+</tr>
+<tr>
+<td><code>COHERE_API_KEY</code></td>
+<td>Cohere LLM API key</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GEMINI_API_KEY</code></td>
+<td>Gemini API key (non-Vertex)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>GOOGLE_APPLICATION_CREDENTIALS</code></td>
+<td>GCP service account path</td>
+<td>Mounted as volume: <code>/app/gcp-credentials.json</code></td>
+</tr>
+<tr>
+<td><code>GEMINI_VERTEX_PROJECT</code></td>
+<td>GCP project for Vertex AI</td>
+<td><code>mindful-backup-495108-n5</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="secrets-storage">Secrets Storage</h3>
+<table>
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr>
+<th>Secret Type</th>
+<th>Storage Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API keys, DB passwords, JWT secrets</td>
+<td><strong>Dokploy UI</strong> — per-project environment variables</td>
+</tr>
+<tr>
+<td>GitHub tokens, Dokploy webhook URLs</td>
+<td><strong>GitHub Actions Secrets</strong></td>
+</tr>
+<tr>
+<td>GCP service account key</td>
+<td><strong>File on VPS</strong> mounted as Docker volume
+(<code>mindful-backup-495108-n5-640600bd5b33.json</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="environment-differences-dev-vs-prod">Environment Differences
+(Dev vs Prod)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 26%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Dev</th>
+<th>Prod</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Docker compose file</td>
+<td><code>docker-compose.dev.yml</code></td>
+<td><code>docker-compose.prod.yml</code></td>
+</tr>
+<tr>
+<td>Port offset</td>
+<td>+1 (4001, 8001)</td>
+<td>0 (4000, 8000)</td>
+</tr>
+<tr>
+<td>Traefik exposure</td>
+<td>Yes (<code>api.johna.me</code>)</td>
+<td>Yes (<code>api.johna.me</code>)</td>
+</tr>
+<tr>
+<td>Email sending</td>
+<td>Usually disabled</td>
+<td>Enabled</td>
+</tr>
+<tr>
+<td>Payments (Chapa)</td>
+<td>Usually disabled (test keys)</td>
+<td>Enabled (live keys)</td>
+</tr>
+<tr>
+<td>Image tag pattern</td>
+<td><code>dev-&lt;sha&gt;</code></td>
+<td><code>vX.Y.Z</code></td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td>Push to <code>dev</code> branch</td>
+<td>GitHub Release published</td>
+</tr>
+</tbody>
+</table>
+<h3 id="web-frontend-vercel">Web Frontend (Vercel)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 23%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Dev</th>
+<th>Prod</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NEXT_PUBLIC_API_URL</code></td>
+<td><code>https://api-dev.johna.me</code></td>
+<td><code>https://api.johna.me</code></td>
+</tr>
+<tr>
+<td>Deploy trigger</td>
+<td>Push to <code>dev</code></td>
+<td>Push to <code>main</code></td>
+</tr>
+<tr>
+<td>Install command</td>
+<td><code>pnpm install --frozen-lockfile</code></td>
+<td><code>pnpm install --frozen-lockfile</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="step-by-step-deployment-instructions">5. Step-by-Step Deployment
+Instructions</h2>
+<h3 id="automated-deployment-cicd-primary-path">Automated Deployment
+(CI/CD — Primary Path)</h3>
+<h4 id="dev-deployment">Dev Deployment</h4>
+<p>Triggered automatically on every push to the <code>dev</code>
+branch.</p>
+<ol type="1">
+<li><p><strong>Push to <code>dev</code></strong>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin dev</span></code></pre></div></li>
+<li><p><strong>GitHub Actions</strong> (<code>deploy-dev.yml</code>)
+runs:</p>
+<ul>
+<li>Checkout code</li>
+<li>Set up Docker Buildx (docker-container driver)</li>
+<li>Log in to <code>ghcr.io</code> via <code>GITHUB_TOKEN</code></li>
+<li>Build and push <code>core-backend:dev-&lt;sha&gt;</code> +
+<code>core-backend:dev</code> (moving tag)</li>
+<li>Build and push <code>ai-service:dev-&lt;sha&gt;</code> +
+<code>ai-service:dev</code> (moving tag)</li>
+<li>POST to Dokploy API to trigger deploy</li>
+</ul></li>
+<li><p><strong>Dokploy</strong> pulls new images and restarts
+services:</p>
+<ul>
+<li><code>docker compose pull</code></li>
+<li>Runs migration containers (<code>migration-core</code>,
+<code>migration-ai</code>)</li>
+<li><code>docker compose up -d</code> for all services</li>
+</ul></li>
+</ol>
+<h4 id="production-deployment">Production Deployment</h4>
+<p>Triggered by publishing a GitHub Release.</p>
+<ol type="1">
+<li><p><strong>Create a GitHub Release</strong> with tag format:</p>
+<ul>
+<li><code>core-backend-vX.Y.Z</code> for core-backend releases</li>
+<li><code>ai-service-vX.Y.Z</code> for ai-service releases</li>
+</ul>
+<p>Releases are managed via Release-Please (automated PRs + version
+bumps).</p></li>
+<li><p><strong>GitHub Actions</strong> (<code>deploy-prod.yml</code>)
+runs:</p>
+<ul>
+<li>Parse release tag → determine service + version</li>
+<li>Set up Docker Buildx</li>
+<li>Log in to <code>ghcr.io</code></li>
+<li>Build and push only the released service:
+<ul>
+<li><code>ghcr.io/.../core-backend:vX.Y.Z</code> +
+<code>:latest</code></li>
+<li><code>ghcr.io/.../ai-service:vX.Y.Z</code> +
+<code>:latest</code></li>
+</ul></li>
+<li>POST to Dokploy API for production project</li>
+</ul></li>
+<li><p><strong>Dokploy</strong> pulls the new image and restarts the
+affected service.</p></li>
+</ol>
+<h3 id="manual-deployment-fallback">Manual Deployment (Fallback)</h3>
+<p>Use when CI/CD is unavailable or for debugging.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SSH into the VPS</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> deploy@<span class="op">&lt;</span>vps-ip<span class="op">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Navigate to deploy directory (managed by Dokploy)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /opt/adisu/prod  <span class="co"># or /opt/adisu/dev</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Pull the new images</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="va">CORE_TAG</span><span class="op">=</span>v0.9.0 <span class="va">AI_TAG</span><span class="op">=</span>v0.5.1 <span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml pull</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Run migrations</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml <span class="at">--profile</span> migration run migration-core</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml <span class="at">--profile</span> migration run migration-ai</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Restart services</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="va">CORE_TAG</span><span class="op">=</span>v0.9.0 <span class="va">AI_TAG</span><span class="op">=</span>v0.5.1 <span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml up <span class="at">-d</span></span></code></pre></div>
+<h3 id="database-migrations">Database Migrations</h3>
+<p>Migrations run automatically as part of the Dokploy deploy via
+one-shot containers:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Command</th>
+<th>Tool</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core DB</td>
+<td><code>/app/schema -action=apply</code></td>
+<td>Atlas</td>
+</tr>
+<tr>
+<td>AI DB</td>
+<td><code>alembic upgrade head</code></td>
+<td>Alembic</td>
+</tr>
+</tbody>
+</table>
+<p>To run migrations manually:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Core migrations</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">--profile</span> migration run <span class="at">--rm</span> migration-core</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># AI migrations</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">--profile</span> migration run <span class="at">--rm</span> migration-ai</span></code></pre></div>
+<blockquote>
+<p><strong>Note</strong>: Migrations require the target database to be
+healthy. The compose file enforces this via
+<code>depends_on: condition: service_healthy</code>.</p>
+</blockquote>
+<h3 id="pre-deployment-steps">Pre-Deployment Steps</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Verify the target branch/tag is
+correct</label></li>
+<li><label><input type="checkbox" />Check that upstream infrastructure
+(DB, Redis, RabbitMQ) is healthy</label></li>
+<li><label><input type="checkbox" />For production: ensure a recent
+database backup exists</label></li>
+<li><label><input type="checkbox" />Review migration SQL for breaking
+changes (if any)</label></li>
+</ul>
+<hr />
+<h2 id="smoke-testing-verification">6. Smoke Testing &amp;
+Verification</h2>
+<h3 id="health-check-endpoints">Health Check Endpoints</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 26%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Endpoint</th>
+<th>Expected Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>core-backend</td>
+<td><code>GET https://api.johna.me/api/v1/health</code></td>
+<td>HTTP 200</td>
+</tr>
+<tr>
+<td>ai-service</td>
+<td><code>GET http://localhost:8000/health</code></td>
+<td><code>{"status": "healthy", "service": "ai-service", "version": "..."}</code></td>
+</tr>
+<tr>
+<td>ai-service (root)</td>
+<td><code>GET http://localhost:8000/</code></td>
+<td><code>{"service": "ai-service", "version": "..."}</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="container-health-checks">Container Health Checks</h3>
+<p>Infrastructure services have Docker-level health checks
+configured:</p>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Check Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL (core)</td>
+<td><code>pg_isready -U $DATABASE_USER -d $DATABASE_DBNAME</code></td>
+</tr>
+<tr>
+<td>PostgreSQL (AI)</td>
+<td><code>pg_isready -U $DATABASE_USER -d adisu_ai</code></td>
+</tr>
+<tr>
+<td>Redis</td>
+<td><code>redis-cli ping</code></td>
+</tr>
+<tr>
+<td>RabbitMQ</td>
+<td><code>rabbitmq-diagnostics -q ping</code></td>
+</tr>
+<tr>
+<td>SeaweedFS Master</td>
+<td><code>wget -qO- http://localhost:9333/cluster/status</code></td>
+</tr>
+<tr>
+<td>SeaweedFS Filer</td>
+<td><code>wget -qO- http://localhost:8888/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="verification-commands">Verification Commands</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check all container statuses</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml ps</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify core-backend health</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-o</span> /dev/null <span class="at">-w</span> <span class="st">&quot;%{http_code}&quot;</span> https://api.johna.me/api/v1/health</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify ai-service health (from within the Docker network)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose exec ai-server curl <span class="at">-s</span> localhost:8000/health</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Check core-backend logs (look for startup success)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">--tail</span> 50 core-backend</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Check ai-server logs</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">--tail</span> 50 ai-server</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Check ai-worker logs</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">--tail</span> 50 ai-worker</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify infrastructure health</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose ps <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&quot;(healthy|unhealthy)&quot;</span></span></code></pre></div>
+<h3 id="successful-startup-indicators">Successful Startup
+Indicators</h3>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Log Line</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>core-backend</td>
+<td><code>Starting HTTP server</code> +
+<code>Huma API initialized</code></td>
+</tr>
+<tr>
+<td>ai-server</td>
+<td><code>Uvicorn running on</code></td>
+</tr>
+<tr>
+<td>ai-worker</td>
+<td>Worker starts consuming from RabbitMQ queues</td>
+</tr>
+<tr>
+<td>Migrations (core)</td>
+<td><code>atlas: apply finished</code></td>
+</tr>
+<tr>
+<td>Migrations (AI)</td>
+<td><code>INFO  [alembic.runtime.migration] Running upgrade</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="critical-user-paths-manual-checks">Critical User Paths (Manual
+Checks)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" />Login to the admin dashboard
+(web)</label></li>
+<li><label><input type="checkbox" />Navigate to dashboard — stats
+load</label></li>
+<li><label><input type="checkbox" />List guides in the guide
+module</label></li>
+<li><label><input type="checkbox" />Open AI Ask page — chat
+loads</label></li>
+<li><label><input type="checkbox" />Upload a document to Knowledge
+Base</label></li>
+<li><label><input type="checkbox" />Verify community categories
+load</label></li>
+<li><label><input type="checkbox" />Check that payment
+plans/subscriptions are accessible</label></li>
+</ul>
+<hr />
+<h2 id="rollback-plan">7. Rollback Plan</h2>
+<h3 id="trigger-criteria">Trigger Criteria</h3>
+<p>Abort the deployment and roll back if any of the following occur
+within 5 minutes of deploy:</p>
+<ol type="1">
+<li><strong>Health endpoint failure</strong>:
+<code>GET /api/v1/health</code> returns non-200 for more than 2
+minutes</li>
+<li><strong>Elevated 5xx errors</strong>: Noticeable spike in HTTP 5xx
+responses from API</li>
+<li><strong>Uptime monitor alert</strong>: Automated alert from uptime
+monitoring (e.g., Better Uptime, Pingdom)</li>
+<li><strong>UI/UX failure</strong>: Dashboard or critical page fails to
+load or shows errors</li>
+<li><strong>Migration failure</strong>: Migration container exits with
+non-zero code</li>
+</ol>
+<h3 id="rollback-steps">Rollback Steps</h3>
+<h4 id="option-a-dokploy-ui-recommended">Option A: Dokploy UI
+(Recommended)</h4>
+<ol type="1">
+<li>Go to Dokploy UI → project (<code>adisu-dev</code> or
+<code>adisu-prod</code>)</li>
+<li>Navigate to the service deployment history</li>
+<li>Find the previous working deployment</li>
+<li>Click “Redeploy” to roll back to the previous image tag</li>
+</ol>
+<h4 id="option-b-manual-ssh-rollback">Option B: Manual SSH Rollback</h4>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SSH into the VPS</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> deploy@<span class="op">&lt;</span>vps-ip<span class="op">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the previous known-good tags</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="va">CORE_TAG</span><span class="op">=&lt;</span>previous-version<span class="op">&gt;</span> AI_TAG=<span class="op">&lt;</span>previous-version<span class="op">&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Pull the old images</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml pull</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Run migrations (if reverting schema changes)</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># docker compose --profile migration run migration-core</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># docker compose --profile migration run migration-ai</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Restart with previous versions</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="va">CORE_TAG</span><span class="op">=</span><span class="va">$CORE_TAG</span> <span class="va">AI_TAG</span><span class="op">=</span><span class="va">$AI_TAG</span> <span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.prod.yml up <span class="at">-d</span></span></code></pre></div>
+<h4 id="option-c-image-tag-revert">Option C: Image Tag Revert</h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-tag and push the previous image as the current tag</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> pull ghcr.io/final-year-project-g22/core-backend:<span class="op">&lt;</span>previous-version<span class="op">&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> tag ghcr.io/final-year-project-g22/core-backend:<span class="op">&lt;</span>previous-version<span class="op">&gt;</span> ghcr.io/final-year-project-g22/core-backend:latest</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> push ghcr.io/final-year-project-g22/core-backend:latest</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Trigger Dokploy redeploy</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST <span class="va">$DOKPLOY_URL</span>/api/deploy/compose/<span class="va">$DOKPLOY_COMPOSE_ID</span></span></code></pre></div>
+<h3 id="data-preservation">Data Preservation</h3>
+<ul>
+<li><strong>Database</strong>: Deployments use forward-only migrations.
+Reverting a migration must be done manually. Document the migration SQL
+before deploying to enable safe reversion.</li>
+<li><strong>Uploaded files</strong>: SeaweedFS data is persistent on
+Docker volumes. Rollback does not affect stored files.</li>
+<li><strong>Message queue</strong>: RabbitMQ messages may be lost during
+rollback. Check queue depths after rollback and re-publish if
+necessary.</li>
+</ul>
+<hr />
+<h2 id="troubleshooting-common-failure-modes">8. Troubleshooting &amp;
+Common Failure Modes</h2>
+<h3 id="known-issues">Known Issues</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 48%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Error: Connection Refused</code> (core-backend → DB)</td>
+<td>PostgreSQL container not fully initialized</td>
+<td>Wait for health check; check
+<code>docker compose logs postgres</code></td>
+</tr>
+<tr>
+<td>SeaweedFS upload fails</td>
+<td>Filer not ready before volume; file permission issues</td>
+<td>Restart SeaweedFS containers:
+<code>docker compose restart seaweed-filer seaweed-volume</code></td>
+</tr>
+<tr>
+<td>Migrations not running</td>
+<td>Migration profile not executed; container exited early</td>
+<td>Run manually:
+<code>docker compose --profile migration run --rm migration-core</code></td>
+</tr>
+<tr>
+<td><code>GCP credentials not found</code></td>
+<td>Service account JSON file path incorrect or missing</td>
+<td>Verify <code>./mindful-backup-495108-n5-640600bd5b33.json</code>
+exists in the backend directory and is mounted correctly</td>
+</tr>
+<tr>
+<td><code>Error: dial tcp: connect: connection refused</code>
+(ai-service → core-backend gRPC)</td>
+<td>Core-backend gRPC server not ready when ai-service starts</td>
+<td>Ensure <code>depends_on</code> conditions are correct; increase
+startup delay</td>
+</tr>
+<tr>
+<td>AI ingestion worker not processing</td>
+<td>RabbitMQ connection failure; worker crashed</td>
+<td>Check <code>docker compose logs ai-worker</code>; verify RabbitMQ is
+healthy</td>
+</tr>
+<tr>
+<td>RabbitMQ management UI requires login</td>
+<td>Default guest credentials not matching environment</td>
+<td>Verify <code>RABBITMQ_USERNAME</code> and
+<code>RABBITMQ_PASSWORD</code> match</td>
+</tr>
+<tr>
+<td>Docker disk space full</td>
+<td>Logs or images accumulating</td>
+<td>Run <code>docker system prune -af</code> (caution: removes unused
+images and containers)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="resource-issues">Resource Issues</h3>
+<table>
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Signs</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>High memory usage</td>
+<td>Docker stats show &gt;80% RAM, OOM kills</td>
+<td>Consider upgrading to 16 GB; reduce AI service batch sizes</td>
+</tr>
+<tr>
+<td>Disk space</td>
+<td>Container logs growing, DB WAL files</td>
+<td>Set up log rotation; monitor disk with <code>df -h</code></td>
+</tr>
+<tr>
+<td>CPU spikes</td>
+<td>During document ingestion or LLM inference</td>
+<td>Expected behavior; monitor duration</td>
+</tr>
+</tbody>
+</table>
+<h3 id="log-inspection">Log Inspection</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View real-time logs for a service</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">-f</span> core-backend</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">-f</span> ai-server</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">-f</span> ai-worker</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># View last N lines</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">--tail</span> 100 core-backend</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter logs by error level</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs core-backend <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> error</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check specific container</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> logs adisu_db <span class="at">--tail</span> 50</span></code></pre></div>
+<h3 id="contact-escalation">Contact Escalation</h3>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 33%" />
+<col style="width: 29%" />
+</colgroup>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Contact</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary</td>
+<td>Yohannes Solomon</td>
+<td>solomonjohna21@gmail.com</td>
+</tr>
+<tr>
+<td>Secondary</td>
+<td>Dawit Belay</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Emergency</td>
+<td>GitHub Issues</td>
+<td>https://github.com/Final-Year-Project-G22/backend/issues</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
