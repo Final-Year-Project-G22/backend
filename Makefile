@@ -122,16 +122,20 @@ AI_ENV = GOOGLE_APPLICATION_CREDENTIALS=/home/johna/Desktop/stuff/projects/final
 	GEMINI_USE_VERTEX=true
 
 # Start all dev servers
+# NOTE: bash -c is deliberate — /bin/sh (dash) does not run the EXIT trap when
+# killed by SIGINT, which used to orphan air/go/python on Ctrl-C. The INT/TERM
+# traps kill the whole process group (kill 0) so air's child binary dies too.
 dev:
-	@trap 'kill 0' EXIT; \
-	cd core-backend && air & \
-	cd ai-service && $(AI_ENV) uv run python main.py & \
-	cd ai-service && $(AI_ENV) uv run python -m workers.ingestion_worker & \
-	wait
+	@bash -c 'set -euo pipefail; \
+		trap "kill 0 2>/dev/null || true" EXIT INT TERM; \
+		(cd core-backend && exec air) & \
+		(cd ai-service && $(AI_ENV) exec uv run python main.py) & \
+		(cd ai-service && $(AI_ENV) exec uv run python -m workers.ingestion_worker) & \
+		wait'
 
 # Start core-backend only
 dev-go:
-	cd core-backend && air
+	cd core-backend && bash -c 'trap "kill 0 2>/dev/null || true" EXIT INT TERM; air'
 
 # Start ai-service only
 dev-python:
