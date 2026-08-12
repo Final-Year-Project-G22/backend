@@ -21,7 +21,7 @@
 ## Commit conventions
 
 - Conventional commits (`type(scope): summary`). **commitlint scopes are strict: `core` | `ai` | `cross`** — any other scope (e.g. `docs`) fails the pre-commit hook. Use `chore(cross): …` for repo-wide chores.
-- Branches: `main` + `dev` only. Direct commits to `dev` are used for cleanup/chores; feature work via PR (branch protection requires PRs; admins may bypass for cleanup).
+- Integration branches are `main` + `dev`. Ticket work must use a feature branch based on `origin/dev` and land through a PR targeting `dev`. Direct commits to `dev` are only for cleanup/chores; admins may bypass branch protection for cleanup.
 - No doc branches, no doc PRs — the docs home is the `planning` repo (`Final-Year-Project-G22/planning`), not this repo.
 
 ## API contract (NON-NEGOTIABLE)
@@ -43,3 +43,13 @@ CI enforces step 1: the `openapi-fresh` job regenerates the spec on every PR tou
 - Implement with /tdd where seams allow; run typechecking regularly, single test files regularly, full suite once at the end.
 - Use /code-review on the finished change, then commit to the current branch.
 - If an implementation touches API shape: the API contract above applies — spec regen + web/mobile typegen propagate **before** the change is considered done.
+
+### Mandatory Ticket Branch/PR Gate
+
+For every implementation requested from a GitHub issue or Linear ticket:
+
+1. Before editing, fetch the latest `origin/dev` and create a feature branch from it: `git fetch origin dev && git switch -c <type>/<short-name> origin/dev`.
+2. Never implement or commit ticket work directly on `dev` or `main`. If the current branch is `dev` or `main`, stop and create the feature branch first.
+3. After verification, push the feature branch with `git push -u origin <branch>`.
+4. Create a GitHub PR with `gh pr create --base dev --head <branch>` and include the issue reference in the PR body.
+5. Do not resolve or close the source ticket until the PR exists, then record the PR URL on the source ticket.
