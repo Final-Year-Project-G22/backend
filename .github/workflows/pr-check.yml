@@ -144,6 +144,57 @@ jobs:
           cd core-backend
           go test ./...
 
+  openapi-fresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.3"
+          cache: false
+
+      - name: Cache Go build and modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('core-backend/go.sum') }}-1.25.3
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          git diff --name-only --diff-filter=ACMR \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Regenerate spec and check for drift
+        run: |
+          GO_CHANGED=$(grep -E '^core-backend/.*\.go$' /tmp/changed_files.txt || true)
+
+          if [ -z "$GO_CHANGED" ]; then
+            echo "No Go files changed — spec check skipped"
+            exit 0
+          fi
+
+          cd core-backend
+          go run ./cmd/spec
+          cd ..
+          if ! git diff --quiet -- core-backend/docs/openapi.json; then
+            echo "❌ OpenAPI spec is stale. Run 'make spec' in the backend repo and commit core-backend/docs/openapi.json together with your API change."
+            git diff --stat -- core-backend/docs/openapi.json
+            exit 1
+          fi
+          echo "✅ OpenAPI spec is up to date"
   python-lint-format:
     runs-on: ubuntu-latest
 
