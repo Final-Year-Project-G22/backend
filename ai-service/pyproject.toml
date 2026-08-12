@@ -126,7 +126,7 @@ ignore = [
 "infrastructure/embeddings/gemini.py" = ["PLC0415", "S110"]
 "infrastructure/rpc/services/inference_service.py" = ["ARG002"]
 "infrastructure/tools/local/*.py" = ["ARG002"]
-"core/usecases/strategies/agentic_ask.py" = ["PLR0915", "PLR0912"]
+"core/usecases/strategies/agentic_ask.py" = ["PLR0915", "PLR0912", "PLR0917"]
 "infrastructure/prefetch/pipeline.py" = ["TRY300"]
 
 [tool.ruff.lint.isort]
