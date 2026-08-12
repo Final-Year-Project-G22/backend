@@ -122,12 +122,15 @@ class AgenticAskStrategy(AskStrategyPort):
         merged_hits = self._merge_and_dedupe_hits(vector_hits, bm25_hits)
 
         intent = await self._intent_classifier.classify(query_embedding)
+        # The language-filtered hybrid search above is the single KB fetch for this turn.
         pre_fetch = await self._pre_fetch_pipeline.pre_fetch(
             intent,
             command.prompt,
             str(command.account_id),
             str(command.user_id),
+            include_kb=False,
         )
+        kb_context_available = bool(merged_hits or pre_fetch.get("kb"))
 
         tool_defs = await self._tool_registry.get_tool_definitions()
         history = await self._load_history(conversation.id, conversation.message_count)
@@ -135,6 +138,7 @@ class AgenticAskStrategy(AskStrategyPort):
         system_prompt = self._prompt_loader.render_agentic(
             locale=command.language.value,
             tools=[{"name": t.name, "description": t.description} for t in tool_defs],
+            kb_context_available=kb_context_available,
         )
 
         messages = [{"role": "system", "content": system_prompt}]
@@ -144,6 +148,10 @@ class AgenticAskStrategy(AskStrategyPort):
             messages.append({"role": "assistant", "content": history_text})
 
         user_context_parts: list[str] = []
+        if merged_hits:
+            user_context_parts.append(self._format_kb_context(merged_hits))
+        if pre_fetch.get("kb"):
+            user_context_parts.append(pre_fetch["kb"])
         if pre_fetch.get("profile"):
             user_context_parts.append(f"User profile: {pre_fetch['profile']}")
         if pre_fetch.get("progress"):
@@ -174,6 +182,16 @@ class AgenticAskStrategy(AskStrategyPort):
             if result.tool_calls:
                 tool_results: list[tuple[ToolCall, str]] = []
                 for tc in result.tool_calls:
+                    query = tc.arguments.get("query")
+                    if (
+                        tc.name == "search_knowledge_base"
+                        and kb_context_available
+                        and isinstance(query, str)
+                        and " ".join(query.split()).casefold()
+                        == " ".join(command.prompt.split()).casefold()
+                    ):
+                        continue
+
                     yield AskStreamEvent(
                         type_=AskStreamEventType.TOOL_CALL,
                         tool_name=tc.name,
@@ -214,6 +232,19 @@ class AgenticAskStrategy(AskStrategyPort):
                         if tool_result.success
                         else f"Failed: {tool_result.error_message}",
                     )
+
+                if not tool_results:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": (
+                                "The pre-fetched knowledge-base context already covers the "
+                                "original question. Use it, or search the knowledge base "
+                                "only with a different query if more evidence is needed."
+                            ),
+                        }
+                    )
+                    continue
 
                 tool_call_text = "\n\n".join(
                     f"Tool: {tc.name}\n{tc.arguments.get('query', '') or tc.arguments.get('url', '')}"

@@ -5,7 +5,11 @@ You have access to the following tools to retrieve information:
 {% endfor %}
 
 Tool usage rules:
+{% if kb_context_available %}
+1. Use the pre-fetched knowledge-base context in the user message for the current question. Do not repeat that same search with search_knowledge_base. Use search_knowledge_base only when the context is insufficient or a genuinely different lookup is needed.
+{% else %}
 1. ALWAYS use search_knowledge_base or search_guides for factual questions about Ethiopian regulations, business registration, compliance, or legal procedures.
+{% endif %}
 2. ALWAYS use get_user_profile when the user asks about their business, profile, sector, or company details.
 3. ALWAYS use find_template when the user asks about document templates, forms, or downloadable files.
 4. ALWAYS use check_compliance_status when the user asks about deadlines, compliance status, or renewals.
