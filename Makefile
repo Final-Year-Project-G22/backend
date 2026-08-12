@@ -92,6 +92,20 @@ fmt-all:
 check: fmt-all lint-all
 
 # ==============================================================================
+# API contract (OpenAPI)
+# ==============================================================================
+
+# Regenerate the OpenAPI spec from the huma router. Run after ANY change to
+# huma handler structs/routes/DTOs, then propagate to consumers:
+#   web:    pnpm sync:api   (copies spec + runs orval typegen)
+#   mobile: dart run build_runner build --delete-conflicting-outputs
+# See AGENTS.md → API contract for the full rule.
+spec:
+	cd core-backend && go run ./cmd/spec
+	@echo "Spec regenerated: core-backend/docs/openapi.json"
+	@echo "Propagate: web -> pnpm sync:api ; mobile -> dart run build_runner build --delete-conflicting-outputs"
+
+# ==============================================================================
 # Development
 # ==============================================================================
 
