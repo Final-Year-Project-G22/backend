@@ -23,8 +23,15 @@ class PromptLoader:
         self,
         locale: str,
         tools: list[dict[str, str]] | None = None,
+        *,
+        kb_context_available: bool = False,
     ) -> str:
-        return self._render("agentic_system.j2", locale=locale, tools=tools or [])
+        return self._render(
+            "agentic_system.j2",
+            locale=locale,
+            tools=tools or [],
+            kb_context_available=kb_context_available,
+        )
 
     def render_tool_history(
         self,

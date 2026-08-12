@@ -19,13 +19,16 @@ class PreFetchPipeline:
         query: str,
         account_id: str,
         user_id: str,
+        *,
+        include_kb: bool = True,
     ) -> dict[str, str]:
         results: dict[str, str] = {}
 
         if intent == IntentClass.KNOWLEDGE:
-            _, value = await self._fetch_kb(query, account_id, user_id)
-            if value:
-                results["kb"] = value
+            if include_kb:
+                _, value = await self._fetch_kb(query, account_id, user_id)
+                if value:
+                    results["kb"] = value
 
         elif intent == IntentClass.PERSONAL:
             tasks = [
@@ -40,12 +43,15 @@ class PreFetchPipeline:
                     results[key] = value
 
         else:
-            tasks = [
-                asyncio.create_task(self._fetch_kb(query, account_id, user_id)),
-                asyncio.create_task(self._fetch_profile(account_id, user_id)),
-                asyncio.create_task(self._fetch_guide_progress(account_id, user_id)),
-                asyncio.create_task(self._fetch_compliance(account_id, user_id)),
-            ]
+            tasks = [asyncio.create_task(self._fetch_profile(account_id, user_id))]
+            if include_kb:
+                tasks.append(asyncio.create_task(self._fetch_kb(query, account_id, user_id)))
+            tasks.extend(
+                [
+                    asyncio.create_task(self._fetch_guide_progress(account_id, user_id)),
+                    asyncio.create_task(self._fetch_compliance(account_id, user_id)),
+                ]
+            )
             done, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
             for task in done:
                 key, value = task.result()
