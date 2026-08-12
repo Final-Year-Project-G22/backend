@@ -60,6 +60,23 @@ async def test_pre_fetch_knowledge_only() -> None:
 
 
 @pytest.mark.asyncio
+async def test_pre_fetch_can_skip_knowledge_base() -> None:
+    reg = _make_registry()
+    p = PreFetchPipeline(tool_registry=reg)
+
+    results = await p.pre_fetch(
+        intent=IntentClass.KNOWLEDGE,
+        query="business license",
+        account_id=str(uuid.uuid4()),
+        user_id=str(uuid.uuid4()),
+        include_kb=False,
+    )
+
+    assert results == {}
+    reg.execute_tool.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_pre_fetch_personal_only() -> None:
     reg = _make_registry(
         ToolResult(
