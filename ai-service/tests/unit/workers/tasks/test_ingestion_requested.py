@@ -20,8 +20,11 @@ TEST_SECRET = "unit-test-secret"  # noqa: S105
 
 
 def _sign(payload: dict[str, object], secret: str) -> str:
+    # Mirrors the Go envelope signer (canonicalizeEnvelope): signature and
+    # key_id are excluded from the canonical payload.
     body = dict(payload)
     body.pop("signature", None)
+    body.pop("key_id", None)
     canonical = json.dumps(body, separators=(",", ":"), sort_keys=True).encode("utf-8")
     return hmac.new(secret.encode("utf-8"), canonical, hashlib.sha256).hexdigest()
 
