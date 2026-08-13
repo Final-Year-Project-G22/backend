@@ -209,6 +209,9 @@ func TestInferenceGRPCClientAskStreamReturnsChunks(t *testing.T) {
 		{Chunk: &pb_inference.AskStreamChunk_Citations{Citations: &pb_inference.CitationsChunk{Citations: []*pb_inference.Citation{
 			{DocumentId: uuid.New().String(), ChunkId: uuid.New().String(), SourceType: "chunk", Score: 0.9},
 		}}}},
+		{Chunk: &pb_inference.AskStreamChunk_ToolSuppressed{ToolSuppressed: &pb_inference.ToolSuppressedChunk{
+			Tool: "search_knowledge_base", Reason: "duplicate_of_prior_search", MatchedQuery: "plc registration",
+		}}},
 		{Chunk: &pb_inference.AskStreamChunk_Done{Done: &pb_inference.DoneChunk{Model: "gemini-1.5-flash", LatencyMs: 100, SessionId: uuid.New().String(), SessionCreatedAt: "2026-01-01T10:00:00Z", SessionUpdatedAt: "2026-01-01T11:00:00Z"}}},
 	}}
 
@@ -236,8 +239,8 @@ func TestInferenceGRPCClientAskStreamReturnsChunks(t *testing.T) {
 		chunks = append(chunks, chunk)
 	}
 
-	if len(chunks) != 4 {
-		t.Fatalf("expected 4 chunks, got %d", len(chunks))
+	if len(chunks) != 5 {
+		t.Fatalf("expected 5 chunks, got %d", len(chunks))
 	}
 	if chunks[0].Text == nil || *chunks[0].Text != "Hello" {
 		t.Fatalf("unexpected first chunk: %+v", chunks[0])
@@ -248,11 +251,17 @@ func TestInferenceGRPCClientAskStreamReturnsChunks(t *testing.T) {
 	if len(chunks[2].Citations) != 1 {
 		t.Fatalf("unexpected citations chunk: %+v", chunks[2])
 	}
-	if chunks[3].Done == nil || chunks[3].Done.Model != "gemini-1.5-flash" {
-		t.Fatalf("unexpected done chunk: %+v", chunks[3])
+	if chunks[3].ToolSuppressed == nil || chunks[3].ToolSuppressed.Reason != "duplicate_of_prior_search" {
+		t.Fatalf("unexpected tool suppressed chunk: %+v", chunks[3])
 	}
-	if chunks[3].Done.CreatedAt != "2026-01-01T10:00:00Z" || chunks[3].Done.UpdatedAt != "2026-01-01T11:00:00Z" {
-		t.Fatalf("unexpected done timestamps: %+v", chunks[3].Done)
+	if chunks[3].ToolSuppressed.MatchedQuery != "plc registration" {
+		t.Fatalf("unexpected matched query: %+v", chunks[3].ToolSuppressed)
+	}
+	if chunks[4].Done == nil || chunks[4].Done.Model != "gemini-1.5-flash" {
+		t.Fatalf("unexpected done chunk: %+v", chunks[4])
+	}
+	if chunks[4].Done.CreatedAt != "2026-01-01T10:00:00Z" || chunks[4].Done.UpdatedAt != "2026-01-01T11:00:00Z" {
+		t.Fatalf("unexpected done timestamps: %+v", chunks[4].Done)
 	}
 }
 

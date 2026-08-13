@@ -92,6 +92,14 @@ func writeStreamToSSE(ctx context.Context, hctx huma.Context, chunks <-chan serv
 				})
 			}
 
+			if chunk.ToolSuppressed != nil {
+				_ = writer.WriteEvent("tool_suppressed", dto.AskStreamToolSuppressedEventBody{
+					Tool:         chunk.ToolSuppressed.Tool,
+					Reason:       chunk.ToolSuppressed.Reason,
+					MatchedQuery: chunk.ToolSuppressed.MatchedQuery,
+				})
+			}
+
 			if chunk.Thinking != nil {
 				_ = writer.WriteEvent("thinking", dto.AskStreamThinkingEventBody{
 					Text: *chunk.Thinking,

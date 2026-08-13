@@ -87,6 +87,12 @@ type AskStreamToolResultEventBody struct {
 	ResultSummary string `json:"resultSummary"`
 }
 
+type AskStreamToolSuppressedEventBody struct {
+	Tool         string `json:"tool"`
+	Reason       string `json:"reason"`
+	MatchedQuery string `json:"matchedQuery"`
+}
+
 type AskStreamThinkingEventBody struct {
 	Text string `json:"text"`
 }
