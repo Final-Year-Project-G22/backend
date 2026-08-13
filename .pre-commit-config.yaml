@@ -55,7 +55,7 @@ repos:
     hooks:
       - id: python-security
         name: Python Security Scan (bandit)
-        entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers'
+        entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers'
         language: system
         types: [python]
         files: ^ai-service/.*\.py$

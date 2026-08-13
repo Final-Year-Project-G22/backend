@@ -130,7 +130,7 @@ ignore = [
 "infrastructure/prefetch/pipeline.py" = ["TRY300"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "core", "grpc", "infrastructure", "workers"]
+known-first-party = ["app", "core", "infrastructure", "workers"]
 split-on-trailing-comma = false
 
 [tool.ruff.format]
@@ -171,7 +171,6 @@ addopts = [
     "--cov=app",
     "--cov=core",
     "--cov=infrastructure",
-    "--cov=grpc",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
     "--cov-fail-under=80",
@@ -184,7 +183,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["app", "core", "infrastructure", "grpc"]
+source = ["app", "core", "infrastructure"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",
