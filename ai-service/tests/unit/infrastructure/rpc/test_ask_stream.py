@@ -161,6 +161,87 @@ async def test_ask_stream_error_on_quota_exceeded() -> None:
 
 
 @pytest.mark.asyncio
+async def test_ask_stream_maps_tool_suppressed_when_debug_enabled() -> None:
+    usecase = AsyncMock()
+    conversation = SimpleNamespace(
+        id=uuid.uuid4(),
+        created_at=SimpleNamespace(isoformat=lambda: "2026-01-01T10:00:00Z"),
+        updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T11:00:00Z"),
+    )
+    ai_message = SimpleNamespace(token_usage=None, id=uuid.uuid4(), cache_hit=False)
+    usecase._llm_port = SimpleNamespace(model="test-model")
+
+    async def _mock_stream(*args: object, **kwargs: object):
+        yield AskStreamEvent(
+            type_=AskStreamEventType.TOOL_SUPPRESSED,
+            tool_name="search_knowledge_base",
+            suppression_reason="duplicate_of_prior_search",
+            matched_query="Ethiopian government business registration process",
+        )
+        yield AskStreamEvent(
+            type_=AskStreamEventType.DONE,
+            done=conversation,
+            ai_message=ai_message,
+            merged_hits=[],
+        )
+
+    usecase.execute_stream_with_tools = _mock_stream
+    service = AIInferenceService(ask_ai_usecase=usecase)
+
+    chunks = [
+        chunk
+        async for chunk in service.AskStream(
+            _make_request(debug_mode=True), SimpleNamespace(abort=AsyncMock())
+        )
+    ]
+
+    suppressed_chunks = [chunk for chunk in chunks if chunk.HasField("tool_suppressed")]
+    assert len(suppressed_chunks) == 1
+    assert suppressed_chunks[0].tool_suppressed.tool == "search_knowledge_base"
+    assert suppressed_chunks[0].tool_suppressed.reason == "duplicate_of_prior_search"
+    assert (
+        suppressed_chunks[0].tool_suppressed.matched_query
+        == "Ethiopian government business registration process"
+    )
+
+
+@pytest.mark.asyncio
+async def test_ask_stream_drops_tool_suppressed_when_debug_disabled() -> None:
+    usecase = AsyncMock()
+    conversation = SimpleNamespace(
+        id=uuid.uuid4(),
+        created_at=SimpleNamespace(isoformat=lambda: "2026-01-01T10:00:00Z"),
+        updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T11:00:00Z"),
+    )
+    ai_message = SimpleNamespace(token_usage=None, id=uuid.uuid4(), cache_hit=False)
+    usecase._llm_port = SimpleNamespace(model="test-model")
+
+    async def _mock_stream(*args: object, **kwargs: object):
+        yield AskStreamEvent(
+            type_=AskStreamEventType.TOOL_SUPPRESSED,
+            tool_name="search_knowledge_base",
+            suppression_reason="drift",
+            matched_query="original prompt",
+        )
+        yield AskStreamEvent(
+            type_=AskStreamEventType.DONE,
+            done=conversation,
+            ai_message=ai_message,
+            merged_hits=[],
+        )
+
+    usecase.execute_stream_with_tools = _mock_stream
+    service = AIInferenceService(ask_ai_usecase=usecase)
+
+    chunks = [
+        chunk
+        async for chunk in service.AskStream(_make_request(), SimpleNamespace(abort=AsyncMock()))
+    ]
+
+    assert all(not chunk.HasField("tool_suppressed") for chunk in chunks)
+
+
+@pytest.mark.asyncio
 async def test_ask_stream_aborts_when_feature_flag_disabled() -> None:
     usecase = AsyncMock()
     service = AIInferenceService(ask_ai_usecase=usecase, ask_enabled=False)

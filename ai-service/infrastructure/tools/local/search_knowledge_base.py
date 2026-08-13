@@ -88,20 +88,12 @@ class SearchKnowledgeBaseTool:
         elapsed = int((time.perf_counter() - start) * 1000)
 
         seen: set[str] = set()
-        merged: list[dict[str, Any]] = []
+        merged: list[Any] = []
         for hit in list(vector_hits) + list(bm25_hits):
             key = str(hit.chunk_id)
             if key not in seen:
                 seen.add(key)
-                merged.append(
-                    {
-                        "chunk_id": str(hit.chunk_id),
-                        "document_id": str(hit.document_id),
-                        "score": round(hit.score, 3),
-                        "text": hit.chunk_text,
-                        "document_title": hit.document_title or "",
-                    }
-                )
+                merged.append(hit)
 
         merged = merged[:top_k]
 
@@ -114,9 +106,9 @@ class SearchKnowledgeBaseTool:
             )
 
         lines: list[str] = []
-        for i, doc in enumerate(merged, 1):
-            lines.append(f"[{i}] {doc.get('document_title')} (score: {doc['score']})")
-            text = doc.get("text", "")
+        for i, hit in enumerate(merged, 1):
+            lines.append(f"[{i}] {hit.document_title} (score: {round(hit.score, 3)})")
+            text = hit.chunk_text
             if len(text) > _MAX_EXCERPT_LENGTH:
                 text = text[:_MAX_EXCERPT_LENGTH] + "..."
             lines.append(f"    {text}")
@@ -129,4 +121,5 @@ class SearchKnowledgeBaseTool:
             result_text=result_text,
             success=True,
             execution_ms=elapsed,
+            hits=merged,
         )

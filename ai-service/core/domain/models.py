@@ -217,6 +217,8 @@ class ToolCallRecord(BaseModel):
     error_message: str | None = None
     execution_ms: int = Field(default=0, ge=0)
     iteration: int = Field(default=1, ge=1)
+    suppressed: bool = False
+    suppression_reason: str | None = None
 
 
 class AIChatMessage(BaseModel):

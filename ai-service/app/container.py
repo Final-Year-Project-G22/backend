@@ -19,6 +19,7 @@ from core.usecases import (
     QuotaGuardUseCase,
 )
 from core.usecases.strategies.agentic_ask import AgenticAskStrategy
+from core.usecases.strategies.kb_query_guard import KBQueryGuard
 from core.usecases.strategies.simple_ask import SimpleAskStrategy
 from infrastructure.chunking.registry import ChunkingRegistry
 from infrastructure.database.connection import async_session_factory
@@ -215,6 +216,15 @@ class Container(containers.DeclarativeContainer):
         event_bus=event_bus_port,
     )
 
+    kb_query_guard = providers.Factory(
+        KBQueryGuard,
+        embedding_port=embedding_port,
+        dup_cosine_threshold=config.provided.AI_KB_DUP_COSINE_THRESHOLD,
+        ambiguous_band_min=config.provided.AI_KB_DUP_AMBIGUOUS_BAND_MIN,
+        jaccard_threshold=config.provided.AI_KB_DUP_JACCARD_THRESHOLD,
+        drift_cosine_threshold=config.provided.AI_KB_DRIFT_COSINE_THRESHOLD,
+    )
+
     agentic_ask_strategy = providers.Factory(
         AgenticAskStrategy,
         conversation=conversation,
@@ -226,6 +236,8 @@ class Container(containers.DeclarativeContainer):
         intent_classifier=intent_classifier,
         pre_fetch_pipeline=pre_fetch_pipeline,
         max_iterations=config.provided.AI_AGENTIC_MAX_ITERATIONS,
+        kb_query_guard=kb_query_guard,
+        suppression_tripwire=config.provided.AI_KB_SUPPRESSION_TRIPWIRE,
         cache=cache_port,
         event_bus=event_bus_port,
     )

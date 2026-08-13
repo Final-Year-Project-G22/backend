@@ -131,7 +131,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
 
         return service_pb2.AskResponse()  # type: ignore
 
-    async def AskStream(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802, PLR0912
+    async def AskStream(self, request: Any, context: Any) -> Any:  # type: ignore[override]  # noqa: N802, PLR0912, PLR0915
         if not await self._ensure_ask_enabled(context):
             return
 
@@ -194,6 +194,15 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):  # type: 
                 if event.is_thinking and event.text and debug_mode:
                     yield service_pb2.AskStreamChunk(
                         thinking=service_pb2.ThinkingChunk(text=event.text),
+                    )
+
+                if event.is_tool_suppressed and event.tool_name and debug_mode:
+                    yield service_pb2.AskStreamChunk(
+                        tool_suppressed=service_pb2.ToolSuppressedChunk(
+                            tool=event.tool_name,
+                            reason=event.suppression_reason or "",
+                            matched_query=event.matched_query or "",
+                        )
                     )
 
                 if event.is_done:

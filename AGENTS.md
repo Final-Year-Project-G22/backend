@@ -53,3 +53,11 @@ For every implementation requested from a GitHub issue or Linear ticket:
 3. After verification, push the feature branch with `git push -u origin <branch>`.
 4. Create a GitHub PR with `gh pr create --base dev --head <branch>` and include the issue reference in the PR body.
 5. Do not resolve or close the source ticket until the PR exists, then record the PR URL on the source ticket.
+
+## Linear access
+
+Design decisions live in Linear (team *Final Year Project G22*, key `FIN`). Read them before implementing:
+
+- Auth: `LINEAR_TOKEN` in the root `.env` (personal API key from https://linear.app/settings/api).
+- Helper: `../scripts/linear.sh` (from repo root). `view <identifier-or-id>` shows a ticket's description, relations, and comments (resolutions are usually in comments).
+- A GitHub issue ported from Linear should name its source ticket (e.g. FIN-75); check that ticket's resolution for design decisions before coding.
