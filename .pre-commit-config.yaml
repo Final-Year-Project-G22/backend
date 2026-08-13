@@ -55,33 +55,11 @@ repos:
     hooks:
       - id: python-security
         name: Python Security Scan (bandit)
-        entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers'
-        language: system
-        types: [python]
-        files: ^ai-service/.*\.py$
-        exclude: ^ai-service/grpc_stubs/
-        pass_filenames: false
-
-  # Python - Type Checking (ai-service only)
-  - repo: local
-    hooks:
-      - id: python-typecheck
-        name: Python Type Checking (basedpyright)
-        entry: bash -c 'cd ai-service && uv run basedpyright'
-        language: system
-        types: [python]
-        files: ^ai-service/.*\.py$
-        pass_filenames: false
-
-  # Python - Security (ai-service only)
-  - repo: local
-    hooks:
-      - id: python-security
-        name: Python Security Scan (bandit)
         entry: bash -c 'cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers'
         language: system
         types: [python]
         files: ^ai-service/.*\.py$
+        exclude: ^ai-service/grpc_stubs/
         pass_filenames: false
 
   # Commit Message
