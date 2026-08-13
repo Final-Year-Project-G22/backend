@@ -275,6 +275,10 @@ async def test_agentic_suppresses_exact_duplicate_then_allows_distinct_follow_up
     assert text_events[0] == "Grounded answer after distinct search"
     assert events[-1].type is AskStreamEventType.DONE
 
+    second_call_prompt = strategy._llm_port.generate.await_args_list[1].args[0]
+    assert "Amharic trade licence context" in second_call_prompt
+    assert command.prompt in second_call_prompt
+
 
 @pytest.mark.asyncio
 async def test_agentic_dedupes_case_variants_and_forces_finalization() -> None:
@@ -503,7 +507,7 @@ async def test_agentic_tripwire_triggers_mid_batch_despite_executed_other_tool()
 
 
 @pytest.mark.asyncio
-async def test_agentic_exhausted_loop_still_emits_visible_text() -> None:
+async def test_agentic_exhausted_loop_finalizes_from_gathered_context() -> None:
     hit = _make_hit(Language.AMHARIC)
     strategy, _repository, tool_registry, command, _ = _make_strategy(
         vector_hits=[hit],
@@ -525,6 +529,7 @@ async def test_agentic_exhausted_loop_still_emits_visible_text() -> None:
                     )
                 ],
             ),
+            LLMResult(text="Grounded answer from gathered context"),
         ],
         max_iterations=2,
         embedding_map={
@@ -539,7 +544,56 @@ async def test_agentic_exhausted_loop_still_emits_visible_text() -> None:
     events = [event async for event in strategy.execute_stream(command)]
 
     text_events = [event.text for event in events if event.is_text and event.text]
-    assert text_events, "expected a visible fallback text event at loop exhaustion"
+    assert len(text_events) == 1
+    assert text_events[0] == "Grounded answer from gathered context"
+    assert events[-1].type is AskStreamEventType.DONE
+    assert tool_registry.execute_tool.await_count == 2
+    assert strategy._llm_port.generate.await_count == 3
+    finalize_prompt = strategy._llm_port.generate.await_args_list[2].args[0]
+    assert "Here are the results:" in finalize_prompt
+    assert "Some context" in finalize_prompt
+    assert "Amharic trade licence context" in finalize_prompt
+
+
+@pytest.mark.asyncio
+async def test_agentic_exhausted_loop_still_emits_visible_fallback() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    strategy, _repository, tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[
+            LLMResult(
+                text="",
+                tool_calls=[
+                    ToolCall(
+                        name="search_knowledge_base", arguments={"query": "first distinct lookup"}
+                    )
+                ],
+            ),
+            LLMResult(
+                text="",
+                tool_calls=[
+                    ToolCall(
+                        name="search_knowledge_base", arguments={"query": "second distinct lookup"}
+                    )
+                ],
+            ),
+            LLMResult(text=""),
+        ],
+        max_iterations=2,
+        embedding_map={
+            "first distinct lookup": [0.6, 0.8],
+            "second distinct lookup": [0.6, -0.8],
+        },
+    )
+    tool_registry.execute_tool.return_value = ToolResult(
+        tool_name="search_knowledge_base", result_text="Some context"
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+
+    text_events = [event.text for event in events if event.is_text and event.text]
+    assert len(text_events) == 1
     assert events[-1].type is AskStreamEventType.DONE
     assert tool_registry.execute_tool.await_count == 2
 

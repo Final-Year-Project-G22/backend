@@ -290,7 +290,9 @@ class AgenticAskStrategy(AskStrategyPort):
                             "role": "user",
                             "content": self._suppression_nudge(
                                 command.prompt, last_suppression_reason
-                            ),
+                            )
+                            + "\n\n"
+                            + user_content,
                         }
                     )
                     continue
@@ -344,10 +346,11 @@ class AgenticAskStrategy(AskStrategyPort):
                 )
                 return
 
-        if forced_finalization:
-            forced_text = await self._force_finalize(messages, system_prompt, command.prompt)
-            if forced_text:
-                final_answer_parts.append(forced_text)
+        finalize_text = await self._finalize_from_gathered_context(
+            messages, system_prompt, command.prompt
+        )
+        if finalize_text:
+            final_answer_parts.append(finalize_text)
 
         final_answer = "".join(final_answer_parts).strip() or FINAL_ANSWER_FALLBACK
         yield AskStreamEvent(type_=AskStreamEventType.TEXT, text=final_answer)
@@ -404,7 +407,7 @@ class AgenticAskStrategy(AskStrategyPort):
             "is needed."
         )
 
-    async def _force_finalize(
+    async def _finalize_from_gathered_context(
         self,
         messages: list[dict[str, str]],
         system_prompt: str,
