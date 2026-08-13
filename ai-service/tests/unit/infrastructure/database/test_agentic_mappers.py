@@ -89,6 +89,26 @@ def test_tool_calls_round_trip_with_error() -> None:
     assert deserialized[0].error_message == "Timeout"
 
 
+def test_tool_calls_round_trip_with_suppression() -> None:
+    tc = ToolCallRecord(
+        tool_name="search_knowledge_base",
+        arguments={"query": "Ethiopian Government Business Registration Process"},
+        result_summary="",
+        iteration=2,
+        suppressed=True,
+        suppression_reason="duplicate_of_prior_search",
+    )
+
+    serialized = serialize_tool_calls([tc])
+    deserialized = _deserialize_tool_calls(serialized)
+
+    assert deserialized is not None
+    assert len(deserialized) == 1
+    assert deserialized[0] == tc
+    assert deserialized[0].suppressed is True
+    assert deserialized[0].suppression_reason == "duplicate_of_prior_search"
+
+
 def test_message_mapper_round_trip_with_tool_calls() -> None:
     now = datetime(2026, 4, 7, 10, 30, tzinfo=UTC)
     tool_call = ToolCallRecord(

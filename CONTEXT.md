@@ -258,6 +258,18 @@ _Avoid_: Web search, internet lookup, external search
 A structured entry stored inside an AI Response message that captures each tool invocation during a ReAct loop: tool name, arguments, result summary, success/failure status, execution time, and iteration number. Stored as JSONB and loaded as summarized context for multi-turn conversations.
 _Avoid_: Tool invocation, function call log
 
+**Query Broadening**:
+A follow-up knowledge-base search within one turn whose query widens the original question (e.g., "PLC registration process" to "Ethiopian government business registration process") while preserving the turn's entity and intent. Justified broadenings execute; their hits join the turn's citations.
+_Avoid_: Query expansion, search widening
+
+**Query Drift**:
+A follow-up knowledge-base search whose query abandons the turn's entity and intent for a different topic. Drifted calls are suppressed and the model is nudged to answer the original question and invite a new message for the drifted topic.
+_Avoid_: Topic shift, off-topic search
+
+**Tool Call Suppression**:
+The system-level skip of a duplicate or drifted knowledge-base search during a ReAct loop, decided by a deterministic guard (embedding cosine similarity against the turn's prompt and prior KB queries, with a token-overlap tiebreak in an ambiguous band). Suppressed calls are not executed, consume no ReAct iteration, persist in the message's tool calls with a `suppressed` flag and reason, and emit a `TOOL_SUPPRESSED` event on the debug stream only.
+_Avoid_: Dedup skip, tool blocking
+
 **Debug Streaming**:
 An admin-gated variant of the Ask streaming endpoint that exposes the full ReAct loop internals: raw reasoning text (thinking chunks), complete tool arguments and results, and per-iteration latency. Regular user streaming shows only status-level events (tool call started, tool call completed).
 _Avoid_: Verbose mode, developer mode

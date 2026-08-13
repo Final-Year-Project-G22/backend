@@ -99,6 +99,13 @@ class Settings(BaseSettings):
     AI_AGENTIC_ENABLED: bool = True
     AI_AGENTIC_MAX_ITERATIONS: int = 5
 
+    # Agentic KB follow-up query policy (FIN-75): duplicate/drift guards.
+    AI_KB_DUP_COSINE_THRESHOLD: float = 0.92
+    AI_KB_DUP_AMBIGUOUS_BAND_MIN: float = 0.80
+    AI_KB_DUP_JACCARD_THRESHOLD: float = 0.6
+    AI_KB_DRIFT_COSINE_THRESHOLD: float = 0.40
+    AI_KB_SUPPRESSION_TRIPWIRE: int = 2
+
     AI_EXPECTED_REMOTE_TOOLS: list[str] = [
         "search_guides",
         "get_user_profile",

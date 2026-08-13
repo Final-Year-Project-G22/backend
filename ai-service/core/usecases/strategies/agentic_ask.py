@@ -27,6 +27,7 @@ from core.usecases.defaults import (
     DEFAULT_MAX_CONTEXT_HITS,
     DEFAULT_MAX_OUTPUT_TOKENS,
 )
+from core.usecases.strategies.kb_query_guard import KBQueryGuard, SuppressionReason
 from infrastructure.prefetch.pipeline import PreFetchPipeline
 from infrastructure.prompts import PromptLoader
 
@@ -34,6 +35,9 @@ logger = logging.getLogger(__name__)
 
 HISTORY_LIMIT = 6
 MAX_AGENTIC_ITERATIONS = 5
+SUPPRESSION_TRIPWIRE = 2
+SEARCH_KNOWLEDGE_BASE_TOOL = "search_knowledge_base"
+FINAL_ANSWER_FALLBACK = "I've retrieved what I could. Please refine your question."
 
 
 def _utc_now() -> datetime:
@@ -53,6 +57,8 @@ class AgenticAskStrategy(AskStrategyPort):
         pre_fetch_pipeline: PreFetchPipeline,
         max_iterations: int = MAX_AGENTIC_ITERATIONS,
         *,
+        kb_query_guard: KBQueryGuard | None = None,
+        suppression_tripwire: int = SUPPRESSION_TRIPWIRE,
         cache: CachePort | None = None,
         event_bus: EventBusPort | None = None,
     ) -> None:
@@ -65,6 +71,8 @@ class AgenticAskStrategy(AskStrategyPort):
         self._intent_classifier = intent_classifier
         self._pre_fetch_pipeline = pre_fetch_pipeline
         self._max_iterations = max_iterations
+        self._kb_query_guard = kb_query_guard or KBQueryGuard(embedding_port)
+        self._suppression_tripwire = suppression_tripwire
         self._cache = cache
         self._event_bus = event_bus
 
@@ -131,6 +139,11 @@ class AgenticAskStrategy(AskStrategyPort):
             include_kb=False,
         )
         kb_context_available = bool(merged_hits or pre_fetch.get("kb"))
+        self._kb_query_guard.start_turn(
+            command.prompt,
+            query_embedding,
+            prompt_covered=kb_context_available,
+        )
 
         tool_defs = await self._tool_registry.get_tool_definitions()
         history = await self._load_history(conversation.id, conversation.message_count)
@@ -165,6 +178,9 @@ class AgenticAskStrategy(AskStrategyPort):
         messages.append({"role": "user", "content": user_content})
 
         final_answer_parts: list[str] = []
+        consecutive_suppressions = 0
+        last_suppression_reason: SuppressionReason | None = None
+        forced_finalization = False
 
         while iteration < self._max_iterations:
             iteration += 1
@@ -184,13 +200,38 @@ class AgenticAskStrategy(AskStrategyPort):
                 for tc in result.tool_calls:
                     query = tc.arguments.get("query")
                     if (
-                        tc.name == "search_knowledge_base"
-                        and kb_context_available
+                        tc.name == SEARCH_KNOWLEDGE_BASE_TOOL
                         and isinstance(query, str)
-                        and " ".join(query.split()).casefold()
-                        == " ".join(command.prompt.split()).casefold()
+                        and query.strip()
                     ):
-                        continue
+                        decision = await self._kb_query_guard.check(query)
+                        if not decision.allowed:
+                            consecutive_suppressions += 1
+                            last_suppression_reason = decision.reason
+                            suppression_reason = decision.reason.value if decision.reason else None
+                            tool_calls_flat.append(
+                                ToolCallRecord(
+                                    tool_name=tc.name,
+                                    arguments=tc.arguments,
+                                    iteration=iteration,
+                                    suppressed=True,
+                                    suppression_reason=suppression_reason,
+                                )
+                            )
+                            if command.debug_mode:
+                                yield AskStreamEvent(
+                                    type_=AskStreamEventType.TOOL_SUPPRESSED,
+                                    tool_name=tc.name,
+                                    suppression_reason=suppression_reason,
+                                    matched_query=decision.matched_query,
+                                )
+                            if consecutive_suppressions >= self._suppression_tripwire:
+                                forced_finalization = True
+                                break
+                            continue
+                        self._kb_query_guard.register_executed(query, decision.embedding)
+
+                    consecutive_suppressions = 0
 
                     yield AskStreamEvent(
                         type_=AskStreamEventType.TOOL_CALL,
@@ -225,6 +266,13 @@ class AgenticAskStrategy(AskStrategyPort):
 
                     tool_results.append((tc, tool_result.result_text))
 
+                    if (
+                        tool_result.success
+                        and tc.name == SEARCH_KNOWLEDGE_BASE_TOOL
+                        and tool_result.hits
+                    ):
+                        merged_hits = self._merge_tool_hits(merged_hits, tool_result.hits)
+
                     yield AskStreamEvent(
                         type_=AskStreamEventType.TOOL_RESULT,
                         tool_name=tc.name,
@@ -233,14 +281,15 @@ class AgenticAskStrategy(AskStrategyPort):
                         else f"Failed: {tool_result.error_message}",
                     )
 
+                if forced_finalization:
+                    break
+
                 if not tool_results:
                     messages.append(
                         {
                             "role": "user",
-                            "content": (
-                                "The pre-fetched knowledge-base context already covers the "
-                                "original question. Use it, or search the knowledge base "
-                                "only with a different query if more evidence is needed."
+                            "content": self._suppression_nudge(
+                                command.prompt, last_suppression_reason
                             ),
                         }
                     )
@@ -267,12 +316,11 @@ class AgenticAskStrategy(AskStrategyPort):
                 if result.text:
                     final_answer_parts.append(result.text)
 
-                    yield AskStreamEvent(
-                        type_=AskStreamEventType.TEXT,
-                        text=result.text,
-                    )
-
                 full_response = "".join(final_answer_parts).strip() or "I'll help you with that."
+                yield AskStreamEvent(
+                    type_=AskStreamEventType.TEXT,
+                    text=full_response,
+                )
 
                 ai_message = await self._persist_ai_message(
                     command,
@@ -296,12 +344,13 @@ class AgenticAskStrategy(AskStrategyPort):
                 )
                 return
 
-        final_answer = (
-            "".join(final_answer_parts).strip()
-            or "I've retrieved what I could. Please refine your question."
-        )
-        if final_answer_parts:
-            yield AskStreamEvent(type_=AskStreamEventType.TEXT, text=final_answer)
+        if forced_finalization:
+            forced_text = await self._force_finalize(messages, system_prompt, command.prompt)
+            if forced_text:
+                final_answer_parts.append(forced_text)
+
+        final_answer = "".join(final_answer_parts).strip() or FINAL_ANSWER_FALLBACK
+        yield AskStreamEvent(type_=AskStreamEventType.TEXT, text=final_answer)
 
         ai_message = await self._persist_ai_message(
             command,
@@ -327,6 +376,61 @@ class AgenticAskStrategy(AskStrategyPort):
             lines.append(f"[{i}] {hit.chunk_text}")
         return "From uploaded documents:\n" + "\n\n".join(lines)
 
+    def _merge_tool_hits(
+        self,
+        merged_hits: list[SearchHit],
+        tool_hits: list[SearchHit],
+    ) -> list[SearchHit]:
+        seen = {str(h.chunk_id) for h in merged_hits}
+        merged = list(merged_hits)
+        for hit in tool_hits:
+            if str(hit.chunk_id) not in seen:
+                seen.add(str(hit.chunk_id))
+                merged.append(hit)
+        return merged
+
+    def _suppression_nudge(self, prompt: str, reason: SuppressionReason | None) -> str:
+        if reason is SuppressionReason.DRIFT:
+            return (
+                f"That search drifted away from the user's question: '{prompt}'. "
+                "Stay on the original question and answer it from the context already "
+                "gathered. If the user wants a different topic, invite them to ask it "
+                "in a new message."
+            )
+        return (
+            "The knowledge base was already searched with an equivalent query this turn. "
+            "Do not repeat it. Provide the final answer now using the context accumulated "
+            "so far."
+        )
+
+    async def _force_finalize(
+        self,
+        messages: list[dict[str, str]],
+        system_prompt: str,
+        prompt: str,
+    ) -> str:
+        messages.append(
+            {
+                "role": "user",
+                "content": (
+                    "You have searched enough for this turn. Provide the final answer to "
+                    f"the user's question ('{prompt}') now, using only the context already "
+                    "provided in this conversation. Do not call any tools."
+                ),
+            }
+        )
+        try:
+            result = await self._llm_port.generate(
+                messages[-1]["content"],
+                system_prompt=system_prompt,
+                max_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
+                temperature=DEFAULT_LLM_TEMPERATURE,
+            )
+        except Exception:
+            logger.warning("Forced finalization LLM call failed")
+            return ""
+        return (result.text or "").strip()
+
     def _format_history(self, history: list[AIChatMessage]) -> str:
         parts: list[str] = []
         for msg in history:
@@ -336,9 +440,12 @@ class AgenticAskStrategy(AskStrategyPort):
                 tool_history = ""
                 if msg.tool_calls:
                     summaries = [
-                        f"  - {tc.tool_name}: {tc.result_summary}" for tc in msg.tool_calls
+                        f"  - {tc.tool_name}: {tc.result_summary}"
+                        for tc in msg.tool_calls
+                        if not tc.suppressed
                     ]
-                    tool_history = "\n" + "\n".join(summaries)
+                    if summaries:
+                        tool_history = "\n" + "\n".join(summaries)
                 parts.append(f"Assistant: {msg.llm_response}{tool_history}")
         if parts:
             return "Conversation history:\n" + "\n".join(reversed(parts))

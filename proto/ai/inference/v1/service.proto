@@ -60,6 +60,7 @@ message AskStreamChunk {
     ToolUseChunk tool_use = 5;
     ToolResultChunk tool_result = 6;
     ThinkingChunk thinking = 7;
+    ToolSuppressedChunk tool_suppressed = 8;
   }
 }
 
@@ -97,4 +98,10 @@ message ToolResultChunk {
 
 message ThinkingChunk {
   string text = 1;
+}
+
+message ToolSuppressedChunk {
+  string tool = 1;
+  string reason = 2;
+  string matched_query = 3;
 }

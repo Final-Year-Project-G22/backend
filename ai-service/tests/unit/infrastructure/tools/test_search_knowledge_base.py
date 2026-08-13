@@ -91,6 +91,27 @@ async def test_execute_returns_results(tool: SearchKnowledgeBaseTool) -> None:
 
 
 @pytest.mark.asyncio
+async def test_execute_passes_structured_hits_through(tool: SearchKnowledgeBaseTool) -> None:
+    result = await tool.execute(
+        arguments={"query": "trade license", "top_k": 5},
+        account_id=str(uuid.uuid4()),
+        user_id=str(uuid.uuid4()),
+    )
+
+    assert result.success is True
+    assert len(result.hits) == 2
+    first = result.hits[0]
+    assert first.chunk_id
+    assert first.document_id
+    assert first.score == 0.92
+    assert first.chunk_text
+    assert first.document_title == "Trade License Guide"
+    assert first.source is DocumentSource.GOVERNMENT
+    assert first.language is Language.ENGLISH
+    assert first.chunk_index == 0
+
+
+@pytest.mark.asyncio
 async def test_execute_empty_query(tool: SearchKnowledgeBaseTool) -> None:
     result = await tool.execute(
         arguments={"query": ""},
