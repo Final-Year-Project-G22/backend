@@ -16,7 +16,7 @@
 - `make dev` / `make dev-go` — local dev (see Makefile).
 - `make spec` — **regenerate `core-backend/docs/openapi.json` from the huma router** (see API contract below).
 - Go: `cd core-backend && go test ./...`
-- Python: `cd ai-service && uv sync --frozen --all-groups --extra dev && uv run basedpyright && uv run ruff check && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers`
+- Python: `cd ai-service && uv sync --frozen --all-groups --extra dev && uv run basedpyright && uv run ruff check && uv run bandit -c pyproject.toml -r app core infrastructure workers`
 
 ## Commit conventions
 

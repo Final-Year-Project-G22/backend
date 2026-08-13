@@ -181,7 +181,7 @@ test-ai-integration:
 	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m integration
 
 security-ai:
-	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers
 
 dead-code-ai:
 	cd ai-service && uv run vulture . --min-confidence 80
@@ -191,7 +191,7 @@ check-ai:
 	cd ai-service && uv run ruff format .
 	cd ai-service && uv run ruff check --fix .
 	cd ai-service && uv run basedpyright
-	cd ai-service && uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers
 
 test-all: test test-ai
 
