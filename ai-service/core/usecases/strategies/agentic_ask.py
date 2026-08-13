@@ -398,9 +398,10 @@ class AgenticAskStrategy(AskStrategyPort):
                 "in a new message."
             )
         return (
-            "The knowledge base was already searched with an equivalent query this turn. "
-            "Do not repeat it. Provide the final answer now using the context accumulated "
-            "so far."
+            "The knowledge base was already searched with that query this turn. "
+            "Do not repeat it. Use the context provided so far, or search the "
+            "knowledge base only with a genuinely different query if more evidence "
+            "is needed."
         )
 
     async def _force_finalize(
@@ -409,16 +410,20 @@ class AgenticAskStrategy(AskStrategyPort):
         system_prompt: str,
         prompt: str,
     ) -> str:
-        messages.append(
-            {
-                "role": "user",
-                "content": (
-                    "You have searched enough for this turn. Provide the final answer to "
-                    f"the user's question ('{prompt}') now, using only the context already "
-                    "provided in this conversation. Do not call any tools."
-                ),
-            }
+        gathered_parts: list[str] = []
+        for message in messages[1:]:
+            content = message.get("content", "")
+            if content.startswith(("Context:", "Here are the results:")):
+                gathered_parts.append(content)
+        finalize_note = (
+            f"The user asked: '{prompt}'. You have searched enough for this turn. "
+            "Provide the final answer now using only the information gathered below. "
+            "Do not call any tools."
         )
+        if gathered_parts:
+            gathered = "\n\n".join(gathered_parts)
+            finalize_note += f"\n\nInformation gathered:\n{gathered[:6000]}"
+        messages.append({"role": "user", "content": finalize_note})
         try:
             result = await self._llm_port.generate(
                 messages[-1]["content"],
