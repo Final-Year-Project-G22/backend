@@ -21,6 +21,7 @@ class AskStreamEventType(StrEnum):
 class AskStreamEvent:
     def __init__(
         self,
+        *,
         type_: AskStreamEventType = AskStreamEventType.TEXT,
         text: str | None = None,
         tool_name: str | None = None,
