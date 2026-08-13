@@ -235,6 +235,48 @@ BROADENED_QUERY = "Ethiopian government business registration process"
 
 
 @pytest.mark.asyncio
+async def test_agentic_suppresses_exact_duplicate_then_allows_distinct_follow_up() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    strategy, _repository, tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[
+            LLMResult(
+                text="",
+                tool_calls=[
+                    ToolCall(
+                        name="search_knowledge_base",
+                        arguments={"query": "What is required for a trade licence?"},
+                    )
+                ],
+            ),
+            LLMResult(
+                text="",
+                tool_calls=[
+                    ToolCall(name="search_knowledge_base", arguments={"query": BROADENED_QUERY})
+                ],
+            ),
+            LLMResult(text="Grounded answer after distinct search"),
+        ],
+        embedding_map={BROADENED_QUERY: [0.6, 0.8]},
+    )
+    tool_registry.execute_tool.return_value = ToolResult(
+        tool_name="search_knowledge_base",
+        result_text="Registration process context",
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+
+    tool_call_events = [event for event in events if event.is_tool_call]
+    assert len(tool_call_events) == 1
+    assert tool_call_events[0].tool_arguments == {"query": BROADENED_QUERY}
+    text_events = [event.text for event in events if event.is_text and event.text]
+    assert len(text_events) == 1
+    assert text_events[0] == "Grounded answer after distinct search"
+    assert events[-1].type is AskStreamEventType.DONE
+
+
+@pytest.mark.asyncio
 async def test_agentic_dedupes_case_variants_and_forces_finalization() -> None:
     hit = _make_hit(Language.AMHARIC)
     strategy, repository, tool_registry, command, _ = _make_strategy(
