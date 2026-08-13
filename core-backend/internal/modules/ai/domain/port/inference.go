@@ -107,13 +107,14 @@ type ArchiveConversationResponse struct {
 }
 
 type AskStreamChunk struct {
-	Text       *string
-	Citations  []Citation
-	Done       *DoneInfo
-	Error      *ErrorInfo
-	ToolUse    *ToolUseInfo
-	ToolResult *ToolResultInfo
-	Thinking   *string
+	Text           *string
+	Citations      []Citation
+	Done           *DoneInfo
+	Error          *ErrorInfo
+	ToolUse        *ToolUseInfo
+	ToolResult     *ToolResultInfo
+	ToolSuppressed *ToolSuppressedInfo
+	Thinking       *string
 }
 
 type ToolUseInfo struct {
@@ -124,6 +125,12 @@ type ToolUseInfo struct {
 type ToolResultInfo struct {
 	Tool          string
 	ResultSummary string
+}
+
+type ToolSuppressedInfo struct {
+	Tool         string
+	Reason       string
+	MatchedQuery string
 }
 
 type DoneInfo struct {

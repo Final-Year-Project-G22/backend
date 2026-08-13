@@ -330,6 +330,13 @@ func (c *InferenceGRPCClient) AskStream(ctx context.Context, req port.AskRequest
 					ResultSummary: toolResult.GetResultSummary(),
 				}
 			}
+			if toolSuppressed := chunk.GetToolSuppressed(); toolSuppressed != nil {
+				out.ToolSuppressed = &port.ToolSuppressedInfo{
+					Tool:         toolSuppressed.GetTool(),
+					Reason:       toolSuppressed.GetReason(),
+					MatchedQuery: toolSuppressed.GetMatchedQuery(),
+				}
+			}
 			if thinking := chunk.GetThinking(); thinking != nil {
 				t := thinking.GetText()
 				out.Thinking = &t
