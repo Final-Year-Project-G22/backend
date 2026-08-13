@@ -290,7 +290,7 @@ jobs:
 
       - name: Generate protobuf stubs
         run: |
-          if grep -qE '^proto/.*\.proto$' /tmp/changed_files.txt; then
+          if grep -qE '^proto/.*\.proto$|^proto/buf\.gen\.yaml$|^proto/buf\.yaml$' /tmp/changed_files.txt; then
             cd proto
             buf generate
           else
