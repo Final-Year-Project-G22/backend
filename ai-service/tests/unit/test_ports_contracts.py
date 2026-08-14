@@ -29,7 +29,7 @@ def test_llm_port_generate_stream_is_not_coroutine_function() -> None:
     assert inspect.iscoroutinefunction(LLMPort.generate_stream) is False
 
     signature = inspect.signature(LLMPort.generate_stream)
-    assert str(signature.return_annotation) == "AsyncIterator[str]"
+    assert str(signature.return_annotation) == "AsyncIterator[LLMChunk]"
 
 
 def test_knowledge_repository_port_contract_shape() -> None:

@@ -34,7 +34,7 @@ def test_loader_loads_agentic_system(prompt_loader: PromptLoader) -> None:
     assert "search_knowledge_base" in result
     assert "Search KB" in result
     assert "get_user_profile" in result
-    assert "Before calling any tool" in result
+    assert "Tool usage rules" in result
     assert "GROUNDED TRUTH" in result
 
 
