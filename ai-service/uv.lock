@@ -62,6 +62,7 @@ dev = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "grpc-stubs" },
     { name = "ruff" },
 ]
 
@@ -113,7 +114,10 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.15.9" }]
+dev = [
+    { name = "grpc-stubs", specifier = ">=1.53.0.6,<1.54" },
+    { name = "ruff", specifier = ">=0.15.9" },
+]
 
 [[package]]
 name = "aio-pika"
@@ -914,6 +918,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f3/fd/d05a4b7acd0154ed758797f0a43b4c0962a843bedfe980115e842c5b2d08/greenlet-3.3.2-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:1fb39a11ee2e4d94be9a76671482be9398560955c9e568550de0224e41104727", size = 1618857, upload-time = "2026-02-20T20:49:37.309Z" },
     { url = "https://files.pythonhosted.org/packages/6f/e1/50ee92a5db521de8f35075b5eff060dd43d39ebd46c2181a2042f7070385/greenlet-3.3.2-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:20154044d9085151bc309e7689d6f7ba10027f8f5a8c0676ad398b951913d89e", size = 1680010, upload-time = "2026-02-20T20:21:13.427Z" },
     { url = "https://files.pythonhosted.org/packages/29/4b/45d90626aef8e65336bed690106d1382f7a43665e2249017e9527df8823b/greenlet-3.3.2-cp314-cp314t-win_amd64.whl", hash = "sha256:c04c5e06ec3e022cbfe2cd4a846e1d4e50087444f875ff6d2c2ad8445495cf1a", size = 237086, upload-time = "2026-02-20T20:20:45.786Z" },
+]
+
+[[package]]
+name = "grpc-stubs"
+version = "1.53.0.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "grpcio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/16/8d/718393d12346c6ab842a1ad2b1a761c175e919ddce4a28c5dc63e4a5538c/grpc_stubs-1.53.0.6.tar.gz", hash = "sha256:70a0840747bd73c2c82fe819699bbf4fcf6d59bd0ed27a4713a240e0c697e1ff", size = 12954, upload-time = "2025-04-28T11:12:55.407Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/c6/c64257331aa4b7a049bd70124d97278071e78b5d5de09df6a5eae4610bbe/grpc_stubs-1.53.0.6-py3-none-any.whl", hash = "sha256:3ffc5a6b5bd84ac46f3d84e2434e97936c1262b47b71b462bdedc43caaf227e1", size = 15842, upload-time = "2025-04-28T11:12:53.982Z" },
 ]
 
 [[package]]

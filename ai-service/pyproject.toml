@@ -203,5 +203,6 @@ show_missing = true
 
 [dependency-groups]
 dev = [
+    "grpc-stubs>=1.53.0.6,<1.54",
     "ruff>=0.15.9",
 ]
