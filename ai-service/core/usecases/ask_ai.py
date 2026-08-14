@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import logging
 from collections.abc import AsyncIterator
-from typing import Any
 
 from core.domain.stream_events import AskStreamEvent
 from core.ports.ask_strategy import AskStrategyPort
+from core.ports.llm import LLMPort
 from core.usecases.contracts import AskAICommand, AskAIResult
 from core.usecases.strategies.agentic_ask import AgenticAskStrategy
 from core.usecases.strategies.simple_ask import SimpleAskStrategy
@@ -26,11 +26,8 @@ class AskAIUseCase:
         self._agentic_enabled = agentic_enabled
 
     @property
-    def _llm_port(self) -> Any:
-        try:
-            return self._simple_strategy._llm_port
-        except AttributeError:
-            return None
+    def _llm_port(self) -> LLMPort | None:
+        return self._simple_strategy.llm_port
 
     def _select_strategy(self, command: AskAICommand) -> AskStrategyPort:
         if (

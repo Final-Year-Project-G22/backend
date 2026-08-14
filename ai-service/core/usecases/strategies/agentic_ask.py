@@ -76,22 +76,33 @@ class AgenticAskStrategy(AskStrategyPort):
         self._cache = cache
         self._event_bus = event_bus
 
+    @property
+    def llm_port(self) -> LLMPort:
+        return self._llm_port
+
     async def execute(self, command: AskAICommand) -> AskAIResult:
         tool_calls_flat: list[ToolCallRecord] = []
         iteration = 0
         final_answer = ""
         merged_hits: list[SearchHit] = []
+        done_event: AskStreamEvent | None = None
 
         async for event in self._execute_react_loop(command, tool_calls_flat, iteration):
             if event.is_text and event.text:
                 final_answer += event.text
             if event.is_done:
+                done_event = event
                 merged_hits = event.merged_hits or []
                 break
 
+        if done_event is None or done_event.done is None:
+            msg = "agentic strategy stream ended without a done event"
+            raise AIServiceError(msg)
+
+        conversation = done_event.done
         ai_message = AIChatMessage(
             user_id=command.user_id,
-            conversation_id=event.done.id if event.done else None,
+            conversation_id=conversation.id,
             message_type=MessageType.AI_RESPONSE,
             llm_response=final_answer.strip() or "I'll help you with that.",
             tool_calls=tool_calls_flat or None,
@@ -100,7 +111,7 @@ class AgenticAskStrategy(AskStrategyPort):
         )
 
         return AskAIResult(
-            conversation=event.done,
+            conversation=conversation,
             user_message=None,
             ai_message=ai_message,
             retrieved_hits=merged_hits,
