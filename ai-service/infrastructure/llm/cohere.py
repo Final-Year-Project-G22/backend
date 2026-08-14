@@ -183,6 +183,11 @@ def _parse_response(data: dict[str, Any], *, provider: str) -> LLMResult:
                 text = t
 
     tool_calls = _parse_tool_calls(message.get("tool_calls"))
+    if not text and not tool_calls:
+        raise LLMError(
+            "cohere response missing content",
+            details={"provider": provider},
+        )
     return LLMResult(text=text, tool_calls=tool_calls)
 
 

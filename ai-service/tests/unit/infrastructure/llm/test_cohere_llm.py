@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from core.domain.exceptions import LLMError
+from core.ports.llm import LLMChunk
 from infrastructure.llm.cohere import CohereLLMAdapter
 
 MAX_TOKENS = 128
@@ -14,12 +15,12 @@ TEMPERATURE = 0.5
 
 @pytest.mark.asyncio
 async def test_cohere_generate_returns_text() -> None:
-    payload = {"message": {"content": "እሺ"}}
+    payload = {"message": {"content": [{"type": "text", "text": "እሺ"}]}}
 
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         assert body["model"] == "command-r"
-        assert body["message"] == "Hello"
+        assert body["messages"][0] == {"role": "user", "content": "Hello"}
         return httpx.Response(200, json=payload)
 
     transport = httpx.MockTransport(handler)
@@ -32,18 +33,19 @@ async def test_cohere_generate_returns_text() -> None:
 
         result = await adapter.generate("Hello")
 
-    assert result == "እሺ"
+    assert result.text == "እሺ"
+    assert result.tool_calls is None
     assert adapter.provider == "cohere"
 
 
 @pytest.mark.asyncio
 async def test_cohere_generate_sends_expected_payload_fields() -> None:
-    payload = {"message": {"content": "ok"}}
+    payload = {"message": {"content": [{"type": "text", "text": "ok"}]}}
 
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         assert body["model"] == "command-r"
-        assert body["message"] == "Hello"
+        assert body["messages"][0] == {"role": "user", "content": "Hello"}
         assert body["max_tokens"] == MAX_TOKENS
         assert body["temperature"] == TEMPERATURE
         return httpx.Response(200, json=payload)
@@ -62,8 +64,8 @@ async def test_cohere_generate_sends_expected_payload_fields() -> None:
 @pytest.mark.asyncio
 async def test_cohere_generate_stream_yields_chunks() -> None:
     lines = [
-        'data: {"message": {"content": "Hel"}}',
-        'data: {"message": {"content": "lo"}}',
+        'data: {"type": "content-delta", "delta": {"message": {"content": {"text": "Hel"}}}}',
+        'data: {"type": "content-delta", "delta": {"message": {"content": {"text": "lo"}}}}',
         "data: [DONE]",
     ]
 
@@ -80,14 +82,14 @@ async def test_cohere_generate_stream_yields_chunks() -> None:
 
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
-    assert chunks == ["Hel", "lo"]
+    assert chunks == [LLMChunk(text="Hel"), LLMChunk(text="lo")]
 
 
 @pytest.mark.asyncio
 async def test_cohere_generate_stream_ignores_invalid_json_chunks() -> None:
     lines = [
         "data: not-json",
-        'data: {"message": {"content": "ok"}}',
+        'data: {"type": "content-delta", "delta": {"message": {"content": {"text": "ok"}}}}',
         "data: [DONE]",
     ]
 
@@ -104,7 +106,7 @@ async def test_cohere_generate_stream_ignores_invalid_json_chunks() -> None:
 
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
-    assert chunks == ["ok"]
+    assert chunks == [LLMChunk(text="ok")]
 
 
 @pytest.mark.asyncio
