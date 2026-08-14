@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from core.domain.exceptions import LLMError
+from core.ports.llm import LLMChunk
 from infrastructure.llm.ollama import OllamaLLMAdapter
 
 MAX_TOKENS = 64
@@ -14,12 +15,12 @@ TEMPERATURE = 0.6
 
 @pytest.mark.asyncio
 async def test_ollama_generate_returns_text() -> None:
-    payload = {"response": "መልስ"}
+    payload = {"message": {"content": "መልስ"}}
 
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         assert body["model"] == "qwen2.5"
-        assert body["prompt"] == "Hello"
+        assert body["messages"][0] == {"role": "user", "content": "Hello"}
         return httpx.Response(200, json=payload)
 
     transport = httpx.MockTransport(handler)
@@ -32,18 +33,19 @@ async def test_ollama_generate_returns_text() -> None:
 
         result = await adapter.generate("Hello")
 
-    assert result == "መልስ"
+    assert result.text == "መልስ"
+    assert result.tool_calls is None
     assert adapter.provider == "ollama"
 
 
 @pytest.mark.asyncio
 async def test_ollama_generate_sends_expected_payload_fields() -> None:
-    payload = {"response": "ok"}
+    payload = {"message": {"content": "ok"}}
 
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         assert body["model"] == "qwen2.5"
-        assert body["prompt"] == "Hello"
+        assert body["messages"][0] == {"role": "user", "content": "Hello"}
         assert body["stream"] is False
         assert body["options"]["num_predict"] == MAX_TOKENS
         assert body["options"]["temperature"] == TEMPERATURE
@@ -63,8 +65,8 @@ async def test_ollama_generate_sends_expected_payload_fields() -> None:
 @pytest.mark.asyncio
 async def test_ollama_generate_stream_yields_chunks() -> None:
     lines = [
-        json.dumps({"response": "Hel", "done": False}),
-        json.dumps({"response": "lo", "done": True}),
+        json.dumps({"message": {"content": "Hel"}, "done": False}),
+        json.dumps({"message": {"content": "lo"}, "done": True}),
     ]
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -80,14 +82,14 @@ async def test_ollama_generate_stream_yields_chunks() -> None:
 
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
-    assert chunks == ["Hel", "lo"]
+    assert chunks == [LLMChunk(text="Hel"), LLMChunk(text="lo")]
 
 
 @pytest.mark.asyncio
 async def test_ollama_generate_stream_ignores_invalid_json_chunks() -> None:
     lines = [
         "not-json",
-        json.dumps({"response": "ok", "done": True}),
+        json.dumps({"message": {"content": "ok"}, "done": True}),
     ]
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -103,7 +105,7 @@ async def test_ollama_generate_stream_ignores_invalid_json_chunks() -> None:
 
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
-    assert chunks == ["ok"]
+    assert chunks == [LLMChunk(text="ok")]
 
 
 @pytest.mark.asyncio
@@ -136,14 +138,14 @@ async def test_ollama_generate_raises_on_missing_response() -> None:
             http_client=client,
         )
 
-        with pytest.raises(LLMError, match="missing text"):
+        with pytest.raises(LLMError, match="missing message"):
             await adapter.generate("Hello")
 
 
 @pytest.mark.asyncio
 async def test_ollama_generate_raises_on_non_string_response() -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={"response": 123})
+        return httpx.Response(200, json={"message": {"content": 123}})
 
     transport = httpx.MockTransport(handler)
     async with httpx.AsyncClient(transport=transport) as client:

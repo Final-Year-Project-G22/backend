@@ -6,6 +6,7 @@ import httpx
 import pytest
 
 from core.domain.exceptions import LLMError
+from core.ports.llm import LLMChunk
 from infrastructure.llm.gemini import GeminiLLMAdapter
 
 MAX_TOKENS = 128
@@ -31,7 +32,8 @@ async def test_gemini_generate_returns_text() -> None:
 
         result = await adapter.generate("Hello")
 
-    assert result == "መልስ"
+    assert result.text == "መልስ"
+    assert result.tool_calls is None
     assert adapter.provider == "gemini"
 
 
@@ -78,7 +80,7 @@ async def test_gemini_generate_stream_yields_chunks() -> None:
 
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
-    assert chunks == ["Hel", "lo"]
+    assert chunks == [LLMChunk(text="Hel"), LLMChunk(text="lo")]
 
 
 @pytest.mark.asyncio
@@ -101,7 +103,7 @@ async def test_gemini_generate_stream_ignores_invalid_json_chunks() -> None:
 
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
-    assert chunks == ["ok"]
+    assert chunks == [LLMChunk(text="ok")]
 
 
 @pytest.mark.asyncio
