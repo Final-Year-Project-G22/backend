@@ -29,6 +29,12 @@ class AskAIUseCase:
     def _llm_port(self) -> LLMPort | None:
         return self._simple_strategy.llm_port
 
+    @property
+    def llm_model(self) -> str | None:
+        """Model name of the active LLM port, or ``None`` when unavailable."""
+        llm_port = self._llm_port
+        return llm_port.model if llm_port is not None else None
+
     def _select_strategy(self, command: AskAICommand) -> AskStrategyPort:
         if (
             self._agentic_enabled

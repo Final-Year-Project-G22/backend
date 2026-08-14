@@ -6,10 +6,13 @@ from datetime import UTC, datetime
 from typing import Any, Protocol
 
 import grpc
+import grpc.aio
+
 from core.domain.enums import Language, Tier
 from core.domain.exceptions import ConfigurationError, RepositoryError
 from core.ports.core_service import CoreServicePort, CoreUserProfile, SignedUrlResult
 from infrastructure.rpc.grpc_stub_loader import (
+    CoreUserServiceStub,
     build_get_signed_url_request,
     build_get_user_request,
     get_core_user_stub,
@@ -60,7 +63,7 @@ class CoreServiceGrpcAdapter(CoreServicePort):
             raise ConfigurationError("core grpc endpoint is required")
         self._endpoint = endpoint
         self._client = client
-        object.__setattr__(self, "_document_fetch_channel", document_fetch_channel)
+        self._document_fetch_channel = document_fetch_channel
 
     async def get_user_tier(self, user_id: uuid.UUID) -> Tier | None:
         response = await self._fetch_user(user_id)
@@ -89,7 +92,7 @@ class CoreServiceGrpcAdapter(CoreServicePort):
         *,
         expires_in_seconds: int = 3600,
     ) -> SignedUrlResult:
-        channel = getattr(self, "_document_fetch_channel", None)
+        channel = self._document_fetch_channel
         if channel is None:
             raise RepositoryError(
                 "document fetch channel not configured",
@@ -109,7 +112,7 @@ class CoreServiceGrpcAdapter(CoreServicePort):
                 str(account_id),
                 expires_in_seconds,
             )
-            response = await document_fetch_client.get_signed_url(request)
+            response = await document_fetch_client.GetSignedUrl(request)
         except Exception as exc:
             raise RepositoryError(
                 "failed to fetch signed url from core service",
@@ -128,8 +131,8 @@ class CoreServiceGrpcAdapter(CoreServicePort):
         return SignedUrlResult(
             signed_url=response.signed_url,
             expires_at=expires_at,
-            content_type=response.content_type,
-            content_length=response.content_length,
+            content_type=response.content_type or None,
+            content_length=response.content_length or None,
         )
 
     async def _fetch_user(self, user_id: uuid.UUID) -> CoreUserResponse | None:
@@ -155,7 +158,7 @@ class CoreUserGrpcClient(CoreServiceClient):
 
         self._endpoint = endpoint
         self._channel = _create_async_channel(endpoint)
-        self._stub: Any | None = get_core_user_stub(self._channel)
+        self._stub: CoreUserServiceStub | None = get_core_user_stub(self._channel)
 
     async def get_user(self, user_id: uuid.UUID) -> CoreUserResponse | None:
         stub = self._stub
@@ -168,21 +171,18 @@ class CoreUserGrpcClient(CoreServiceClient):
                 )
             self._stub = stub
 
-        request: Any = build_get_user_request(str(user_id))
+        request = build_get_user_request(str(user_id))
         response = await stub.GetUserProfile(request)
 
-        parsed_user_id = _parse_uuid(str(getattr(response, "user_id", "")), field="user_id")
-        parsed_account_id = _parse_uuid(
-            str(getattr(response, "account_id", "")), field="account_id"
-        )
+        parsed_user_id = _parse_uuid(response.user_id, field="user_id")
+        parsed_account_id = _parse_uuid(response.account_id, field="account_id")
 
-        preferred_language_raw = getattr(response, "preferred_language", "")
-        preferred_language = str(preferred_language_raw) or None
+        preferred_language = response.preferred_language or None
 
         return CoreUserResponse(
             user_id=parsed_user_id,
             account_id=parsed_account_id,
-            tier=str(getattr(response, "tier", "")),
+            tier=response.tier,
             preferred_language=preferred_language,
         )
 
@@ -239,10 +239,8 @@ def _is_not_found_error(exc: Exception) -> bool:
     return str(status).endswith("NOT_FOUND")
 
 
-def _create_async_channel(endpoint: str) -> Any:
-    grpc_aio: Any = getattr(grpc, "aio")  # noqa: B009
-    insecure_channel: Any = getattr(grpc_aio, "insecure_channel")  # noqa: B009
-    return insecure_channel(endpoint)
+def _create_async_channel(endpoint: str) -> grpc.aio.Channel:
+    return grpc.aio.insecure_channel(endpoint)
 
 
 __all__ = [

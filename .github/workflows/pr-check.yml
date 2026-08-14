@@ -290,12 +290,11 @@ jobs:
 
       - name: Generate protobuf stubs
         run: |
-          if grep -qE '^proto/.*\.proto$|^proto/buf\.gen\.yaml$|^proto/buf\.yaml$' /tmp/changed_files.txt; then
-            cd proto
-            buf generate
-          else
-            echo "No proto changes"
-          fi
+          # The strict typecheck covers the whole service including the gRPC
+          # layer, which imports the generated stubs; grpc_stubs/ is
+          # gitignored, so always regenerate before typechecking.
+          cd proto
+          buf generate
 
       - name: Type check Python
         run: |

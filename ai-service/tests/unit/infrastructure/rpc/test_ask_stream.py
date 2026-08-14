@@ -4,9 +4,9 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import grpc
 import pytest
 
-import grpc
 from core.domain.enums import DocumentSource, Language
 from core.domain.exceptions import QuotaExceededError
 from core.domain.stream_events import AskStreamEvent, AskStreamEventType
@@ -24,6 +24,8 @@ def _make_request(**overrides: object) -> SimpleNamespace:
         "session_id": "",
         "title": "",
         "top_k": 5,
+        "strategy": "simple",
+        "debug_mode": False,
     }
     payload.update(overrides)
     return SimpleNamespace(**payload)
@@ -59,9 +61,7 @@ def _mock_usecase(
     embedding_port.embed_query = AsyncMock(return_value=[0.1, 0.2, 0.3])
     usecase._embedding_port = embedding_port
 
-    llm_port = AsyncMock()
-    llm_port.model = "test-model"
-    usecase._llm_port = llm_port
+    usecase.llm_model = "test-model"
 
     async def _mock_stream(*args: object, **kwargs: object):
         for chunk_text in stream_chunks:
@@ -169,7 +169,7 @@ async def test_ask_stream_maps_tool_suppressed_when_debug_enabled() -> None:
         updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T11:00:00Z"),
     )
     ai_message = SimpleNamespace(token_usage=None, id=uuid.uuid4(), cache_hit=False)
-    usecase._llm_port = SimpleNamespace(model="test-model")
+    usecase.llm_model = "test-model"
 
     async def _mock_stream(*args: object, **kwargs: object):
         yield AskStreamEvent(
@@ -214,7 +214,7 @@ async def test_ask_stream_drops_tool_suppressed_when_debug_disabled() -> None:
         updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T11:00:00Z"),
     )
     ai_message = SimpleNamespace(token_usage=None, id=uuid.uuid4(), cache_hit=False)
-    usecase._llm_port = SimpleNamespace(model="test-model")
+    usecase.llm_model = "test-model"
 
     async def _mock_stream(*args: object, **kwargs: object):
         yield AskStreamEvent(
@@ -245,9 +245,16 @@ async def test_ask_stream_drops_tool_suppressed_when_debug_disabled() -> None:
 async def test_ask_stream_aborts_when_feature_flag_disabled() -> None:
     usecase = AsyncMock()
     service = AIInferenceService(ask_ai_usecase=usecase, ask_enabled=False)
-    context = SimpleNamespace(abort=AsyncMock())
+    context = SimpleNamespace(
+        abort=AsyncMock(
+            side_effect=grpc.aio.AbortError(
+                grpc.StatusCode.UNAVAILABLE,
+                "Ask API is disabled",
+            )
+        )
+    )
 
-    chunks = [chunk async for chunk in service.AskStream(_make_request(), context)]
+    with pytest.raises(grpc.aio.AbortError):
+        _ = [chunk async for chunk in service.AskStream(_make_request(), context)]
 
-    assert chunks == []
     context.abort.assert_awaited_once_with(grpc.StatusCode.UNAVAILABLE, "Ask API is disabled")
