@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from core.domain.exceptions import LLMError
-from core.ports.llm import LLMChunk
+from core.ports.llm import LLMChunk, ToolCall
 from infrastructure.llm.ollama import OllamaLLMAdapter
 
 MAX_TOKENS = 64
@@ -106,6 +106,31 @@ async def test_ollama_generate_stream_ignores_invalid_json_chunks() -> None:
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
     assert chunks == [LLMChunk(text="ok")]
+
+
+@pytest.mark.asyncio
+async def test_ollama_generate_extracts_tool_calls() -> None:
+    payload = {
+        "message": {
+            "tool_calls": [{"function": {"name": "search", "arguments": {"query": "books"}}}]
+        }
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = OllamaLLMAdapter(
+            base_url="http://localhost:11434",
+            model="qwen2.5",
+            http_client=client,
+        )
+
+        result = await adapter.generate("Hello")
+
+    assert result.text == ""
+    assert result.tool_calls == [ToolCall(name="search", arguments={"query": "books"})]
 
 
 @pytest.mark.asyncio
