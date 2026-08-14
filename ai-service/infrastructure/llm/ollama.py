@@ -166,6 +166,11 @@ def _parse_response(data: dict[str, Any], *, provider: str) -> LLMResult:
         text = ""
 
     tool_calls = _parse_tool_calls(message.get("tool_calls"))
+    if not text and not tool_calls:
+        raise LLMError(
+            "ollama response missing text",
+            details={"provider": provider},
+        )
     return LLMResult(text=text, tool_calls=tool_calls)
 
 

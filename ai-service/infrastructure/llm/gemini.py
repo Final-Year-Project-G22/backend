@@ -105,7 +105,7 @@ class GeminiLLMAdapter(LLMPort):
             ) from exc
 
         data = response.json()
-        return _parse_response(data)
+        return _parse_response(data, provider=self.provider)
 
     def generate_stream(
         self,
@@ -203,9 +203,14 @@ def _build_payload(
     return payload
 
 
-def _parse_response(data: dict[str, Any]) -> LLMResult:
+def _parse_response(data: dict[str, Any], *, provider: str) -> LLMResult:
     text = _extract_text_optional(data)
     tool_calls = _extract_tool_calls(data)
+    if not text and not tool_calls:
+        raise LLMError(
+            "gemini response missing text",
+            details={"provider": provider},
+        )
     return LLMResult(text=text or "", tool_calls=tool_calls)
 
 
