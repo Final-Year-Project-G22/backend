@@ -59,6 +59,10 @@ class SimpleAskStrategy(AskStrategyPort):
         self._cache = cache
         self._event_bus = event_bus
 
+    @property
+    def llm_port(self) -> LLMPort:
+        return self._llm_port
+
     async def execute(self, command: AskAICommand) -> AskAIResult:
         now = _utc_now()
         conversation = await self._resolve_conversation(command, now)

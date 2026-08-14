@@ -71,7 +71,7 @@ class AskAIResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     conversation: AIConversationSession
-    user_message: AIChatMessage
+    user_message: AIChatMessage | None
     ai_message: AIChatMessage
     retrieved_hits: list[SearchHit] = Field(default_factory=list)
     usage: UsageSnapshot | None = None
