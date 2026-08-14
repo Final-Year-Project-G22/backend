@@ -119,12 +119,12 @@ class IngestionOrchestratorUseCase:
                     embeddings = await self._embed_chunks(chunk_texts)
                 elif stage == IngestionStage.INDEXING:
                     await self._index_chunks(
-                        document_id,
-                        source_filename,
-                        content_type,
-                        declared_language,
-                        parsed_chunks,
-                        embeddings,
+                        document_id=document_id,
+                        source_filename=source_filename,
+                        content_type=content_type,
+                        declared_language=declared_language,
+                        chunks=parsed_chunks,
+                        embeddings=embeddings,
                     )
 
                 await self._publish_status_event(
@@ -291,6 +291,7 @@ class IngestionOrchestratorUseCase:
 
     async def _index_chunks(
         self,
+        *,
         document_id: uuid.UUID,
         source_filename: str,
         content_type: str,

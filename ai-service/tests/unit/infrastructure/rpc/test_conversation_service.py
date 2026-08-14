@@ -4,9 +4,9 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import grpc
 import pytest
 
-import grpc
 from core.domain.enums import Language, SessionStatus
 from infrastructure.rpc.services.conversation_service import AIConversationService
 
