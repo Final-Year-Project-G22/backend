@@ -45,8 +45,8 @@ class SimpleAskStrategy(AskStrategyPort):
         embedding_port: EmbeddingPort,
         llm_port: LLMPort,
         prompt_loader: PromptLoader,
-        tool_registry: ToolRegistryPort | None = None,
         *,
+        tool_registry: ToolRegistryPort | None = None,
         cache: CachePort | None = None,
         event_bus: EventBusPort | None = None,
     ) -> None:
