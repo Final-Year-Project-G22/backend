@@ -2,14 +2,73 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import Any, NotRequired, TypedDict, TypeGuard
 
 import httpx
 
 from core.domain.exceptions import LLMError
 from core.ports.llm import LLMChunk, LLMPort, LLMResult, ToolCall, ToolDefinition
+from infrastructure.llm.json_guard import is_json_object
 
 _CHAT_URL = "https://api.cohere.com/v2/chat"
+
+
+class _CohereContentBlock(TypedDict):
+    """Well-formed shape of a content block in a Cohere chat message."""
+
+    text: NotRequired[str]
+
+
+class _CohereFunction(TypedDict):
+    """Well-formed shape of the function descriptor of a Cohere tool call."""
+
+    name: NotRequired[str]
+    arguments: NotRequired[object]
+
+
+class _CohereToolCall(TypedDict):
+    function: NotRequired[_CohereFunction]
+
+
+class _CohereMessage(TypedDict):
+    content: NotRequired[list[_CohereContentBlock]]
+    tool_calls: NotRequired[list[_CohereToolCall]]
+
+
+class _CohereResponse(TypedDict):
+    """Schema of a Cohere v2 chat response."""
+
+    message: _CohereMessage
+
+
+class _CohereStreamDeltaContent(TypedDict):
+    text: NotRequired[str]
+
+
+class _CohereStreamDeltaMessage(TypedDict):
+    content: NotRequired[_CohereStreamDeltaContent]
+
+
+class _CohereStreamDelta(TypedDict):
+    message: NotRequired[_CohereStreamDeltaMessage]
+
+
+class _CohereContentDeltaEvent(TypedDict):
+    """Schema of a Cohere ``content-delta`` stream event."""
+
+    type: str
+    delta: NotRequired[_CohereStreamDelta]
+
+
+class _CohereToolCallDelta(TypedDict):
+    tool_calls: NotRequired[list[_CohereToolCall]]
+
+
+class _CohereToolCallsChunkEvent(TypedDict):
+    """Schema of a Cohere ``tool-calls-chunk`` stream event."""
+
+    type: str
+    tool_call_delta: NotRequired[_CohereToolCallDelta]
 
 
 class CohereLLMAdapter(LLMPort):
@@ -165,23 +224,26 @@ def _build_payload(
     return payload
 
 
-def _parse_response(data: dict[str, Any], *, provider: str) -> LLMResult:
-    message: object = data.get("message")
-    if not isinstance(message, dict):
+def _is_cohere_response(raw: object) -> TypeGuard[_CohereResponse]:
+    """Narrow raw JSON to the Cohere v2 chat response schema.
+
+    This is the audited parse boundary for this provider's responses. Only
+    the ``message`` backbone is validated here; content blocks and tool
+    calls are still inspected leniently by the extractors.
+    """
+    if not is_json_object(raw):
+        return False
+    return isinstance(raw.get("message"), dict)
+
+
+def _parse_response(raw: object, *, provider: str) -> LLMResult:
+    if not _is_cohere_response(raw):
         raise LLMError(
             "cohere response missing message",
             details={"provider": provider},
         )
-
-    content: object = message.get("content")
-    text = ""
-    if isinstance(content, list) and content:
-        first = content[0]
-        if isinstance(first, dict):
-            t = first.get("text")
-            if isinstance(t, str):
-                text = t
-
+    message = raw["message"]
+    text = _extract_text(message)
     tool_calls = _parse_tool_calls(message.get("tool_calls"))
     if not text and not tool_calls:
         raise LLMError(
@@ -191,67 +253,144 @@ def _parse_response(data: dict[str, Any], *, provider: str) -> LLMResult:
     return LLMResult(text=text, tool_calls=tool_calls)
 
 
-def _parse_tool_calls(raw: object) -> list[ToolCall] | None:
-    if not isinstance(raw, list) or not raw:
+def _extract_text(message: _CohereMessage) -> str:
+    content = message.get("content")
+    if not isinstance(content, list) or not content:
+        return ""
+    first = content[0]
+    if not is_json_object(first):
+        return ""
+    first_payload: dict[str, object] = first
+    text = first_payload.get("text")
+    return text if isinstance(text, str) else ""
+
+
+def _parse_tool_calls(raw: list[_CohereToolCall] | None) -> list[ToolCall] | None:
+    if not raw:
         return None
     result: list[ToolCall] = []
-    for tc in raw:
-        if not isinstance(tc, dict):
+    for tool_call in raw:
+        if not is_json_object(tool_call):
             continue
-        func: object = tc.get("function")
-        if not isinstance(func, dict):
+        tool_call_payload: dict[str, object] = tool_call
+        function = tool_call_payload.get("function")
+        if not is_json_object(function):
             continue
-        name = func.get("name", "")
+        function_payload: dict[str, object] = function
+        name = function_payload.get("name")
         if not isinstance(name, str) or not name:
             continue
-        args_raw = func.get("arguments")
-        if isinstance(args_raw, str):
-            try:
-                args = json.loads(args_raw)
-            except json.JSONDecodeError:
-                args = {}
-        elif isinstance(args_raw, dict):
-            args = args_raw
-        else:
-            args = {}
-        result.append(ToolCall(name=name, arguments=args))
+        result.append(
+            ToolCall(
+                name=name,
+                arguments=_parse_arguments(function_payload.get("arguments")),
+            )
+        )
     return result or None
 
 
-def _parse_stream_chunk(data: dict[str, Any]) -> LLMChunk | None:  # noqa: PLR0912
-    event_type = data.get("type")
-    if event_type == "content-delta":
-        delta: object = data.get("delta")
-        if isinstance(delta, dict):
-            msg: object = delta.get("message")
-            if isinstance(msg, dict):
-                content: object = msg.get("content")
-                if isinstance(content, dict):
-                    text = content.get("text")
-                    if isinstance(text, str):
-                        return LLMChunk(text=text)
-    if event_type == "tool-calls-chunk":
-        tool_calls_raw = data.get("tool_call_delta", {}).get("tool_calls")
-        if isinstance(tool_calls_raw, list) and tool_calls_raw:
-            for tc in tool_calls_raw:
-                if not isinstance(tc, dict):
-                    continue
-                func: object = tc.get("function")
-                if not isinstance(func, dict):
-                    continue
-                name = func.get("name", "")
-                if isinstance(name, str) and name:
-                    args_str = func.get("arguments", "{}")
-                    if isinstance(args_str, str):
-                        try:
-                            args = json.loads(args_str)
-                        except json.JSONDecodeError:
-                            args = {}
-                    elif isinstance(args_str, dict):
-                        args = args_str
-                    else:
-                        args = {}
-                    return LLMChunk(tool_call=ToolCall(name=name, arguments=args))
+def _parse_arguments(raw: object) -> dict[str, object]:
+    if isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        return parsed if is_json_object(parsed) else {}
+    if is_json_object(raw):
+        return raw
+    return {}
+
+
+def _is_content_delta_event(raw: object) -> TypeGuard[_CohereContentDeltaEvent]:  # noqa: PLR0911
+    if not is_json_object(raw):
+        return False
+    if raw.get("type") != "content-delta":
+        return False
+    delta = raw.get("delta")
+    if delta is None:
+        return True
+    if not is_json_object(delta):
+        return False
+    message = delta.get("message")
+    if message is None:
+        return True
+    if not is_json_object(message):
+        return False
+    content = message.get("content")
+    if content is None:
+        return True
+    if not is_json_object(content):
+        return False
+    text = content.get("text")
+    return text is None or isinstance(text, str)
+
+
+def _is_tool_calls_chunk_event(raw: object) -> TypeGuard[_CohereToolCallsChunkEvent]:
+    if not is_json_object(raw):
+        return False
+    if raw.get("type") != "tool-calls-chunk":
+        return False
+    tool_call_delta = raw.get("tool_call_delta")
+    if tool_call_delta is None:
+        return True
+    if not is_json_object(tool_call_delta):
+        return False
+    tool_calls = tool_call_delta.get("tool_calls")
+    if tool_calls is None:
+        return True
+    return isinstance(tool_calls, list)
+
+
+def _parse_stream_chunk(raw: object) -> LLMChunk | None:
+    if not is_json_object(raw):
+        return None
+    event_type = raw.get("type")
+    if event_type == "content-delta" and _is_content_delta_event(raw):
+        return _parse_content_delta(raw)
+    if event_type == "tool-calls-chunk" and _is_tool_calls_chunk_event(raw):
+        return _parse_tool_calls_chunk(raw)
+    return None
+
+
+def _parse_content_delta(event: _CohereContentDeltaEvent) -> LLMChunk | None:
+    delta = event.get("delta")
+    if delta is None:
+        return None
+    message = delta.get("message")
+    if message is None:
+        return None
+    content = message.get("content")
+    if content is None:
+        return None
+    text = content.get("text")
+    if text is None:
+        return None
+    return LLMChunk(text=text)
+
+
+def _parse_tool_calls_chunk(event: _CohereToolCallsChunkEvent) -> LLMChunk | None:
+    tool_call_delta = event.get("tool_call_delta")
+    if tool_call_delta is None:
+        return None
+    tool_calls = tool_call_delta.get("tool_calls")
+    if not tool_calls:
+        return None
+    for tool_call in tool_calls:
+        if not is_json_object(tool_call):
+            continue
+        tool_call_payload: dict[str, object] = tool_call
+        function = tool_call_payload.get("function")
+        if not is_json_object(function):
+            continue
+        function_payload: dict[str, object] = function
+        name = function_payload.get("name")
+        if isinstance(name, str) and name:
+            return LLMChunk(
+                tool_call=ToolCall(
+                    name=name,
+                    arguments=_parse_arguments(function_payload.get("arguments")),
+                )
+            )
     return None
 
 
