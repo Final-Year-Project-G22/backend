@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from core.domain.exceptions import LLMError
-from core.ports.llm import LLMChunk
+from core.ports.llm import LLMChunk, ToolCall
 from infrastructure.llm.gemini import GeminiLLMAdapter
 
 MAX_TOKENS = 128
@@ -104,6 +104,110 @@ async def test_gemini_generate_stream_ignores_invalid_json_chunks() -> None:
         chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
 
     assert chunks == [LLMChunk(text="ok")]
+
+
+@pytest.mark.asyncio
+async def test_gemini_generate_extracts_tool_call() -> None:
+    payload = {
+        "candidates": [
+            {
+                "content": {
+                    "parts": [{"functionCall": {"name": "search", "args": {"query": "books"}}}]
+                }
+            }
+        ]
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = GeminiLLMAdapter(
+            api_key="test-key",
+            model="gemini-1.5-flash",
+            http_client=client,
+        )
+
+        result = await adapter.generate("Hello")
+
+    assert result.text == ""
+    assert result.tool_calls == [ToolCall(name="search", arguments={"query": "books"})]
+
+
+@pytest.mark.asyncio
+async def test_gemini_generate_ignores_malformed_tool_call_parts() -> None:
+    payload = {
+        "candidates": [
+            {
+                "content": {
+                    "parts": [
+                        {"functionCall": "not-a-dict"},
+                        {"functionCall": {"name": 123, "args": {"query": "books"}}},
+                        {"functionCall": {"name": "search", "args": "not-a-dict"}},
+                        {"functionCall": {"name": "search", "args": {"query": "books"}}},
+                    ]
+                }
+            }
+        ]
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = GeminiLLMAdapter(
+            api_key="test-key",
+            model="gemini-1.5-flash",
+            http_client=client,
+        )
+
+        result = await adapter.generate("Hello")
+
+    assert result.tool_calls == [
+        ToolCall(name="search", arguments={}),
+        ToolCall(name="search", arguments={"query": "books"}),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_gemini_generate_stream_skips_tool_call_chunks() -> None:
+    lines = [
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "functionCall": {
+                                        "name": "search",
+                                        "args": {"query": "books"},
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ),
+    ]
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="\n".join(lines))
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = GeminiLLMAdapter(
+            api_key="test-key",
+            model="gemini-1.5-flash",
+            http_client=client,
+        )
+
+        chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
+
+    assert chunks == []
 
 
 @pytest.mark.asyncio

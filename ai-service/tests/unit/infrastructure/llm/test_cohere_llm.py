@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from core.domain.exceptions import LLMError
-from core.ports.llm import LLMChunk
+from core.ports.llm import LLMChunk, ToolCall
 from infrastructure.llm.cohere import CohereLLMAdapter
 
 MAX_TOKENS = 128
@@ -91,6 +91,147 @@ async def test_cohere_generate_stream_ignores_invalid_json_chunks() -> None:
         "data: not-json",
         'data: {"type": "content-delta", "delta": {"message": {"content": {"text": "ok"}}}}',
         "data: [DONE]",
+    ]
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="\n".join(lines))
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = CohereLLMAdapter(
+            api_key="test-key",
+            model="command-r",
+            http_client=client,
+        )
+
+        chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
+
+    assert chunks == [LLMChunk(text="ok")]
+
+
+@pytest.mark.asyncio
+async def test_cohere_generate_extracts_tool_calls_from_json_string_args() -> None:
+    payload = {
+        "message": {
+            "tool_calls": [
+                {
+                    "id": "call-1",
+                    "type": "function",
+                    "function": {"name": "search", "arguments": '{"query": "books"}'},
+                }
+            ]
+        }
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = CohereLLMAdapter(
+            api_key="test-key",
+            model="command-r",
+            http_client=client,
+        )
+
+        result = await adapter.generate("Hello")
+
+    assert result.text == ""
+    assert result.tool_calls == [ToolCall(name="search", arguments={"query": "books"})]
+
+
+@pytest.mark.asyncio
+async def test_cohere_generate_ignores_malformed_tool_calls() -> None:
+    payload = {
+        "message": {
+            "tool_calls": [
+                "not-a-dict",
+                {"function": "not-a-dict"},
+                {"function": {"name": "", "arguments": "{}"}},
+                {"function": {"name": "search", "arguments": "{not-json"}},
+                {"function": {"name": "search", "arguments": '{"query": "books"}'}},
+            ]
+        }
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = CohereLLMAdapter(
+            api_key="test-key",
+            model="command-r",
+            http_client=client,
+        )
+
+        result = await adapter.generate("Hello")
+
+    assert result.tool_calls == [
+        ToolCall(name="search", arguments={}),
+        ToolCall(name="search", arguments={"query": "books"}),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_cohere_generate_coerces_non_object_json_string_args_to_empty() -> None:
+    payload = {
+        "message": {
+            "tool_calls": [
+                {"function": {"name": "search", "arguments": "[1, 2]"}},
+            ]
+        }
+    }
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = CohereLLMAdapter(
+            api_key="test-key",
+            model="command-r",
+            http_client=client,
+        )
+
+        result = await adapter.generate("Hello")
+
+    assert result.tool_calls == [ToolCall(name="search", arguments={})]
+
+
+@pytest.mark.asyncio
+async def test_cohere_generate_stream_yields_tool_call_chunk() -> None:
+    lines = [
+        (
+            "data: "
+            '{"type": "tool-calls-chunk", '
+            '"tool_call_delta": {"tool_calls": [{"function": '
+            '{"name": "search", "arguments": "{\\"query\\": \\"books\\"}"}}]}}'
+        ),
+    ]
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="\n".join(lines))
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        adapter = CohereLLMAdapter(
+            api_key="test-key",
+            model="command-r",
+            http_client=client,
+        )
+
+        chunks = [chunk async for chunk in adapter.generate_stream("Hello")]
+
+    assert chunks == [LLMChunk(tool_call=ToolCall(name="search", arguments={"query": "books"}))]
+
+
+@pytest.mark.asyncio
+async def test_cohere_generate_stream_ignores_unknown_event_types() -> None:
+    lines = [
+        'data: {"type": "message-start", "id": "1"}',
+        'data: {"type": "content-delta", "delta": {"message": {"content": {"text": "ok"}}}}',
+        'data: {"type": "message-end", "id": "1"}',
     ]
 
     async def handler(request: httpx.Request) -> httpx.Response:
