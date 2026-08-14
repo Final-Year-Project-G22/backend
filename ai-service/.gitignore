@@ -21,3 +21,21 @@ uvicorn.log
 
 # Virtual environments
 ENV/
+
+# Hand-written gRPC-level type stubs (no buf plugin emits these) are tracked
+# inside the otherwise generated-and-ignored grpc_stubs/ tree (the root
+# .gitignore prunes that directory).
+!grpc_stubs/
+grpc_stubs/*
+!grpc_stubs/ai/
+grpc_stubs/ai/*
+!grpc_stubs/ai/inference/
+grpc_stubs/ai/inference/*
+!grpc_stubs/ai/inference/v1/
+grpc_stubs/ai/inference/v1/*
+!grpc_stubs/ai/inference/v1/service_pb2_grpc.pyi
+!grpc_stubs/ai/conversation/
+grpc_stubs/ai/conversation/*
+!grpc_stubs/ai/conversation/v1/
+grpc_stubs/ai/conversation/v1/*
+!grpc_stubs/ai/conversation/v1/service_pb2_grpc.pyi

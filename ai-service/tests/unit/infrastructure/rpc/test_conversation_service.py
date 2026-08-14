@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import grpc
 import pytest
 
-from core.domain.enums import Language, SessionStatus
+from core.domain.enums import Language, MessageType, SessionStatus
 from infrastructure.rpc.services.conversation_service import AIConversationService
 
 
@@ -76,10 +76,16 @@ async def test_list_conversations_invalid_user_id_aborts() -> None:
     service = AIConversationService(conversation_usecase=usecase)
 
     request = _make_list_request(user_id="invalid-uuid")
-    abort = AsyncMock()
+    abort = AsyncMock(
+        side_effect=grpc.aio.AbortError(
+            grpc.StatusCode.INVALID_ARGUMENT,
+            "Invalid UUID or enum: badly formed hexadecimal UUID string",
+        )
+    )
     context = SimpleNamespace(abort=abort)
 
-    await service.ListConversations(request, context)
+    with pytest.raises(grpc.aio.AbortError):
+        await service.ListConversations(request, context)
 
     abort.assert_called_once_with(
         grpc.StatusCode.INVALID_ARGUMENT,
@@ -106,7 +112,7 @@ async def test_get_conversation_returns_session_and_messages() -> None:
     usecase.list_messages.return_value = [
         SimpleNamespace(
             id=message_id,
-            message_type=SimpleNamespace(value="user_query"),
+            message_type=MessageType.USER_QUERY,
             user_query="Hello",
             llm_response=None,
             retrieved_chunk_ids=[],
@@ -133,10 +139,13 @@ async def test_get_conversation_not_found_aborts() -> None:
 
     service = AIConversationService(conversation_usecase=usecase)
     request = _make_get_request(session_id=str(uuid.uuid4()))
-    abort = AsyncMock()
+    abort = AsyncMock(
+        side_effect=grpc.aio.AbortError(grpc.StatusCode.NOT_FOUND, "Session not found")
+    )
     context = SimpleNamespace(abort=abort)
 
-    await service.GetConversation(request, context)
+    with pytest.raises(grpc.aio.AbortError):
+        await service.GetConversation(request, context)
 
     abort.assert_called_once_with(grpc.StatusCode.NOT_FOUND, "Session not found")
 
@@ -171,9 +180,12 @@ async def test_archive_conversation_not_found_aborts() -> None:
 
     service = AIConversationService(conversation_usecase=usecase)
     request = _make_archive_request(session_id=str(uuid.uuid4()))
-    abort = AsyncMock()
+    abort = AsyncMock(
+        side_effect=grpc.aio.AbortError(grpc.StatusCode.NOT_FOUND, "Session not found")
+    )
     context = SimpleNamespace(abort=abort)
 
-    await service.ArchiveConversation(request, context)
+    with pytest.raises(grpc.aio.AbortError):
+        await service.ArchiveConversation(request, context)
 
     abort.assert_called_once_with(grpc.StatusCode.NOT_FOUND, "Session not found")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -23,7 +24,11 @@ async def test_inference_service_contract_shape_matches_proto_expectations() -> 
         "Response",
         (),
         {
-            "conversation": type("Conversation", (), {"id": conversation_id})(),
+            "conversation": SimpleNamespace(
+                id=conversation_id,
+                created_at=SimpleNamespace(isoformat=lambda: "2026-01-01T10:00:00Z"),
+                updated_at=SimpleNamespace(isoformat=lambda: "2026-01-01T11:00:00Z"),
+            ),
             "ai_message": type(
                 "AIMessage",
                 (),
@@ -48,6 +53,9 @@ async def test_inference_service_contract_shape_matches_proto_expectations() -> 
                         "document_id": doc_id,
                         "chunk_id": chunk_id,
                         "score": 0.76,
+                        "chunk_text": "Relevant text",
+                        "chunk_index": 0,
+                        "document_title": "",
                     },
                 )(),
             ],
@@ -64,7 +72,10 @@ async def test_inference_service_contract_shape_matches_proto_expectations() -> 
             "query": "How do I register?",
             "language": "en",
             "session_id": "",
+            "title": "",
             "top_k": 3,
+            "strategy": "simple",
+            "debug_mode": False,
         },
     )()
 

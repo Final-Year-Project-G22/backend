@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
@@ -14,6 +14,13 @@ BATCH_SIZE = 50
 BATCH_DELAY_S = 5.0
 MAX_RETRIES = 5
 _429_TOO_MANY_REQUESTS = 429
+_CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+
+
+class _Credentials(Protocol):
+    token: str | None
+
+    def refresh(self, request: object) -> None: ...
 
 
 def _is_rate_limit(exc: BaseException) -> bool:
@@ -80,9 +87,9 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
             return results[0]
         return await self._embed_single_gemini(query, input_type="search_query")
 
-    def _ensure_request_built(self) -> None:
+    def _ensure_request_built(self) -> str:
         if self._url is not None:
-            return
+            return self._url
         url, params, headers, auth_ok = self._build_request()
         if self._use_vertex and not auth_ok:
             raise EmbeddingError(
@@ -92,6 +99,7 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
         self._url = url
         self._params = params
         self._headers = headers
+        return url
 
     async def _embed_batches_vertex(
         self,
@@ -127,6 +135,7 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
         *,
         input_type: str | None,
     ) -> list[list[float]]:
+        url = self._ensure_request_built()
         task_type = _map_task_type(input_type)
         payload: dict[str, Any] = {
             "instances": [{"content": t} for t in texts],
@@ -136,7 +145,7 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
 
         try:
             response = await self._http.post(
-                self._url,
+                url,
                 params=self._params or None,
                 headers=self._headers or None,
                 json=payload,
@@ -150,15 +159,19 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
             ) from exc
 
         data = response.json()
-        predictions = data.get("predictions")
-        if not isinstance(predictions, list) or len(predictions) != len(texts):
+        raw_predictions: Any = data.get("predictions")
+        if not isinstance(raw_predictions, list):
             raise EmbeddingError(
                 "vertex ai embedding response missing or mismatched predictions",
                 details={"provider": self.provider},
             )
-        return [
-            _ensure_float_list(cast(list[object], p["embeddings"]["values"])) for p in predictions
-        ]
+        predictions = cast(list[object], raw_predictions)
+        if len(predictions) != len(texts):
+            raise EmbeddingError(
+                "vertex ai embedding response missing or mismatched predictions",
+                details={"provider": self.provider},
+            )
+        return [_ensure_float_list(_prediction_values(p)) for p in predictions]
 
     @retry(
         stop=stop_after_attempt(MAX_RETRIES),
@@ -171,6 +184,7 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
         *,
         input_type: str | None,
     ) -> list[float]:
+        url = self._ensure_request_built()
         task_type = _map_task_type(input_type)
         payload: dict[str, Any] = {
             "content": {
@@ -183,7 +197,7 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
 
         try:
             response = await self._http.post(
-                self._url,
+                url,
                 params=params or None,
                 headers=self._headers or None,
                 json=payload,
@@ -197,13 +211,13 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
             ) from exc
 
         data = response.json()
-        embedding = data.get("embedding", {}).get("values")
-        if not isinstance(embedding, list):
+        raw_embedding: Any = data.get("embedding", {}).get("values")
+        if not isinstance(raw_embedding, list):
             raise EmbeddingError(
                 "gemini embedding response missing values",
                 details={"provider": self.provider},
             )
-        return _ensure_float_list(cast(list[object], embedding))
+        return _ensure_float_list(cast(list[object], raw_embedding))
 
     def _build_request(self) -> tuple[str, dict[str, str], dict[str, str], bool]:
         if self._use_vertex:
@@ -216,19 +230,19 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
             params: dict[str, str] = {}
             try:
                 import google.auth
-                import google.auth.transport.requests
+                import google.auth.transport.requests as _gauth_requests
 
-                credentials, _ = google.auth.default(
-                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                auth_module = cast(Any, google.auth)
+                credentials = cast(
+                    _Credentials,
+                    auth_module.default(scopes=[_CLOUD_PLATFORM_SCOPE])[0],
                 )
-                creds = credentials
-                if hasattr(creds, "refresh"):
-                    try:
-                        request = google.auth.transport.requests.Request()
-                        creds.refresh(request)
-                    except Exception:
-                        pass
-                token = creds.token
+                try:
+                    request = cast(Any, _gauth_requests).Request()
+                    credentials.refresh(request)
+                except Exception:
+                    pass
+                token = credentials.token
                 if token:
                     headers["Authorization"] = f"Bearer {token}"
                     return url, params, headers, True
@@ -249,6 +263,18 @@ def _map_task_type(input_type: str | None) -> str | None:
     if input_type == "search_document":
         return "RETRIEVAL_DOCUMENT"
     return None
+
+
+def _prediction_values(prediction: object) -> list[object]:
+    if not isinstance(prediction, dict):
+        raise EmbeddingError("vertex ai embedding prediction is malformed")
+    embeddings = cast(dict[object, object], prediction).get("embeddings")
+    if not isinstance(embeddings, dict):
+        raise EmbeddingError("vertex ai embedding prediction is malformed")
+    values = cast(dict[object, object], embeddings).get("values")
+    if not isinstance(values, list):
+        raise EmbeddingError("vertex ai embedding prediction is malformed")
+    return cast(list[object], values)
 
 
 def _ensure_float_list(raw: list[object]) -> list[float]:

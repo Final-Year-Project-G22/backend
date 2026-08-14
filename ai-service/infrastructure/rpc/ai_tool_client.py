@@ -5,8 +5,11 @@ import logging
 from typing import Any
 
 import grpc
+import grpc.aio
+
 from core.ports.llm import ToolDefinition
 from infrastructure.rpc.grpc_stub_loader import (
+    AIToolServiceStub,
     build_execute_tool_request,
     build_list_tools_request,
     get_ai_tool_stub,
@@ -19,9 +22,9 @@ class AIToolGrpcClient:
     def __init__(self, endpoint: str) -> None:
         self._endpoint = endpoint
         self._channel: grpc.aio.Channel | None = None
-        self._stub: Any = None
+        self._stub: AIToolServiceStub | None = None
 
-    async def _ensure_connected(self) -> Any:
+    async def _ensure_connected(self) -> AIToolServiceStub | None:
         if self._stub is None:
             self._channel = grpc.aio.insecure_channel(self._endpoint)
             self._stub = get_ai_tool_stub(self._channel)
@@ -75,7 +78,7 @@ class AIToolGrpcClient:
 
     async def close(self) -> None:
         if self._channel is not None:
-            await self._channel.close()
+            await self._channel.close(None)
             self._channel = None
             self._stub = None
 

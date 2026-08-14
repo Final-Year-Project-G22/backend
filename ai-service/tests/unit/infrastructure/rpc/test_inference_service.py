@@ -4,9 +4,9 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import grpc
 import pytest
 
-import grpc
 from core.domain.enums import DocumentSource, Language
 from core.domain.exceptions import AIServiceError, QuotaExceededError, RepositoryError
 from core.domain.value_objects import SearchHit
@@ -30,6 +30,8 @@ def _make_request(**overrides: object) -> SimpleNamespace:
         "session_id": "",
         "title": "",
         "top_k": 5,
+        "strategy": "simple",
+        "debug_mode": False,
     }
     payload.update(overrides)
     return SimpleNamespace(**payload)
@@ -118,8 +120,13 @@ async def test_ask_aborts_for_invalid_uuid() -> None:
 
     request = _make_request(user_id="not-a-uuid")
     context = AsyncMock()
+    context.abort.side_effect = grpc.aio.AbortError(
+        grpc.StatusCode.INVALID_ARGUMENT,
+        "Invalid UUID or enum: badly formed hexadecimal UUID string",
+    )
 
-    await service.Ask(request, context)
+    with pytest.raises(grpc.aio.AbortError):
+        await service.Ask(request, context)
 
     context.abort.assert_awaited_once()
     assert context.abort.await_args.args[0] is grpc.StatusCode.INVALID_ARGUMENT
@@ -158,8 +165,13 @@ async def test_ask_aborts_when_feature_flag_disabled() -> None:
 
     request = _make_request()
     context = AsyncMock()
+    context.abort.side_effect = grpc.aio.AbortError(
+        grpc.StatusCode.UNAVAILABLE,
+        "Ask API is disabled",
+    )
 
-    await service.Ask(request, context)
+    with pytest.raises(grpc.aio.AbortError):
+        await service.Ask(request, context)
 
     context.abort.assert_awaited_once_with(
         grpc.StatusCode.UNAVAILABLE,
