@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from core.domain.enums import DocumentSource, Language, MessageType, Tier
+from core.domain.exceptions import AIServiceError
 from core.domain.models import AIChatMessage, AIConversationSession, ToolCallRecord
-from core.domain.stream_events import AskStreamEventType
+from core.domain.stream_events import AskStreamEvent, AskStreamEventType
 from core.domain.tools import ToolResult
 from core.domain.value_objects import SearchHit
 from core.ports.conversation_repository import ConversationRepositoryPort
@@ -678,3 +680,43 @@ async def test_format_history_skips_suppressed_tool_calls() -> None:
     assert "3 results" in history
     assert "suppressed lookup" not in history
     assert history.count("search_knowledge_base") == 1
+
+
+@pytest.mark.asyncio
+async def test_agentic_execute_returns_result_assembled_from_done_event() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    strategy, _repository, _tool_registry, command, expected_hit = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Grounded answer")],
+    )
+
+    result = await strategy.execute(command)
+
+    assert result.conversation.id is not None
+    assert result.user_message is None
+    assert result.ai_message.llm_response == "Grounded answer"
+    assert result.ai_message.conversation_id == result.conversation.id
+    assert result.retrieved_hits == [expected_hit]
+
+
+@pytest.mark.asyncio
+async def test_agentic_execute_raises_when_stream_ends_without_done_event() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    strategy, _repository, _tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Grounded answer")],
+    )
+
+    async def _stream_without_done(
+        *_args: object,
+        **_kwargs: object,
+    ) -> AsyncIterator[AskStreamEvent]:
+        if False:  # pragma: no cover
+            yield AskStreamEvent(type_=AskStreamEventType.DONE)
+
+    strategy._execute_react_loop = _stream_without_done  # type: ignore[method-assign]
+
+    with pytest.raises(AIServiceError, match="without a done event"):
+        await strategy.execute(command)

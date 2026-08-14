@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 
+from core.ports.ask_strategy import AskStrategyPort
 from core.ports.cache import CachePort
 from core.ports.conversation_repository import ConversationRepositoryPort
 from core.ports.core_service import CoreServicePort
@@ -30,6 +31,17 @@ def test_llm_port_generate_stream_is_not_coroutine_function() -> None:
 
     signature = inspect.signature(LLMPort.generate_stream)
     assert str(signature.return_annotation) == "AsyncIterator[LLMChunk]"
+
+
+def test_ask_strategy_port_contract_shape() -> None:
+    assert inspect.isabstract(AskStrategyPort)
+    expected = {"llm_port", "execute", "execute_stream"}
+    assert expected.issubset(AskStrategyPort.__abstractmethods__)
+    assert inspect.iscoroutinefunction(AskStrategyPort.execute) is True
+    assert inspect.iscoroutinefunction(AskStrategyPort.execute_stream) is False
+
+    signature = inspect.signature(AskStrategyPort.execute_stream)
+    assert str(signature.return_annotation) == "AsyncIterator[AskStreamEvent]"
 
 
 def test_knowledge_repository_port_contract_shape() -> None:
