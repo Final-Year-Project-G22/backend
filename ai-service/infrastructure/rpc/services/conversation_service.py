@@ -2,27 +2,38 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any
-
-from ai.conversation.v1 import service_pb2, service_pb2_grpc
 
 import grpc
+import grpc.aio
+from ai.conversation.v1 import service_pb2, service_pb2_grpc
+
+from core.domain.enums import MessageType
 from core.domain.models import AIChatMessage
 from core.usecases.contracts import ListSessionsQuery
 from core.usecases.conversation import ConversationUseCase
 
 logger = logging.getLogger(__name__)
 
+_ListContext = grpc.aio.ServicerContext[
+    service_pb2.ListConversationsRequest, service_pb2.ListConversationsResponse
+]
+_GetContext = grpc.aio.ServicerContext[
+    service_pb2.GetConversationRequest, service_pb2.GetConversationResponse
+]
+_ArchiveContext = grpc.aio.ServicerContext[
+    service_pb2.ArchiveConversationRequest, service_pb2.ArchiveConversationResponse
+]
+
 
 class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
-    def __init__(self, conversation_usecase: ConversationUseCase):
+    def __init__(self, conversation_usecase: ConversationUseCase) -> None:
         self._conversation_usecase = conversation_usecase
 
     async def ListConversations(  # noqa: N802
         self,
-        request: Any,
-        context: Any,
-    ) -> Any:
+        request: service_pb2.ListConversationsRequest,
+        context: _ListContext,
+    ) -> service_pb2.ListConversationsResponse:
         try:
             user_id = uuid.UUID(request.user_id)
             account_id = uuid.UUID(request.account_id)
@@ -30,7 +41,6 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
             offset = max(0, request.offset)
         except ValueError as e:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID or enum: {e}")
-            return service_pb2.ListConversationsResponse()
 
         query = ListSessionsQuery(
             user_id=user_id,
@@ -60,9 +70,9 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
 
     async def GetConversation(  # noqa: N802
         self,
-        request: Any,
-        context: Any,
-    ) -> Any:
+        request: service_pb2.GetConversationRequest,
+        context: _GetContext,
+    ) -> service_pb2.GetConversationResponse:
         try:
             session_id = uuid.UUID(request.session_id)
             account_id = uuid.UUID(request.account_id)
@@ -71,7 +81,6 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
             include_deleted = request.include_deleted
         except ValueError as e:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID: {e}")
-            return service_pb2.GetConversationResponse()
 
         session = await self._conversation_usecase.get_session(
             session_id,
@@ -79,7 +88,6 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
         )
         if session is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
-            return service_pb2.GetConversationResponse()
 
         messages = await self._conversation_usecase.list_messages(
             session_id,
@@ -107,20 +115,18 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
 
     async def ArchiveConversation(  # noqa: N802
         self,
-        request: Any,
-        context: Any,
-    ) -> Any:
+        request: service_pb2.ArchiveConversationRequest,
+        context: _ArchiveContext,
+    ) -> service_pb2.ArchiveConversationResponse:
         try:
             session_id = uuid.UUID(request.session_id)
             _ = uuid.UUID(request.account_id)
         except ValueError as e:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID: {e}")
-            return service_pb2.ArchiveConversationResponse()
 
         session = await self._conversation_usecase.get_session(session_id)
         if session is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
-            return service_pb2.ArchiveConversationResponse()
 
         success = await self._conversation_usecase.archive_session(session_id)
 
@@ -133,25 +139,22 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
 
         return service_pb2.ArchiveConversationResponse(success=success, updated_at=updated_at)
 
-    def _map_message_to_detail(self, message: AIChatMessage) -> Any:
+    def _map_message_to_detail(self, message: AIChatMessage) -> service_pb2.MessageDetail:
         content = message.user_query or message.llm_response or ""
 
-        citations = []
-        if message.response_sources:
-            for src in message.response_sources:
-                kwargs: dict[str, Any] = {
-                    "chunk_id": str(src.chunk_id) if src.chunk_id else "",
-                    "document_id": str(src.document_id),
-                    "source_type": src.source.value,
-                    "score": src.score or 0.0,
-                }
-                if src.title:
-                    kwargs["title"] = src.title
-                if src.excerpt:
-                    kwargs["excerpt"] = src.excerpt
-                citations.append(service_pb2.Citation(**kwargs))
+        citations: list[service_pb2.Citation] = [
+            service_pb2.Citation(
+                chunk_id=str(src.chunk_id) if src.chunk_id else "",
+                document_id=str(src.document_id),
+                source_type=src.source.value,
+                title=src.title,
+                score=src.score or 0.0,
+                excerpt=src.excerpt,
+            )
+            for src in message.response_sources
+        ]
 
-        usage = None
+        usage: service_pb2.Usage | None = None
         if message.token_usage:
             usage = service_pb2.Usage(
                 prompt_tokens=message.token_usage.prompt_tokens,
@@ -159,7 +162,7 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
                 total_tokens=message.token_usage.total_tokens,
             )
 
-        role = "user" if message.message_type.value == "user_query" else "assistant"
+        role = "user" if message.message_type is MessageType.USER_QUERY else "assistant"
 
         return service_pb2.MessageDetail(
             id=str(message.id),
