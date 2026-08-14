@@ -355,6 +355,8 @@ class IngestionOrchestratorUseCase:
         retry_count: int,
         error_message: str | None = None,
     ) -> None:
+        if not self._emit_status_events:
+            return
         if self._event_bus is None:
             logger.warning("event bus is None, skipping status publish document_id=%s", document_id)
             return

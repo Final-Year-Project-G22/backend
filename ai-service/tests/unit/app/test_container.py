@@ -46,14 +46,18 @@ async def test_container_wires_database_repositories() -> None:
     await knowledge_repository.session.close()
 
 
-def test_container_wires_use_cases_with_dependency_overrides() -> None:
-    container = Container(
+def _make_container_with_port_overrides() -> Container:
+    return Container(
         embedding_port=AsyncMock(spec=EmbeddingPort),
         llm_port=AsyncMock(spec=LLMPort),
         cache_port=AsyncMock(spec=CachePort),
         event_bus_port=AsyncMock(spec=EventBusPort),
         core_service_port=AsyncMock(spec=CoreServicePort),
     )
+
+
+def test_container_wires_use_cases_with_dependency_overrides() -> None:
+    container = _make_container_with_port_overrides()
 
     quota_guard = container.quota_guard()
     conversation = container.conversation()
@@ -65,7 +69,7 @@ def test_container_wires_use_cases_with_dependency_overrides() -> None:
 
 
 def test_container_wires_ingestion_worker_dependencies() -> None:
-    container = Container()
+    container = _make_container_with_port_overrides()
 
     task_handler = container.ingestion_requested_task_handler()
     consumer = container.ingestion_consumer()
@@ -75,7 +79,7 @@ def test_container_wires_ingestion_worker_dependencies() -> None:
 
 
 def test_container_wires_ingestion_orchestrator() -> None:
-    container = Container()
+    container = _make_container_with_port_overrides()
 
     orchestrator = container.ingestion_orchestrator()
 

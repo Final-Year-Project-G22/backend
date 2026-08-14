@@ -83,6 +83,11 @@ async def test_serve_rpc_passes_ask_enabled_to_inference_service(
 ) -> None:
     fake_server = _FakeServer()
     inference_ctor_args: dict[str, object] = {}
+    server_ctor_kwargs: dict[str, object] = {}
+
+    def _fake_server_ctor(**kwargs: object) -> _FakeServer:
+        server_ctor_kwargs.update(kwargs)
+        return fake_server
 
     class _FakeInferenceService:
         def __init__(self, ask_ai_usecase: object, *, ask_enabled: bool = True) -> None:
@@ -101,7 +106,9 @@ async def test_serve_rpc_passes_ask_enabled_to_inference_service(
         lambda _svc, _server: None,
     )
     monkeypatch.setattr(
-        rpc_server.grpc, "aio", SimpleNamespace(server=lambda _interceptors: fake_server)
+        rpc_server.grpc,
+        "aio",
+        SimpleNamespace(server=_fake_server_ctor),
     )
 
     ask_ai_usecase = object()
@@ -116,5 +123,6 @@ async def test_serve_rpc_passes_ask_enabled_to_inference_service(
     assert server is fake_server
     assert fake_server.listen_addr == "[::]:50051"
     assert fake_server.started is True
+    assert server_ctor_kwargs["interceptors"] == []
     assert inference_ctor_args["ask_ai_usecase"] is ask_ai_usecase
     assert inference_ctor_args["ask_enabled"] is False

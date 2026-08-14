@@ -110,6 +110,7 @@ async def test_get_conversation_returns_session_and_messages() -> None:
             user_query="Hello",
             llm_response=None,
             retrieved_chunk_ids=[],
+            response_sources=[],
             token_usage=None,
             created_at=SimpleNamespace(isoformat=lambda: "2026-01-01T00:00:00"),
         )
