@@ -168,17 +168,21 @@ typecheck-python:
 	$(MAKE) proto-gen
 	cd ai-service && uv run basedpyright
 
+# Runs the full suite with the default addopts, so the --cov-fail-under=80
+# coverage gate from pyproject.toml is enforced (see pr-check.yml python-test).
 test-ai:
 	$(MAKE) proto-gen
-	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v
+	cd ai-service && uv run pytest
 
+# Subset runs keep addopts for coverage reporting but drop the fail-under:
+# the 80% gate only makes sense over the whole suite (unit alone covers ~41%).
 test-ai-unit:
 	$(MAKE) proto-gen
-	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m unit
+	cd ai-service && uv run pytest tests/unit --cov-fail-under=0 --cov-reset
 
 test-ai-integration:
 	$(MAKE) proto-gen
-	cd ai-service && PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run pytest -p pytest_asyncio.plugin -o addopts='' -v -m integration
+	cd ai-service && uv run pytest tests/integration --cov-fail-under=0 --cov-reset
 
 security-ai:
 	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers

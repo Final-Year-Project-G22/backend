@@ -326,3 +326,87 @@ jobs:
           cd ai-service
           uv sync --frozen --all-groups --extra dev
           uv run bandit -c pyproject.toml -r app core infrastructure workers
+
+      - name: Dead code scan Python (vulture)
+        run: |
+          PY_RELEVANT=$(grep -E '^ai-service/.*\.py$|^ai-service/pyproject\.toml$|^ai-service/uv\.lock$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+
+          if [ -z "$PY_RELEVANT" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+
+          cd ai-service
+          uv sync --frozen --all-groups --extra dev
+          uv run vulture . --min-confidence 80
+
+      - name: Dependency vulnerability scan (pip-audit)
+        run: |
+          PY_RELEVANT=$(grep -E '^ai-service/.*\.py$|^ai-service/pyproject\.toml$|^ai-service/uv\.lock$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+
+          if [ -z "$PY_RELEVANT" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+
+          cd ai-service
+          uv sync --frozen --all-groups --extra dev
+          uv run --with pip-audit pip-audit --local
+
+  python-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('ai-service/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Set up Buf
+        uses: bufbuild/buf-setup-action@v1
+
+      - name: Determine changed files
+        id: diff
+        run: |
+          git diff --name-only --diff-filter=ACMR \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Generate protobuf stubs
+        run: |
+          # rpc modules import the generated stubs at import time, so the
+          # suite needs them even though grpc_stubs/ is gitignored.
+          cd proto
+          buf generate
+
+      - name: Run Python tests
+        run: |
+          PY_RELEVANT=$(grep -E '^ai-service/.*\.py$|^ai-service/pyproject\.toml$|^ai-service/uv\.lock$' /tmp/changed_files.txt | grep -v '^ai-service/grpc_stubs/' || true)
+
+          if [ -z "$PY_RELEVANT" ]; then
+            echo "No Python files changed"
+            exit 0
+          fi
+
+          cd ai-service
+          uv sync --frozen --all-groups --extra dev
+          # Runs the full suite with the default addopts, so the
+          # --cov-fail-under=80 coverage gate from pyproject.toml applies.
+          uv run pytest
