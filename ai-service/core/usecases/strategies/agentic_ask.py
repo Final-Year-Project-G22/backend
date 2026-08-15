@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from collections.abc import AsyncIterator
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
@@ -18,7 +19,7 @@ from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.intent_classifier import IntentClassifierPort
 from core.ports.knowledge_repository import KnowledgeRepositoryPort
-from core.ports.llm import LLMPort, ToolCall
+from core.ports.llm import LLMPort, ToolCall, ToolDefinition
 from core.ports.tool_registry import ToolRegistryPort
 from core.usecases.contracts import AskAICommand, AskAIResult, CreateSessionCommand
 from core.usecases.conversation import ConversationUseCase
@@ -38,10 +39,20 @@ MAX_AGENTIC_ITERATIONS = 5
 SUPPRESSION_TRIPWIRE = 2
 SEARCH_KNOWLEDGE_BASE_TOOL = "search_knowledge_base"
 FINAL_ANSWER_FALLBACK = "I've retrieved what I could. Please refine your question."
+NO_TOOL_ANSWER_FALLBACK = "I'll help you with that."
 
 
 def _utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+@dataclass
+class _ToolLoopState:
+    merged_hits: list[SearchHit]
+    tool_results: list[tuple[ToolCall, str]] = field(default_factory=list)
+    consecutive_suppressions: int = 0
+    last_suppression_reason: SuppressionReason | None = None
+    forced_finalization: bool = False
 
 
 class AgenticAskStrategy(AskStrategyPort):
@@ -104,7 +115,7 @@ class AgenticAskStrategy(AskStrategyPort):
             user_id=command.user_id,
             conversation_id=conversation.id,
             message_type=MessageType.AI_RESPONSE,
-            llm_response=final_answer.strip() or "I'll help you with that.",
+            llm_response=final_answer.strip() or NO_TOOL_ANSWER_FALLBACK,
             tool_calls=tool_calls_flat or None,
             agent_strategy="agentic",
             message_order=1,
@@ -158,14 +169,96 @@ class AgenticAskStrategy(AskStrategyPort):
 
         tool_defs = await self._tool_registry.get_tool_definitions()
         history = await self._load_history(conversation.id, conversation.message_count)
+        system_prompt, messages, user_content = self._build_turn_messages(
+            command,
+            merged_hits,
+            pre_fetch,
+            tool_defs,
+            history,
+            kb_context_available=kb_context_available,
+        )
 
+        state = _ToolLoopState(merged_hits=merged_hits)
+        final_answer_parts: list[str] = []
+
+        while iteration < self._max_iterations:
+            iteration += 1
+
+            current_prompt = messages[-1]["content"] if messages else ""
+
+            result = await self._llm_port.generate(
+                current_prompt,
+                system_prompt=system_prompt,
+                tools=tool_defs,
+                max_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
+                temperature=DEFAULT_LLM_TEMPERATURE,
+            )
+
+            if result.tool_calls:
+                async for event in self._run_tool_round(
+                    command, iteration, result.tool_calls, tool_calls_flat, state
+                ):
+                    yield event
+
+                if state.forced_finalization:
+                    break
+
+                if not state.tool_results:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": self._suppression_nudge(
+                                command.prompt, state.last_suppression_reason
+                            )
+                            + "\n\n"
+                            + user_content,
+                        }
+                    )
+                    continue
+
+                self._append_tool_followup_messages(messages, state.tool_results)
+            else:
+                async for event in self._finalize_turn(
+                    command=command,
+                    conversation=conversation,
+                    merged_hits=state.merged_hits,
+                    tool_calls_flat=tool_calls_flat,
+                    final_answer_parts=final_answer_parts,
+                    result_text=result.text,
+                    now=now,
+                ):
+                    yield event
+                return
+
+        async for event in self._finalize_after_exhaustion(
+            command=command,
+            conversation=conversation,
+            merged_hits=state.merged_hits,
+            tool_calls_flat=tool_calls_flat,
+            final_answer_parts=final_answer_parts,
+            messages=messages,
+            system_prompt=system_prompt,
+            now=now,
+        ):
+            yield event
+
+    def _build_turn_messages(
+        self,
+        command: AskAICommand,
+        merged_hits: list[SearchHit],
+        pre_fetch: dict[str, str],
+        tool_defs: list[ToolDefinition],
+        history: list[AIChatMessage],
+        *,
+        kb_context_available: bool,
+    ) -> tuple[str, list[dict[str, str]], str]:
         system_prompt = self._prompt_loader.render_agentic(
             locale=command.language.value,
             tools=[{"name": t.name, "description": t.description} for t in tool_defs],
             kb_context_available=kb_context_available,
         )
 
-        messages = [{"role": "system", "content": system_prompt}]
+        messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
 
         if history:
             history_text = self._format_history(history)
@@ -188,175 +281,166 @@ class AgenticAskStrategy(AskStrategyPort):
             user_content = "Context:\n" + "\n\n".join(user_context_parts) + "\n\n" + user_content
         messages.append({"role": "user", "content": user_content})
 
-        final_answer_parts: list[str] = []
-        consecutive_suppressions = 0
-        last_suppression_reason: SuppressionReason | None = None
-        forced_finalization = False
+        return system_prompt, messages, user_content
 
-        while iteration < self._max_iterations:
-            iteration += 1
-
-            current_prompt = messages[-1]["content"] if messages else ""
-
-            result = await self._llm_port.generate(
-                current_prompt,
-                system_prompt=system_prompt,
-                tools=tool_defs,
-                max_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
-                temperature=DEFAULT_LLM_TEMPERATURE,
-            )
-
-            if result.tool_calls:
-                tool_results: list[tuple[ToolCall, str]] = []
-                for tc in result.tool_calls:
-                    query = tc.arguments.get("query")
-                    if (
-                        tc.name == SEARCH_KNOWLEDGE_BASE_TOOL
-                        and isinstance(query, str)
-                        and query.strip()
-                    ):
-                        decision = await self._kb_query_guard.check(query)
-                        if not decision.allowed:
-                            consecutive_suppressions += 1
-                            last_suppression_reason = decision.reason
-                            suppression_reason = decision.reason.value if decision.reason else None
-                            tool_calls_flat.append(
-                                ToolCallRecord(
-                                    tool_name=tc.name,
-                                    arguments=tc.arguments,
-                                    iteration=iteration,
-                                    suppressed=True,
-                                    suppression_reason=suppression_reason,
-                                )
-                            )
-                            if command.debug_mode:
-                                yield AskStreamEvent(
-                                    type_=AskStreamEventType.TOOL_SUPPRESSED,
-                                    tool_name=tc.name,
-                                    suppression_reason=suppression_reason,
-                                    matched_query=decision.matched_query,
-                                )
-                            if consecutive_suppressions >= self._suppression_tripwire:
-                                forced_finalization = True
-                                break
-                            continue
-                        self._kb_query_guard.register_executed(query, decision.embedding)
-
-                    consecutive_suppressions = 0
-
-                    yield AskStreamEvent(
-                        type_=AskStreamEventType.TOOL_CALL,
-                        tool_name=tc.name,
-                        tool_arguments=tc.arguments,
-                    )
-
-                    if command.debug_mode:
-                        yield AskStreamEvent(
-                            type_=AskStreamEventType.THINKING,
-                            text=f"Calling {tc.name} with {tc.arguments}",
-                        )
-
-                    tool_result = await self._tool_registry.execute_tool(
-                        tc.name,
-                        tc.arguments,
-                        str(command.account_id),
-                        str(command.user_id),
-                    )
-
+    async def _run_tool_round(
+        self,
+        command: AskAICommand,
+        iteration: int,
+        tool_calls: list[ToolCall],
+        tool_calls_flat: list[ToolCallRecord],
+        state: _ToolLoopState,
+    ) -> AsyncIterator[AskStreamEvent]:
+        tool_results: list[tuple[ToolCall, str]] = []
+        for tc in tool_calls:
+            query = tc.arguments.get("query")
+            if tc.name == SEARCH_KNOWLEDGE_BASE_TOOL and isinstance(query, str) and query.strip():
+                decision = await self._kb_query_guard.check(query)
+                if not decision.allowed:
+                    state.consecutive_suppressions += 1
+                    state.last_suppression_reason = decision.reason
+                    suppression_reason = decision.reason.value if decision.reason else None
                     tool_calls_flat.append(
                         ToolCallRecord(
                             tool_name=tc.name,
                             arguments=tc.arguments,
-                            result_summary=tool_result.result_text[:200],
-                            success=tool_result.success,
-                            error_message=tool_result.error_message,
-                            execution_ms=tool_result.execution_ms,
                             iteration=iteration,
+                            suppressed=True,
+                            suppression_reason=suppression_reason,
                         )
                     )
-
-                    tool_results.append((tc, tool_result.result_text))
-
-                    if (
-                        tool_result.success
-                        and tc.name == SEARCH_KNOWLEDGE_BASE_TOOL
-                        and tool_result.hits
-                    ):
-                        merged_hits = self._merge_tool_hits(merged_hits, tool_result.hits)
-
-                    yield AskStreamEvent(
-                        type_=AskStreamEventType.TOOL_RESULT,
-                        tool_name=tc.name,
-                        tool_result_summary=tool_result.result_text[:200]
-                        if tool_result.success
-                        else f"Failed: {tool_result.error_message}",
-                    )
-
-                if forced_finalization:
-                    break
-
-                if not tool_results:
-                    messages.append(
-                        {
-                            "role": "user",
-                            "content": self._suppression_nudge(
-                                command.prompt, last_suppression_reason
-                            )
-                            + "\n\n"
-                            + user_content,
-                        }
-                    )
+                    if command.debug_mode:
+                        yield AskStreamEvent(
+                            type_=AskStreamEventType.TOOL_SUPPRESSED,
+                            tool_name=tc.name,
+                            suppression_reason=suppression_reason,
+                            matched_query=decision.matched_query,
+                        )
+                    if state.consecutive_suppressions >= self._suppression_tripwire:
+                        state.forced_finalization = True
+                        break
                     continue
+                self._kb_query_guard.register_executed(query, decision.embedding)
 
-                tool_call_text = "\n\n".join(
-                    f"Tool: {tc.name}\n{tc.arguments.get('query', '') or tc.arguments.get('url', '')}"
-                    for tc, _ in tool_results
-                )
-                tool_result_text = "\n\n".join(f"Result: {text[:500]}" for _, text in tool_results)
-                messages.append(
-                    {
-                        "role": "assistant",
-                        "content": f"I'll use the following tools:\n{tool_call_text}",
-                    }
-                )
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": f"Here are the results:\n{tool_result_text}\n\nBased on this, provide a final answer to the user. You may call more tools if needed.",
-                    }
-                )
-            else:
-                if result.text:
-                    final_answer_parts.append(result.text)
+            state.consecutive_suppressions = 0
 
-                full_response = "".join(final_answer_parts).strip() or "I'll help you with that."
+            yield AskStreamEvent(
+                type_=AskStreamEventType.TOOL_CALL,
+                tool_name=tc.name,
+                tool_arguments=tc.arguments,
+            )
+
+            if command.debug_mode:
                 yield AskStreamEvent(
-                    type_=AskStreamEventType.TEXT,
-                    text=full_response,
+                    type_=AskStreamEventType.THINKING,
+                    text=f"Calling {tc.name} with {tc.arguments}",
                 )
 
-                ai_message = await self._persist_ai_message(
-                    command,
-                    conversation,
-                    full_response,
-                    now,
-                    retrieved_hits=merged_hits,
-                    tool_calls=tool_calls_flat,
+            tool_result = await self._tool_registry.execute_tool(
+                tc.name,
+                tc.arguments,
+                str(command.account_id),
+                str(command.user_id),
+            )
+
+            tool_calls_flat.append(
+                ToolCallRecord(
+                    tool_name=tc.name,
+                    arguments=tc.arguments,
+                    result_summary=tool_result.result_text[:200],
+                    success=tool_result.success,
+                    error_message=tool_result.error_message,
+                    execution_ms=tool_result.execution_ms,
+                    iteration=iteration,
                 )
+            )
 
-                cache_key = self._build_cache_key(command, conversation.id)
-                await self._cache_response(cache_key, full_response)
-                await self._publish_query_event(command, conversation, ai_message)
-                await self._try_update_title(conversation, command, tool_calls_flat)
+            tool_results.append((tc, tool_result.result_text))
 
-                yield AskStreamEvent(
-                    type_=AskStreamEventType.DONE,
-                    done=conversation,
-                    ai_message=ai_message,
-                    merged_hits=merged_hits,
-                )
-                return
+            if tool_result.success and tc.name == SEARCH_KNOWLEDGE_BASE_TOOL and tool_result.hits:
+                state.merged_hits = self._merge_tool_hits(state.merged_hits, tool_result.hits)
 
+            yield AskStreamEvent(
+                type_=AskStreamEventType.TOOL_RESULT,
+                tool_name=tc.name,
+                tool_result_summary=tool_result.result_text[:200]
+                if tool_result.success
+                else f"Failed: {tool_result.error_message}",
+            )
+
+        state.tool_results = tool_results
+
+    def _append_tool_followup_messages(
+        self,
+        messages: list[dict[str, str]],
+        tool_results: list[tuple[ToolCall, str]],
+    ) -> None:
+        tool_call_text = "\n\n".join(
+            f"Tool: {tc.name}\n{tc.arguments.get('query', '') or tc.arguments.get('url', '')}"
+            for tc, _ in tool_results
+        )
+        tool_result_text = "\n\n".join(f"Result: {text[:500]}" for _, text in tool_results)
+        messages.append(
+            {
+                "role": "assistant",
+                "content": f"I'll use the following tools:\n{tool_call_text}",
+            }
+        )
+        messages.append(
+            {
+                "role": "user",
+                "content": f"Here are the results:\n{tool_result_text}\n\nBased on this, provide a final answer to the user. You may call more tools if needed.",
+            }
+        )
+
+    async def _finalize_turn(
+        self,
+        *,
+        command: AskAICommand,
+        conversation: AIConversationSession,
+        merged_hits: list[SearchHit],
+        tool_calls_flat: list[ToolCallRecord],
+        final_answer_parts: list[str],
+        result_text: str | None,
+        now: datetime,
+    ) -> AsyncIterator[AskStreamEvent]:
+        if result_text:
+            final_answer_parts.append(result_text)
+
+        full_response = "".join(final_answer_parts).strip() or NO_TOOL_ANSWER_FALLBACK
+        yield AskStreamEvent(
+            type_=AskStreamEventType.TEXT,
+            text=full_response,
+        )
+
+        ai_message = await self._persist_ai_message(
+            command,
+            conversation,
+            full_response,
+            now,
+            retrieved_hits=merged_hits,
+            tool_calls=tool_calls_flat,
+        )
+
+        cache_key = self._build_cache_key(command, conversation.id)
+        await self._cache_response(cache_key, full_response)
+        await self._publish_query_event(command, conversation, ai_message)
+        await self._try_update_title(conversation, command, tool_calls_flat)
+
+        yield self._done_event(conversation, ai_message, merged_hits)
+
+    async def _finalize_after_exhaustion(
+        self,
+        *,
+        command: AskAICommand,
+        conversation: AIConversationSession,
+        merged_hits: list[SearchHit],
+        tool_calls_flat: list[ToolCallRecord],
+        final_answer_parts: list[str],
+        messages: list[dict[str, str]],
+        system_prompt: str,
+        now: datetime,
+    ) -> AsyncIterator[AskStreamEvent]:
         finalize_text = await self._finalize_from_gathered_context(
             messages, system_prompt, command.prompt
         )
@@ -375,7 +459,15 @@ class AgenticAskStrategy(AskStrategyPort):
             tool_calls=tool_calls_flat,
         )
 
-        yield AskStreamEvent(
+        yield self._done_event(conversation, ai_message, merged_hits)
+
+    def _done_event(
+        self,
+        conversation: AIConversationSession,
+        ai_message: AIChatMessage,
+        merged_hits: list[SearchHit],
+    ) -> AskStreamEvent:
+        return AskStreamEvent(
             type_=AskStreamEventType.DONE,
             done=conversation,
             ai_message=ai_message,
