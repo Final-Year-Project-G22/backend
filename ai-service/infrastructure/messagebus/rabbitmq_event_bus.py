@@ -29,7 +29,7 @@ class RabbitMQEventBusAdapter(EventBusPort):
 
     async def _ensure_connected(self) -> AbstractExchange:
         """Lazily connect and declare the exchange."""
-        if self._exchange is not None and not self._channel.is_closed:  # type: ignore[union-attr]
+        if self._exchange is not None and self._channel is not None and not self._channel.is_closed:
             return self._exchange
 
         self._connection = await aio_pika.connect_robust(self._amqp_url)
