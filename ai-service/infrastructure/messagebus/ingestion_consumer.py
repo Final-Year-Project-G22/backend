@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-import random
+import secrets
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
@@ -47,7 +47,7 @@ def calculate_retry_delay_ms(policy: RetryPolicy, retry_count: int) -> int:
         jitter = int(delay * jitter_factor)
         lower = max(0, delay - jitter)
         upper = delay + jitter
-        delay = random.randint(lower, upper)  # noqa: S311
+        delay = lower + secrets.randbelow(upper - lower + 1)
 
     return delay
 
