@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any, cast
 
-import numpy as np  # type: ignore[import-untyped]
+import numpy as np
 from sqlalchemy import delete, func, literal, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession

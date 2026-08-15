@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pymupdf  # type: ignore[import]
+import pymupdf
 
 from core.ports.parser import ParsedDocument, ParsedDocumentSection, ParserPort
 
@@ -35,7 +35,7 @@ class _PdfDocument:
 
 
 def _open_pdf(stream: bytes, filetype: str) -> _PdfDocument:
-    doc = pymupdf.open(stream=stream, filetype=filetype)  # type: ignore[no-untyped-call]
+    doc = pymupdf.open(stream=stream, filetype=filetype)
     return _PdfDocument(doc)
 
 
