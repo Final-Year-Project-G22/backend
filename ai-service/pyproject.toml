@@ -152,7 +152,8 @@ exclude = [".venv", "__pycache__", "grpc_stubs", "tests"]
 extraPaths = ["grpc_stubs"]
 # Remaining deliberate relaxations (everything else runs strict):
 reportMissingTypeStubs = false      # grpcio/protobuf come from grpc-stubs; pgvector is
-                                    # the only untyped dep and is annotated at its import site
+                                    # the only imported dep without stubs and is annotated
+                                    # at its import sites
 reportUntypedFunctionDecorator = false  # FastAPI/arq/dependency-injector decorators are typed
                                         # but their decorator-application is opaque; annotating
                                         # each call site adds noise without safety

@@ -8,7 +8,7 @@ Create Date: 2026-05-26
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]  # pgvector ships no py.typed
 
 from alembic import op
 
