@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class _EtreeProtocol(Protocol):
     def fromstring(self, text: bytes) -> Any: ...
-    def tostring(self, element: Any, *, pretty_print: bool, encoding: str) -> str: ...
+    def tostring(self, element: Any, *, pretty_print: bool, encoding: str) -> str: ...  # noqa: V107
 
 
 def _load_etree() -> _EtreeProtocol:

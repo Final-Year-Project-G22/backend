@@ -7,7 +7,7 @@ Create Date: 2026-04-05
 
 from collections.abc import Sequence
 
-import pgvector  # type: ignore[reportUnusedImport]
+import pgvector  # type: ignore[reportUnusedImport]  # noqa: V104
 import sqlalchemy as sa
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
