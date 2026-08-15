@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+import grpc as grpc_lib
 from dependency_injector import containers, providers
 
-import grpc as grpc_lib
 from app.config import Settings
 from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
