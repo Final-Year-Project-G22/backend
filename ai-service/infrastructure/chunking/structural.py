@@ -96,6 +96,7 @@ class StructuralChunkingAdapter(ChunkingPort):
         tokens: list[int],
         heading: str | None,
         section_order: int,
+        *,
         strategy: ChunkingStrategy,
         start_chunk_index: int,
         parser_version: str | None,
