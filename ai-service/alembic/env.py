@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from logging.config import fileConfig
 
-import pgvector  # noqa: F401 — required for Vector type deserialization
+import pgvector  # noqa: F401 — required for Vector type deserialization  # type: ignore[import-untyped]
 from sqlalchemy.engine import Connection
 
 from alembic import context
