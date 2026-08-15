@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any
 
-from pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]  # pgvector ships no py.typed
 from sqlalchemy import (
     BigInteger,
     Boolean,

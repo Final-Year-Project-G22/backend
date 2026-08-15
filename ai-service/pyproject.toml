@@ -70,7 +70,7 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-exclude = [".git", ".venv", "__pycache__", "grpc_stubs", "grpc/generated"]
+exclude = [".git", ".venv", "__pycache__", "grpc_stubs"]
 
 [tool.ruff.lint]
 select = [
@@ -106,6 +106,8 @@ select = [
     "PERF",  # perflint
     "FURB",  # refurb
 ]
+# Global relaxations are deliberate; each ignore below is named and global
+# rather than scattered as blanket noqa comments.
 ignore = [
     "E501",    # Line length (handled by formatter)
     "PLR0913", # Too many arguments (common in services)
@@ -118,17 +120,15 @@ external = [
     "V107",    # vulture: unused variable (abstract port/Protocol signature params)
 ]
 
+# Narrow, file-scoped relaxations: each entry must stay live — delete an entry
+# when its violations disappear (verified by removing the rule and running ruff).
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ARG001", "T201", "PLR2004"]
-"grpc_stubs/**/*.py" = ["ALL"]
-"grpc/generated/*.py" = ["ALL"]
+"tests/**/*.py" = ["S101", "ARG001", "PLR2004"]
 "app/config.py" = ["S105"]
-"app/container.py" = ["ERA001"]
 "alembic/env.py" = ["PLC0415"]
-"alembic/versions/*.py" = ["PLC0415", "F401"]
+"alembic/versions/*.py" = ["F401"]
 "infrastructure/llm/gemini.py" = ["PLC0415"]
 "infrastructure/embeddings/gemini.py" = ["PLC0415"]
-"infrastructure/rpc/services/inference_service.py" = ["ARG002"]
 "infrastructure/tools/local/*.py" = ["ARG002"]
 "infrastructure/prefetch/pipeline.py" = ["TRY300"]
 
@@ -147,19 +147,24 @@ docstring-code-format = true
 pythonVersion = "3.11"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
-include = ["app", "core", "infrastructure", "workers"]
+include = ["main.py", "app", "core", "infrastructure", "workers"]
 exclude = [".venv", "__pycache__", "grpc_stubs", "tests"]
 extraPaths = ["grpc_stubs"]
-reportMissingTypeStubs = false
-reportUntypedFunctionDecorator = false
-reportUntypedClassDecorator = false
-reportImplicitStringConcatenation = false
+# Remaining deliberate relaxations (everything else runs strict):
+reportMissingTypeStubs = false      # grpcio/protobuf come from grpc-stubs; pgvector is
+                                    # the only untyped dep and is annotated at its import site
+reportUntypedFunctionDecorator = false  # FastAPI/arq/dependency-injector decorators are typed
+                                        # but their decorator-application is opaque; annotating
+                                        # each call site adds noise without safety
+reportUntypedClassDecorator = false # same rationale as above for class decorators
+reportImplicitStringConcatenation = false  # deliberate SQL/prompt string concatenation in
+                                           # repositories and prompt builders
 
 [tool.bandit]
-exclude_dirs = [".venv", "grpc_stubs", "grpc/generated", "tests"]
+exclude_dirs = [".venv", "grpc_stubs", "tests"]
 
 [tool.vulture]
-exclude = [".venv", "__pycache__", "grpc_stubs", "grpc/generated", "tests"]
+exclude = [".venv", "__pycache__", "grpc_stubs", "tests"]
 min_confidence = 80
 paths = ["."]
 
@@ -190,7 +195,6 @@ omit = [
     "*/tests/*",
     "*/__pycache__/*",
     "*/grpc_stubs/*",
-    "*/grpc/generated/*",
 ]
 
 [tool.coverage.report]

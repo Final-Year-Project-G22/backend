@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-import grpc as grpc_lib
+import grpc.aio as grpc_aio
 from dependency_injector import containers, providers
 
 from app.config import Settings
@@ -45,11 +45,11 @@ from workers.tasks import IngestionRequestedTaskHandler
 def _create_document_fetch_channel(endpoint: str) -> Any:
     """Factory for the document-fetch gRPC channel.
 
-    Returns ``Any`` because Pylance cannot resolve ``grpc.aio.Channel``
-    from the grpc stubs, which would otherwise make the provider type
-    ``Singleton[Unknown]`` and cascade "partially unknown" errors.
+    Returns ``Any`` because the grpc-stubs ``Channel`` type cannot be
+    resolved through dependency-injector's ``Singleton`` provider without
+    cascading "partially unknown" errors.
     """
-    return cast(Any, grpc_lib.aio.insecure_channel(endpoint))  # type: ignore[reportUnknownMemberType]
+    return cast(Any, grpc_aio.insecure_channel(endpoint))
 
 
 class Container(containers.DeclarativeContainer):

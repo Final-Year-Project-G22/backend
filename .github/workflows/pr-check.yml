@@ -325,4 +325,4 @@ jobs:
 
           cd ai-service
           uv sync --frozen --all-groups --extra dev
-          uv run bandit -c pyproject.toml -r app core grpc infrastructure workers
+          uv run bandit -c pyproject.toml -r app core infrastructure workers

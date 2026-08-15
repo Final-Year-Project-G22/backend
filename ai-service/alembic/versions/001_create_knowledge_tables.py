@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 import pgvector  # type: ignore[reportUnusedImport]  # noqa: V104
 import sqlalchemy as sa
-from pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]  # pgvector ships no py.typed
 from sqlalchemy.dialects import postgresql
 
 from alembic import op
