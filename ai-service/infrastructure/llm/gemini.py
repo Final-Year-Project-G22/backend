@@ -95,7 +95,7 @@ class GeminiLLMAdapter(LLMPort):
                     self._auth_token = credentials.token
             except Exception as e:
                 logger.warning("Vertex AI auth failed: %s", e)
-                self._auth_token = ""
+                self._auth_token = ""  # nosec B105 -- empty-string sentinel, not a credential
 
     def _build_url(self, action: str, *, alt_sse: bool = False) -> str:
         if self._use_vertex:

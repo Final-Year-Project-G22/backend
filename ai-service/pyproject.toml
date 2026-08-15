@@ -113,6 +113,10 @@ ignore = [
     "EM101",   # Exception must not use string literal
     "EM102",   # Exception must not use f-string
 ]
+external = [
+    "V104",    # vulture: unused import (side-effect import whitelisted via # noqa)
+    "V107",    # vulture: unused variable (abstract port/Protocol signature params)
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ARG001", "T201", "PLR2004"]
@@ -123,7 +127,7 @@ ignore = [
 "alembic/env.py" = ["PLC0415"]
 "alembic/versions/*.py" = ["PLC0415", "F401"]
 "infrastructure/llm/gemini.py" = ["PLC0415"]
-"infrastructure/embeddings/gemini.py" = ["PLC0415", "S110"]
+"infrastructure/embeddings/gemini.py" = ["PLC0415"]
 "infrastructure/rpc/services/inference_service.py" = ["ARG002"]
 "infrastructure/tools/local/*.py" = ["ARG002"]
 "infrastructure/prefetch/pipeline.py" = ["TRY300"]
@@ -153,7 +157,6 @@ reportImplicitStringConcatenation = false
 
 [tool.bandit]
 exclude_dirs = [".venv", "grpc_stubs", "grpc/generated", "tests"]
-skips = ["B101", "B311", "B110", "B105"]
 
 [tool.vulture]
 exclude = [".venv", "__pycache__", "grpc_stubs", "grpc/generated", "tests"]

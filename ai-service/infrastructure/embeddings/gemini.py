@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Sequence
 from typing import Any, Protocol, cast
 
@@ -15,6 +16,8 @@ BATCH_DELAY_S = 5.0
 MAX_RETRIES = 5
 _429_TOO_MANY_REQUESTS = 429
 _CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
+
+logger = logging.getLogger(__name__)
 
 
 class _Credentials(Protocol):
@@ -240,14 +243,14 @@ class GeminiEmbeddingAdapter(EmbeddingPort):
                 try:
                     request = cast(Any, _gauth_requests).Request()
                     credentials.refresh(request)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.warning("Vertex AI credential refresh failed: %s", exc)
                 token = credentials.token
                 if token:
                     headers["Authorization"] = f"Bearer {token}"
                     return url, params, headers, True
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Vertex AI auth setup failed: %s", exc)
             return url, params, headers, False
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:embedContent"
         params = {"key": self._api_key}
