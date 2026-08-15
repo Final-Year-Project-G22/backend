@@ -238,7 +238,11 @@ jobs:
           fi
 
           cd ai-service
-          printf '%s\n' "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx ruff check
+          # Pin ruff to the version resolved in uv.lock so CI always matches
+          # the local dev environment (pre-commit uses `uv run ruff`).
+          RUFF_VERSION=$(awk '/^name = "ruff"/{found=1} found && /^version =/{gsub(/"/, "", $3); print $3; exit}' uv.lock)
+          echo "Using ruff $RUFF_VERSION (pinned by ai-service/uv.lock)"
+          printf '%s\n' "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx "ruff==$RUFF_VERSION" check
 
       - name: Format Python (check only)
         run: |
@@ -250,7 +254,8 @@ jobs:
           fi
 
           cd ai-service
-          printf '%s\n' "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx ruff format --check
+          RUFF_VERSION=$(awk '/^name = "ruff"/{found=1} found && /^version =/{gsub(/"/, "", $3); print $3; exit}' uv.lock)
+          printf '%s\n' "$PY_FILES" | sed 's|^ai-service/||' | xargs uvx "ruff==$RUFF_VERSION" format --check
 
   python-typecheck-security:
     runs-on: ubuntu-latest

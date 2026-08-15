@@ -51,7 +51,7 @@ For every implementation requested from a GitHub issue or Linear ticket:
 1. Before editing, fetch the latest `origin/dev` and create a feature branch from it: `git fetch origin dev && git switch -c <type>/<short-name> origin/dev`.
 2. Never implement or commit ticket work directly on `dev` or `main`. If the current branch is `dev` or `main`, stop and create the feature branch first.
 3. After verification, push the feature branch with `git push -u origin <branch>`.
-4. Create a GitHub PR with `gh pr create --base dev --head <branch>` and include the issue reference in the PR body.
+4. Create a GitHub PR with `gh pr create --base dev --head <branch>` and include the issue reference in the PR body so GitHub links them — always link the PR to the issue (mention `#<issue>` in the PR body, and verify the link appears in the issue's Development/mentions before moving on).
 5. Do not resolve or close the source ticket until the PR exists, then record the PR URL on the source ticket.
 
 ## Linear access
