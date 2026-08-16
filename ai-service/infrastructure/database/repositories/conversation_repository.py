@@ -197,15 +197,23 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         *,
         limit: int = 100,
         offset: int = 0,
+        descending: bool = False,
     ) -> list[AIChatMessage]:
-        statement = (
-            select(sa_models.AIChatMessage)
-            .where(sa_models.AIChatMessage.conversation_id == conversation_id)
-            .order_by(
+        order = (
+            sa_models.AIChatMessage.message_order.desc(),
+            sa_models.AIChatMessage.created_at.desc(),
+            sa_models.AIChatMessage.id.desc(),
+        )
+        if not descending:
+            order = (
                 sa_models.AIChatMessage.message_order.asc(),
                 sa_models.AIChatMessage.created_at.asc(),
                 sa_models.AIChatMessage.id.asc(),
             )
+        statement = (
+            select(sa_models.AIChatMessage)
+            .where(sa_models.AIChatMessage.conversation_id == conversation_id)
+            .order_by(*order)
             .offset(offset)
         )
         if limit > 0:

@@ -49,6 +49,7 @@ class ConversationRepositoryPort(ABC):
         *,
         limit: int = 100,
         offset: int = 0,
+        descending: bool = False,
     ) -> list[AIChatMessage]: ...
 
 

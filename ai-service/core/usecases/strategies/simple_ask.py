@@ -340,7 +340,9 @@ class SimpleAskStrategy(AskStrategyPort):
         return await self._conversation_repository.add_message(ai_message)
 
     async def _next_message_order(self, conversation_id: Any) -> int:
-        messages = await self._conversation.list_messages(conversation_id, limit=1, offset=0)
+        messages = await self._conversation.list_messages(
+            conversation_id, limit=1, offset=0, descending=True
+        )
         if not messages:
             return 1
         return messages[0].message_order + 1

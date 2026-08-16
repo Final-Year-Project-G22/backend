@@ -187,6 +187,24 @@ async def test_list_messages_returns_domain_models() -> None:
 
 
 @pytest.mark.asyncio
+async def test_list_messages_descending_orders_most_recent_first() -> None:
+    domain_session = _build_domain_session()
+    domain_message = _build_domain_message(conversation_id=domain_session.id)
+
+    session = _build_session_mock()
+    session.execute.return_value = _ListResult([to_orm_message(domain_message)])
+    repo = SqlAlchemyConversationRepository(session)
+
+    messages = await repo.list_messages(domain_session.id, limit=1, descending=True)
+
+    assert messages == [domain_message]
+    statement = session.execute.await_args.args[0]
+    compiled = str(statement)
+    assert "message_order DESC" in compiled
+    assert "message_order ASC" not in compiled
+
+
+@pytest.mark.asyncio
 async def test_get_session_wraps_sqlalchemy_errors() -> None:
     session = _build_session_mock()
     session.execute.side_effect = SQLAlchemyError("boom")
