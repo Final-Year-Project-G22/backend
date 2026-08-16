@@ -23,6 +23,7 @@ from core.usecases.conversation import ConversationUseCase
 from core.usecases.strategies.agentic_ask import AgenticAskStrategy
 from infrastructure.prefetch.pipeline import PreFetchPipeline
 from infrastructure.prompts import PromptLoader
+from tests.unit.core.usecases.strategies._message_store import _MessageStore
 
 
 def _make_hit(language: Language) -> SearchHit:
@@ -47,6 +48,7 @@ def _make_strategy(
     embedding_map: dict[str, list[float]] | None = None,
     max_iterations: int = 5,
     debug_mode: bool = False,
+    store: _MessageStore | None = None,
 ) -> tuple[AgenticAskStrategy, MagicMock, MagicMock, AskAICommand, SearchHit]:
     user_id = uuid.uuid4()
     account_id = uuid.uuid4()
@@ -69,9 +71,14 @@ def _make_strategy(
     repository = MagicMock(spec=ConversationRepositoryPort)
     repository.create_session = AsyncMock(return_value=session)
     repository.get_session = AsyncMock(return_value=None)
-    repository.list_messages = AsyncMock(return_value=[])
-    repository.add_message = AsyncMock(side_effect=lambda message: message)
-    repository.update_message = AsyncMock(side_effect=lambda message: message)
+    if store is not None:
+        repository.list_messages = AsyncMock(side_effect=store.list)
+        repository.add_message = AsyncMock(side_effect=store.add)
+        repository.update_message = AsyncMock(side_effect=store.update)
+    else:
+        repository.list_messages = AsyncMock(return_value=[])
+        repository.add_message = AsyncMock(side_effect=lambda message: message)
+        repository.update_message = AsyncMock(side_effect=lambda message: message)
     conversation = ConversationUseCase(repository)
 
     knowledge_repository = MagicMock(spec=KnowledgeRepositoryPort)
@@ -680,6 +687,54 @@ async def test_format_history_skips_suppressed_tool_calls() -> None:
     assert "3 results" in history
     assert "suppressed lookup" not in history
     assert history.count("search_knowledge_base") == 1
+
+
+@pytest.mark.asyncio
+async def test_persisted_messages_follow_most_recent_order_across_turns() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    last_message = AIChatMessage(
+        user_id=uuid.uuid4(),
+        conversation_id=uuid.uuid4(),
+        message_type=MessageType.AI_RESPONSE,
+        llm_response="Previous answer",
+        message_order=5,
+    )
+    store = _MessageStore(last_message)
+    strategy, _repository, tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Grounded answer")] * 2,
+        store=store,
+    )
+    tool_registry.execute_tool.return_value = ToolResult(
+        tool_name="search_knowledge_base", result_text="Registration context"
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+    assert events[-1].type is AskStreamEventType.DONE
+    assert [m.message_order for m in store.messages] == [5, 6, 7]
+    assert store.messages[1].message_type is MessageType.USER_QUERY
+    assert store.messages[2].message_type is MessageType.AI_RESPONSE
+
+    events = [event async for event in strategy.execute_stream(command)]
+    assert events[-1].type is AskStreamEventType.DONE
+    assert [m.message_order for m in store.messages] == [5, 6, 7, 8, 9]
+
+
+@pytest.mark.asyncio
+async def test_first_message_in_empty_conversation_gets_order_one() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    store = _MessageStore()
+    strategy, _repository, _tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Grounded answer")],
+        store=store,
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+    assert events[-1].type is AskStreamEventType.DONE
+    assert [m.message_order for m in store.messages] == [1, 2]
 
 
 @pytest.mark.asyncio
