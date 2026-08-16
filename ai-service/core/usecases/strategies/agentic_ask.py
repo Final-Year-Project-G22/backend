@@ -111,7 +111,7 @@ class AgenticAskStrategy(AskStrategyPort):
             raise AIServiceError(msg)
 
         conversation = done_event.done
-        ai_message = AIChatMessage(
+        ai_message = done_event.ai_message or AIChatMessage(
             user_id=command.user_id,
             conversation_id=conversation.id,
             message_type=MessageType.AI_RESPONSE,
@@ -126,6 +126,7 @@ class AgenticAskStrategy(AskStrategyPort):
             user_message=None,
             ai_message=ai_message,
             retrieved_hits=merged_hits,
+            cache_hit=ai_message.cache_hit,
         )
 
     async def execute_stream(self, command: AskAICommand) -> AsyncIterator[AskStreamEvent]:
@@ -144,6 +145,15 @@ class AgenticAskStrategy(AskStrategyPort):
         now = _utc_now()
         conversation = await self._resolve_conversation(command, now)
         user_message = await self._persist_user_message(command, conversation, now)
+
+        cache_key = self._build_cache_key(command, conversation.id)
+        cached_response = await self._try_cache(cache_key)
+        if cached_response is not None:
+            async for event in self._deliver_cached_turn(
+                command, conversation, cached_response, now
+            ):
+                yield event
+            return
 
         query_embedding = await self._embedding_port.embed_query(command.prompt)
         user_message = await self._update_user_message_embedding(user_message, query_embedding, now)
@@ -392,6 +402,26 @@ class AgenticAskStrategy(AskStrategyPort):
                 "content": f"Here are the results:\n{tool_result_text}\n\nBased on this, provide a final answer to the user. You may call more tools if needed.",
             }
         )
+
+    async def _deliver_cached_turn(
+        self,
+        command: AskAICommand,
+        conversation: AIConversationSession,
+        cached_response: str,
+        now: datetime,
+    ) -> AsyncIterator[AskStreamEvent]:
+        ai_message = await self._persist_ai_message(
+            command,
+            conversation,
+            cached_response,
+            now,
+            retrieved_hits=[],
+            tool_calls=None,
+            cache_hit=True,
+        )
+
+        yield AskStreamEvent(type_=AskStreamEventType.TEXT, text=cached_response)
+        yield self._done_event(conversation, ai_message, [])
 
     async def _finalize_turn(
         self,
