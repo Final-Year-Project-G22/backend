@@ -131,6 +131,9 @@ external = [
 "infrastructure/embeddings/gemini.py" = ["PLC0415"]
 "infrastructure/tools/local/*.py" = ["ARG002"]
 "infrastructure/prefetch/pipeline.py" = ["TRY300"]
+# Eval fixture provisioning/verification are standalone operator scripts, not
+# app code: console I/O, assertions, and inline imports are intentional.
+"evals/fixture/scripts/*.py" = ["S101", "T201", "PLC0415", "PLR2004", "PLW0603", "FBT001", "DTZ005", "PLR0915"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "core", "infrastructure", "workers"]

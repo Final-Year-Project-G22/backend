@@ -1,0 +1,144 @@
+{
+  "fixture_version": "1.0.0",
+  "description": "Deterministic AI evaluation fixture: frozen knowledge corpus + seeded core-backend account state. No live/demo data.",
+  "chunking": {
+    "strategy": "structural",
+    "max_tokens": 512,
+    "overlap_tokens": 50,
+    "min_chunk_tokens": 20,
+    "encoding": "cl100k_base"
+  },
+  "documents": [
+    {
+      "document_key": "en:tax_code:vat-registration",
+      "external_id": "vat-registration-en",
+      "source": "tax_code",
+      "locale": "en",
+      "title": "VAT Registration for MSMEs in Ethiopia",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "am:tax_code:vat-registration",
+      "external_id": "vat-registration-am",
+      "source": "tax_code",
+      "locale": "am",
+      "title": "በኢትዮጵያ ውስጥ ለአነስተኛ እና መካከለኛ ኢንተርፕራይዞች (MSME) የተጨማሪ እሴት ታክስ (VAT) ምዝገባ",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "en:tax_code:tin-registration",
+      "external_id": "tin-registration-en",
+      "source": "tax_code",
+      "locale": "en",
+      "title": "TIN Registration for Businesses",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "am:tax_code:tin-registration",
+      "external_id": "tin-registration-am",
+      "source": "tax_code",
+      "locale": "am",
+      "title": "የንግድ ድርጅት የታክስ ከፋይ መለያ ቁጥር (TIN) ምዝገባ",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "en:legal:business-registration",
+      "external_id": "business-registration-en",
+      "source": "legal",
+      "locale": "en",
+      "title": "Business Registration in Ethiopia",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "am:legal:business-registration",
+      "external_id": "business-registration-am",
+      "source": "legal",
+      "locale": "am",
+      "title": "በኢትዮጵያ ውስጥ የንግድ ምዝገባ",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "en:government:trade-license",
+      "external_id": "trade-license-en",
+      "source": "government",
+      "locale": "en",
+      "title": "Trade License Application",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "am:government:trade-license",
+      "external_id": "trade-license-am",
+      "source": "government",
+      "locale": "am",
+      "title": "የንግድ ፈቃድ ማመልከቻ",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "en:guide:compliance-deadlines",
+      "external_id": "compliance-deadlines-en",
+      "source": "guide",
+      "locale": "en",
+      "title": "Compliance Deadlines and Obligations",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "am:guide:compliance-deadlines",
+      "external_id": "compliance-deadlines-am",
+      "source": "guide",
+      "locale": "am",
+      "title": "የተገዢነት ግዴታዎች እና ቀነ-ገደቦች",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "en:guide:formalization-overview",
+      "external_id": "formalization-overview-en",
+      "source": "guide",
+      "locale": "en",
+      "title": "MSME Formalization: Step-by-Step Overview",
+      "effective_date": "2026-01-01"
+    },
+    {
+      "document_key": "am:guide:formalization-overview",
+      "external_id": "formalization-overview-am",
+      "source": "guide",
+      "locale": "am",
+      "title": "የአነስተኛ እና መካከለኛ ኢንተርፕራይዝ ሕጋዊነት (Formalization)፡ ደረጃ በደረጃ አጠቃላይ እይታ",
+      "effective_date": "2026-01-01"
+    }
+  ],
+  "account": {
+    "email": "eval-msme-01@fixture.local",
+    "username": "eval-msme-01",
+    "password": "EvalFixture2026!",
+    "profile": {
+      "company_name": "Selam Coffee Export PLC",
+      "sector": "crop-farming",
+      "region": "OROMIA",
+      "stage": "OPERATIONAL",
+      "tags": ["plc", "op-exporter", "has-employees", "tax-vat"]
+    },
+    "compliance": [
+      {
+        "type": "tax_registration",
+        "reference_number": "TIN-100-2026-0001",
+        "issued_date": "2025-06-15",
+        "expiry_date": "2030-06-15",
+        "reminder_days_before": 45
+      },
+      {
+        "type": "trade_license",
+        "reference_number": "TL-AA-2026-0042",
+        "issued_date": "2026-01-10",
+        "expiry_date": "2027-01-10",
+        "reminder_days_before": 30
+      },
+      {
+        "type": "business_registration",
+        "reference_number": "BR-2026-00777",
+        "issued_date": "2025-06-15",
+        "expiry_date": "2031-06-15",
+        "reminder_days_before": 60
+      }
+    ]
+  }
+}
