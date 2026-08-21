@@ -53,7 +53,7 @@ async def main() -> None:
     for path in sorted(CORPUS.glob("*/*.md")):
         content_type = CONTENT_TYPES[path.suffix]
         parser = parser_registry.get_parser(content_type)
-        assert parser is not None, f"no parser for {content_type}"
+        assert parser is not None, f"no parser for {content_type}"  # nosec B101 - operator script guard
         parsed = await parser.parse(path.read_bytes(), metadata={"filename": path.name})
         chunks = await chunking_registry.chunk("structural", parsed, CHUNKING_STRATEGY)
         results[document_key_for(path)] = {

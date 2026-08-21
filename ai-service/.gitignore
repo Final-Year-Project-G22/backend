@@ -15,6 +15,10 @@ build/
 .mypy_cache/
 .ruff_cache/
 
+# Evaluation run outputs and judge cache (never commit run artifacts)
+evals/results/
+evals/.judge_cache/
+
 # FastAPI / Uvicorn
 *.log
 uvicorn.log

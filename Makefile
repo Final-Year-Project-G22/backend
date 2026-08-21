@@ -185,17 +185,26 @@ test-ai-integration:
 	cd ai-service && uv run pytest tests/integration --cov-fail-under=0 --cov-reset
 
 security-ai:
-	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers
+	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers evals
 
 dead-code-ai:
 	cd ai-service && uv run vulture . --min-confidence 80
+
+# Full live evaluation over the golden set (manual / nightly / pre-demo —
+# never a default PR gate). Requires the fixture provisioned with embeddings,
+# core-backend gRPC up, and provider keys configured.
+eval-ai:
+	cd ai-service && $(AI_ENV) uv run python -m evals.cli run $(EVAL_ARGS)
+
+eval-verify:
+	cd ai-service && $(AI_ENV) uv run python -m evals.cli verify-dataset
 
 check-ai:
 	$(MAKE) proto-gen
 	cd ai-service && uv run ruff format .
 	cd ai-service && uv run ruff check --fix .
 	cd ai-service && uv run basedpyright
-	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers
+	cd ai-service && uv run bandit -c pyproject.toml -r app core infrastructure workers evals
 
 test-all: test test-ai
 
