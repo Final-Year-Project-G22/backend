@@ -84,11 +84,13 @@ class ConversationUseCase:
         *,
         limit: int = 100,
         offset: int = 0,
+        descending: bool = False,
     ) -> list[AIChatMessage]:
         return await self._conversation_repository.list_messages(
             conversation_id,
             limit=limit,
             offset=offset,
+            descending=descending,
         )
 
     async def update_session_title(

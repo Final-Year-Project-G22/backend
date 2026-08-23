@@ -251,8 +251,8 @@ A streaming event containing the LLM's internal reasoning or chain-of-thought te
 _Avoid_: Reasoning event, chain-of-thought chunk, plan chunk
 
 **Trusted Web Search**:
-An AI Tool that fetches content from a hardcoded whitelist of domain sources (e.g., Ethiopian government and regulatory websites). Uses direct URL mapping per topic area with no external search API dependency. Runs locally in the AI service via httpx.
-_Avoid_: Web search, internet lookup, external search
+An AI Tool that fetches content only from a curated registry of official Ethiopian government pages, organized by topic area, over a whitelist of verified official domains — with no external search API dependency. The registry is strict: the model may fetch only registered URLs (per locale), each carrying a freshness timestamp ("As of") and a per-topic fallback for when the source is unreachable. Runs locally in the AI service via httpx.
+_Avoid_: Web search, internet lookup, external search, free-form URL fetch
 
 **Tool Call Record**:
 A structured entry stored inside an AI Response message that captures each tool invocation during a ReAct loop: tool name, arguments, result summary, success/failure status, execution time, and iteration number. Stored as JSONB and loaded as summarized context for multi-turn conversations.
@@ -277,6 +277,28 @@ _Avoid_: Verbose mode, developer mode
 **Prompt Template**:
 A Jinja2 file loaded at application startup that defines the system prompt for the LLM. Two top-level templates exist — one for the Agentic Ask strategy (including tool instructions) and one for the Simple Ask strategy — sharing common sections (persona, guardrails, locale rules) via includes. Provider-specific formatting is handled by each LLM adapter.
 _Avoid_: System prompt, prompt config, prompt string
+
+### AI quality evaluation terms
+
+**Golden Question**:
+A versioned evaluation query with an intended locale, intent, difficulty tier, expected evidence, expected tools, and a reference answer or claims. It is a measurement case, not a user-facing test question.
+_Avoid_: Test case, sample prompt
+
+**Evaluation Cell**:
+The six Golden Questions sharing one intent and one locale. Results are reported per Evaluation Cell so English/Amharic and knowledge/personal/mixed performance cannot disappear inside one overall average.
+_Avoid_: Cohort, bucket
+
+**Difficulty Tier**:
+The evidence and reasoning complexity of a Golden Question: easy is direct single-source evidence, medium adds multiple facts or disambiguation, and hard requires multi-step/multi-source reasoning or handles sparse context. Intent does not determine difficulty by itself.
+_Avoid_: Severity, priority
+
+**Evaluation Fixture**:
+The frozen knowledge corpus and account state used to make personal and mixed Golden Questions reproducible. It is distinct from live or demo data.
+_Avoid_: Demo account, production snapshot
+
+**Pass Bar**:
+A calibrated quality threshold a candidate AI change must meet, together with the no-regression rule, before it is accepted. Pass Bars are calibrated against the current system and a deliberately broken baseline rather than treated as universal metric constants.
+_Avoid_: Score target, benchmark score
 
 ## Relationships (AI)
 

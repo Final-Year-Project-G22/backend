@@ -170,5 +170,32 @@ async def test_list_and_get_messages_delegate_to_repository() -> None:
         conversation_id,
         limit=50,
         offset=10,
+        descending=False,
     )
     conversation_repository.get_message.assert_awaited_once_with(message.id)
+
+
+@pytest.mark.asyncio
+async def test_list_messages_forwards_descending_lookup() -> None:
+    conversation_id = uuid.uuid4()
+    message = AIChatMessage(
+        user_id=uuid.uuid4(),
+        conversation_id=conversation_id,
+        message_type=MessageType.AI_RESPONSE,
+        llm_response="Use your license form",
+        message_order=1,
+    )
+
+    conversation_repository = AsyncMock()
+    conversation_repository.list_messages.return_value = [message]
+
+    usecase = ConversationUseCase(conversation_repository)
+    listed = await usecase.list_messages(conversation_id, limit=1, descending=True)
+
+    assert listed == [message]
+    conversation_repository.list_messages.assert_awaited_once_with(
+        conversation_id,
+        limit=1,
+        offset=0,
+        descending=True,
+    )

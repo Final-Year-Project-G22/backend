@@ -1,0 +1,148 @@
+{
+  "am:legal:business-registration": {
+    "path": "am/business-registration.md",
+    "chunk_count": 5,
+    "token_counts": [
+      430,
+      414,
+      322,
+      402,
+      400
+    ],
+    "section_count": 6
+  },
+  "am:guide:compliance-deadlines": {
+    "path": "am/compliance-deadlines.md",
+    "chunk_count": 5,
+    "token_counts": [
+      424,
+      467,
+      326,
+      396,
+      374
+    ],
+    "section_count": 6
+  },
+  "am:guide:formalization-overview": {
+    "path": "am/formalization-overview.md",
+    "chunk_count": 6,
+    "token_counts": [
+      402,
+      333,
+      370,
+      313,
+      293,
+      261
+    ],
+    "section_count": 7
+  },
+  "am:tax_code:tin-registration": {
+    "path": "am/tin-registration.md",
+    "chunk_count": 5,
+    "token_counts": [
+      456,
+      390,
+      378,
+      384,
+      339
+    ],
+    "section_count": 6
+  },
+  "am:government:trade-license": {
+    "path": "am/trade-license.md",
+    "chunk_count": 5,
+    "token_counts": [
+      393,
+      441,
+      415,
+      362,
+      314
+    ],
+    "section_count": 6
+  },
+  "am:tax_code:vat-registration": {
+    "path": "am/vat-registration.md",
+    "chunk_count": 5,
+    "token_counts": [
+      473,
+      466,
+      497,
+      451,
+      252
+    ],
+    "section_count": 6
+  },
+  "en:legal:business-registration": {
+    "path": "en/business-registration.md",
+    "chunk_count": 5,
+    "token_counts": [
+      47,
+      57,
+      43,
+      50,
+      52
+    ],
+    "section_count": 6
+  },
+  "en:guide:compliance-deadlines": {
+    "path": "en/compliance-deadlines.md",
+    "chunk_count": 5,
+    "token_counts": [
+      45,
+      52,
+      45,
+      46,
+      46
+    ],
+    "section_count": 6
+  },
+  "en:guide:formalization-overview": {
+    "path": "en/formalization-overview.md",
+    "chunk_count": 6,
+    "token_counts": [
+      44,
+      44,
+      43,
+      48,
+      38,
+      31
+    ],
+    "section_count": 7
+  },
+  "en:tax_code:tin-registration": {
+    "path": "en/tin-registration.md",
+    "chunk_count": 5,
+    "token_counts": [
+      61,
+      52,
+      52,
+      60,
+      49
+    ],
+    "section_count": 6
+  },
+  "en:government:trade-license": {
+    "path": "en/trade-license.md",
+    "chunk_count": 5,
+    "token_counts": [
+      54,
+      59,
+      54,
+      40,
+      42
+    ],
+    "section_count": 6
+  },
+  "en:tax_code:vat-registration": {
+    "path": "en/vat-registration.md",
+    "chunk_count": 5,
+    "token_counts": [
+      54,
+      59,
+      55,
+      53,
+      36
+    ],
+    "section_count": 6
+  }
+}

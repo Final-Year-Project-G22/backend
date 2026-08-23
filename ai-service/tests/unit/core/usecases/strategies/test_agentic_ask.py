@@ -7,11 +7,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from core.domain.enums import DocumentSource, Language, MessageType, Tier
-from core.domain.exceptions import AIServiceError
+from core.domain.exceptions import AIServiceError, CacheError
 from core.domain.models import AIChatMessage, AIConversationSession, ToolCallRecord
 from core.domain.stream_events import AskStreamEvent, AskStreamEventType
 from core.domain.tools import ToolResult
 from core.domain.value_objects import SearchHit
+from core.ports.cache import CachePort
 from core.ports.conversation_repository import ConversationRepositoryPort
 from core.ports.embedding import EmbeddingPort
 from core.ports.intent_classifier import IntentClass, IntentClassifierPort
@@ -23,6 +24,7 @@ from core.usecases.conversation import ConversationUseCase
 from core.usecases.strategies.agentic_ask import AgenticAskStrategy
 from infrastructure.prefetch.pipeline import PreFetchPipeline
 from infrastructure.prompts import PromptLoader
+from tests.unit.core.usecases.strategies._message_store import _MessageStore
 
 
 def _make_hit(language: Language) -> SearchHit:
@@ -47,6 +49,8 @@ def _make_strategy(
     embedding_map: dict[str, list[float]] | None = None,
     max_iterations: int = 5,
     debug_mode: bool = False,
+    store: _MessageStore | None = None,
+    cache: CachePort | None = None,
 ) -> tuple[AgenticAskStrategy, MagicMock, MagicMock, AskAICommand, SearchHit]:
     user_id = uuid.uuid4()
     account_id = uuid.uuid4()
@@ -69,9 +73,14 @@ def _make_strategy(
     repository = MagicMock(spec=ConversationRepositoryPort)
     repository.create_session = AsyncMock(return_value=session)
     repository.get_session = AsyncMock(return_value=None)
-    repository.list_messages = AsyncMock(return_value=[])
-    repository.add_message = AsyncMock(side_effect=lambda message: message)
-    repository.update_message = AsyncMock(side_effect=lambda message: message)
+    if store is not None:
+        repository.list_messages = AsyncMock(side_effect=store.list)
+        repository.add_message = AsyncMock(side_effect=store.add)
+        repository.update_message = AsyncMock(side_effect=store.update)
+    else:
+        repository.list_messages = AsyncMock(return_value=[])
+        repository.add_message = AsyncMock(side_effect=lambda message: message)
+        repository.update_message = AsyncMock(side_effect=lambda message: message)
     conversation = ConversationUseCase(repository)
 
     knowledge_repository = MagicMock(spec=KnowledgeRepositoryPort)
@@ -126,6 +135,7 @@ def _make_strategy(
         intent_classifier=intent_classifier,
         pre_fetch_pipeline=pre_fetch_pipeline,
         max_iterations=max_iterations,
+        cache=cache,
     )
     return strategy, repository, tool_registry, command, vector_hits[0]
 
@@ -683,6 +693,54 @@ async def test_format_history_skips_suppressed_tool_calls() -> None:
 
 
 @pytest.mark.asyncio
+async def test_persisted_messages_follow_most_recent_order_across_turns() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    last_message = AIChatMessage(
+        user_id=uuid.uuid4(),
+        conversation_id=uuid.uuid4(),
+        message_type=MessageType.AI_RESPONSE,
+        llm_response="Previous answer",
+        message_order=5,
+    )
+    store = _MessageStore(last_message)
+    strategy, _repository, tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Grounded answer")] * 2,
+        store=store,
+    )
+    tool_registry.execute_tool.return_value = ToolResult(
+        tool_name="search_knowledge_base", result_text="Registration context"
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+    assert events[-1].type is AskStreamEventType.DONE
+    assert [m.message_order for m in store.messages] == [5, 6, 7]
+    assert store.messages[1].message_type is MessageType.USER_QUERY
+    assert store.messages[2].message_type is MessageType.AI_RESPONSE
+
+    events = [event async for event in strategy.execute_stream(command)]
+    assert events[-1].type is AskStreamEventType.DONE
+    assert [m.message_order for m in store.messages] == [5, 6, 7, 8, 9]
+
+
+@pytest.mark.asyncio
+async def test_first_message_in_empty_conversation_gets_order_one() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    store = _MessageStore()
+    strategy, _repository, _tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Grounded answer")],
+        store=store,
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+    assert events[-1].type is AskStreamEventType.DONE
+    assert [m.message_order for m in store.messages] == [1, 2]
+
+
+@pytest.mark.asyncio
 async def test_agentic_execute_returns_result_assembled_from_done_event() -> None:
     hit = _make_hit(Language.AMHARIC)
     strategy, _repository, _tool_registry, command, expected_hit = _make_strategy(
@@ -720,3 +778,120 @@ async def test_agentic_execute_raises_when_stream_ends_without_done_event() -> N
 
     with pytest.raises(AIServiceError, match="without a done event"):
         await strategy.execute(command)
+
+
+@pytest.mark.asyncio
+async def test_agentic_cache_hit_short_circuits_all_ports_and_persists_flagged_message() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    previous = AIChatMessage(
+        user_id=uuid.uuid4(),
+        conversation_id=uuid.uuid4(),
+        message_type=MessageType.AI_RESPONSE,
+        llm_response="Previous answer",
+        message_order=5,
+    )
+    store = _MessageStore(previous)
+    cache = MagicMock(spec=CachePort)
+    cache.get = AsyncMock(return_value="Cached trade licence answer")
+    cache.set = AsyncMock()
+    strategy, _repository, tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Fresh grounded answer")],
+        store=store,
+        cache=cache,
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+
+    assert [event.type for event in events] == [AskStreamEventType.TEXT, AskStreamEventType.DONE]
+    assert events[0].text == "Cached trade licence answer"
+    done_event = events[-1]
+    assert done_event.done is not None
+    assert done_event.merged_hits == []
+
+    strategy._llm_port.generate.assert_not_awaited()
+    strategy._embedding_port.embed_query.assert_not_awaited()
+    strategy._knowledge_repository.search_vector.assert_not_awaited()
+    strategy._knowledge_repository.search_bm25.assert_not_awaited()
+    strategy._intent_classifier.classify.assert_not_awaited()
+    strategy._pre_fetch_pipeline.pre_fetch.assert_not_awaited()
+    tool_registry.get_tool_definitions.assert_not_awaited()
+    cache.set.assert_not_awaited()
+
+    assert len(store.messages) == 3
+    assert store.messages[0] is previous
+    assert store.messages[1].message_type is MessageType.USER_QUERY
+    ai_message = store.messages[2]
+    assert ai_message.message_type is MessageType.AI_RESPONSE
+    assert ai_message.llm_response == "Cached trade licence answer"
+    assert ai_message.cache_hit is True
+    assert [m.message_order for m in store.messages] == [5, 6, 7]
+
+
+@pytest.mark.asyncio
+async def test_agentic_cache_hit_execute_returns_flagged_result() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    cache = MagicMock(spec=CachePort)
+    cache.get = AsyncMock(return_value="Cached trade licence answer")
+    cache.set = AsyncMock()
+    strategy, _repository, _tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Fresh grounded answer")],
+        cache=cache,
+    )
+
+    result = await strategy.execute(command)
+
+    assert result.ai_message.llm_response == "Cached trade licence answer"
+    assert result.ai_message.cache_hit is True
+    assert result.cache_hit is True
+    assert result.retrieved_hits == []
+    strategy._llm_port.generate.assert_not_awaited()
+    strategy._embedding_port.embed_query.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_agentic_cache_miss_runs_full_loop_and_writes_cache() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    cache = MagicMock(spec=CachePort)
+    cache.get = AsyncMock(return_value=None)
+    cache.set = AsyncMock()
+    strategy, repository, _tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Fresh grounded answer")],
+        cache=cache,
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+
+    assert events[-1].type is AskStreamEventType.DONE
+    strategy._llm_port.generate.assert_awaited_once()
+    ai_message = repository.add_message.await_args_list[-1].args[0]
+    assert ai_message.cache_hit is False
+    cache.set.assert_awaited_once()
+    cache_key, cached_value = cache.set.await_args.args
+    assert cached_value == "Fresh grounded answer"
+    assert cache_key == strategy._build_cache_key(command, events[-1].done.id)
+
+
+@pytest.mark.asyncio
+async def test_agentic_cache_unavailable_degrades_to_normal_miss() -> None:
+    hit = _make_hit(Language.AMHARIC)
+    cache = MagicMock(spec=CachePort)
+    cache.get = AsyncMock(side_effect=CacheError("redis down"))
+    cache.set = AsyncMock()
+    strategy, _repository, _tool_registry, command, _ = _make_strategy(
+        vector_hits=[hit],
+        bm25_hits=[],
+        llm_results=[LLMResult(text="Fresh grounded answer")],
+        cache=cache,
+    )
+
+    events = [event async for event in strategy.execute_stream(command)]
+
+    assert events[-1].type is AskStreamEventType.DONE
+    strategy._llm_port.generate.assert_awaited_once()
+    strategy._embedding_port.embed_query.assert_awaited_once()
