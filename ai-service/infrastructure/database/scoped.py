@@ -48,9 +48,15 @@ class ScopedConversation(ConversationUseCase):
     async def create_session(
         self, command: CreateSessionCommand, *, at: Any = None
     ) -> AIConversationSession:
+        # Resolve Core's tier before acquiring a database connection.
+        tier = (
+            await self._core_service.get_user_tier(command.user_id)
+            if self._core_service is not None
+            else None
+        )
         async with self._database.command() as repositories:
             usecase = ConversationUseCase(
                 repositories.conversation,
-                quota_guard=QuotaGuardUseCase(repositories.quota, core_service=self._core_service),
+                quota_guard=QuotaGuardUseCase(repositories.quota, resolved_tier=tier),
             )
             return await usecase.create_session(command, at=at)

@@ -71,6 +71,27 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
             )
         return RecordIngestionEventResult.RECORDED
 
+    async def matches_record(
+        self,
+        *,
+        event_id: str,
+        idempotency_key: str,
+        account_id: uuid.UUID,
+        document_id: uuid.UUID,
+    ) -> bool:
+        try:
+            result = await self._session.execute(
+                select(sa_models.IngestionEventLedger.id).where(
+                    sa_models.IngestionEventLedger.event_id == event_id,
+                    sa_models.IngestionEventLedger.idempotency_key == idempotency_key,
+                    sa_models.IngestionEventLedger.account_id == account_id,
+                    sa_models.IngestionEventLedger.document_id == document_id,
+                )
+            )
+        except SQLAlchemyError as exc:
+            raise RepositoryError("failed to query ingestion ledger event") from exc
+        return result.scalar_one_or_none() is not None
+
     async def classify_existing(
         self,
         *,

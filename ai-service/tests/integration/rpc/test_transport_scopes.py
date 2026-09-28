@@ -221,6 +221,38 @@ async def test_parallel_local_tools_do_not_share_a_session(
 
 
 @pytest.mark.integration
+async def test_cancelling_after_first_chunk_closes_provider_stream(
+    rpc_graph: tuple[Container, grpc.aio.Channel],
+) -> None:
+    container, channel = rpc_graph
+    closed = asyncio.Event()
+    llm = container.llm_port()
+
+    async def provider_stream(*_args: object, **_kwargs: object) -> AsyncIterator[LLMChunk]:
+        try:
+            yield LLMChunk(text="first")
+            await asyncio.Event().wait()
+        finally:
+            closed.set()
+
+    llm.generate_stream = provider_stream
+    stub = inference_grpc.AIInferenceServiceStub(channel)
+    call = stub.AskStream(
+        inference_pb2.AskRequest(
+            user_id=str(uuid.uuid4()),
+            account_id=str(uuid.uuid4()),
+            query="What next?",
+            strategy="simple",
+        )
+    )
+    chunk = await asyncio.wait_for(call.read(), 5)
+    assert chunk.text.text == "first"
+    call.cancel()
+    await asyncio.wait_for(closed.wait(), 5)
+    assert container.database().engine.pool.checkedout() == 0
+
+
+@pytest.mark.integration
 async def test_cancelled_stream_releases_database_before_model_finishes(
     rpc_graph: tuple[Container, grpc.aio.Channel],
 ) -> None:

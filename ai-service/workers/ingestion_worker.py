@@ -16,6 +16,7 @@ from dependency_injector import providers
 
 from app.config import Settings, get_settings
 from app.container import Container
+from core.domain.enums import DocumentStatus
 from core.ports.ingestion_event_ledger import RecordIngestionEventResult
 from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase, PreparedIndex
 from infrastructure.database.connection import Database
@@ -48,15 +49,36 @@ async def handle_ingestion_message(
     request: ValidatedIngestionRequest = validator.validate(payload)
     # Read without claiming the event during remote download, parse, and embedding.
     async with database.command() as command:
-        _reject_if_previously_handled(
-            await command.ledger.classify_existing(
+        previous = await command.ledger.classify_existing(
+            event_id=request.event_id,
+            idempotency_key=request.idempotency_key,
+            account_id=request.account_id,
+            document_id=request.document_id,
+            occurred_at=request.occurred_at,
+        )
+        indexed = False
+        if previous in (
+            RecordIngestionEventResult.DUPLICATE_EVENT,
+            RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY,
+        ):
+            matches = await command.ledger.matches_record(
                 event_id=request.event_id,
                 idempotency_key=request.idempotency_key,
                 account_id=request.account_id,
                 document_id=request.document_id,
-                occurred_at=request.occurred_at,
             )
+            if matches:
+                document = await command.knowledge.get_document(request.document_id)
+                indexed = document is not None and document.status is DocumentStatus.ACTIVE
+
+    if indexed:
+        await orchestrator.announce_completed(
+            event_id=request.event_id,
+            document_id=request.document_id,
+            account_id=request.account_id,
         )
+        return
+    _reject_if_previously_handled(previous)
 
     async def persist_index(index: PreparedIndex) -> None:
         async with database.command() as command:

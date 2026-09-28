@@ -368,6 +368,20 @@ class IngestionOrchestratorUseCase:
 
         logger.info("indexing complete document_id=%s", document_id)
 
+    async def announce_completed(
+        self, *, event_id: str, document_id: uuid.UUID, account_id: uuid.UUID
+    ) -> None:
+        """Repeat a terminal announcement for an already indexed event on redelivery."""
+        await self._publish_status_event(
+            event_id=event_id,
+            document_id=document_id,
+            account_id=account_id,
+            from_stage=IngestionStage.INDEXING,
+            to_stage=IngestionStage.COMPLETED,
+            is_terminal=True,
+            retry_count=0,
+        )
+
     async def _publish_status_event(
         self,
         *,

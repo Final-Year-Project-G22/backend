@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
+from core.domain.enums import Tier
 from core.domain.exceptions import QuotaExceededError
 from core.domain.models import AIUserQuota
 from core.domain.value_objects import UsageSnapshot
@@ -20,9 +21,11 @@ class QuotaGuardUseCase:
         quota_repository: QuotaRepositoryPort,
         *,
         core_service: CoreServicePort | None = None,
+        resolved_tier: Tier | None = None,
     ) -> None:
         self._quota_repository = quota_repository
         self._core_service = core_service
+        self._resolved_tier = resolved_tier
 
     async def get_quota(self, user_id: uuid.UUID) -> AIUserQuota:
         quota = await self._quota_repository.get_quota(user_id)
@@ -137,10 +140,9 @@ class QuotaGuardUseCase:
         )
 
     async def _sync_tier(self, quota: AIUserQuota) -> AIUserQuota:
-        if self._core_service is None:
-            return quota
-
-        latest_tier = await self._core_service.get_user_tier(quota.user_id)
+        latest_tier = self._resolved_tier
+        if self._core_service is not None:
+            latest_tier = await self._core_service.get_user_tier(quota.user_id)
         if latest_tier is None or latest_tier == quota.tier:
             return quota
 

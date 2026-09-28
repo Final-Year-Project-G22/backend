@@ -15,13 +15,13 @@ from core.domain.enums import DocumentStatus
 from core.domain.exceptions import RepositoryError
 from core.domain.ingestion_events import DOCUMENT_INGESTION_REQUESTED_V1
 from core.ports.embedding import EmbeddingPort
+from core.ports.event_bus import EventBusPort
 from core.ports.ingestion_event_ledger import RecordIngestionEventResult
 from core.security import EnvelopeVerifier
 from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase
 from infrastructure.chunking.registry import ChunkingRegistry
 from infrastructure.database.connection import Database
 from infrastructure.database.scoped import ScopedRepository
-from infrastructure.messagebus import MessageHandlingRejectError
 from infrastructure.parsers.registry import ParserRegistry
 from workers.ingestion_worker import handle_ingestion_message
 from workers.tasks.ingestion_requested import IngestionRequestedTaskHandler
@@ -119,16 +119,82 @@ async def test_worker_closes_database_during_embedding_and_commits_ledger_with_i
             assert document is not None
             assert document.status is DocumentStatus.ACTIVE
             assert len(await reader.knowledge.get_chunks_by_document(doc_id)) == 1
-        with pytest.raises(MessageHandlingRejectError):
-            await handle_ingestion_message(
+        await handle_ingestion_message(
+            payload,
+            database=database,
+            validator=validator,
+            orchestrator=orchestrator,
+        )
+        embed.embed_documents.assert_awaited_once()
+    finally:
+        resume.set()
+        await http_client.aclose()
+
+
+@pytest.mark.integration
+async def test_redelivery_finishes_status_after_cancelled_committed_index(
+    database: Database,
+) -> None:
+    doc_id = uuid.uuid4()
+    payload = _envelope(doc_id)
+    indexing, hold = asyncio.Event(), asyncio.Event()
+    published: list[str] = []
+    events = AsyncMock(spec=EventBusPort)
+
+    async def publish(_name: str, envelope: dict[str, object]) -> None:
+        stage = envelope["payload"]["to_stage"]
+        if stage == "indexing":
+            indexing.set()
+            await hold.wait()
+        published.append(stage)
+
+    events.publish.side_effect = publish
+    embed = AsyncMock(spec=EmbeddingPort)
+    embed.embed_documents.return_value = [[0.0] * 1024]
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(
+            lambda _request: httpx.Response(200, content=b"A business guide.")
+        ),
+        trust_env=False,
+    ) as http_client:
+        orchestrator = IngestionOrchestratorUseCase(
+            event_bus=events,
+            parser_registry=ParserRegistry(),
+            chunking_registry=ChunkingRegistry(),
+            embedding_port=embed,
+            knowledge_repository=ScopedRepository(database, "knowledge"),
+            core_service_port=AsyncMock(),
+            seaweedfs_filer_url="http://storage.test",
+            http_client=http_client,
+        )
+        validator = IngestionRequestedTaskHandler(
+            envelope_verifier=EnvelopeVerifier(
+                active_key_id="ingestion-v1", active_secret=TEST_SECRET
+            ),
+            ingestion_event_ledger_repository=ScopedRepository(database, "ledger"),
+            ingestion_orchestrator=orchestrator,
+        )
+        task = asyncio.create_task(
+            handle_ingestion_message(
                 payload,
                 database=database,
                 validator=validator,
                 orchestrator=orchestrator,
             )
-    finally:
-        resume.set()
-        await http_client.aclose()
+        )
+        await asyncio.wait_for(indexing.wait(), 5)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        hold.set()
+        await handle_ingestion_message(
+            payload,
+            database=database,
+            validator=validator,
+            orchestrator=orchestrator,
+        )
+        assert "completed" in published
+        embed.embed_documents.assert_awaited_once()
 
 
 @pytest.mark.integration
