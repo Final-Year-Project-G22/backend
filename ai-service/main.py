@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             httpx.AsyncClient(trust_env=settings.HTTPX_TRUST_ENV)
         )
         cast(Any, container.http_client).override(http_client)
+        app.state.http_client = http_client
         if not cast(Any, container.embedding_port).overridden:
             cast(Any, container.embedding_port).override(
                 create_embedding_adapter(settings, http_client=http_client)

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, cast
 
@@ -41,6 +43,16 @@ _PIPELINE_STAGES: list[IngestionStage] = [
 _HTTP_STATUS_NOT_FOUND = 404
 
 
+@dataclass(frozen=True)
+class PreparedIndex:
+    document_id: uuid.UUID
+    source_filename: str
+    content_type: str
+    declared_language: str
+    chunks: list[Any]
+    embeddings: list[list[float]]
+
+
 class IngestionOrchestratorUseCase:
     def __init__(
         self,
@@ -53,6 +65,7 @@ class IngestionOrchestratorUseCase:
         knowledge_repository: KnowledgeRepositoryPort,
         core_service_port: CoreServicePort,
         seaweedfs_filer_url: str = "",
+        http_client: httpx.AsyncClient | None = None,
     ) -> None:
         self._event_bus = event_bus
         self._emit_status_events = emit_status_events
@@ -62,8 +75,14 @@ class IngestionOrchestratorUseCase:
         self._knowledge_repository = knowledge_repository
         self._core_service_port = core_service_port
         self._seaweedfs_filer_url = seaweedfs_filer_url.rstrip("/")
+        self._http_client = http_client
 
-    async def start_ingestion(self, payload: dict[str, Any]) -> IngestionTransitionResult:
+    async def start_ingestion(  # noqa: PLR0915 - stage pipeline and failure notifications are kept together
+        self,
+        payload: dict[str, Any],
+        *,
+        persist_index: Callable[[PreparedIndex], Awaitable[None]] | None = None,
+    ) -> IngestionTransitionResult:
         logger.info("start_ingestion called event_id=%s", payload.get("event_id", "unknown"))
         event_id = str(payload.get("event_id", ""))
         idempotency_key = str(payload.get("idempotency_key", ""))
@@ -118,7 +137,7 @@ class IngestionOrchestratorUseCase:
                 elif stage == IngestionStage.EMBEDDING:
                     embeddings = await self._embed_chunks(chunk_texts)
                 elif stage == IngestionStage.INDEXING:
-                    await self._index_chunks(
+                    index = PreparedIndex(
                         document_id=document_id,
                         source_filename=source_filename,
                         content_type=content_type,
@@ -126,6 +145,10 @@ class IngestionOrchestratorUseCase:
                         chunks=parsed_chunks,
                         embeddings=embeddings,
                     )
+                    if persist_index is None:
+                        await self.index_chunks(index)
+                    else:
+                        await persist_index(index)
 
                 await self._publish_status_event(
                     event_id=event_id,
@@ -233,15 +256,16 @@ class IngestionOrchestratorUseCase:
             raise RuntimeError("SEAWEEDFS_FILER_URL not configured")
 
         url = f"{self._seaweedfs_filer_url}/{storage_key}"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-            response.raise_for_status()
-            logger.info(
-                "document downloaded document_id=%s size=%d",
-                document_id,
-                len(response.content),
-            )
-            return response.content
+        if self._http_client is None:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url)
+        else:
+            response = await self._http_client.get(url)
+        response.raise_for_status()
+        logger.info(
+            "document downloaded document_id=%s size=%d", document_id, len(response.content)
+        )
+        return response.content
 
     async def _parse_and_chunk(
         self,
@@ -289,35 +313,35 @@ class IngestionOrchestratorUseCase:
         logger.info("embeddings generated total=%d", len(all_embeddings))
         return all_embeddings
 
-    async def _index_chunks(
+    async def index_chunks(
         self,
+        index: PreparedIndex,
         *,
-        document_id: uuid.UUID,
-        source_filename: str,
-        content_type: str,
-        declared_language: str,
-        chunks: list[Any],
-        embeddings: list[list[float]],
+        knowledge_repository: KnowledgeRepositoryPort | None = None,
     ) -> None:
-        """Persist chunks with embeddings to vector store."""
-        logger.info("indexing chunks document_id=%s count=%d", document_id, len(chunks))
+        """Persist prepared chunks in the caller's short database command."""
+        repository = knowledge_repository or self._knowledge_repository
+        document_id = index.document_id
+        logger.info("indexing chunks document_id=%s count=%d", document_id, len(index.chunks))
 
         # Create or update the knowledge document record (sanitize null bytes)
         doc = KnowledgeDocument(
             id=document_id,
-            title=source_filename.replace("\x00", ""),
+            title=index.source_filename.replace("\x00", ""),
             source=DocumentSource.GUIDE,
             external_id=str(document_id),
             effective_date=datetime.now(UTC).date(),
-            language=Language.ENGLISH if declared_language.startswith("en") else Language.AMHARIC,
+            language=Language.ENGLISH
+            if index.declared_language.startswith("en")
+            else Language.AMHARIC,
             status=DocumentStatus.PROCESSING,
-            metadata={"content_type": content_type},
+            metadata={"content_type": index.content_type},
         )
-        await self._knowledge_repository.upsert_document(doc)
+        await repository.upsert_document(doc)
 
         # Build document chunk entities (sanitize null bytes for PostgreSQL)
         document_chunks: list[DocumentChunk] = []
-        for idx, (chunk, embedding) in enumerate(zip(chunks, embeddings, strict=True)):
+        for idx, (chunk, embedding) in enumerate(zip(index.chunks, index.embeddings, strict=True)):
             clean_text = chunk.chunk_text.replace("\x00", "")
             section_heading = (chunk.provenance.section_heading or "").replace("\x00", "")
             document_chunks.append(
@@ -331,12 +355,12 @@ class IngestionOrchestratorUseCase:
                     embedding=embedding,
                     status=ChunkStatus.EMBEDDED,
                     section_heading=section_heading or None,
-                    metadata={"content_type": content_type},
+                    metadata={"content_type": index.content_type},
                 )
             )
 
         # Atomically upsert chunks and mark document active
-        await self._knowledge_repository.complete_ingestion_atomically(
+        await repository.complete_ingestion_atomically(
             document_id,
             status=DocumentStatus.ACTIVE,
             chunks=document_chunks,

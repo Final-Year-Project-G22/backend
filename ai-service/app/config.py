@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        frozen=True,
     )
 
     APP_NAME: str = "ai-service"
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     HTTP_PORT: int = 8000
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: tuple[str, ...] = ("http://localhost:3000",)
     # When True, httpx honors HTTP(S)_PROXY from the environment (default httpx behavior).
     HTTPX_TRUST_ENV: bool = True
 
@@ -106,7 +107,7 @@ class Settings(BaseSettings):
     AI_KB_DRIFT_COSINE_THRESHOLD: float = 0.40
     AI_KB_SUPPRESSION_TRIPWIRE: int = 2
 
-    AI_EXPECTED_REMOTE_TOOLS: list[str] = [
+    AI_EXPECTED_REMOTE_TOOLS: tuple[str, ...] = (
         "search_guides",
         "get_user_profile",
         "find_template",
@@ -115,12 +116,12 @@ class Settings(BaseSettings):
         "list_sectors",
         "list_tags",
         "get_guide_detail",
-    ]
+    )
     AI_TOOL_REFRESH_TTL_SEC: int = 300
 
     AI_INTENT_SIMILARITY_THRESHOLD: float = 0.6
 
-    AI_INTENT_SEED_QUERIES_KNOWLEDGE: list[str] = [
+    AI_INTENT_SEED_QUERIES_KNOWLEDGE: tuple[str, ...] = (
         "business registration process",
         "how to register a business in ethiopia",
         "tax rates for small businesses",
@@ -141,9 +142,9 @@ class Settings(BaseSettings):
         "food handling certificate",
         "export license requirements",
         "professional license renewal",
-    ]
+    )
 
-    AI_INTENT_SEED_QUERIES_PERSONAL: list[str] = [
+    AI_INTENT_SEED_QUERIES_PERSONAL: tuple[str, ...] = (
         "my business profile",
         "what is my current status",
         "show my compliance deadlines",
@@ -164,7 +165,7 @@ class Settings(BaseSettings):
         "how far along am I",
         "what is missing in my profile",
         "my pending tasks",
-    ]
+    )
 
     OTEL_ENABLED: bool = False
     PROMETHEUS_PORT: int = 9090

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections.abc import Sequence
 from typing import Any
 
 from core.domain.tools import ToolResult
@@ -21,13 +22,13 @@ class ToolRegistry(ToolRegistryPort):
     def __init__(
         self,
         ai_tool_client: AIToolGrpcClient,
-        expected_remote_tools: list[str],
+        expected_remote_tools: Sequence[str],
         *,
         search_knowledge_base: SearchKnowledgeBaseTool,
         search_trusted_web: SearchTrustedWebTool,
     ) -> None:
         self._client = ai_tool_client
-        self._expected_remote_tools = expected_remote_tools
+        self._expected_remote_tools = tuple(expected_remote_tools)
 
         self._local_tools: dict[str, Any] = {}
         self._register_local(search_knowledge_base)

@@ -7,7 +7,7 @@ import pgvector  # noqa: F401 — required for Vector type deserialization  # ty
 from sqlalchemy.engine import Connection
 
 from alembic import context
-from infrastructure.database.connection import Base, engine
+from infrastructure.database.connection import Base, Database
 from infrastructure.database.models_sqlalchemy import (  # noqa: F401 — registers models
     AIChatMessage,
     AIConversationSession,
@@ -48,12 +48,14 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    connectable = engine
+    from app.config import get_settings
 
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-
-    await connectable.dispose()
+    database = Database(get_settings().DATABASE_URL)
+    try:
+        async with database.engine.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+    finally:
+        await database.engine.dispose()
 
 
 def run_migrations_online() -> None:

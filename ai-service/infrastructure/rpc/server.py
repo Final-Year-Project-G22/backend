@@ -129,5 +129,9 @@ async def serve_rpc(
     listen_addr = f"[::]:{port}"
     server.add_insecure_port(listen_addr)
     logger.info("Starting gRPC server on %s", listen_addr)
-    await server.start()
+    try:
+        await server.start()
+    except BaseException:
+        await server.stop(grace=0)
+        raise
     return server

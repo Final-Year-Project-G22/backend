@@ -113,9 +113,10 @@ class IngestionRequestedConsumer:
                 durable=True,
             )
 
-        self._consumer_tag = await queue.consume(
-            lambda message: self.on_message(message=message, handler=handler)
-        )
+        async def handle_delivery(message: AbstractIncomingMessage) -> None:
+            await self.on_message(message=message, handler=handler)
+
+        self._consumer_tag = await queue.consume(handle_delivery)
 
         logger.info(
             "ingestion consumer started queue=%s exchange=%s routing_key=%s prefetch=%s max_retries=%s dlq_enabled=%s",

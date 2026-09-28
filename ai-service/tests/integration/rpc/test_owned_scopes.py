@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from datetime import UTC, datetime
 
 import pytest
 
 from core.domain.enums import Language, Tier
 from core.domain.models import AIConversationSession, AIUserQuota
+from core.ports.ingestion_event_ledger import RecordIngestionEventResult
 from infrastructure.database.connection import Database
 
 
@@ -74,3 +76,27 @@ async def test_cancelled_command_releases_connection(database: Database) -> None
     async with asyncio.timeout(5):
         async with database.command() as command:
             await command.quota.upsert_quota(AIUserQuota(user_id=uuid.uuid4()))
+
+
+@pytest.mark.integration
+async def test_duplicate_ledger_event_does_not_poison_command(database: Database) -> None:
+    event = {
+        "event_id": "event-1",
+        "idempotency_key": "idempotent-1",
+        "account_id": uuid.uuid4(),
+        "document_id": uuid.uuid4(),
+        "occurred_at": datetime.now(UTC),
+    }
+    async with database.command() as command:
+        assert (
+            await command.ledger.record_or_classify(**event) is RecordIngestionEventResult.RECORDED
+        )
+    async with database.command() as command:
+        assert (
+            await command.ledger.classify_existing(**event)
+            is RecordIngestionEventResult.DUPLICATE_EVENT
+        )
+        assert (
+            await command.ledger.record_or_classify(**event)
+            is RecordIngestionEventResult.DUPLICATE_EVENT
+        )
