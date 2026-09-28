@@ -91,9 +91,11 @@ async def _unauthorized_unary_unary(request: Any, context: Any) -> None:
 
 async def serve_rpc(
     port: int,
-    ask_ai_usecase: AskAIUseCase,
-    conversation_usecase: ConversationUseCase,
+    ask_ai_usecase: AskAIUseCase | None = None,
+    conversation_usecase: ConversationUseCase | None = None,
     *,
+    ask_factory: Callable[[], AskAIUseCase] | None = None,
+    conversation_factory: Callable[[], ConversationUseCase] | None = None,
     auth_token: str | None = None,
     ask_enabled: bool = True,
 ) -> grpc.aio.Server:
@@ -103,10 +105,25 @@ async def serve_rpc(
 
     server = _aio_server_ctor()(interceptors=interceptors)
 
-    inference_service = AIInferenceService(ask_ai_usecase, ask_enabled=ask_enabled)
+    if ask_factory is None and ask_ai_usecase is None:
+        raise ValueError("Ask use case or factory is required")
+    if conversation_factory is None and conversation_usecase is None:
+        raise ValueError("Conversation use case or factory is required")
+
+    if ask_factory is None:
+        inference_service = AIInferenceService(ask_ai_usecase, ask_enabled=ask_enabled)
+    else:
+        inference_service = AIInferenceService(
+            ask_ai_usecase, ask_enabled=ask_enabled, usecase_factory=ask_factory
+        )
     service_pb2_grpc.add_AIInferenceServiceServicer_to_server(inference_service, server)
 
-    conversation_service = AIConversationService(conversation_usecase)
+    if conversation_factory is None:
+        conversation_service = AIConversationService(conversation_usecase)
+    else:
+        conversation_service = AIConversationService(
+            conversation_usecase, usecase_factory=conversation_factory
+        )
     conversation_grpc.add_AIConversationServiceServicer_to_server(conversation_service, server)
 
     listen_addr = f"[::]:{port}"

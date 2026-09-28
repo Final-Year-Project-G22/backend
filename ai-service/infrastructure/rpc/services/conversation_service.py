@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable
 
 import grpc
 import grpc.aio
@@ -26,8 +27,21 @@ _ArchiveContext = grpc.aio.ServicerContext[
 
 
 class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
-    def __init__(self, conversation_usecase: ConversationUseCase) -> None:
+    def __init__(
+        self,
+        conversation_usecase: ConversationUseCase | None,
+        *,
+        usecase_factory: Callable[[], ConversationUseCase] | None = None,
+    ) -> None:
         self._conversation_usecase = conversation_usecase
+        self._usecase_factory = usecase_factory
+
+    def _usecase(self) -> ConversationUseCase:
+        if self._usecase_factory is not None:
+            return self._usecase_factory()
+        if self._conversation_usecase is None:
+            raise RuntimeError("Conversation use case not configured")
+        return self._conversation_usecase
 
     async def ListConversations(  # noqa: N802
         self,
@@ -49,7 +63,7 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
             include_deleted=False,
         )
 
-        sessions = await self._conversation_usecase.list_sessions(query)
+        sessions = await self._usecase().list_sessions(query)
 
         session_summaries = [
             service_pb2.SessionSummary(
@@ -82,14 +96,15 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
         except ValueError as e:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID: {e}")
 
-        session = await self._conversation_usecase.get_session(
+        usecase = self._usecase()
+        session = await usecase.get_session(
             session_id,
             include_deleted=include_deleted,
         )
         if session is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
 
-        messages = await self._conversation_usecase.list_messages(
+        messages = await usecase.list_messages(
             session_id,
             limit=message_limit,
             offset=message_offset,
@@ -124,15 +139,14 @@ class AIConversationService(service_pb2_grpc.AIConversationServiceServicer):
         except ValueError as e:
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, f"Invalid UUID: {e}")
 
-        session = await self._conversation_usecase.get_session(session_id)
+        usecase = self._usecase()
+        session = await usecase.get_session(session_id)
         if session is None:
             await context.abort(grpc.StatusCode.NOT_FOUND, "Session not found")
 
-        success = await self._conversation_usecase.archive_session(session_id)
+        success = await usecase.archive_session(session_id)
 
-        refreshed_session = await self._conversation_usecase.get_session(
-            session_id, include_deleted=True
-        )
+        refreshed_session = await usecase.get_session(session_id, include_deleted=True)
         updated_at = ""
         if refreshed_session is not None:
             updated_at = refreshed_session.updated_at.isoformat()

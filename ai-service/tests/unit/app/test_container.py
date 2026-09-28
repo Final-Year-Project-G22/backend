@@ -3,7 +3,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.container import Container
 from core.ports.cache import CachePort
@@ -11,17 +10,8 @@ from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.llm import LLMPort
-from core.usecases import (
-    AskAIUseCase,
-    ConversationUseCase,
-    IngestionOrchestratorUseCase,
-    QuotaGuardUseCase,
-)
-from infrastructure.database.repositories import (
-    SqlAlchemyConversationRepository,
-    SqlAlchemyKnowledgeRepository,
-    SqlAlchemyQuotaRepository,
-)
+from core.usecases import AskAIUseCase, IngestionOrchestratorUseCase, QuotaGuardUseCase
+from infrastructure.database.scoped import ScopedConversation, ScopedRepository
 from infrastructure.messagebus import IngestionRequestedConsumer
 from workers.tasks import IngestionRequestedTaskHandler
 
@@ -34,16 +24,10 @@ async def test_container_wires_database_repositories() -> None:
     conversation_repository = container.conversation_repository()
     knowledge_repository = container.knowledge_repository()
 
-    assert isinstance(quota_repository, SqlAlchemyQuotaRepository)
-    assert isinstance(conversation_repository, SqlAlchemyConversationRepository)
-    assert isinstance(knowledge_repository, SqlAlchemyKnowledgeRepository)
-    assert isinstance(quota_repository.session, AsyncSession)
-    assert isinstance(conversation_repository.session, AsyncSession)
-    assert isinstance(knowledge_repository.session, AsyncSession)
-
-    await quota_repository.session.close()
-    await conversation_repository.session.close()
-    await knowledge_repository.session.close()
+    assert isinstance(quota_repository, ScopedRepository)
+    assert isinstance(conversation_repository, ScopedRepository)
+    assert isinstance(knowledge_repository, ScopedRepository)
+    await container.database().engine.dispose()
 
 
 def _make_container_with_port_overrides() -> Container:
@@ -64,7 +48,7 @@ def test_container_wires_use_cases_with_dependency_overrides() -> None:
     ask_ai = container.ask_ai()
 
     assert isinstance(quota_guard, QuotaGuardUseCase)
-    assert isinstance(conversation, ConversationUseCase)
+    assert isinstance(conversation, ScopedConversation)
     assert isinstance(ask_ai, AskAIUseCase)
 
 

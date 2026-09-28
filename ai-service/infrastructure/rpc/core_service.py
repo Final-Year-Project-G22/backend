@@ -160,6 +160,9 @@ class CoreUserGrpcClient(CoreServiceClient):
         self._channel = _create_async_channel(endpoint)
         self._stub: CoreUserServiceStub | None = get_core_user_stub(self._channel)
 
+    async def close(self) -> None:
+        await self._channel.close(None)
+
     async def get_user(self, user_id: uuid.UUID) -> CoreUserResponse | None:
         stub = self._stub
         if stub is None:

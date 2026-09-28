@@ -3,32 +3,23 @@ from __future__ import annotations
 from typing import Any, cast
 
 import grpc.aio as grpc_aio
+import httpx
 from dependency_injector import containers, providers
 
-from app.config import Settings
+from app.config import get_settings
 from app.security import build_ingestion_envelope_verifier
 from core.ports.cache import CachePort
 from core.ports.core_service import CoreServicePort
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.llm import LLMPort
-from core.usecases import (
-    AskAIUseCase,
-    ConversationUseCase,
-    IngestionOrchestratorUseCase,
-    QuotaGuardUseCase,
-)
+from core.usecases import AskAIUseCase, IngestionOrchestratorUseCase, QuotaGuardUseCase
 from core.usecases.strategies.agentic_ask import AgenticAskStrategy
 from core.usecases.strategies.kb_query_guard import KBQueryGuard
 from core.usecases.strategies.simple_ask import SimpleAskStrategy
 from infrastructure.chunking.registry import ChunkingRegistry
-from infrastructure.database.connection import async_session_factory
-from infrastructure.database.repositories import (
-    SqlAlchemyConversationRepository,
-    SqlAlchemyIngestionEventLedgerRepository,
-    SqlAlchemyKnowledgeRepository,
-    SqlAlchemyQuotaRepository,
-)
+from infrastructure.database.connection import Database
+from infrastructure.database.scoped import ScopedConversation, ScopedRepository
 from infrastructure.messagebus import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from infrastructure.parsers.registry import ParserRegistry
@@ -57,7 +48,7 @@ class Container(containers.DeclarativeContainer):
         modules=["main", "workers.ingestion_worker"],
     )
 
-    config = providers.Singleton(Settings)
+    config = providers.Singleton(get_settings)
 
     prompt_loader = providers.Singleton(
         PromptLoader,
@@ -74,23 +65,19 @@ class Container(containers.DeclarativeContainer):
         endpoint=config.provided.CORE_GRPC_ENDPOINT,
     )
 
-    db_session = providers.Callable(async_session_factory)
+    database = providers.Singleton(
+        Database,
+        url=config.provided.DATABASE_URL,
+        debug=config.provided.DEBUG,
+    )
 
-    quota_repository = providers.Factory(
-        SqlAlchemyQuotaRepository,
-        session=db_session,
-    )
+    quota_repository = providers.Factory(ScopedRepository, database=database, name="quota")
     conversation_repository = providers.Factory(
-        SqlAlchemyConversationRepository,
-        session=db_session,
+        ScopedRepository, database=database, name="conversation"
     )
-    knowledge_repository = providers.Factory(
-        SqlAlchemyKnowledgeRepository,
-        session=db_session,
-    )
+    knowledge_repository = providers.Factory(ScopedRepository, database=database, name="knowledge")
     ingestion_event_ledger_repository = providers.Factory(
-        SqlAlchemyIngestionEventLedgerRepository,
-        session=db_session,
+        ScopedRepository, database=database, name="ledger"
     )
 
     embedding_port: providers.Dependency[EmbeddingPort] = providers.Dependency(
@@ -106,8 +93,12 @@ class Container(containers.DeclarativeContainer):
         embedding_port=embedding_port,
     )
 
+    http_client: providers.Provider[httpx.AsyncClient | None] = cast(
+        providers.Provider[httpx.AsyncClient | None], providers.Object(None)
+    )
     search_trusted_web_tool = providers.Factory(
         SearchTrustedWebTool,
+        http_client=http_client,
     )
 
     tool_registry = providers.Singleton(
@@ -199,9 +190,9 @@ class Container(containers.DeclarativeContainer):
         core_service=core_service_port,
     )
     conversation = providers.Factory(
-        ConversationUseCase,
-        conversation_repository=conversation_repository,
-        quota_guard=quota_guard,
+        ScopedConversation,
+        database=database,
+        core_service=core_service_port,
     )
 
     simple_ask_strategy = providers.Factory(
