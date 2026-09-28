@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import uuid
+from contextlib import AsyncExitStack
 from datetime import date, datetime
 from pathlib import Path
 
@@ -24,9 +25,7 @@ from core.domain.enums import ChunkStatus, DocumentSource, DocumentStatus, Langu
 from core.domain.models import AIUserQuota, DocumentChunk, KnowledgeDocument
 from core.ports.chunking import ChunkingStrategy
 from infrastructure.chunking.registry import ChunkingRegistry
-from infrastructure.database.connection import async_session_factory
-from infrastructure.database.repositories.knowledge_repository import SqlAlchemyKnowledgeRepository
-from infrastructure.database.repositories.quota_repository import SqlAlchemyQuotaRepository
+from infrastructure.database.connection import Database
 from infrastructure.embeddings import create_embedding_adapter
 from infrastructure.parsers.registry import ParserRegistry
 
@@ -60,38 +59,42 @@ async def main() -> None:
     parser_registry = ParserRegistry()
     chunking_registry = ChunkingRegistry()
 
-    embedding_port = None
-    if not dry_run and not skip_embeddings:
-        import httpx
+    async with AsyncExitStack() as resources:
+        database = Database(settings.DATABASE_URL)
+        resources.push_async_callback(database.engine.dispose)
+        embedding_port = None
+        if not dry_run and not skip_embeddings:
+            import httpx
 
-        embedding_port = create_embedding_adapter(settings, http_client=httpx.AsyncClient())
-
-    if dry_run:
-        print(f"DRY RUN: {len(documents)} documents to provision")
-    elif embedding_port is not None:
-        await embedding_port.embed_documents(["probe"])  # type: ignore[union-attr]
-
-    session_factory = async_session_factory
-    async with session_factory() as session:
-        repo = SqlAlchemyKnowledgeRepository(session)
-        stats: dict[str, int] = {"documents": 0, "chunks": 0}
-
-        # Ensure the fixture user's quota can never block a 36-item eval run.
-        quota_repo = SqlAlchemyQuotaRepository(session)
-        existing = await quota_repo.get_quota(FIXTURE_USER_ID)
-        if existing is None or (
-            existing.daily_query_limit < 500 or existing.max_conversations_per_day < 200
-        ):
-            await quota_repo.upsert_quota(
-                AIUserQuota(
-                    user_id=FIXTURE_USER_ID,
-                    tier=Tier.PRO,
-                    daily_query_limit=1000,
-                    daily_token_limit=5_000_000,
-                    max_conversations_per_day=200,
-                )
+            http_client = await resources.enter_async_context(
+                httpx.AsyncClient(trust_env=settings.HTTPX_TRUST_ENV)
             )
-            print("seeded fixture user quota: 1000 queries/day, 200 conversations/day")
+            embedding_port = create_embedding_adapter(settings, http_client=http_client)
+
+        if dry_run:
+            print(f"DRY RUN: {len(documents)} documents to provision")
+        else:
+            if embedding_port is not None:
+                await embedding_port.embed_documents(["probe"])
+
+            # Commit quota independently; parsing and embedding never hold a connection.
+            async with database.command() as command:
+                existing = await command.quota.get_quota(FIXTURE_USER_ID)
+                if existing is None or (
+                    existing.daily_query_limit < 500 or existing.max_conversations_per_day < 200
+                ):
+                    await command.quota.upsert_quota(
+                        AIUserQuota(
+                            user_id=FIXTURE_USER_ID,
+                            tier=Tier.PRO,
+                            daily_query_limit=1000,
+                            daily_token_limit=5_000_000,
+                            max_conversations_per_day=200,
+                        )
+                    )
+                    print("seeded fixture user quota: 1000 queries/day, 200 conversations/day")
+
+        stats: dict[str, int] = {"documents": 0, "chunks": 0}
         for doc in documents:
             document_key = doc["document_key"]
             corpus_path = (
@@ -125,8 +128,6 @@ async def main() -> None:
                 processed_at=datetime.now(),
                 metadata={"fixture": True, "fixture_version": manifest["fixture_version"]},
             )
-            await repo.upsert_document(knowledge_doc)
-
             orm_chunks: list[DocumentChunk] = []
             for idx, chunk in enumerate(chunks):
                 orm_chunks.append(
@@ -144,15 +145,16 @@ async def main() -> None:
                         metadata={"fixture": True, "fixture_version": manifest["fixture_version"]},
                     )
                 )
-            await repo.upsert_chunks(orm_chunks)
+            if not dry_run:
+                async with database.command() as command:
+                    await command.knowledge.upsert_document(knowledge_doc)
+                    await command.knowledge.upsert_chunks(orm_chunks)
             stats["documents"] += 1
             stats["chunks"] += len(orm_chunks)
             print(
                 f"{document_key:42s} chunks={len(orm_chunks):2d} "
                 f"status={'EMBEDDED' if embeddings else 'PENDING'}"
             )
-        if not dry_run:
-            await session.commit()
         print(f"\nprovisioned {stats['documents']} documents, {stats['chunks']} chunks")
 
 

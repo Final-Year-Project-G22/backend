@@ -28,6 +28,15 @@ class ValidatedIngestionRequest:
     occurred_at: datetime
 
 
+def reject_previously_handled(result: RecordIngestionEventResult) -> None:
+    if result is RecordIngestionEventResult.DUPLICATE_EVENT:
+        raise MessageHandlingRejectError("duplicate event id")
+    if result is RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY:
+        raise MessageHandlingRejectError("duplicate idempotency key")
+    if result is RecordIngestionEventResult.STALE_LINEAGE:
+        raise MessageHandlingRejectError("stale ingestion lineage event")
+
+
 class IngestionRequestedTaskHandler:
     def __init__(
         self,
@@ -53,12 +62,7 @@ class IngestionRequestedTaskHandler:
         except RepositoryError as exc:
             raise MessageHandlingRetryError("failed to classify ingestion event") from exc
 
-        if ledger_result is RecordIngestionEventResult.DUPLICATE_EVENT:
-            raise MessageHandlingRejectError("duplicate event id")
-        if ledger_result is RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY:
-            raise MessageHandlingRejectError("duplicate idempotency key")
-        if ledger_result is RecordIngestionEventResult.STALE_LINEAGE:
-            raise MessageHandlingRejectError("stale ingestion lineage event")
+        reject_previously_handled(ledger_result)
 
         await self._ingestion_orchestrator.start_ingestion(payload)
 

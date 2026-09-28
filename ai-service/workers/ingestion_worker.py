@@ -21,22 +21,13 @@ from core.ports.ingestion_event_ledger import RecordIngestionEventResult
 from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase, PreparedIndex
 from infrastructure.database.connection import Database
 from infrastructure.embeddings import create_embedding_adapter
-from infrastructure.messagebus import MessageHandlingRejectError
 from infrastructure.messagebus.ingestion_consumer import IngestionRequestedConsumer
 from infrastructure.messagebus.rabbitmq_event_bus import RabbitMQEventBusAdapter
 from workers.tasks.ingestion_requested import (
     IngestionRequestedTaskHandler,
     ValidatedIngestionRequest,
+    reject_previously_handled,
 )
-
-
-def _reject_if_previously_handled(result: RecordIngestionEventResult) -> None:
-    if result is RecordIngestionEventResult.DUPLICATE_EVENT:
-        raise MessageHandlingRejectError("duplicate event id")
-    if result is RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY:
-        raise MessageHandlingRejectError("duplicate idempotency key")
-    if result is RecordIngestionEventResult.STALE_LINEAGE:
-        raise MessageHandlingRejectError("stale ingestion lineage event")
 
 
 async def handle_ingestion_message(
@@ -78,11 +69,11 @@ async def handle_ingestion_message(
             account_id=request.account_id,
         )
         return
-    _reject_if_previously_handled(previous)
+    reject_previously_handled(previous)
 
     async def persist_index(index: PreparedIndex) -> None:
         async with database.command() as command:
-            _reject_if_previously_handled(
+            reject_previously_handled(
                 await command.ledger.record_or_classify(
                     event_id=request.event_id,
                     idempotency_key=request.idempotency_key,
@@ -97,7 +88,7 @@ async def handle_ingestion_message(
     if result.status == "failed":
         # A deleted source is terminal: record it so redelivery does not download it again.
         async with database.command() as command:
-            _reject_if_previously_handled(
+            reject_previously_handled(
                 await command.ledger.record_or_classify(
                     event_id=request.event_id,
                     idempotency_key=request.idempotency_key,
