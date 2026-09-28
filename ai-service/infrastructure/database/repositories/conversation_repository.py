@@ -36,7 +36,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         try:
             self._session.add(model)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to create conversation session",
@@ -55,7 +54,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
 
             self._apply_session_domain_values(model, session)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update conversation session",
@@ -119,7 +117,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
             model.deleted_at = deleted_at
             model.updated_at = deleted_at
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to soft-delete conversation session",
@@ -135,7 +132,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
                 model.title = title
                 model.updated_at = datetime.now(UTC)
                 await self._session.flush()
-                await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update conversation session title",
@@ -147,7 +143,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         try:
             self._session.add(model)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to add chat message",
@@ -165,7 +160,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
                 )
             self._apply_message_domain_values(model, message)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update chat message",
