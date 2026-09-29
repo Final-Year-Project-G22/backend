@@ -16,8 +16,7 @@ from dependency_injector import providers
 
 from app.config import Settings, get_settings
 from app.container import Container
-from core.domain.enums import DocumentStatus
-from core.ports.ingestion_event_ledger import RecordIngestionEventResult
+from core.ports.ingestion_event_ledger import IngestionEventOutcome, RecordIngestionEventResult
 from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase, PreparedIndex
 from infrastructure.database.connection import Database
 from infrastructure.embeddings import create_embedding_adapter
@@ -47,22 +46,20 @@ async def handle_ingestion_message(
             document_id=request.document_id,
             occurred_at=request.occurred_at,
         )
-        indexed = False
+        outcome = None
         if previous in (
             RecordIngestionEventResult.DUPLICATE_EVENT,
             RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY,
         ):
-            matches = await command.ledger.matches_record(
+            outcome = await command.ledger.get_outcome(
                 event_id=request.event_id,
                 idempotency_key=request.idempotency_key,
                 account_id=request.account_id,
                 document_id=request.document_id,
+                occurred_at=request.occurred_at,
             )
-            if matches:
-                document = await command.knowledge.get_document(request.document_id)
-                indexed = document is not None and document.status is DocumentStatus.ACTIVE
 
-    if indexed:
+    if outcome is IngestionEventOutcome.COMPLETED:
         await orchestrator.announce_completed(
             event_id=request.event_id,
             document_id=request.document_id,
@@ -80,6 +77,7 @@ async def handle_ingestion_message(
                     account_id=request.account_id,
                     document_id=request.document_id,
                     occurred_at=request.occurred_at,
+                    outcome=IngestionEventOutcome.COMPLETED,
                 )
             )
             await orchestrator.index_chunks(index, knowledge_repository=command.knowledge)
@@ -95,6 +93,7 @@ async def handle_ingestion_message(
                     account_id=request.account_id,
                     document_id=request.document_id,
                     occurred_at=request.occurred_at,
+                    outcome=IngestionEventOutcome.FAILED,
                 )
             )
 

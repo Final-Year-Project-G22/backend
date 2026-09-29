@@ -9,7 +9,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.domain.exceptions import RepositoryError
-from core.ports.ingestion_event_ledger import IngestionEventLedgerPort, RecordIngestionEventResult
+from core.ports.ingestion_event_ledger import (
+    IngestionEventLedgerPort,
+    IngestionEventOutcome,
+    RecordIngestionEventResult,
+)
 from infrastructure.database import models_sqlalchemy as sa_models
 
 
@@ -29,6 +33,7 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
         account_id: uuid.UUID,
         document_id: uuid.UUID,
         occurred_at: datetime,
+        outcome: IngestionEventOutcome | None = None,
     ) -> RecordIngestionEventResult:
         previous = await self.classify_existing(
             event_id=event_id,
@@ -48,6 +53,7 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
                 account_id=account_id,
                 document_id=document_id,
                 occurred_at=occurred_at,
+                outcome=outcome.value if outcome is not None else None,
             )
             .on_conflict_do_nothing()
             .returning(sa_models.IngestionEventLedger.id)
@@ -71,26 +77,29 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
             )
         return RecordIngestionEventResult.RECORDED
 
-    async def matches_record(
+    async def get_outcome(
         self,
         *,
         event_id: str,
         idempotency_key: str,
         account_id: uuid.UUID,
         document_id: uuid.UUID,
-    ) -> bool:
+        occurred_at: datetime,
+    ) -> IngestionEventOutcome | None:
         try:
             result = await self._session.execute(
-                select(sa_models.IngestionEventLedger.id).where(
+                select(sa_models.IngestionEventLedger.outcome).where(
                     sa_models.IngestionEventLedger.event_id == event_id,
                     sa_models.IngestionEventLedger.idempotency_key == idempotency_key,
                     sa_models.IngestionEventLedger.account_id == account_id,
                     sa_models.IngestionEventLedger.document_id == document_id,
+                    sa_models.IngestionEventLedger.occurred_at == occurred_at,
                 )
             )
         except SQLAlchemyError as exc:
-            raise RepositoryError("failed to query ingestion ledger event") from exc
-        return result.scalar_one_or_none() is not None
+            raise RepositoryError("failed to query ingestion ledger outcome") from exc
+        outcome = result.scalar_one_or_none()
+        return IngestionEventOutcome(outcome) if outcome is not None else None
 
     async def classify_existing(
         self,

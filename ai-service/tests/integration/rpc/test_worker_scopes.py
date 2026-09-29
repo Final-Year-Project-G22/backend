@@ -11,9 +11,10 @@ from unittest.mock import AsyncMock
 import httpx
 import pytest
 
-from core.domain.enums import DocumentStatus
+from core.domain.enums import DocumentSource, DocumentStatus, Language
 from core.domain.exceptions import RepositoryError
 from core.domain.ingestion_events import DOCUMENT_INGESTION_REQUESTED_V1
+from core.domain.models import KnowledgeDocument
 from core.ports.embedding import EmbeddingPort
 from core.ports.event_bus import EventBusPort
 from core.ports.ingestion_event_ledger import RecordIngestionEventResult
@@ -22,6 +23,7 @@ from core.usecases.ingestion_orchestrator import IngestionOrchestratorUseCase
 from infrastructure.chunking.registry import ChunkingRegistry
 from infrastructure.database.connection import Database
 from infrastructure.database.scoped import ScopedRepository
+from infrastructure.messagebus import MessageHandlingRejectError
 from infrastructure.parsers.registry import ParserRegistry
 from workers.ingestion_worker import handle_ingestion_message
 from workers.tasks.ingestion_requested import IngestionRequestedTaskHandler
@@ -195,6 +197,64 @@ async def test_redelivery_finishes_status_after_cancelled_committed_index(
         )
         assert "completed" in published
         embed.embed_documents.assert_awaited_once()
+
+
+@pytest.mark.integration
+async def test_redelivery_of_missing_source_does_not_complete_an_older_active_document(
+    database: Database,
+) -> None:
+    doc_id = uuid.uuid4()
+    payload = _envelope(doc_id)
+    async with database.command() as command:
+        await command.knowledge.upsert_document(
+            KnowledgeDocument(
+                id=doc_id,
+                title="Existing guide",
+                source=DocumentSource.GUIDE,
+                effective_date=datetime.now(UTC).date(),
+                language=Language.ENGLISH,
+                status=DocumentStatus.ACTIVE,
+                processed_at=datetime.now(UTC),
+            )
+        )
+
+    published: list[str] = []
+    events = AsyncMock(spec=EventBusPort)
+
+    async def publish(_name: str, envelope: dict[str, object]) -> None:
+        published.append(envelope["payload"]["to_stage"])
+
+    events.publish.side_effect = publish
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _request: httpx.Response(404)),
+        trust_env=False,
+    ) as http_client:
+        orchestrator = IngestionOrchestratorUseCase(
+            event_bus=events,
+            parser_registry=ParserRegistry(),
+            chunking_registry=ChunkingRegistry(),
+            embedding_port=AsyncMock(spec=EmbeddingPort),
+            knowledge_repository=ScopedRepository(database, "knowledge"),
+            core_service_port=AsyncMock(),
+            seaweedfs_filer_url="http://storage.test",
+            http_client=http_client,
+        )
+        validator = IngestionRequestedTaskHandler(
+            envelope_verifier=EnvelopeVerifier(
+                active_key_id="ingestion-v1", active_secret=TEST_SECRET
+            ),
+            ingestion_event_ledger_repository=ScopedRepository(database, "ledger"),
+            ingestion_orchestrator=orchestrator,
+        )
+        await handle_ingestion_message(
+            payload, database=database, validator=validator, orchestrator=orchestrator
+        )
+        assert published[-1] == "failed"
+        with pytest.raises(MessageHandlingRejectError, match="duplicate event id"):
+            await handle_ingestion_message(
+                payload, database=database, validator=validator, orchestrator=orchestrator
+            )
+    assert "completed" not in published
 
 
 @pytest.mark.integration
