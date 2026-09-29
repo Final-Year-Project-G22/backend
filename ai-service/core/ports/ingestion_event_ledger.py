@@ -13,6 +13,11 @@ class RecordIngestionEventResult(StrEnum):
     STALE_LINEAGE = "stale_lineage"
 
 
+class IngestionEventOutcome(StrEnum):
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class IngestionEventLedgerPort(ABC):
     @abstractmethod
     async def record_or_classify(
@@ -23,7 +28,8 @@ class IngestionEventLedgerPort(ABC):
         account_id: uuid.UUID,
         document_id: uuid.UUID,
         occurred_at: datetime,
+        outcome: IngestionEventOutcome | None = None,
     ) -> RecordIngestionEventResult: ...
 
 
-__all__ = ["IngestionEventLedgerPort", "RecordIngestionEventResult"]
+__all__ = ["IngestionEventLedgerPort", "IngestionEventOutcome", "RecordIngestionEventResult"]

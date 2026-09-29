@@ -19,13 +19,17 @@ import asyncio
 import json
 import os
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure.database.connection import async_session_factory
+from app.config import get_settings
+from infrastructure.database.connection import Database
 
 FIXTURE_DIR = Path(__file__).resolve().parents[1]
 _failures: list[str] = []
@@ -37,11 +41,21 @@ def check(label: str, ok: bool, detail: str = "") -> None:
     print(f"{'PASS' if ok else 'FAIL'}  {label}" + (f" — {detail}" if detail else ""))
 
 
+@asynccontextmanager
+async def ai_read_session() -> AsyncIterator[AsyncSession]:
+    database = Database(get_settings().DATABASE_URL)
+    try:
+        async with database.sessions() as session:
+            yield session
+    finally:
+        await database.engine.dispose()
+
+
 async def verify_ai_db() -> None:
     manifest = json.loads((FIXTURE_DIR / "manifest.json").read_text())
     chunk_refs = json.loads((FIXTURE_DIR / "chunk_refs.json").read_text())
 
-    async with async_session_factory() as session:
+    async with ai_read_session() as session:
         for doc in manifest["documents"]:
             row = (
                 (

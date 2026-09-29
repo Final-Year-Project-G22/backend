@@ -4,11 +4,16 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.domain.exceptions import RepositoryError
-from core.ports.ingestion_event_ledger import IngestionEventLedgerPort, RecordIngestionEventResult
+from core.ports.ingestion_event_ledger import (
+    IngestionEventLedgerPort,
+    IngestionEventOutcome,
+    RecordIngestionEventResult,
+)
 from infrastructure.database import models_sqlalchemy as sa_models
 
 
@@ -28,29 +33,33 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
         account_id: uuid.UUID,
         document_id: uuid.UUID,
         occurred_at: datetime,
+        outcome: IngestionEventOutcome | None = None,
     ) -> RecordIngestionEventResult:
-        latest_occurred_at = await self._latest_occurred_at(
-            account_id=account_id,
-            document_id=document_id,
-        )
-        if latest_occurred_at is not None and occurred_at <= latest_occurred_at:
-            return RecordIngestionEventResult.STALE_LINEAGE
-
-        model = sa_models.IngestionEventLedger(
+        previous = await self.classify_existing(
             event_id=event_id,
             idempotency_key=idempotency_key,
             account_id=account_id,
             document_id=document_id,
             occurred_at=occurred_at,
         )
+        if previous is not RecordIngestionEventResult.RECORDED:
+            return previous
 
-        self._session.add(model)
-        try:
-            await self._session.flush()
-        except IntegrityError:
-            return await self._classify_duplicate(
-                event_id=event_id, idempotency_key=idempotency_key
+        statement = (
+            insert(sa_models.IngestionEventLedger)
+            .values(
+                event_id=event_id,
+                idempotency_key=idempotency_key,
+                account_id=account_id,
+                document_id=document_id,
+                occurred_at=occurred_at,
+                outcome=outcome.value if outcome is not None else None,
             )
+            .on_conflict_do_nothing()
+            .returning(sa_models.IngestionEventLedger.id)
+        )
+        try:
+            result = await self._session.execute(statement)
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to persist ingestion ledger event",
@@ -62,6 +71,56 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
                 },
             ) from exc
 
+        if result.scalar_one_or_none() is None:
+            return await self._classify_duplicate(
+                event_id=event_id, idempotency_key=idempotency_key
+            )
+        return RecordIngestionEventResult.RECORDED
+
+    async def get_outcome(
+        self,
+        *,
+        event_id: str,
+        idempotency_key: str,
+        account_id: uuid.UUID,
+        document_id: uuid.UUID,
+        occurred_at: datetime,
+    ) -> IngestionEventOutcome | None:
+        try:
+            result = await self._session.execute(
+                select(sa_models.IngestionEventLedger.outcome).where(
+                    sa_models.IngestionEventLedger.event_id == event_id,
+                    sa_models.IngestionEventLedger.idempotency_key == idempotency_key,
+                    sa_models.IngestionEventLedger.account_id == account_id,
+                    sa_models.IngestionEventLedger.document_id == document_id,
+                    sa_models.IngestionEventLedger.occurred_at == occurred_at,
+                )
+            )
+        except SQLAlchemyError as exc:
+            raise RepositoryError("failed to query ingestion ledger outcome") from exc
+        outcome = result.scalar_one_or_none()
+        return IngestionEventOutcome(outcome) if outcome is not None else None
+
+    async def classify_existing(
+        self,
+        *,
+        event_id: str,
+        idempotency_key: str,
+        account_id: uuid.UUID,
+        document_id: uuid.UUID,
+        occurred_at: datetime,
+    ) -> RecordIngestionEventResult:
+        duplicate = await self._classify_duplicate(
+            event_id=event_id, idempotency_key=idempotency_key
+        )
+        if duplicate is not RecordIngestionEventResult.RECORDED:
+            return duplicate
+        latest_occurred_at = await self._latest_occurred_at(
+            account_id=account_id,
+            document_id=document_id,
+        )
+        if latest_occurred_at is not None and occurred_at <= latest_occurred_at:
+            return RecordIngestionEventResult.STALE_LINEAGE
         return RecordIngestionEventResult.RECORDED
 
     async def _latest_occurred_at(
@@ -119,7 +178,7 @@ class SqlAlchemyIngestionEventLedgerRepository(IngestionEventLedgerPort):
                 },
             ) from exc
 
-        return RecordIngestionEventResult.DUPLICATE_EVENT
+        return RecordIngestionEventResult.RECORDED
 
 
 __all__ = ["SqlAlchemyIngestionEventLedgerRepository"]

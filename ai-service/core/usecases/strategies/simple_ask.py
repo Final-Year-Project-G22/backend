@@ -240,18 +240,17 @@ class SimpleAskStrategy(AskStrategyPort):
         conversation: AIConversationSession,
         now: datetime,
     ) -> AIChatMessage:
-        message_order = await self._next_message_order(conversation.id)
         user_message = AIChatMessage(
             user_id=command.user_id,
             conversation_id=conversation.id,
             message_type=MessageType.USER_QUERY,
             user_query=command.prompt,
             query_language=command.language,
-            message_order=message_order,
+            message_order=1,
             created_at=now,
             updated_at=now,
         )
-        return await self._conversation_repository.add_message(user_message)
+        return await self._conversation.append_message(user_message)
 
     @property
     def _conversation_repository(self) -> ConversationRepositoryPort:
@@ -311,7 +310,6 @@ class SimpleAskStrategy(AskStrategyPort):
         retrieved_hits: list[SearchHit] | None = None,
         cache_hit: bool = False,
     ) -> AIChatMessage:
-        message_order = await self._next_message_order(conversation.id)
         hits = retrieved_hits or []
         ai_message = AIChatMessage(
             user_id=command.user_id,
@@ -332,20 +330,12 @@ class SimpleAskStrategy(AskStrategyPort):
                 )
                 for h in hits
             ],
-            message_order=message_order,
+            message_order=1,
             cache_hit=cache_hit,
             created_at=now,
             updated_at=now,
         )
-        return await self._conversation_repository.add_message(ai_message)
-
-    async def _next_message_order(self, conversation_id: Any) -> int:
-        messages = await self._conversation.list_messages(
-            conversation_id, limit=1, offset=0, descending=True
-        )
-        if not messages:
-            return 1
-        return messages[0].message_order + 1
+        return await self._conversation.append_message(ai_message)
 
     def _build_cache_key(self, command: AskAICommand, conversation_id: Any) -> str:
         return f"ai:cache:{conversation_id}:{command.prompt[:100]}"

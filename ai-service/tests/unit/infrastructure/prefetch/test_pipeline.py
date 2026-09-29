@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
@@ -157,3 +158,39 @@ async def test_pre_fetch_personal_calls_multiple_tools() -> None:
     )
 
     assert "get_user_profile" in calls
+
+
+@pytest.mark.asyncio
+async def test_cancelling_prefetch_joins_parallel_remote_calls() -> None:
+    started = asyncio.Event()
+    stopped = asyncio.Event()
+    active = 0
+
+    async def wait_for_remote(
+        name: str, arguments: dict, account_id: str, user_id: str
+    ) -> ToolResult:
+        nonlocal active
+        active += 1
+        if active == 3:
+            started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            active -= 1
+            if active == 0:
+                stopped.set()
+        return ToolResult(tool_name=name)
+
+    registry = MagicMock(spec=ToolRegistryPort)
+    registry.execute_tool = wait_for_remote
+    task = asyncio.create_task(
+        PreFetchPipeline(registry).pre_fetch(
+            IntentClass.PERSONAL, "my status", str(uuid.uuid4()), str(uuid.uuid4())
+        )
+    )
+    await asyncio.wait_for(started.wait(), 5)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert stopped.is_set()
+    assert active == 0

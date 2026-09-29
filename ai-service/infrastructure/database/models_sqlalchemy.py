@@ -8,6 +8,7 @@ from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]  # pgvect
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Computed,
     Date,
     DateTime,
@@ -18,7 +19,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from infrastructure.database.connection import Base
@@ -77,7 +78,7 @@ class DocumentChunk(Base):
     token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(1024), nullable=True)
     content_tsvector: Mapped[str | None] = mapped_column(
-        Text,
+        TSVECTOR,
         Computed("to_tsvector('simple', chunk_text)", persisted=True),
         nullable=True,
     )
@@ -229,9 +230,13 @@ class IngestionEventLedger(Base):
     account_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    outcome: Mapped[str | None] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
+        CheckConstraint(
+            "outcome IN ('completed', 'failed')", name="ck_ingestion_event_ledger_outcome"
+        ),
         Index(
             "ix_ingestion_event_ledger_document_occurred",
             "document_id",

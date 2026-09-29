@@ -4,8 +4,9 @@ import json
 import logging
 import time
 import uuid
-from collections.abc import AsyncIterator
-from typing import NamedTuple
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
+from contextlib import aclosing
+from typing import NamedTuple, cast
 
 import grpc
 import grpc.aio
@@ -48,9 +49,23 @@ class _ParsedRequest(NamedTuple):
 
 
 class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):
-    def __init__(self, ask_ai_usecase: AskAIUseCase, *, ask_enabled: bool = True) -> None:
+    def __init__(
+        self,
+        ask_ai_usecase: AskAIUseCase | None,
+        *,
+        ask_enabled: bool = True,
+        usecase_factory: Callable[[], AskAIUseCase] | None = None,
+    ) -> None:
         self._ask_ai_usecase = ask_ai_usecase
+        self._usecase_factory = usecase_factory
         self._ask_enabled = ask_enabled
+
+    def _usecase(self) -> AskAIUseCase:
+        if self._usecase_factory is not None:
+            return self._usecase_factory()
+        if self._ask_ai_usecase is None:
+            raise RuntimeError("Ask use case not configured")
+        return self._ask_ai_usecase
 
     def _parse_request_ids(self, request: service_pb2.AskRequest) -> _ParsedRequest:
         user_id = uuid.UUID(request.user_id)
@@ -188,7 +203,7 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):
 
             command = self._build_command(request, parsed)
 
-            response = await self._ask_ai_usecase.execute(command)
+            response = await self._usecase().execute(command)
 
             citations: list[service_pb2.Citation] = [
                 map_citation_from_hit(hit) for hit in response.retrieved_hits
@@ -248,17 +263,22 @@ class AIInferenceService(service_pb2_grpc.AIInferenceServiceServicer):
             ai_message: AIChatMessage | None = None
             merged_hits: list[SearchHit] | None = None
             conversation: AIConversationSession | None = None
-            llm_model = self._ask_ai_usecase.llm_model
+            usecase = self._usecase()
+            llm_model = usecase.llm_model
 
-            async for event in self._ask_ai_usecase.execute_stream_with_tools(command):
-                if event.is_done:
-                    ai_message = event.ai_message
-                    merged_hits = event.merged_hits
-                    conversation = event.done
+            stream = cast(
+                AsyncGenerator[AskStreamEvent, None], usecase.execute_stream_with_tools(command)
+            )
+            async with aclosing(stream) as events:
+                async for event in events:
+                    if event.is_done:
+                        ai_message = event.ai_message
+                        merged_hits = event.merged_hits
+                        conversation = event.done
 
-                chunk = self._map_event_chunk(event, debug_mode=command.debug_mode)
-                if chunk is not None:
-                    yield chunk
+                    chunk = self._map_event_chunk(event, debug_mode=command.debug_mode)
+                    if chunk is not None:
+                        yield chunk
 
             if ai_message is None or conversation is None:
                 logger.error("execute_stream_with_tools finished without done event")

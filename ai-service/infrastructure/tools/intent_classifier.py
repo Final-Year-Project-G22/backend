@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+from collections.abc import Sequence
 
 from core.ports.embedding import EmbeddingPort
 from core.ports.intent_classifier import IntentClass, IntentClassifierPort
@@ -13,13 +14,13 @@ class EmbeddingIntentClassifier(IntentClassifierPort):
     def __init__(
         self,
         embedding_port: EmbeddingPort,
-        knowledge_seeds: list[str],
-        personal_seeds: list[str],
+        knowledge_seeds: Sequence[str],
+        personal_seeds: Sequence[str],
         threshold: float = 0.6,
     ) -> None:
         self._embedding_port = embedding_port
-        self._knowledge_seeds = knowledge_seeds
-        self._personal_seeds = personal_seeds
+        self._knowledge_seeds = tuple(knowledge_seeds)
+        self._personal_seeds = tuple(personal_seeds)
         self._threshold = threshold
         self._knowledge_centroid: list[float] = []
         self._personal_centroid: list[float] = []
@@ -52,10 +53,10 @@ class EmbeddingIntentClassifier(IntentClassifierPort):
 
         return IntentClass.MIXED
 
-    async def _compute_centroid(self, seeds: list[str]) -> list[float]:
+    async def _compute_centroid(self, seeds: Sequence[str]) -> list[float]:
         if not seeds:
             return []
-        embeddings = await self._embedding_port.embed_documents(seeds)
+        embeddings = await self._embedding_port.embed_documents(list(seeds))
         if not embeddings:
             return []
         dim = len(embeddings[0])

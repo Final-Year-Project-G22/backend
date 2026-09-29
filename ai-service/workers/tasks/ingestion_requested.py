@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 from uuid import UUID
@@ -18,6 +19,24 @@ from infrastructure.messagebus import MessageHandlingRejectError, MessageHandlin
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ValidatedIngestionRequest:
+    event_id: str
+    idempotency_key: str
+    account_id: UUID
+    document_id: UUID
+    occurred_at: datetime
+
+
+def reject_previously_handled(result: RecordIngestionEventResult) -> None:
+    if result is RecordIngestionEventResult.DUPLICATE_EVENT:
+        raise MessageHandlingRejectError("duplicate event id")
+    if result is RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY:
+        raise MessageHandlingRejectError("duplicate idempotency key")
+    if result is RecordIngestionEventResult.STALE_LINEAGE:
+        raise MessageHandlingRejectError("stale ingestion lineage event")
+
+
 class IngestionRequestedTaskHandler:
     def __init__(
         self,
@@ -31,6 +50,29 @@ class IngestionRequestedTaskHandler:
         self._ingestion_orchestrator = ingestion_orchestrator
 
     async def handle(self, payload: dict[str, Any]) -> None:
+        request = self.validate(payload)
+        try:
+            ledger_result = await self._ingestion_event_ledger_repository.record_or_classify(
+                event_id=request.event_id,
+                idempotency_key=request.idempotency_key,
+                account_id=request.account_id,
+                document_id=request.document_id,
+                occurred_at=request.occurred_at,
+            )
+        except RepositoryError as exc:
+            raise MessageHandlingRetryError("failed to classify ingestion event") from exc
+
+        reject_previously_handled(ledger_result)
+
+        await self._ingestion_orchestrator.start_ingestion(payload)
+
+        logger.info(
+            "ingestion event received event_id=%s event_type=%s",
+            request.event_id,
+            DOCUMENT_INGESTION_REQUESTED_V1,
+        )
+
+    def validate(self, payload: dict[str, Any]) -> ValidatedIngestionRequest:
         logger.debug(
             "event_type=%s key_id=%s has_signature=%s",
             payload.get("event_type"),
@@ -77,30 +119,12 @@ class IngestionRequestedTaskHandler:
         document_id_raw = ingestion_requested_payload_dict.get("document_id")
         document_id = _parse_uuid(str(document_id_raw), field_name="document_id")
 
-        try:
-            ledger_result = await self._ingestion_event_ledger_repository.record_or_classify(
-                event_id=event_id,
-                idempotency_key=idempotency_key,
-                account_id=account_id,
-                document_id=document_id,
-                occurred_at=occurred_at,
-            )
-        except RepositoryError as exc:
-            raise MessageHandlingRetryError("failed to classify ingestion event") from exc
-
-        if ledger_result is RecordIngestionEventResult.DUPLICATE_EVENT:
-            raise MessageHandlingRejectError("duplicate event id")
-        if ledger_result is RecordIngestionEventResult.DUPLICATE_IDEMPOTENCY:
-            raise MessageHandlingRejectError("duplicate idempotency key")
-        if ledger_result is RecordIngestionEventResult.STALE_LINEAGE:
-            raise MessageHandlingRejectError("stale ingestion lineage event")
-
-        await self._ingestion_orchestrator.start_ingestion(payload)
-
-        logger.info(
-            "ingestion event received event_id=%s event_type=%s",
-            event_id,
-            event_type,
+        return ValidatedIngestionRequest(
+            event_id=event_id,
+            idempotency_key=idempotency_key,
+            account_id=account_id,
+            document_id=document_id,
+            occurred_at=occurred_at,
         )
 
 

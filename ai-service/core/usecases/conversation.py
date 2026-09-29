@@ -75,6 +75,13 @@ class ConversationUseCase:
             deleted_at=deleted_at or _utc_now(),
         )
 
+    async def append_message(self, message: AIChatMessage) -> AIChatMessage:
+        previous = await self.list_messages(message.conversation_id, limit=1, descending=True)
+        next_order = previous[0].message_order + 1 if previous else 1
+        return await self._conversation_repository.add_message(
+            message.model_copy(update={"message_order": next_order})
+        )
+
     async def get_message(self, message_id: uuid.UUID) -> AIChatMessage | None:
         return await self._conversation_repository.get_message(message_id)
 

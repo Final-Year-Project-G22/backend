@@ -30,30 +30,19 @@ class PreFetchPipeline:
                 if value:
                     results["kb"] = value
 
-        elif intent == IntentClass.PERSONAL:
-            tasks = [
-                asyncio.create_task(self._fetch_profile(account_id, user_id)),
-                asyncio.create_task(self._fetch_guide_progress(account_id, user_id)),
-                asyncio.create_task(self._fetch_compliance(account_id, user_id)),
-            ]
-            done, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-            for task in done:
-                key, value = task.result()
-                if value:
-                    results[key] = value
-
         else:
-            tasks = [asyncio.create_task(self._fetch_profile(account_id, user_id))]
-            if include_kb:
-                tasks.append(asyncio.create_task(self._fetch_kb(query, account_id, user_id)))
-            tasks.extend(
-                [
-                    asyncio.create_task(self._fetch_guide_progress(account_id, user_id)),
-                    asyncio.create_task(self._fetch_compliance(account_id, user_id)),
-                ]
-            )
-            done, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-            for task in done:
+            # The task group joins and cancels every remote call if the stream ends.
+            async with asyncio.TaskGroup() as group:
+                tasks = [group.create_task(self._fetch_profile(account_id, user_id))]
+                if intent != IntentClass.PERSONAL and include_kb:
+                    tasks.append(group.create_task(self._fetch_kb(query, account_id, user_id)))
+                tasks.extend(
+                    [
+                        group.create_task(self._fetch_guide_progress(account_id, user_id)),
+                        group.create_task(self._fetch_compliance(account_id, user_id)),
+                    ]
+                )
+            for task in tasks:
                 key, value = task.result()
                 if value:
                     results[key] = value

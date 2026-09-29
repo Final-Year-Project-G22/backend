@@ -36,7 +36,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
         try:
             self._session.add(model)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to create conversation session",
@@ -55,7 +54,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
 
             self._apply_session_domain_values(model, session)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update conversation session",
@@ -119,7 +117,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
             model.deleted_at = deleted_at
             model.updated_at = deleted_at
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to soft-delete conversation session",
@@ -135,19 +132,30 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
                 model.title = title
                 model.updated_at = datetime.now(UTC)
                 await self._session.flush()
-                await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update conversation session title",
                 details={"session_id": str(session_id)},
             ) from exc
 
+    async def add_message_in_order(self, message: AIChatMessage) -> AIChatMessage:
+        # Serialize writers for one conversation without locking other conversations.
+        result = await self._session.execute(
+            select(sa_models.AIConversationSession.id)
+            .where(sa_models.AIConversationSession.id == message.conversation_id)
+            .with_for_update()
+        )
+        if result.scalar_one_or_none() is None:
+            raise RepositoryError("conversation session not found")
+        previous = await self.list_messages(message.conversation_id, limit=1, descending=True)
+        next_order = previous[0].message_order + 1 if previous else 1
+        return await self.add_message(message.model_copy(update={"message_order": next_order}))
+
     async def add_message(self, message: AIChatMessage) -> AIChatMessage:
         model = to_orm_message(message)
         try:
             self._session.add(model)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to add chat message",
@@ -165,7 +173,6 @@ class SqlAlchemyConversationRepository(ConversationRepositoryPort):
                 )
             self._apply_message_domain_values(model, message)
             await self._session.flush()
-            await self._session.commit()
         except SQLAlchemyError as exc:
             raise RepositoryError(
                 "failed to update chat message",
