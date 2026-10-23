@@ -123,7 +123,7 @@ external = [
 # Narrow, file-scoped relaxations: each entry must stay live — delete an entry
 # when its violations disappear (verified by removing the rule and running ruff).
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ARG001", "PLR2004"]
+"tests/**/*.py" = ["S101", "ARG001", "ARG002", "PLR2004"]
 "app/config.py" = ["S105"]
 "alembic/env.py" = ["PLC0415"]
 "alembic/versions/*.py" = ["F401"]
@@ -134,9 +134,12 @@ external = [
 # Eval fixture provisioning/verification are standalone operator scripts, not
 # app code: console I/O, assertions, and inline imports are intentional.
 "evals/fixture/scripts/*.py" = ["S101", "T201", "PLC0415", "PLR2004", "PLW0603", "FBT001", "DTZ005", "PLR0915"]
+# The eval CLI reports to the operator's terminal and prints clean error
+# messages without tracebacks.
+"evals/cli.py" = ["T201", "TRY400"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "core", "infrastructure", "workers"]
+known-first-party = ["app", "core", "infrastructure", "workers", "evals"]
 split-on-trailing-comma = false
 
 [tool.ruff.format]
@@ -150,7 +153,7 @@ docstring-code-format = true
 pythonVersion = "3.11"
 pythonPlatform = "Linux"
 typeCheckingMode = "strict"
-include = ["main.py", "app", "core", "infrastructure", "workers"]
+include = ["main.py", "app", "core", "infrastructure", "workers", "evals"]
 exclude = [".venv", "__pycache__", "grpc_stubs", "tests"]
 extraPaths = ["grpc_stubs"]
 # Remaining deliberate relaxations (everything else runs strict):
